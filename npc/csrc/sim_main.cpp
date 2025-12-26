@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define TO_STR(a) #a
+
 void nvboard_bind_all_pins(TOP_NAME* top);
 
 VerilatedContext* contextp = NULL;
@@ -22,7 +24,7 @@ void sim_init(int argc, char** argv)
 	Verilated::traceEverOn(true);
 	tfp = new VerilatedFstC;
 	top->trace(tfp, 99);
-	tfp->open(WAVE);
+	tfp->open(TO_STR(WAVE));
 }
 
 void sim_close(void)
