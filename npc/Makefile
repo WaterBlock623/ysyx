@@ -17,7 +17,7 @@ BIN = $(BUILD_DIR)/$(TOPNAME)
 
 default: $(BIN)
 
-$(shell mkdir -p $(BUILD_DIR) $(WAVE_DIR))
+$(shell mkdir -p $(BUILD_DIR))
 
 # constraint file
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
@@ -39,6 +39,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -DWAVE="\"$(abspath $(WAVE)
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@rm -rf $(OBJ_DIR)
+	@mkdir -p $(WAVE_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
