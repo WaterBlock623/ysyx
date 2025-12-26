@@ -6,12 +6,14 @@
 #include <assert.h>
 
 int main(int argc, char** argv) {
+	int sim_time = 1000;
+
     VerilatedContext* contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
-    Vour* top = new Vtop{contextp};
+    Vtop* top = new Vtop{contextp};
 	Verilated::traceEverOn(true);
 	VerilatedFstC* tfp = new VerilatedFstC;
-	topp->trace(tfp, 99);
+	top->trace(tfp, 99);
 	tfp->open("obj_dir/wave/sim.fst");
     while (contextp->time() < sim_time && !contextp->gotFinish()) {
 		contextp->timeInc(1);
