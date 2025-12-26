@@ -36,7 +36,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -DWAVE="\"$(abspath $(WAVE))\""
 
-all: commit hint $(BIN)
+all: commit lint $(BIN)
 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
@@ -58,9 +58,9 @@ wave:
 commit:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
-hint:
-	$(VERILATOR) -Wall --hint-only $(VSRCS)
+lint:
+	$(VERILATOR) -Wall --lint-only $(VSRCS)
 
-.PHONY: default all clean run wave commit hint
+.PHONY: default all clean run wave commit lint
 
 include ../Makefile
