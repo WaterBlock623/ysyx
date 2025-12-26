@@ -1,33 +1,55 @@
 #include "Vtop.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include <nvboard.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
-int main(int argc, char** argv) {
-	int sim_time = 1000;
+VerilatedContext* contextp = NULL;
+TOP_NAME* top = NULL;
+VerilatedFstC* tfp = NULL;
 
-    VerilatedContext* contextp = new VerilatedContext;
+void sim_init(void)
+{
+    contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
-    Vtop* top = new Vtop{contextp};
+    top = new Vtop{contextp};
+	nvboard_bind_all_pins(top);
+	nvboard_init();
 	Verilated::traceEverOn(true);
-	VerilatedFstC* tfp = new VerilatedFstC;
+	tfp = new VerilatedFstC;
 	top->trace(tfp, 99);
-	tfp->open("obj_dir/wave/sim.fst");
-    while (contextp->time() < sim_time && !contextp->gotFinish()) {
-		contextp->timeInc(1);
-		int a = rand() & 1;
-		int b = rand() & 1;
-		top->a = a;
-		top->b = b;
-		top->eval();
-		printf("a = %d, b = %d, f = %d\n", a, b, top->f);
-		assert(top->f == (a ^ b));
-		tfp->dump(contextp->time());
-	}
+	tfp->open(WAVE);
+}
+
+void sim_close(void)
+{
 	tfp->close();
     delete top;
     delete contextp;
+}
+
+void single_cycle(void)
+{
+	int a = rand() & 1;
+	int b = rand() & 1;
+	top->a = a;
+	top->b = b;
+	top->eval();
+	printf("a = %d, b = %d, f = %d\n", a, b, top->f);
+	assert(top->f == (a ^ b));
+}
+
+int main(int argc, char** argv) {
+	int sim_time = 1000;
+	sim_init();
+    while (contextp->time() < sim_time && !contextp->gotFinish()) {
+		contextp->timeInc(1);
+		nvboard_update();
+		single_cycle();
+		tfp->dump(contextp->time());
+	}
+	sim_close();
     return 0;
 }
