@@ -37,18 +37,20 @@ void sim_close(void)
 
 void single_cycle(void)
 {
-/*	int a = rand() & 1;
-	int b = rand() & 1;
-	top->a = a;
-	top->b = b; */
-	top->eval();
-//	printf("a = %d, b = %d, f = %d\n", a, b, top->f);
-//	assert(top->f == (a ^ b));
+	top->clk = 0; top->eval();
+	top->clk = 1; top->eval();
+}
+
+void reset(int n) {
+	top->rst = 1;
+	while (n-- > 0) single_cycle();
+	top->rst = 0;
 }
 
 int main(int argc, char** argv) {
 	int sim_time = -1;
 	sim_init(argc, argv);
+	reset(10);
     while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
 		contextp->timeInc(1);
 		nvboard_update();
