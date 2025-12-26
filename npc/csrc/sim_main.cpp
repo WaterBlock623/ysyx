@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+void nvboard_bind_all_pins(TOP_NAME* top);
+
 VerilatedContext* contextp = NULL;
 TOP_NAME* top = NULL;
 VerilatedFstC* tfp = NULL;
@@ -28,6 +30,7 @@ void sim_close(void)
 	tfp->close();
     delete top;
     delete contextp;
+	nvboard_quit();
 }
 
 void single_cycle(void)
