@@ -12,7 +12,7 @@ VerilatedContext* contextp = NULL;
 TOP_NAME* top = NULL;
 VerilatedFstC* tfp = NULL;
 
-void sim_init(void)
+void sim_init(int argc, char** argv)
 {
     contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
@@ -46,7 +46,7 @@ void single_cycle(void)
 
 int main(int argc, char** argv) {
 	int sim_time = 1000;
-	sim_init();
+	sim_init(argc, argv);
     while (contextp->time() < sim_time && !contextp->gotFinish()) {
 		contextp->timeInc(1);
 		nvboard_update();
