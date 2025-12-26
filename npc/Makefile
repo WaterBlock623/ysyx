@@ -15,7 +15,7 @@ WAVE_DIR = $(OBJ_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
-default: $(BIN)
+default: all 
 
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -36,8 +36,9 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -DWAVE="\"$(abspath $(WAVE))\""
 
+all: commit hint $(BIN)
+
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@rm -rf $(OBJ_DIR)
 	@mkdir -p $(WAVE_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
@@ -45,10 +46,8 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
-all: default
-
-run: $(BIN)
-	@$^
+run: all
+	@$(BIN)
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -59,6 +58,9 @@ wave:
 commit:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
-.PHONY: default all clean run wave commit
+hint:
+	$(VERILATOR) -Wall --hint-only $(VSRCS)
+
+.PHONY: default all clean run wave commit hint
 
 include ../Makefile
