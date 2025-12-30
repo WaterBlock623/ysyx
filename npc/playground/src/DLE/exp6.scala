@@ -12,10 +12,10 @@ class Lfsr() extends Module {
     val out = Output(UInt(8.W))
   })
 
-  val shiftReg = RegInit(seed)
+  val shiftReg = RegInit(io.seed)
   val newBit = shiftReg(4) ^ shiftReg(3) ^ shiftReg(2) ^ shiftReg(0)
   shiftReg := Mux(load, seed, newBit ## shiftReg(7, 1))
-  out := shiftReg
+  io.out := shiftReg
 }
 
 class Exp6() extends Module {
