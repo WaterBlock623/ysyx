@@ -57,8 +57,8 @@ class PEncoder83 extends Module {
     val out = Output(UInt(3.W))
   })
 
-  val hotIn = Wire(Vec(8, Bool()))
-  val cond  = Wire(Vec(8, Bool()))
+  val hotIn = VecInit.fill(8)(false.B)
+  val cond  = VecInit.fill(8)(false.B)
 
   hotIn(7) := io.in(7)
   cond(7)  := ~io.in(7)
