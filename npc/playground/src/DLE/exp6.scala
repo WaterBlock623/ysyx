@@ -18,7 +18,7 @@ class Lfsr() extends Module {
   out := shiftReg
 }
 
-calss Exp6() extends Module {
+class Exp6() extends Module {
   val io = IO(new Bundle {
     val seed = Input(UInt(8.W))
     val load = Input(Bool())
