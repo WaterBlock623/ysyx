@@ -1,23 +1,21 @@
-BUILD_DIR = ./build
-PRJ = playground
-MILL = ./mill
-
-TOPNAME := top
-NXDC_FILES = constr/$(TOPNAME).nxdc
+TOPNAME = top
+NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert \
-#				--trace-fst
+				--trace-fst
 
 GTKWAVE = gtkwave
 
+BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 WAVE_DIR = $(OBJ_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
+default: all 
 
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -27,7 +25,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
-VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
+VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
@@ -36,39 +34,9 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-test:
-	$(MILL) -i $(PRJ).test
-
-verilog:
-	$(call git_commit, "generate verilog")
-	mkdir -p $(BUILD_DIR)
-	$(MILL) -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
-
-help:
-	$(MILL) -i $(PRJ).runMain Elaborate --help
-
-reformat:
-	$(MILL) -i __.reformat
-
-checkformat:
-	$(MILL) -i __.checkFormat
-
-bsp:
-	$(MILL) -i mill.bsp.BSP/install
-
-idea:
-	$(MILL) -i mill.idea.GenIdea/idea
-
-clean:
-	-rm -rf $(BUILD_DIR)
-
-.PHONY: test verilog help reformat checkformat clean
-
-sim: lint $(BIN)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN)
+all: commit lint $(BIN)
 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
@@ -78,12 +46,21 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
+run: all
+	@$(BIN)
+
+clean:
+	rm -rf $(BUILD_DIR)
+
 wave:
 	$(GTKWAVE) $(WAVE)
 
+commit:
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+
 lint:
-	-$(VERILATOR) -Wall --lint-only $(VSRCS)
+	$(VERILATOR) -Wall --lint-only $(VSRCS)
 
-.PHONY: wave lint sim
+.PHONY: default all clean run wave commit lint
 
--include ../Makefile
+include ../Makefile
