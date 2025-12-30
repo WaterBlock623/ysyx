@@ -1,7 +1,7 @@
 package dle.exp3
 
 import chisel3._
-import chisel3.util
+import chisel3.util._
 
 class Alu4() extends Module {
   val io = IO(new Bundle {
@@ -40,5 +40,5 @@ class Exp3 extends Module {
     val carry = Output(Bool())
   })
   val alu = Module(new Alu4)
-  alu <> io
+  alu.io <> io
 }
