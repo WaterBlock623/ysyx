@@ -7,13 +7,13 @@ EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
 			  grep "new " | \
 			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
 			  sed 's/.*\.//'
-TOPNAME := $(shell $(EXT_TOP_CMD)) 
+TOPNAME := $(strip $(shell $(EXT_TOP_CMD)))
 NXDC_FILES = constr/$(TOPNAME).nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert \
+				-O3 --x-assign fast --x-initial fast --noassert
 #				--trace-fst
 
 GTKWAVE = gtkwave
@@ -30,6 +30,10 @@ $(shell mkdir -p $(BUILD_DIR))
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+test_path:
+	@echo "[$(NXDC_FILES)]"
+	@echo "[$(TOPNAME)]"
 
 # project source
 VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
