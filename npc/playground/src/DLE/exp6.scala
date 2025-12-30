@@ -26,7 +26,8 @@ class Exp6() extends Module {
   })
 
   val lfsr = Module(new Lfsr())
-  lfsr.io <> io
+  lfsr.io.seed := io.seed
+  lfsr.io.load := io.load
   val dcdled1 = Module(new DecoderLed())
   val dcdled2 = Module(new DecoderLed())
   dcdled1.io.in := lfsr.io.out(3, 0)
