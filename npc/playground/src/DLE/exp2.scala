@@ -62,7 +62,7 @@ class PEncoder83 extends Module {
 
   hotIn(7) := io.in(7)
   cond(7)  := ~io.in(7)
-  for (i <- 6 to 0) {
+  for (i <- 6 to 0 by -1) {
     cond(i)  := ~io.in(i) & cond(i + 1)
     hotIn(i) := io.in(i) & cond(i + 1)
   }
@@ -73,7 +73,7 @@ class PEncoder83 extends Module {
   io.out := enc83.io.out
 }
 
-class Top extends Module {
+class Exp2 extends Module {
   val io = IO(new Bundle {
     val sw     = Input(UInt(8.W))
     val en     = Input(Bool())
