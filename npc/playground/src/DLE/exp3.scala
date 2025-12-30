@@ -23,7 +23,7 @@ class Alu4() extends Module {
 
   val lt = asOverflow ^ asResult(3)
   val subCarry = lt
-  val equ = ~asResult.orR
+  val equ = ~asOut.orR
 
   val out = VecInit(asOut, asOut, ~io.a, io.a & io.b, io.a | io.b, io.a ^ io.b, lt, equ)
   io.out := out(io.inst)
