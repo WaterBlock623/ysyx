@@ -86,4 +86,4 @@ lint:
 
 .PHONY: wave lint sim
 
--include ../Makefile
+include ../Makefile
