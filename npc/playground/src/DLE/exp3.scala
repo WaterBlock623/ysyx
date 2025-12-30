@@ -17,7 +17,7 @@ class Alu4() extends Module {
 
   val asResult = io.a +& (io.b ^ Fill(4, sub)) + sub
   val asOut = asResult(3, 0)
-  val asOverflow = (io.a(3) === io.b(3)) && (asResult(3) =/= io.a(3))
+  val asOverflow = (io.a(3) === io.b(3)) && (asResult(3) =/= (io.a(3) ^ sub))
   val addCarry = asResult(4)
 
   val lt = asOverflow ^ asResult(3)
