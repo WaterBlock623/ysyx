@@ -45,7 +45,7 @@ verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	$(MILL) -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
-	$(MAKE) lint
+	-$(MAKE) lint
 
 help:
 	$(MILL) -i $(PRJ).runMain Elaborate --help
