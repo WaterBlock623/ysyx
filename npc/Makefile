@@ -83,7 +83,7 @@ wave:
 	$(GTKWAVE) $(WAVE)
 
 lint:
-	-$(VERILATOR) -Wall --lint-only $(VSRCS)
+	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 .PHONY: wave lint sim
 
