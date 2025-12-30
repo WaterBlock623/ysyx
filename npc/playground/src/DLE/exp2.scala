@@ -62,7 +62,7 @@ class PEncoder83 extends Module {
 
   hotIn(7) := io.in(7)
   cond(7)  := ~io.in(7)
-  for (i <- 6 downwardsTo 0) {
+  for (i <- 6 to 0) {
     cond(i)  := ~io.in(i) & cond(i + 1)
     hotIn(i) := io.in(i) & cond(i + 1)
   }
