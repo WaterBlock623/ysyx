@@ -2,7 +2,12 @@ BUILD_DIR = ./build
 PRJ = playground
 MILL = ./mill
 
-TOPNAME := top
+ELABORATE_SCALA = ./playground/src/Elaborate.scala
+EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
+			  grep "new " | \
+			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
+			  sed 's/.*\.//'
+TOPNAME := $(shell $(EXT_TOP_CMD)) 
 NXDC_FILES = constr/$(TOPNAME).nxdc
 INC_PATH ?=
 
