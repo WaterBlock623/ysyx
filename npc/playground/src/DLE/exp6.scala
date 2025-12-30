@@ -31,5 +31,5 @@ class Exp6() extends Module {
   val dcdled2 = Module(new DecoderLed())
   dcdled1.io.in := lfsr.io.out(3, 0)
   dcdled2.io.in := lfsr.io.out(7, 4)
-  io.out := dcdled2.io.out ## dcdled1.io.out
+  io.led7 := dcdled2.io.out ## dcdled1.io.out
 }
