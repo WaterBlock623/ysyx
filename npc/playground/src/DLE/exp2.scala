@@ -3,8 +3,13 @@ package dle.exp3
 import chisel3._
 import chisel3.util._
 
-def decoderLed(in: UInt(4.W)): UInt(7.W) = {
-  val out = MuxLookup(in, 0.U)(Seq(
+class DecoderLed extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(UInt(4.W))
+    val out = Output(UInt(7.W))
+  })
+
+  io.out := MuxLookup(io.in, 0.U)(Seq(
     0.U -> "b1111110".U,
     1.U -> "b0110000".U,
     2.U -> "b1101101".U,
@@ -21,50 +26,71 @@ def decoderLed(in: UInt(4.W)): UInt(7.W) = {
     13.U -> "b0111101".U,
     14.U -> "b1001111".U,
     15.U -> "b1000111".U
-    ))
-  out
+  ))
 }
 
-def encoder83(in: UInt(8.W), en: Bool): UInt(3.W) = {
-  val enc = Mux1H(Seq(
-    in(0) -> 0.U,
-    in(1) -> 1.U,
-    in(2) -> 2.U,
-    in(3) -> 3.U,
-    in(4) -> 4.U,
-    in(5) -> 5.U,
-    in(6) -> 6.U,
-    in(7) -> 7.U
-    ))
-  val out = Mux(en, enc, 0.U)
-  out
+class Encoder83 extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(UInt(8.W))
+    val en  = Input(Bool())
+    val out = Output(UInt(3.W))
+  })
+  
+  val enc = WireDefault(0.U(3.W))
+  enc := Mux1H(Seq(
+    io.in(0) -> 0.U,
+    io.in(1) -> 1.U,
+    io.in(2) -> 2.U,
+    io.in(3) -> 3.U,
+    io.in(4) -> 4.U,
+    io.in(5) -> 5.U,
+    io.in(6) -> 6.U,
+    io.in(7) -> 7.U
+  ))
+  io.out := Mux(io.en, enc, 0.U)
 }
 
-def pEncoder83(in: UInt(8.W), en: Bool): UInt(3.W) = {
-  val hotIn = VecInit.fill(8)(false.B)
-  val cond = VecInit.fill(8)(false.B)
+class PEncoder83 extends Module {
+  val io = IO(new Bundle {
+    val in  = Input(UInt(8.W))
+    val en  = Input(Bool())
+    val out = Output(UInt(3.W))
+  })
 
-  hotIn(7) := in(7)
-  cond(7) := ~in(7)
-  for (i <- 6 to 0) {
-    cond(i) := ~in(i) & cond(i + 1)
-    hot(i) := in(i) & cond(i + 1)
+  val hotIn = Wire(Vec(8, Bool()))
+  val cond  = Wire(Vec(8, Bool()))
+
+  hotIn(7) := io.in(7)
+  cond(7)  := ~io.in(7)
+  for (i <- 6 downwardsTo 0) {
+    cond(i)  := ~io.in(i) & cond(i + 1)
+    hotIn(i) := io.in(i) & cond(i + 1)
   }
   
-  val out = encoder83(hotIn.asUInt, en)
-  out
-} 
-
-class top() extends Moudle {
-  val io = IO(new Bundle {
-    val sw = Input(UInt(8.W))
-    val en = Input(Bool())
-    val led = Output(UInt(3.W))
-    val hasOne = Output(Bool())
-    val led7 = Output(UInt(7.W))
-  })
-  io.hasOne := io.sw.orR
-  io.led := pEncoder(io.sw, io.en)
-  io.led7 := decoderLed(false.B ## io.led)
+  val enc83 = Module(new Encoder83)
+  enc83.io.in := hotIn.asUInt
+  enc83.io.en := io.en
+  io.out := enc83.io.out
 }
 
+class Top extends Module {
+  val io = IO(new Bundle {
+    val sw     = Input(UInt(8.W))
+    val en     = Input(Bool())
+    val led    = Output(UInt(3.W))
+    val hasOne = Output(Bool())
+    val led7   = Output(UInt(7.W))
+  })
+
+  val pe     = Module(new PEncoder83)
+  val decLed = Module(new DecoderLed)
+
+  io.hasOne := io.sw.orR
+  
+  pe.io.in  := io.sw
+  pe.io.en  := io.en
+  io.led    := pe.io.out
+
+  decLed.io.in := 0.U(1.W) ## io.led
+  io.led7      := decLed.io.out
+}
