@@ -1,6 +1,7 @@
 package dle.exp3
 
 import chisel3._
+import chisel3.util
 
 class Alu4() extends Module {
   val io = IO(new Bundle {
@@ -16,7 +17,7 @@ class Alu4() extends Module {
 
   val asResult = io.a +& (io.b ^ Fill(4, sub)) + sub
   val asOut = asResult(3, 0)
-  val asOverflow = (io.a(3) === io.b(3)) && (addResult(3) =/= io.a(3))
+  val asOverflow = (io.a(3) === io.b(3)) && (asResult(3) =/= io.a(3))
   val addCarry = asResult(4)
 
   val lt = asOverflow ^ asResult(3)
