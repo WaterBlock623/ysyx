@@ -80,6 +80,11 @@ sim: lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN)
 
+simwave: VERILATOR_CFLAGS += --trace-fst
+simwave: CSRCS = $(shell find $(abspath ./csrc) -name "*_wave.c" -or -name "*_wave.cc" -or -name "*_wave.cpp")
+simwave: CSRCS += $(SRC_AUTO_BIND)
+simwave: sim
+
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	@mkdir -p $(WAVE_DIR)
