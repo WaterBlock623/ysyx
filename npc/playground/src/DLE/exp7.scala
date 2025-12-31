@@ -141,7 +141,7 @@ class Exp7() extends Module {
   io.led7Ascii := asciiDcdLed2.io.out ## asciiDcdLed1.io.out
 
   val cntReg = RegInit(0.U(8.W))
-  cntReg := Mux(validPosEdge, cntReg + (notUp & ~keyDownReg), cntReg)
+  cntReg := Mux(validPosEdge, cntReg + (isKeyDown & ~keyDownReg), cntReg)
   val cntDcdLed1 = Module(new DecoderLed)
   val cntDcdLed2 = Module(new DecoderLed)
   cntDcdLed1.io.en := true.B
