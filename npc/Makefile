@@ -81,8 +81,7 @@ sim: lint $(BIN)
 	@$(BIN)
 
 simwave: VERILATOR_CFLAGS += --trace-fst
-simwave: CSRCS = $(shell find $(abspath ./csrc) -name "*_wave.c" -or -name "*_wave.cc" -or -name "*_wave.cpp")
-simwave: CSRCS += $(SRC_AUTO_BIND)
+simwave: CXXFLAGS += -DENAWAVE
 simwave: sim
 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
