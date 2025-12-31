@@ -22,7 +22,8 @@ void sim_init(int argc, char** argv)
 	Verilated::traceEverOn(true);
 	tfp = new VerilatedFstC;
 	top->trace(tfp, 99);
-	tfp->open("./build/obj_dir/wave/sim.fst");
+//	tfp->open("./build/obj_dir/wave/sim.fst");
+	tfp->open("sim.fst");
 #endif
 }
 
