@@ -140,7 +140,8 @@ class Exp7() extends Module {
   io.led7Scan := scanDcdLed2.io.out ## scanDcdLed1.io.out
   io.led7Ascii := asciiDcdLed2.io.out ## asciiDcdLed1.io.out
 
-  val cntReg:UInt = RegEnable(cntReg + (notUp && (ps.io.data =/= dataReg)).asUInt, 0.U(8.W), ps.io.valid)
+  val cntReg = RegInit(0.U(8.W))
+  cntReg := Mux(validPosEdge, cntReg + (notUp && (ps.io.data =/= dataReg)).asUInt, cntReg)
   val cntDcdLed1 = Module(new DecoderLed)
   val cntDcdLed2 = Module(new DecoderLed)
   cntDcdLed1.io.en := true.B
