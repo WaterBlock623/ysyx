@@ -73,10 +73,10 @@ class ParsePs2() extends Module {
   val negEdge = ~io.ps2Clk & RegNext(io.ps2Clk)
   val dataCntReg = RegInit(0.U(4.W))
   dataCntReg := Mux(negEdge, Mux(dataCntReg === 10.U, 0.U, dataCntReg + 1.U), dataCntReg)
-  val dataReg = RegInit(0.U(10.W))
-  dataReg := Mux(negEdge, Mux(dataCntReg === 0.U, 0.U, dataReg | io.ps2Dat << dataCntReg), dataReg)
+  val dataReg = RegInit(0.U(11.W))
+  dataReg := Mux(negEdge, io.ps2Dat ## dataReg(11, 1), dataReg)
   io.data := dataReg(8, 1)
-  io.valid := ~dataCntReg.orR
+  io.valid := negEdge & dataCntReg === 10.U
 }
 
 class DecoderLed extends Module {
@@ -120,8 +120,8 @@ class Exp7() extends Module {
   ps.io.ps2Dat := io.ps2Dat
   val validPosEdge = ps.io.valid & ~RegNext(ps.io.valid)
   val dataReg = RegEnable(ps.io.data, 0.U(8.W), validPosEdge)
-  val notUp = ps.io.data =/= "hf0".U && dataReg =/= "hf0".U
-  val keyDownReg = RegEnable(notUp, false.B, validPosEdge) 
+  val isKeyDown = ps.io.data =/= "hf0".U && dataReg =/= "hf0".U
+  val keyDownReg = RegEnable(isKeyDown, false.B, validPosEdge) 
 
   val scanDcdLed1 = Module(new DecoderLed)
   val scanDcdLed2 = Module(new DecoderLed)
