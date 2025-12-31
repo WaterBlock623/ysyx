@@ -86,7 +86,7 @@ class DecoderLed extends Module {
     val out = Output(UInt(7.W))
   })
 
-  io.out := ~Mux(io.en, 0.U, MuxLookup(io.in, 0.U)(Seq(
+  io.out := ~Mux(io.en, MuxLookup(io.in, 0.U)(Seq(
     0.U -> "b1111110".U,
     1.U -> "b0110000".U,
     2.U -> "b1101101".U,
@@ -103,7 +103,7 @@ class DecoderLed extends Module {
     13.U -> "b0111101".U,
     14.U -> "b1001111".U,
     15.U -> "b1000111".U
-  )))
+  )), 0.U)
 }
 
 class Exp7() extends Module {
