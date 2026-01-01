@@ -12,6 +12,8 @@
 !.scalafmt.conf
 !README.md
 !*.nxdc
+!*.py
+!*.txt
 build/
 
 # mill

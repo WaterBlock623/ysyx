@@ -2,13 +2,18 @@ BUILD_DIR = ./build
 PRJ = playground
 MILL = ./mill
 
-TOPNAME := top
+ELABORATE_SCALA = ./playground/src/Elaborate.scala
+EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
+			  grep "new " | \
+			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
+			  sed 's/.*\.//'
+TOPNAME := $(strip $(shell $(EXT_TOP_CMD)))
 NXDC_FILES = constr/$(TOPNAME).nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert \
+				-O3 --x-assign fast --x-initial fast --noassert
 #				--trace-fst
 
 GTKWAVE = gtkwave
@@ -25,6 +30,10 @@ $(shell mkdir -p $(BUILD_DIR))
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+test_path:
+	@echo "[$(NXDC_FILES)]"
+	@echo "[$(TOPNAME)]"
 
 # project source
 VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
@@ -45,6 +54,7 @@ verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	$(MILL) -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
+	-$(MAKE) lint
 
 help:
 	$(MILL) -i $(PRJ).runMain Elaborate --help
@@ -70,6 +80,10 @@ sim: lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN)
 
+simwave: VERILATOR_CFLAGS += --trace-fst
+simwave: CXXFLAGS += -DENAWAVE
+simwave: sim
+
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	@mkdir -p $(WAVE_DIR)
@@ -82,7 +96,7 @@ wave:
 	$(GTKWAVE) $(WAVE)
 
 lint:
-	-$(VERILATOR) -Wall --lint-only $(VSRCS)
+	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 .PHONY: wave lint sim
 

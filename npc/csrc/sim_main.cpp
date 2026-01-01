@@ -18,15 +18,20 @@ void sim_init(int argc, char** argv)
     top = new TOP_NAME{contextp};
 	nvboard_bind_all_pins(top);
 	nvboard_init();
-//	Verilated::traceEverOn(true);
-//	tfp = new VerilatedFstC;
-//	top->trace(tfp, 99);
-//	tfp->open("./build/obj_dir/wave/sim.fst");
+#ifdef ENAWAVE
+	Verilated::traceEverOn(true);
+	tfp = new VerilatedFstC;
+	top->trace(tfp, 99);
+	tfp->open("./build/obj_dir/wave/sim.fst");
+//	tfp->open("sim.fst");
+#endif
 }
 
 void sim_close(void)
 {
-//	tfp->close();
+#ifdef ENAWAVE
+	tfp->close();
+#endif
     delete top;
     delete contextp;
 	nvboard_quit();
@@ -35,7 +40,15 @@ void sim_close(void)
 void single_cycle(void)
 {
 	top->clock = 0; top->eval();
+#ifdef ENAWAVE
+	tfp->dump(contextp->time());
+	contextp->timeInc(1);
+#endif
 	top->clock = 1; top->eval();
+#ifdef ENAWAVE
+	tfp->dump(contextp->time());
+	contextp->timeInc(1);
+#endif
 }
 
 void reset(int n) {
@@ -45,14 +58,12 @@ void reset(int n) {
 }
 
 int main(int argc, char** argv) {
-	int sim_time = -1;
+	int sim_time = 2 * 50000000;
 	sim_init(argc, argv);
 	reset(10);
     while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
-//		contextp->timeInc(1);
 		nvboard_update();
 		single_cycle();
-//		tfp->dump(contextp->time());
 	}
 	sim_close();
     return 0;
