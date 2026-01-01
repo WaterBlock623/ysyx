@@ -45,7 +45,7 @@ class VgaCtrl(implicit val cfg: VgaCfg) extends Module {
   val hMax = cfg.hTotal - 1
   val vMax = cfg.vTotal - 1
   hCntReg := Mux(hCntReg === hMax.U, 0.U, hCntReg + 1.U)
-  hCntReg := Mux(hCntReg === hMax.U, Mux(hCntReg === vMax.U, 0.U, hCntReg + 1.U), hCntReg)
+  vCntReg := Mux(hCntReg === hMax.U, Mux(vCntReg === vMax.U, 0.U, vCntReg + 1.U), vCntReg)
 
   io.vga.rgbOut := io.rgbIn
   io.vga.hs := RegNext(hCntReg < cfg.hFrontPorchWidth.U || 
@@ -53,7 +53,7 @@ class VgaCtrl(implicit val cfg: VgaCfg) extends Module {
   io.vga.vs := RegNext(hCntReg < cfg.vFrontPorchWidth.U || 
                 vCntReg > (cfg.vFrontPorchWidth + cfg.vSyncWidth - 1).U)
   val isData = (hCntReg > (cfg.hBlankWidth - 1).U && 
-                    vCntReg > (cfg.vBlankWidth - 1).U)  
+                vCntReg > (cfg.vBlankWidth - 1).U)  
   io.vga.blankN := RegNext(isData)
   io.hAddr := Mux(isData, hCntReg - cfg.hBlankWidth.U, 0.U)
   io.vAddr := Mux(isData, vCntReg - cfg.vBlankWidth.U, 0.U)
