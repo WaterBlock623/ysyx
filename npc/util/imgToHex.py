@@ -11,6 +11,6 @@ with open(output_path, 'w') as f:
         for x in range(size[0]):
             line = ""
             r, g, b = img.getpixel((x, y))
-            #line += f"{r>>4:x}{g>>4:x}{b>>4:x}"
-            line += f"{r:02x}{g:02x}{b:02x}"
+            line += f"{r>>4:01x}{g>>4:01x}{b>>4:01x}"
+            #line += f"{r:02x}{g:02x}{b:02x}"
             f.write(line + "\n")
