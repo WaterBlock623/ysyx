@@ -72,6 +72,10 @@ class Exp8(memFile: String = "/home/waterblock/ysyx-workbench/npc/util/output.he
 
   val vgaCtrl = Module(new VgaCtrl)
   vgaCtrl.io.vga <> io.vga
-  vgaCtrl.io.rgbIn := mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth.U + vgaCtrl.io.hAddr) ## 0.U(12.W)
+  vgaCtrl.io.rgbIn := (
+    mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth.U + vgaCtrl.io.hAddr)(11, 8) ## 0.U(4.W) ## 
+    mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth.U + vgaCtrl.io.hAddr)(7, 4) ## 0.U(4.W) ## 
+    mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth.U + vgaCtrl.io.hAddr)(3, 0) ## 0.U(4.W)
+  )
   //vgaCtrl.io.rgbIn := mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth.U + vgaCtrl.io.hAddr)
 }
