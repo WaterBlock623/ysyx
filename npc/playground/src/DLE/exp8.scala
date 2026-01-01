@@ -65,7 +65,7 @@ class Exp8(memFile: String = "/home/waterblock/ysyx-workbench/npc/util/output.he
   })
 
   //val mem = SyncReadMem(cfg.vDataWidth, Vec(cfg.hDataWidth, UInt(12.W)))
-  val mem = SyncReadMem(cfg.vDataWidth, Vec(cfg.hDataWidth, UInt(24.W)))
+  val mem = SyncReadMem(cfg.vDataWidth * cfg.hDataWidth, UInt(24.W))
   if (memFile.trim().nonEmpty) {
     loadMemoryFromFileInline(mem, memFile)
   }
@@ -73,5 +73,5 @@ class Exp8(memFile: String = "/home/waterblock/ysyx-workbench/npc/util/output.he
   val vgaCtrl = Module(new VgaCtrl)
   vgaCtrl.io.vga <> io.vga
   //vgaCtrl.io.rgbIn := mem.read(vgaCtrl.io.vAddr)(vgaCtrl.io.hAddr) ## 0.U(12.W)
-  vgaCtrl.io.rgbIn := mem.read(vgaCtrl.io.vAddr)(vgaCtrl.io.hAddr)
+  vgaCtrl.io.rgbIn := mem.read(vgaCtrl.io.vAddr * cfg.hDataWidth + vgaCtrl.io.hAddr)
 }
