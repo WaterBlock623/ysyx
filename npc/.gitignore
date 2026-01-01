@@ -12,6 +12,8 @@
 !.scalafmt.conf
 !README.md
 !*.nxdc
+!util/*
+!playground/*
 build/
 
 # mill
