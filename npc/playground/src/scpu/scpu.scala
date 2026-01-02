@@ -247,6 +247,6 @@ class SCpu extends Module {
   led7Dcd(1).io.in := gpr.io.rData(1)(7, 4)
   val isWriteLed7 = decoder.io.selSignal.isWriteLed7 === 1.U
   led7Reg(0) := Mux(isWriteLed7, led7Dcd(0).io.out, led7Reg(0))
-  led7Reg(1) := Mux(isWriteLed7, led7Dcd(1).io.out, led7Reg(0))
+  led7Reg(1) := Mux(isWriteLed7, led7Dcd(1).io.out, led7Reg(1))
   io.led7 := led7Reg.asUInt
 }
