@@ -140,6 +140,7 @@ class Decoder extends Module {
 
   io.selSignal.isWriteReg := decodeResult(InstFields.IsWriteReg)
   io.selSignal.gprRAddr1Src := decodeResult(InstFields.GprRAddr1Src)
+  io.selSignal.gprRAddr2Src := decodeResult(InstFields.GprRAddr2Src)
   io.selSignal.aluOp := decodeResult(InstFields.AluOp)
   io.selSignal.aluASrc := decodeResult(InstFields.AluASrc)
   io.selSignal.aluBSrc := decodeResult(InstFields.AluBSrc)
