@@ -58,7 +58,8 @@ void reset(int n) {
 }
 
 int main(int argc, char** argv) {
-	int sim_time = 2 * 50000000;
+	//int sim_time = 2 * 50000000;
+	int sim_time = 100;
 	sim_init(argc, argv);
 	reset(10);
     while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
