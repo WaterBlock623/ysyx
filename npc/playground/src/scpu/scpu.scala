@@ -161,13 +161,13 @@ class Gpr extends Module {
   })
 
   val wEn = io.selSignal.isWriteReg
-  val gpReg = RegInit(0.U.asTypeOf(Vec(4, UInt(8.W))))
+  val gpReg = Mem(4, UInt(8.W))
   when (wEn) {
-    gpReg(io.wAddr) := io.wData
+    gpReg.write(io.wAddr, io.wData)
   }
 
-  io.rData(0) := gpReg(io.rAddr(0))
-  io.rData(1) := gpReg(io.rAddr(1))
+  io.rData(0) := gpReg.read(io.rAddr(0))
+  io.rData(1) := gpReg.read(io.rAddr(1))
 }
 
 class Alu extends Module {
