@@ -135,6 +135,8 @@ class Decoder extends Module {
 
   val instPatterns = InstPatterns.saver.all
   val instFields = InstFields.saver.all
+  print(instPatterns)
+  print(instFields)
   val decodeTable = new DecodeTable(instPatterns, instFields)
   val decodeResult = decodeTable.decode(io.inst)
 
