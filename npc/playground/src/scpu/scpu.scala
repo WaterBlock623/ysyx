@@ -46,8 +46,8 @@ object InstFields {
     def name = "The source of read address 1"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add => BitPat(0.U)
-      case Bner0 => BitPat(1.U)
+      case Add => BitPat("b0")
+      case Bner0 => BitPat("b1")
       case _ => dc
     }
   }
@@ -57,8 +57,8 @@ object InstFields {
     def name = "The source of read address 2"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat(0.U)
-      case OutRs => BitPat(1.U)
+      case Add|Bner0 => BitPat("b0")
+      case OutRs => BitPat("b1")
       case _ => dc
     }
   }
@@ -68,9 +68,9 @@ object InstFields {
     def name = "Chose which operation will be excuted by ALU"
     def chiselType = UInt(2.W)
     def genTable(p: InstPattern) = p match {
-      case Add => BitPat(0.U)
-      case Li => BitPat(1.U)
-      case Bner0 => BitPat(2.U)
+      case Add => BitPat("b00")
+      case Li => BitPat("b01")
+      case Bner0 => BitPat("b10")
       case _ => dc
     }
   }
@@ -80,8 +80,8 @@ object InstFields {
     def name = "The source of OP NUM a"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat(0.U)
-      case Li => BitPat(1.U)
+      case Add|Bner0 => BitPat("b0")
+      case Li => BitPat("b1")
       case _ => dc
     }
   }
@@ -91,8 +91,8 @@ object InstFields {
     def name = "The source of OP NUM b"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat(0.U)
-      case Li => BitPat(1.U)
+      case Add|Bner0 => BitPat("b0")
+      case Li => BitPat("b1")
       case _ => dc
     }
   }
