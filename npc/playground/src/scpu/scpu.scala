@@ -57,8 +57,7 @@ object InstFields {
     def name = "The source of read address 2"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat("b0")
-      case OutRs => BitPat("b1")
+      case Add|Bner0|OutRs => BitPat("b0")
       case _ => dc
     }
   }
@@ -213,7 +212,8 @@ class SCpu extends Module {
   rom(4) := "b00010111".U
   rom(5) := "b00101001".U
   rom(6) := "b11010001".U
-  rom(7) := "b11011111".U
+  rom(7) := "b01000010".U
+  rom(8) := "b11011111".U
 
   val pcReg = RegInit(0.U(4.W))
   val inst = rom(pcReg)
@@ -231,7 +231,8 @@ class SCpu extends Module {
 
   gpr.io.selSignal <> decoder.io.selSignal
   gpr.io.rAddr(0) := Mux(decoder.io.selSignal.gprRAddr1Src === 1.U, 0.U, rs1)
-  gpr.io.rAddr(1) := Mux(decoder.io.selSignal.gprRAddr2Src === 1.U, 2.U, rs2)
+//  gpr.io.rAddr(1) := Mux(decoder.io.selSignal.gprRAddr2Src === 1.U, 2.U, rs2)
+  gpr.io.rAddr(1) := rs2
   gpr.io.wData := alu.io.out
   gpr.io.wAddr := rd 
 
