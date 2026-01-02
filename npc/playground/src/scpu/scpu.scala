@@ -242,7 +242,7 @@ class SCpu extends Module {
                                               pcReg + 1.U)
 
   val led7Reg = RegInit(0.U.asTypeOf(Vec(2, UInt(7.W))))
-  val led7Dcd = Seq.fill(2)(new DecoderLed)
+  val led7Dcd = Seq.fill(2)(Module(new DecoderLed))
   led7Dcd(0).io.in := gpr.io.rData(1)(3, 0)
   led7Dcd(1).io.in := gpr.io.rData(1)(7, 4)
   val isWriteLed7 = decoder.io.selSignal.isWriteLed7 === 1.U
