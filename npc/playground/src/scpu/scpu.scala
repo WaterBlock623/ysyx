@@ -162,9 +162,7 @@ class Gpr extends Module {
 
   val wEn = io.selSignal.isWriteReg
   val gpReg = RegInit(VecInit.fill(4)(0.U(8.W)))
-  when (wEn) {
-    gpReg(io.wAddr) := io.wData
-  }
+  gpReg(io.wAddr) := Mux(wEn, io.wData, gpReg(io.wAddr))
 
   io.rData(0) := gpReg(io.rAddr(0))
   io.rData(1) := gpReg(io.rAddr(1))
