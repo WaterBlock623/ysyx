@@ -114,6 +114,7 @@ object InstFields {
       case _ => n
     }
   }
+  r(IsWriteLed7)
 }
 
 class SelSignal extends Bundle {
