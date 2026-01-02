@@ -66,7 +66,7 @@ object InstFields {
 
   object AluOp extends DecodeField[InstPattern, UInt] {
     def name = "Chose which operation will be excuted by ALU"
-    def chiselType = UInt(1.W)
+    def chiselType = UInt(2.W)
     def genTable(p: InstPattern) = p match {
       case Add => BitPat(0.U)
       case Li => BitPat(1.U)
@@ -120,7 +120,7 @@ class SelSignal extends Bundle {
     val isWriteReg = Bool()
     val gprRAddr1Src = UInt(1.W)
     val gprRAddr2Src = UInt(1.W)
-    val aluOp = UInt(1.W)
+    val aluOp = UInt(2.W)
     val aluASrc = UInt(1.W)
     val aluBSrc = UInt(1.W)
     val isBranch = Bool()
