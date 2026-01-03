@@ -89,7 +89,7 @@ static int cmd_info(char *args) {
       isa_reg_display();
       break;            
     }
-    default: printf("info <r | w>\nUnknown args");
+    default: printf("info <r | w>\nUnknown args\n");
   }
   return 0;
 }
@@ -106,9 +106,9 @@ static int cmd_x(char *args) {
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
-      printf("%#.8x: ", addr + i * 4);
+      printf("0x%.8x: ", addr + i * 4);
     }
-    printf("%#.8x ", vaddr_read(addr + i * 4, 4));
+    printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
     if (i % 4 == 0) {
       printf("\n");
     }
