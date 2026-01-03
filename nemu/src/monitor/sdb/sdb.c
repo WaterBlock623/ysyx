@@ -104,7 +104,9 @@ static int cmd_x(char *args) {
   }
 
   int num_4byte = atoi(arg_buf[0]);
-  vaddr_t addr = strtol(arg_buf[1], NULL, 16);
+  // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
+  bool seccess;
+  vaddr_t addr = expr(arg_buf[1], &seccess);
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
