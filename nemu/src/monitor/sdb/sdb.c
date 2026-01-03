@@ -45,7 +45,7 @@ static char* rl_gets() {
 
   return line_read;
 }
-
+/*
 static int get_arg(char *args, char *arg_buf[], int n) {
   if (args == NULL)
     return 0;
@@ -58,7 +58,7 @@ static int get_arg(char *args, char *arg_buf[], int n) {
   }
   return i;
 }
-
+*/
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -97,16 +97,21 @@ static int cmd_info(char *args) {
 }
 
 static int cmd_x(char *args) {
-  char *arg_buf[2];
-  if (get_arg(args, arg_buf, 2) < 2) {
-    printf("x <N> <EXPR>\nNeed 2 arg");
+//  char *arg_buf[2];
+//  if (get_arg(args, arg_buf, 2) < 2) {
+//    printf("x <N> <EXPR>\nNeed 2 arg");
+//    return 0;
+//  }
+  char *tok_saveptr;
+  if (strtok_r(args, " ", &tok_saveptr) == NULL) {
+    printf("x <N> <EXPR>\nNeed 2 arg\n");
     return 0;
   }
 
-  int num_4byte = atoi(arg_buf[0]);
+  int num_4byte = atoi(args);
   // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
   bool seccess;
-  vaddr_t addr = expr(arg_buf[1], &seccess);
+  vaddr_t addr = expr(args + strlen(args) + 1, &seccess);
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
