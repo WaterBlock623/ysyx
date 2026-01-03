@@ -35,7 +35,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"\\d+", TK_NUM10},
+  {"[0-9]+", TK_NUM10},
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
