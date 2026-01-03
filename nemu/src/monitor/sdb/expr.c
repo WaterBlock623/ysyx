@@ -35,6 +35,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
+  {"\\d+", TK_NUM10},
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
@@ -43,7 +44,6 @@ static struct rule {
   {"\\/", '/'},
   {"\\(", '('},
   {"\\)", ')'},
-  {"\\d+", TK_NUM10},
 };
 
 #define NR_REGEX ARRLEN(rules)
