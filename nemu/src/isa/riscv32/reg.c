@@ -32,6 +32,7 @@ void isa_reg_display() {
     else
       printf("%2d (%3s)  \033[2m0x%.8x\033[0m\n", i, regs[i], cpu.gpr[i]);
   } 
+  printf("\n");
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
