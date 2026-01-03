@@ -52,7 +52,7 @@ static int get_arg(char *args, char *arg_buf[], int n) {
   char *save_ptr = NULL;
   int i;
   for (i = 0; i < n; i++) {
-    arg_buf[i] = strtok_r(args, " ", &save_ptr);
+    arg_buf[i] = strtok_r(i == 0 ? args : NULL, " ", &save_ptr);
     if (arg_buf[i] == NULL)
       break; 
   }
