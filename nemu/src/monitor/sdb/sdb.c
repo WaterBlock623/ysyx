@@ -47,6 +47,8 @@ static char* rl_gets() {
 }
 
 static int get_arg(char *args, char *arg_buf[], int n) {
+  if (args == NULL)
+    return 0;
   char *save_ptr = NULL;
   int i;
   for (i = 0; i < n; i++) {
