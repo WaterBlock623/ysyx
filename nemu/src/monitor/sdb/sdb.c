@@ -15,8 +15,12 @@
 
 #include <isa.h>
 #include <cpu/cpu.h>
+#include <memory/vaddr.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "sdb.h"
 
 static int is_batch_mode = false;
@@ -42,6 +46,17 @@ static char* rl_gets() {
   return line_read;
 }
 
+static int get_arg(char *args, char *arg_buf[], int n) {
+  char *save_ptr = NULL;
+  int i;
+  for (i = 0; i < n; i++) {
+    arg_buf[i] = strtok_r(args, " ", &save_ptr);
+    if (arg_buf[i] == NULL)
+      break; 
+  }
+  return i;
+}
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -55,6 +70,53 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
+static int cmd_si(char *args) {
+  if (args == NULL) {
+    printf("si [N]\nNeed 1 arg\n");
+    return 0;
+  }
+  cpu_exec(atoi(args));
+  return 0;
+}  
+
+static int cmd_info(char *args) {
+  if (args == NULL) {
+    printf("info <r | w>\nNeed 1 arg\n");
+    return 0;
+  }
+  switch (args[0]) {
+    case 'r': {
+      isa_reg_display();
+      break;            
+    }
+    default: printf("info <r | w>\nUnknown args");
+  }
+  return 0;
+}
+
+static int cmd_x(char *args) {
+  char *arg_buf[2];
+  if (get_arg(args, arg_buf, 2) < 2) {
+    printf("x <N> <EXPR>\nNeed 2 arg");
+    return 0;
+  }
+
+  int num_4byte = atoi(arg_buf[0]);
+  vaddr_t addr = strtol(arg_buf[1], NULL, 16);
+  int i;
+  for (i = 0; i < num_4byte; i++) {
+    if (i % 4 == 0) {
+      printf("%#.8x: ", addr + i * 4);
+    }
+    printf("%#.8x ", vaddr_read(addr + i * 4, 4));
+    if (i % 4 == 0) {
+      printf("\n");
+    }
+  }
+  printf("\n");
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -63,9 +125,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
-  /* TODO: Add more commands */
-
+  { "si", "Execute N instructions", cmd_si },
+  { "info", "Print info of registers or whatch points", cmd_info },
+  { "x", "Print 4N byte from memory that beginning address is Expr", cmd_x },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -107,7 +169,8 @@ void sdb_mainloop() {
     char *str_end = str + strlen(str);
 
     /* extract the first token as the command */
-    char *cmd = strtok(str, " ");
+	char *tok_saveptr = NULL;
+    char *cmd = strtok_r(str, " ", &tok_saveptr);
     if (cmd == NULL) { continue; }
 
     /* treat the remaining string as the arguments,
