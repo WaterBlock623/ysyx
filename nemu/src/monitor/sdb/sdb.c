@@ -108,12 +108,10 @@ static int cmd_x(char *args) {
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
+      printf("\n");
       printf("0x%.8x: ", addr + i * 4);
     }
     printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
-    if (i % 4 == 0) {
-      printf("\n");
-    }
   }
   printf("\n");
   return 0;
