@@ -109,11 +109,11 @@ static int cmd_x(char *args) {
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
       printf("\n");
-      printf("0x%.8x: ", addr + i * 4);
+      printf("\033[0;32m0x%.8x\033[0m:  ", addr + i * 4);
     }
     printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
   }
-  printf("\n");
+  printf("\n\n");
   return 0;
 }
 
