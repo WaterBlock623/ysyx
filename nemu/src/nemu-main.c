@@ -39,6 +39,7 @@ void test_expr(void) {
     uint32_t ret = expr(ex, &success);
 	Assert(success, "success is false");
 	Assert(result == ret, "expr is wrong: file: %u  expr: %u", result, ret);
+	Log("ok");
   }	
 }
 
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
+  test_expr();
   /* Start engine. */
   engine_start();
 
