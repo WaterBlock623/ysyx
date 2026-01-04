@@ -105,7 +105,7 @@ typedef struct token {
   char *str;
 } Token;
 
-#define TOKENS_MAX_LENGTH 32
+#define TOKENS_MAX_LENGTH 65536
 static Token tokens[TOKENS_MAX_LENGTH] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 

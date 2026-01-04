@@ -41,6 +41,7 @@ void test_expr(void) {
 	Assert(result == ret, "expr is wrong: file: %u  expr: %u", result, ret);
 	Log("ok");
   }	
+  Log("PASS");
 }
 
 int main(int argc, char *argv[]) {
