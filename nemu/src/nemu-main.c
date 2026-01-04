@@ -30,7 +30,9 @@ void test_expr(void) {
   FILE *f = fopen("tools/gen-expr/input.txt", "r");
   Assert(f, "file can't open");
   char buf[65537];
+  int i = 1;
   while (fgets(buf, 65537, f)) {
+    printf("%d start", i);
     buf[strlen(buf) - 1] = '\0';
     char *save_ptr = NULL;
     strtok_r(buf, " ", &save_ptr);
@@ -40,6 +42,7 @@ void test_expr(void) {
 	Assert(success, "success is false");
 	Assert(result == ret, "expr is wrong: file: %u  expr: %u", result, ret);
 	Log("ok");
+	i++;
   }	
   Log("PASS");
 }
