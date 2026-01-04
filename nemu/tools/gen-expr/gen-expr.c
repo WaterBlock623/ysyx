@@ -61,7 +61,7 @@ static void gen_rand_op(void) {
 }
 
 static void gen_space(void) {
-  int space_num = choose((GEN_EXPR_BUF_LEN - buf_cur_idx - 1 - parentheses_cnt) / 100);
+  int space_num = choose((GEN_EXPR_BUF_LEN - buf_cur_idx - 1 - parentheses_cnt) / 100 + 1);
   int i;
   for (i = 0; i < space_num; i++) {
     sprintf(buf + buf_cur_idx, " ");
