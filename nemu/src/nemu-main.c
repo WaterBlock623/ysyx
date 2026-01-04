@@ -27,7 +27,7 @@ int is_exit_status_bad();
 word_t expr(char *, bool *);
 void test_expr(void) {
   bool success = true;
-  FILE *f = fopen("./tools/", "r");
+  FILE *f = fopen("", "r");
   Assert(f, "file can't open");
   char buf[65537];
   while (fgets(buf, 65537, f)) {
@@ -49,12 +49,15 @@ int main(int argc, char *argv[]) {
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
 #else
+  Log("1");
   init_monitor(argc, argv);
 #endif
 
+  Log("2");
   test_expr();
   /* Start engine. */
   engine_start();
+  Log("3");
 
   return is_exit_status_bad();
 }
