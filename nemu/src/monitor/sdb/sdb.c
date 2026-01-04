@@ -18,6 +18,7 @@
 #include <memory/vaddr.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -108,10 +109,12 @@ static int cmd_x(char *args) {
     return 0;
   }
 
-  int num_4byte = atoi(args);
+  // int num_4byte = atoi(args);
   // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
-  bool seccess;
+  bool seccess = true;
   vaddr_t addr = expr(args + strlen(args) + 1, &seccess);
+  printf("%d\n", addr);
+  /*
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
@@ -121,6 +124,7 @@ static int cmd_x(char *args) {
     printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
   }
   printf("\n\n");
+  */
   return 0;
 }
 

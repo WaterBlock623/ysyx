@@ -13,12 +13,20 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "debug.h"
+#include <asm-generic/errno-base.h>
+#include <errno.h>
+#include <inttypes.h>
 #include <isa.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 enum {
   TK_NOTYPE = 256, TK_EQ, TK_NUM10,
@@ -26,24 +34,47 @@ enum {
 
 };
 
+struct op_attribute {
+  bool is_op;
+  int precedence; // The smaller the number, the higher the priority
+  bool is_right_associative;
+  int unary;      // 0: Binary  1: Suffix  -1: Prefix
+  int32_t (*calc)(int32_t, int32_t);
+};
+
+int32_t calc_add(int32_t val1, int32_t val2) {
+  return val1 + val2;
+}
+int32_t calc_sub(int32_t val1, int32_t val2) {
+  return val1 - val2;
+}
+int32_t calc_mul(int32_t val1, int32_t val2) {
+  return val1 * val2;
+}
+int32_t calc_div(int32_t val1, int32_t val2) {
+  return val1 / val2;
+}
+
 static struct rule {
   const char *regex;
   int token_type;
+  struct op_attribute op;
 } rules[] = {
 
   /* TODO: Add more rules.
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[0-9]+", TK_NUM10},
-  {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
-  {"==", TK_EQ},        // equal
-  {"\\-", '-'},
-  {"\\*", '*'},
-  {"\\/", '/'},
-  {"\\(", '('},
-  {"\\)", ')'},
+  {"[0-9]+", TK_NUM10, {false}},
+  {" +", TK_NOTYPE, {false}},    // spaces
+  {"\\(", '(', {false}},
+  {"\\)", ')', {false}},
+  {"==", TK_EQ, {false}},        // equal
+
+  {"\\+", '+', {true, 5, false, 0, calc_add}},         // plus
+  {"\\-", '-', {true, 5, false, 0, calc_sub}},
+  {"\\*", '*', {true, 4, false, 0, calc_mul}},
+  {"\\/", '/', {true, 4, false, 0, calc_div}},
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -67,12 +98,15 @@ void init_regex() {
   }
 }
 
+
 typedef struct token {
   int type;
-  char str[32];
+  struct op_attribute op;
+  char *str;
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+#define TOKENS_MAX_LENGTH 32
+static Token tokens[TOKENS_MAX_LENGTH] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -99,28 +133,30 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
         int tok_type = rules[i].token_type;
+        struct op_attribute tok_op = rules[i].op;
         if (tok_type == TK_NOTYPE)
           break;
 
+        Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full\n");
         switch (tok_type) {
           case TK_NUM10: {
-            int add_maxlen = substr_len / 32;
-            int add_rlen = substr_len % 32;
-            int i;
-            for (i = 0; i < add_maxlen; i++) {
-              Token tok = {tok_type};
-              strncpy(tok.str, substr_start, 32);
-              tokens[nr_token++] = tok;
-              substr_start += 32;
-            }
-            Token tok = {tok_type};
-            strncpy(tok.str, substr_start, add_rlen);
-            tokens[nr_token++] = tok;
+            Assert(strlen(substr_start) == substr_len, 
+                   "substr's length is not equal to strlen");
+            Assert(substr_len, "substr's length is 0");
+            tokens[nr_token].type = tok_type;
+            tokens[nr_token].op = tok_op;
+            char *str_ptr = malloc(substr_len + 1);
+            strncpy(str_ptr, substr_start, substr_len);
+            str_ptr[substr_len] = '\0';
+            tokens[nr_token].str = str_ptr;
+            nr_token++;
             break;
           }
           default: {
-            Token tok = {tok_type};
-            tokens[nr_token++] = tok;
+            tokens[nr_token].type = tok_type;
+            tokens[nr_token].op = tok_op;
+            tokens[nr_token].str = NULL;
+            nr_token++;
             break;
           }
         }
@@ -138,15 +174,142 @@ static bool make_token(char *e) {
   return true;
 }
 
+static void free_tokens(void) {
+  int i;
+  for (i = 0; i < nr_token; i++) {
+    char *str_ptr = tokens[nr_token].str;
+    if (str_ptr)
+      free(str_ptr);
+  }
+}
+
+static int check_parentheses(Token *start, Token *end) {
+  if (start > end)
+    return -1;
+  int cnt = 0;
+  bool is_outer_pair = true;
+  Token *p = start;
+  while(p <= end) {
+    if (p->type == '(') {
+      cnt++;
+    } else if (p->type == ')') {
+      cnt--;
+    }
+    if (cnt == 0 && p != end)
+      is_outer_pair = false;
+    p++;
+  }
+  if (cnt != 0) {
+    return -1;
+  } else if (is_outer_pair) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+static bool in_parentheses(Token *target, Token *end) {
+  int cnt = 0;
+  Token *p = target + 1;
+  while (p <= end) {
+    if (p->type == '(') {
+      cnt++;
+    } else if (p->type == ')') {
+      cnt--;
+    }
+    if (cnt < 0)
+      return true;
+  }
+  return false;
+}
+
+static Token *get_main_op(Token *start, Token *end) {
+  Token *main_op = NULL;
+  Token *p;
+  for (p = start; p <= end; p++) {
+    if (!(p->op.is_op))
+      continue;
+    if (main_op == NULL) {
+      main_op = p;
+    } else if (in_parentheses(p, end)) {
+      continue;
+    } else if (p->op.precedence > main_op->op.precedence) {
+      main_op = p;
+    } else if ((p->op.precedence == main_op->op.precedence) && 
+                !(p->op.is_right_associative)) {
+      Assert(main_op->op.is_right_associative == p->op.is_right_associative, 
+             "exist diffirent associative in the same precedence: %c %c\n", 
+              main_op->type, p->type);
+      main_op = p;
+    }
+  }
+  return main_op;
+}
+
+static int32_t eval(Token *start, Token *end, bool *success) {
+  bool scs = true;
+  if (start > end) {
+    Log("invalid token\n");
+    *success = false;
+    return 0;
+  } else if (start == end) {
+    char *endptr = NULL;
+    errno = 0;
+    int32_t val = strtol(start->str, &endptr, 10);
+    if (errno == ERANGE) {
+      Log("number is out of range: %s\n", start->str);
+    } else if (errno == EINVAL) {
+      Log("token is not a number: %s\n", start->str);
+      *success = false;
+      return 0;
+    }
+    if (*endptr != '\0') {
+      Log("exist non-number token in a number string: %s\n", (*start).str);
+    }
+    return val;
+  } else {
+    int pair_check_result = check_parentheses(start, end);
+    if (pair_check_result < 0) {
+      Log("exist unmatched parentheses\n");
+      *success = false;
+      return 0;
+    } else if (pair_check_result) {
+      int32_t val = eval(start + 1, end - 1, &scs);
+      if (scs) {
+        return val;
+      } else {
+        *success = false;
+        return 0;
+      }
+    } else {
+      Token *op = get_main_op(start, end);
+      Assert(op, "main op not found\n");
+      int32_t val1 = op == start ? 0 : eval(start, op - 1, &scs);
+      int32_t val2 = op == end ? 0 : eval(op + 1, end, &scs);
+      if (scs) {
+        return op->op.calc(val1, val2);
+      } else {
+        *success = false;
+        return 0;
+      }
+    }
+  }
+}
 
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
     return 0;
   }
+  
+  bool scs = true;
+  int32_t val = eval(tokens, tokens + (nr_token - 1), &scs);
+  if (!scs) {
+    *success = false;
+    return 0;
+  }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  free_tokens();
 
-  return 0;
+  return val;
 }
