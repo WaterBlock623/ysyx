@@ -103,6 +103,10 @@ static int cmd_x(char *args, char *str_end) {
 //    printf("x <N> <EXPR>\nNeed 2 arg");
 //    return 0;
 //  }
+  if (args == NULL) {
+    printf("x <N> <EXPR>\nNeed 2 arg\n");
+    return 0;
+  }
   char *tok_saveptr;
   char *ret = strtok_r(args, " ", &tok_saveptr);
   char *expr_str = args + strlen(args) + 1;
