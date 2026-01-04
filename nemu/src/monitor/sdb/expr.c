@@ -39,19 +39,19 @@ struct op_attribute {
   int precedence; // The smaller the number, the higher the priority
   bool is_right_associative;
   int unary;      // 0: Binary  1: Suffix  -1: Prefix
-  int32_t (*calc)(int32_t, int32_t);
+  uint32_t (*calc)(uint32_t, uint32_t);
 };
 
-int32_t calc_add(int32_t val1, int32_t val2) {
+uint32_t calc_add(uint32_t val1, uint32_t val2) {
   return val1 + val2;
 }
-int32_t calc_sub(int32_t val1, int32_t val2) {
+uint32_t calc_sub(uint32_t val1, uint32_t val2) {
   return val1 - val2;
 }
-int32_t calc_mul(int32_t val1, int32_t val2) {
+uint32_t calc_mul(uint32_t val1, uint32_t val2) {
   return val1 * val2;
 }
-int32_t calc_div(int32_t val1, int32_t val2) {
+uint32_t calc_div(uint32_t val1, uint32_t val2) {
   return val1 / val2;
 }
 
@@ -137,7 +137,7 @@ static bool make_token(char *e) {
         if (tok_type == TK_NOTYPE)
           break;
 
-        Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full\n");
+        Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full");
         switch (tok_type) {
           case TK_NUM10: {
             Assert(substr_len, "substr's length is 0");
@@ -237,7 +237,7 @@ static Token *get_main_op(Token *start, Token *end) {
     } else if ((p->op.precedence == main_op->op.precedence) && 
                 !(p->op.is_right_associative)) {
       Assert(main_op->op.is_right_associative == p->op.is_right_associative, 
-             "exist diffirent associative in the same precedence: %c %c\n", 
+             "exist diffirent associative in the same precedence: %c %c", 
               main_op->type, p->type);
       main_op = p;
     }
@@ -245,35 +245,35 @@ static Token *get_main_op(Token *start, Token *end) {
   return main_op;
 }
 
-static int32_t eval(Token *start, Token *end, bool *success) {
+static uint32_t eval(Token *start, Token *end, bool *success) {
   bool scs = true;
   if (start > end) {
-    Log("invalid token\n");
+    Log("invalid token");
     *success = false;
     return 0;
   } else if (start == end) {
     char *endptr = NULL;
     errno = 0;
-    int32_t val = strtol(start->str, &endptr, 10);
+    uint32_t val = strtol(start->str, &endptr, 10);
     if (errno == ERANGE) {
-      Log("number is out of range: %s\n", start->str);
+      Log("number is out of range: %s", start->str);
     } else if (errno == EINVAL) {
-      Log("token is not a number: %s\n", start->str);
+      Log("token is not a number: %s", start->str);
       *success = false;
       return 0;
     }
     if (*endptr != '\0') {
-      Log("exist non-number token in a number string: %s\n", (*start).str);
+      Log("exist non-number token in a number string: %s", (*start).str);
     }
     return val;
   } else {
     int pair_check_result = check_parentheses(start, end);
     if (pair_check_result < 0) {
-      Log("exist unmatched parentheses\n");
+      Log("exist unmatched parentheses");
       *success = false;
       return 0;
     } else if (pair_check_result) {
-      int32_t val = eval(start + 1, end - 1, &scs);
+      uint32_t val = eval(start + 1, end - 1, &scs);
       if (scs) {
         return val;
       } else {
@@ -282,9 +282,9 @@ static int32_t eval(Token *start, Token *end, bool *success) {
       }
     } else {
       Token *op = get_main_op(start, end);
-      Assert(op, "main op not found\n");
-      int32_t val1 = op == start ? 0 : eval(start, op - 1, &scs);
-      int32_t val2 = op == end ? 0 : eval(op + 1, end, &scs);
+      Assert(op, "main op not found");
+      uint32_t val1 = op == start ? 0 : eval(start, op - 1, &scs);
+      uint32_t val2 = op == end ? 0 : eval(op + 1, end, &scs);
       if (scs) {
         return op->op.calc(val1, val2);
       } else {
@@ -302,7 +302,7 @@ word_t expr(char *e, bool *success) {
   }
   
   bool scs = true;
-  int32_t val = eval(tokens, tokens + (nr_token - 1), &scs);
+  uint32_t val = eval(tokens, tokens + (nr_token - 1), &scs);
   if (!scs) {
     *success = false;
     return 0;
