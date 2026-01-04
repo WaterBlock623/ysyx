@@ -175,9 +175,11 @@ static bool make_token(char *e) {
 static void free_tokens(void) {
   int i;
   for (i = 0; i < nr_token; i++) {
-    char *str_ptr = tokens[nr_token].str;
-    if (str_ptr)
+    char *str_ptr = tokens[i].str;
+    if (str_ptr) {
       free(str_ptr);
+      tokens[i].str = NULL;
+    }
   }
 }
 
