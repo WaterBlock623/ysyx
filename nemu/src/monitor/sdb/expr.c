@@ -140,8 +140,6 @@ static bool make_token(char *e) {
         Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full\n");
         switch (tok_type) {
           case TK_NUM10: {
-            Assert(strlen(substr_start) == substr_len, 
-                   "substr's length is not equal to strlen");
             Assert(substr_len, "substr's length is 0");
             tokens[nr_token].type = tok_type;
             tokens[nr_token].op = tok_op;
