@@ -60,20 +60,20 @@ static int get_arg(char *args, char *arg_buf[], int n) {
   return i;
 }
 */
-static int cmd_c(char *args) {
+static int cmd_c(char *args, char *str_end) {
   cpu_exec(-1);
   return 0;
 }
 
 
-static int cmd_q(char *args) {
+static int cmd_q(char *args, char *str_end) {
   nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
-static int cmd_help(char *args);
+static int cmd_help(char *args, char *str_end);
 
-static int cmd_si(char *args) {
+static int cmd_si(char *args, char *str_end) {
   if (args == NULL) {
     printf("si [N]\nNeed 1 arg\n");
     return 0;
@@ -82,7 +82,7 @@ static int cmd_si(char *args) {
   return 0;
 }  
 
-static int cmd_info(char *args) {
+static int cmd_info(char *args, char *str_end) {
   if (args == NULL) {
     printf("info <r | w>\nNeed 1 arg\n");
     return 0;
@@ -97,14 +97,16 @@ static int cmd_info(char *args) {
   return 0;
 }
 
-static int cmd_x(char *args) {
+static int cmd_x(char *args, char *str_end) {
 //  char *arg_buf[2];
 //  if (get_arg(args, arg_buf, 2) < 2) {
 //    printf("x <N> <EXPR>\nNeed 2 arg");
 //    return 0;
 //  }
   char *tok_saveptr;
-  if (strtok_r(args, " ", &tok_saveptr) == NULL) {
+  char *ret = strtok_r(args, " ", &tok_saveptr);
+  char *expr_str = args + strlen(args) + 1;
+  if (ret == NULL || expr_str >= str_end) {
     printf("x <N> <EXPR>\nNeed 2 arg\n");
     return 0;
   }
@@ -112,7 +114,7 @@ static int cmd_x(char *args) {
   // int num_4byte = atoi(args);
   // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
   bool seccess = true;
-  vaddr_t addr = expr(args + strlen(args) + 1, &seccess);
+  vaddr_t addr = expr(expr_str, &seccess);
   printf("%d\n", addr);
   /*
   int i;
@@ -131,7 +133,7 @@ static int cmd_x(char *args) {
 static struct {
   const char *name;
   const char *description;
-  int (*handler) (char *);
+  int (*handler) (char *, char *);
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
@@ -143,7 +145,7 @@ static struct {
 
 #define NR_CMD ARRLEN(cmd_table)
 
-static int cmd_help(char *args) {
+static int cmd_help(char *args, char *str_end) {
   /* extract the first argument */
   char *arg = strtok(NULL, " ");
   int i;
@@ -172,7 +174,7 @@ void sdb_set_batch_mode() {
 
 void sdb_mainloop() {
   if (is_batch_mode) {
-    cmd_c(NULL);
+    cmd_c(NULL, NULL);
     return;
   }
 
@@ -200,7 +202,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-        if (cmd_table[i].handler(args) < 0) { return; }
+        if (cmd_table[i].handler(args, str_end) < 0) { return; }
         break;
       }
     }
