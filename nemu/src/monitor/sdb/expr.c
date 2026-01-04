@@ -217,6 +217,7 @@ static bool in_parentheses(Token *target, Token *end) {
     }
     if (cnt < 0)
       return true;
+    p++;
   }
   return false;
 }
@@ -225,12 +226,12 @@ static Token *get_main_op(Token *start, Token *end) {
   Token *main_op = NULL;
   Token *p;
   for (p = start; p <= end; p++) {
-    if (!(p->op.is_op))
+    if (!(p->op.is_op)) {
       continue;
-    if (main_op == NULL) {
-      main_op = p;
     } else if (in_parentheses(p, end)) {
       continue;
+    } else if (main_op == NULL) {
+      main_op = p;
     } else if (p->op.precedence > main_op->op.precedence) {
       main_op = p;
     } else if ((p->op.precedence == main_op->op.precedence) && 
