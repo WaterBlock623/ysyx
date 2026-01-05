@@ -43,14 +43,14 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   int i;
   for (i = 0; i < gpr_max; i++) {
     if (strcmp(s + 1, regs[i])) {
-      Log("read: Reg %d", i);
+      Log("read from name(%s): Reg %d", s + 1, i);
       return cpu.gpr[i];
     }
   }
   char *endptr = NULL;
   errno = 0;
   word_t val = strtol(s + 1, &endptr, 10);
-  Log("read: Reg %d", val);
+  Log("read from index(%s): Reg %d",s + 1, val);
   if (errno != 0) {
     perror("");
     Log("reg name parse error");
