@@ -178,14 +178,15 @@ static bool make_token(char *e) {
       }
     }
 
-    free(pmatch);
-    pmatch = NULL;
-
     if (i == NR_REGEX) {
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+      free(pmatch);
+      pmatch = NULL;
       return false;
     }
   }
+  free(pmatch);
+  pmatch = NULL;
   return true;
 }
 
