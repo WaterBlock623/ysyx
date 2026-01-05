@@ -128,13 +128,14 @@ static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_le
     return;
   tok_ptr->type = tok_type;
   tok_ptr->op = tok_op;
+  printf("add token to %d: %c\n", nr_token - 1, tok_type);
   switch (tok_type) {
     case TK_NUM10: {
       char *str_ptr = malloc(str_len + 1);
       Assert(str_ptr, "malloc return NULL");
       strncpy(str_ptr, str, str_len);
       str_ptr[str_len] = '\0';
-      printf("add number: %s\n", str_ptr);
+      printf("add number to %d: %s\n", nr_token - 1, str_ptr);
       tok_ptr->str = str_ptr;
       break;
     }
