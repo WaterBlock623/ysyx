@@ -195,24 +195,17 @@ static int parse_op_type(void) {
       }
       struct rule *ru_prev = &rules[tokens[i - 1].rule_idx];
       struct rule *ru_next = &rules[tokens[i + 1].rule_idx];
-      if (ru_prev->token_type == TK_OP || ru_prev->token_type == '(') {
-        if (ru_cur->op[1].op_type != OP_PRE) {
-          Log("expect a prefix operation at %d", i);
-          return -1;
-        }
+      if ((ru_prev->token_type == TK_OP || ru_prev->token_type == '(') && 
+          ru_cur->op[1].op_type == OP_PRE) {
         tokens[i].op = ru_cur->op[1];
-      } else if (ru_next->token_type == TK_OP || ru_next->token_type == ')') {
-        if (ru_cur->op[2].op_type != OP_SUF) {
-          Log("expect a suffix operation at %d", i);
-          return -1;
-        }
+      } else if ((ru_next->token_type == TK_OP || ru_next->token_type == ')') && 
+                 ru_cur->op[2].op_type == OP_SUF) {
         tokens[i].op = ru_cur->op[2];
-      } else {
-        if (ru_cur->op[0].op_type != OP_BIN) {
-          Log("expect a binary operation at %d", i);
-          return -1;
-        }
+      } else if (ru_cur->op[0].op_type == OP_BIN) {
         tokens[i].op = ru_cur->op[0];
+      } else {
+        Log("parse operation fail");
+        return -1;
       }
     } else {
       tokens[i].op = ru_cur->op[0];
