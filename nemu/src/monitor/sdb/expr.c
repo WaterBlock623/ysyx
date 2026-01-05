@@ -31,9 +31,8 @@
 #include <string.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM10, TK_NUM16,
-
-
+  TK_NOTYPE = 256, TK_NUM10, TK_NUM16,
+  TK_REG, TK_EQ, TK_NE, TK_AND, TK_UNPTR, 
 };
 
 struct op_attribute {
@@ -74,15 +73,19 @@ static struct rule {
 
   {"^0(x|X)[0-9]+", 0, TK_NUM16, {false}},
   {"^([0-9]+)([^xX0-9]|$)", 1, TK_NUM10, {false}},
-  {" +", 0, TK_NOTYPE, {false}},    // spaces
-  {"\\(", 0, '(', {false}},
-  {"\\)", 0, ')', {false}},
-  {"==", 0, TK_EQ, {false}},        // equal
+  {"^$([0-9]+)", 1, TK_REG, {false}},
+  {"^ +", 0, TK_NOTYPE, {false}},    // spaces
+  {"^\\(", 0, '(', {false}},
+  {"^\\)", 0, ')', {false}},
 
-  {"\\+", 0, '+', {true, 5, false, 0, calc_add}},         // plus
-  {"\\-", 0, '-', {true, 5, false, 0, calc_sub}},
-  {"\\*", 0, '*', {true, 4, false, 0, calc_mul}},
-  {"\\/", 0, '/', {true, 4, false, 0, calc_div}},
+  {"^==", 0, TK_EQ, {false}},        // equal
+  {"^!=", 0, TK_NE, {false}},
+  {"^&&", 0, TK_AND, {false}},
+  {"^!=", 0, TK_UNPTR, {false}},
+  {"^\\+", 0, '+', {true, 5, false, 0, calc_add}},         // plus
+  {"^\\-", 0, '-', {true, 5, false, 0, calc_sub}},
+  {"^\\*", 0, '*', {true, 4, false, 0, calc_mul}},
+  {"^\\/", 0, '/', {true, 4, false, 0, calc_div}},
 };
 
 #define NR_REGEX ARRLEN(rules)
