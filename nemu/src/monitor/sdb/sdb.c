@@ -95,6 +95,7 @@ static int cmd_info(char *args, char *str_end) {
     }
     case 'w': {
       print_wp();  
+      break;
     }
     default: printf("info <r | w>\nUnknown arg\n");
   }
