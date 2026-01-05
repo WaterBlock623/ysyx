@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include "debug.h"
+#include <alloca.h>
 #include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -62,6 +63,7 @@ uint32_t calc_div(uint32_t val1, uint32_t val2, bool *success) {
 
 static struct rule {
   const char *regex;
+  int group;
   int token_type;
   struct op_attribute op;
 } rules[] = {
@@ -70,21 +72,22 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[0-9]+", TK_NUM10, {false}},
-  {" +", TK_NOTYPE, {false}},    // spaces
-  {"\\(", '(', {false}},
-  {"\\)", ')', {false}},
-  {"==", TK_EQ, {false}},        // equal
+  {"[0-9]+", 0, TK_NUM10, {false}},
+  {" +", 0, TK_NOTYPE, {false}},    // spaces
+  {"\\(", 0, '(', {false}},
+  {"\\)", 0, ')', {false}},
+  {"==", 0, TK_EQ, {false}},        // equal
 
-  {"\\+", '+', {true, 5, false, 0, calc_add}},         // plus
-  {"\\-", '-', {true, 5, false, 0, calc_sub}},
-  {"\\*", '*', {true, 4, false, 0, calc_mul}},
-  {"\\/", '/', {true, 4, false, 0, calc_div}},
+  {"\\+", 0, '+', {true, 5, false, 0, calc_add}},         // plus
+  {"\\-", 0, '-', {true, 5, false, 0, calc_sub}},
+  {"\\*", 0, '*', {true, 4, false, 0, calc_mul}},
+  {"\\/", 0, '/', {true, 4, false, 0, calc_div}},
 };
 
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
+static int nsub_max = 0;
 
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
@@ -100,6 +103,8 @@ void init_regex() {
       regerror(ret, &re[i], error_msg, 128);
       panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
     }
+    if (re[i].re_nsub > nsub_max)
+      nsub_max = re[i].re_nsub;
   }
 }
 
@@ -124,8 +129,7 @@ static struct token *get_token_ptr(void) {
 static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_len) {
   int tok_type = rules[type_idx].token_type;
   struct op_attribute tok_op = rules[type_idx].op;
-  if (tok_type == TK_NOTYPE)
-    return;
+  Assert(tok_type != TK_NOTYPE, "TK_NOTYPE shouldn't add to tokens");
   tok_ptr->type = tok_type;
   tok_ptr->op = tok_op;
   switch (tok_type) {
@@ -143,16 +147,16 @@ static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_le
 static bool make_token(char *e) {
   int position = 0;
   int i;
-  regmatch_t pmatch;
+  regmatch_t *pmatch = alloca((nsub_max + 1) * sizeof(regmatch_t));
 
   nr_token = 0;
 
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
-      if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
+      if (regexec(&re[i], e + position, re[i].re_nsub + 1, pmatch, 0) == 0 && pmatch[rules[i].group].rm_so == 0) {
         char *substr_start = e + position;
-        int substr_len = pmatch.rm_eo;
+        int substr_len = pmatch[rules[i].group].rm_eo;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
