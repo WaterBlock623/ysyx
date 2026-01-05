@@ -167,8 +167,10 @@ static bool make_token(char *e) {
          */
         Assert(substr_len > 0, "substr's length is 0");
         printf("nr_token: %d\n", nr_token);
-        struct token *tok_ptr = get_token_ptr();
-        set_token(tok_ptr, i, substr_start, substr_len);
+        if (rules[i].token_type != TK_NOTYPE) {
+          struct token *tok_ptr = get_token_ptr();
+          set_token(tok_ptr, i, substr_start, substr_len);
+        }
         break;
       }
     }
