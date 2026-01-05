@@ -19,6 +19,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -92,39 +93,37 @@ static int cmd_info(char *args, char *str_end) {
       isa_reg_display();
       break;            
     }
-    default: printf("info <r | w>\nUnknown args\n");
+    case 'w': {
+      print_wp();  
+    }
+    default: printf("info <r | w>\nUnknown arg\n");
   }
   return 0;
 }
 
 static int cmd_x(char *args, char *str_end) {
-//  char *arg_buf[2];
-//  if (get_arg(args, arg_buf, 2) < 2) {
-//    printf("x <N> <EXPR>\nNeed 2 arg");
-//    return 0;
-//  }
   if (args == NULL) {
-    printf("x <N> <EXPR>\nNeed 2 arg\n");
+    printf("x <N> <EXPR>\nNeed 2 args\n");
     return 0;
   }
   char *tok_saveptr;
   char *ret = strtok_r(args, " ", &tok_saveptr);
   char *expr_str = args + strlen(args) + 1;
   if (ret == NULL || expr_str >= str_end) {
-    printf("x <N> <EXPR>\nNeed 2 arg\n");
+    printf("x <N> <EXPR>\nNeed 2 args\n");
     return 0;
   }
 
-  // int num_4byte = atoi(args);
-  // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
+  int num_4byte = atoi(args);
   bool success = true;
   vaddr_t addr = expr(expr_str, &success);
   if (success) {
     printf("%u\n", addr);
   } else {
-    printf("error\n");
+    printf("invalid EXPR\n");
+    return 0;
   }
-  /*
+ 
   int i;
   for (i = 0; i < num_4byte; i++) {
     if (i % 4 == 0) {
@@ -134,7 +133,33 @@ static int cmd_x(char *args, char *str_end) {
     printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
   }
   printf("\n\n");
-  */
+  
+  return 0;
+}
+
+static int cmd_w(char *args, char *str_end) {
+  if (args == NULL) {
+    printf("w <EXPR>\nNeed 1 arg\n");
+    return 0;
+  }
+  bool success = true;
+  uint32_t val = expr(args, &success);
+  if (!success) {
+    printf("invalid EXPR\n");
+    return 0;
+  }
+  WP *wp = new_wp(args);
+  wp->val = val;
+  return 0;
+}
+
+static int cmd_d(char *args, char *str_len) {
+  if (args == NULL) {
+    printf("d <NO>\nNeed 1 arg\n");
+  }
+  int no = atoi(args);
+  free_wp_by_no(no);
+
   return 0;
 }
 
@@ -149,6 +174,8 @@ static struct {
   { "si", "Execute N instructions", cmd_si },
   { "info", "Print info of registers or whatch points", cmd_info },
   { "x", "Print 4N byte from memory that beginning address is Expr", cmd_x },
+  { "w", "New a watchpoint", cmd_w },
+  { "d", "Delete a watchpoint through NO", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)

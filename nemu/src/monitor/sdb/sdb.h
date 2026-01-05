@@ -20,4 +20,18 @@
 
 word_t expr(char *e, bool *success);
 
+typedef struct watchpoint {
+  int NO;
+  struct watchpoint *next;
+  char *str;
+  uint32_t val;
+} WP;
+
+WP *new_wp(const char *);
+void free_wp(WP *);
+WP *gethead_wp(void);
+void traverse_wp(int (*cmd)(WP *, void *), void *arg);
+void print_wp(void);
+void free_wp_by_no(int no);
+
 #endif
