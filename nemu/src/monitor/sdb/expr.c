@@ -128,14 +128,12 @@ static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_le
     return;
   tok_ptr->type = tok_type;
   tok_ptr->op = tok_op;
-  printf("add token to %d: %c\n", nr_token - 1, tok_type);
   switch (tok_type) {
     case TK_NUM10: {
       char *str_ptr = malloc(str_len + 1);
       Assert(str_ptr, "malloc return NULL");
       strncpy(str_ptr, str, str_len);
       str_ptr[str_len] = '\0';
-      printf("add number to %d: %s\n", nr_token - 1, str_ptr);
       tok_ptr->str = str_ptr;
       break;
     }
@@ -166,7 +164,6 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
         Assert(substr_len > 0, "substr's length is 0");
-        printf("nr_token: %d\n", nr_token);
         if (rules[i].token_type != TK_NOTYPE) {
           struct token *tok_ptr = get_token_ptr();
           set_token(tok_ptr, i, substr_start, substr_len);
