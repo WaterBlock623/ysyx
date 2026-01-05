@@ -173,36 +173,52 @@ static struct token *get_token_ptr(void) {
   return tok_ptr;
 }
 
-static void parse_op_type(void) {
+static int parse_op_type(void) {
   int i;
   for (i = 0; i < nr_token; i++) {
     struct rule *ru_cur = &rules[tokens[i].rule_idx];
     if (ru_cur->token_type == TK_OP) {
       if (i == 0) {
-        Assert(ru_cur->op[1].op_type == OP_PRE, "expect a prefix operation at %d", i);
+        if (ru_cur->op[1].op_type != OP_PRE) {
+          Log("expect a prefix operation at %d", i);
+          return -1;
+        }
         tokens[i].op = ru_cur->op[1];
         continue;
       } else if (i == nr_token - 1) {
-        Assert(ru_cur->op[2].op_type == OP_SUF, "expect a suffix operation at %d", i);
+        if (ru_cur->op[2].op_type != OP_SUF) {
+          Log("expect a suffix operation at %d", i);
+          return -1;
+        }
         tokens[i].op = ru_cur->op[2];
         continue;
       }
       struct rule *ru_prev = &rules[tokens[i - 1].rule_idx];
       struct rule *ru_next = &rules[tokens[i + 1].rule_idx];
       if (ru_prev->token_type == TK_OP || ru_prev->token_type == '(') {
-        Assert(ru_cur->op[1].op_type == OP_PRE, "expect a prefix operation at %d", i);
+        if (ru_cur->op[1].op_type != OP_PRE) {
+          Log("expect a prefix operation at %d", i);
+          return -1;
+        }
         tokens[i].op = ru_cur->op[1];
       } else if (ru_next->token_type == TK_OP || ru_next->token_type == ')') {
-        Assert(ru_cur->op[2].op_type == OP_SUF, "expect a suffix operation at %d", i);
+        if (ru_cur->op[2].op_type != OP_SUF) {
+          Log("expect a suffix operation at %d", i);
+          return -1;
+        }
         tokens[i].op = ru_cur->op[2];
       } else {
-        Assert(ru_cur->op[0].op_type == OP_BIN, "expect a binary operation at %d", i);
+        if (ru_cur->op[0].op_type != OP_BIN) {
+          Log("expect a binary operation at %d", i);
+          return -1;
+        }
         tokens[i].op = ru_cur->op[0];
       }
     } else {
       tokens[i].op = ru_cur->op[0];
     }
   }
+  return 0;
 }
 
 static void set_token(struct token *tok_ptr, int rule_idx, char *str, int str_len) {
@@ -263,9 +279,11 @@ static bool make_token(char *e) {
       return false;
     }
   }
-  parse_op_type();
   free(pmatch);
   pmatch = NULL;
+  if (parse_op_type() != 0) {
+    return false;
+  }
   return true;
 }
 
