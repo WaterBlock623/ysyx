@@ -42,7 +42,7 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   int gpr_max = sizeof(cpu.gpr) / sizeof(cpu.gpr[0]);
   int i;
   for (i = 0; i < gpr_max; i++) {
-    if (strcmp(s + 1, regs[i])) {
+    if (strcmp(s + 1, regs[i]) == 0) {
       Log("read from name(%s): Reg %d", s + 1, i);
       return cpu.gpr[i];
     }
