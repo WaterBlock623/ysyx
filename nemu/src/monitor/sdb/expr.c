@@ -75,7 +75,7 @@ uint32_t calc_and_l(uint32_t val1, uint32_t val2, bool *success) {
   return val1 && val2;
 }
 uint32_t calc_deref(uint32_t val1, uint32_t val2, bool *success) {
-  return vaddr_read(val2, 32);
+  return vaddr_read(val2, 4);
 }
 
 static struct rule {
