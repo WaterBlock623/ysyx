@@ -39,19 +39,23 @@ struct op_attribute {
   int precedence; // The smaller the number, the higher the priority
   bool is_right_associative;
   int unary;      // 0: Binary  1: Suffix  -1: Prefix
-  uint32_t (*calc)(uint32_t, uint32_t);
+  uint32_t (*calc)(uint32_t, uint32_t, bool *);
 };
 
-uint32_t calc_add(uint32_t val1, uint32_t val2) {
+uint32_t calc_add(uint32_t val1, uint32_t val2, bool *success) {
   return val1 + val2;
 }
-uint32_t calc_sub(uint32_t val1, uint32_t val2) {
+uint32_t calc_sub(uint32_t val1, uint32_t val2, bool *success) {
   return val1 - val2;
 }
-uint32_t calc_mul(uint32_t val1, uint32_t val2) {
+uint32_t calc_mul(uint32_t val1, uint32_t val2, bool *success) {
   return val1 * val2;
 }
-uint32_t calc_div(uint32_t val1, uint32_t val2) {
+uint32_t calc_div(uint32_t val1, uint32_t val2, bool *success) {
+  if (val2 == 0) {
+    *success = false;
+    return 0;
+  }
   return val1 / val2;
 }
 
@@ -109,6 +113,32 @@ typedef struct token {
 static Token tokens[TOKENS_MAX_LENGTH] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
+static struct token *get_token_ptr(void) {
+  Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full");
+  struct token *tok_ptr = tokens + nr_token;
+  nr_token++; 
+  return tok_ptr;
+}
+
+static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_len) {
+  int tok_type = rules[type_idx].token_type;
+  struct op_attribute tok_op = rules[type_idx].op;
+  if (tok_type == TK_NOTYPE)
+    return;
+  tok_ptr->type = tok_type;
+  tok_ptr->op = tok_op;
+  switch (tok_type) {
+    case TK_NUM10: {
+      char *str_ptr = malloc(str_len + 1);
+      Assert(str_ptr, "malloc return NULL");
+      strncpy(str_ptr, str, str_len);
+      str_ptr[str_len] = '\0';
+      tok_ptr->str = str_ptr;
+      break;
+    }
+  }
+}
+
 static bool make_token(char *e) {
   int position = 0;
   int i;
@@ -132,33 +162,9 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-        int tok_type = rules[i].token_type;
-        struct op_attribute tok_op = rules[i].op;
-        if (tok_type == TK_NOTYPE)
-          break;
-
-        Assert(nr_token < TOKENS_MAX_LENGTH, "tokens is full");
-        switch (tok_type) {
-          case TK_NUM10: {
-            Assert(substr_len, "substr's length is 0");
-            tokens[nr_token].type = tok_type;
-            tokens[nr_token].op = tok_op;
-            char *str_ptr = malloc(substr_len + 1);
-            strncpy(str_ptr, substr_start, substr_len);
-            str_ptr[substr_len] = '\0';
-            tokens[nr_token].str = str_ptr;
-            nr_token++;
-            break;
-          }
-          default: {
-            tokens[nr_token].type = tok_type;
-            tokens[nr_token].op = tok_op;
-            tokens[nr_token].str = NULL;
-            nr_token++;
-            break;
-          }
-        }
-
+        Assert(substr_len > 0, "substr's length is 0");
+        struct token *tok_ptr = get_token_ptr();
+        set_token(tok_ptr, i, substr_start, substr_len);
         break;
       }
     }
@@ -183,6 +189,9 @@ static void free_tokens(void) {
   }
 }
 
+// RETURN: -1: invalid token
+//          0: no outer parentheses
+//          1: exist outer parenthese
 static int check_parentheses(Token *start, Token *end) {
   if (start > end)
     return -1;
@@ -287,8 +296,12 @@ static uint32_t eval(Token *start, Token *end, bool *success) {
       Assert(op, "main op not found");
       uint32_t val1 = op == start ? 0 : eval(start, op - 1, &scs);
       uint32_t val2 = op == end ? 0 : eval(op + 1, end, &scs);
+      uint32_t result = 0;
       if (scs) {
-        return op->op.calc(val1, val2);
+        result = op->op.calc(val1, val2, &scs);
+      }
+      if (scs) {
+        return result;
       } else {
         *success = false;
         return 0;
