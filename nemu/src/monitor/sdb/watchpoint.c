@@ -96,7 +96,7 @@ void traverse_wp(int (*cmd)(WP *, void *), void *arg) {
 }
 
 static int print_wp_(WP *wp, void *arg) {
-  printf("%d: val=%u  %s\n", wp->NO, wp->val, wp->str);
+  printf("%d: val=%u\t%s\n", wp->NO, wp->val, wp->str);
   return 0;
 }
 
