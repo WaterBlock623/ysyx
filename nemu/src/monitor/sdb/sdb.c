@@ -119,7 +119,7 @@ static int cmd_x(char *args, char *str_end) {
   // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
   bool seccess = true;
   vaddr_t addr = expr(expr_str, &seccess);
-  printf("%d\n", addr);
+  printf("%u\n", addr);
   /*
   int i;
   for (i = 0; i < num_4byte; i++) {
