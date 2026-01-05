@@ -72,7 +72,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[0-9]+", 0, TK_NUM10, {false}},
+  {"[^x]([0-9]+)[^x]", 1, TK_NUM10, {false}},
   {" +", 0, TK_NOTYPE, {false}},    // spaces
   {"\\(", 0, '(', {false}},
   {"\\)", 0, ')', {false}},
@@ -147,7 +147,8 @@ static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_le
 static bool make_token(char *e) {
   int position = 0;
   int i;
-  regmatch_t *pmatch = alloca((nsub_max + 1) * sizeof(regmatch_t));
+  regmatch_t *pmatch = malloc((nsub_max + 1) * sizeof(regmatch_t));
+  Assert(pmatch, "malloc return NULL");
 
   nr_token = 0;
 
@@ -176,12 +177,14 @@ static bool make_token(char *e) {
       }
     }
 
+    free(pmatch);
+    pmatch = NULL;
+
     if (i == NR_REGEX) {
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
   }
-
   return true;
 }
 
