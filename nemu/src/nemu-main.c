@@ -46,10 +46,8 @@ void test_expr(void) {
   }	
   Log("PASS");
 }
-int a[5];
+
 int main(int argc, char *argv[]) {
-  int b = 5;
-  a[b] = 1;
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
