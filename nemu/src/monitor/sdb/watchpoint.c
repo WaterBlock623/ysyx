@@ -126,7 +126,8 @@ static int check_print_update_wp_(WP *wp, void *have_change) {
   }
   if (new_val != wp->val) {
     *(bool *)have_change = true;
-    printf("%d: old=%u\tnew=%u\t%s\n", wp->NO, wp->val, new_val, wp->str);
+    printf("watchpoint%d: old=%#x(%u)\tnew=%#x(%u)\t%s\n", 
+           wp->NO, wp->val, wp->val, new_val, new_val, wp->str);
     wp->val = new_val;
   }
   return 0;
