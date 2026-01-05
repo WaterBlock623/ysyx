@@ -117,9 +117,13 @@ static int cmd_x(char *args, char *str_end) {
 
   // int num_4byte = atoi(args);
   // vaddr_t addr = strtol(arg_buf[1], NULL, 16);
-  bool seccess = true;
-  vaddr_t addr = expr(expr_str, &seccess);
-  printf("%u\n", addr);
+  bool success = true;
+  vaddr_t addr = expr(expr_str, &success);
+  if (success) {
+    printf("%u\n", addr);
+  } else {
+    printf("error\n");
+  }
   /*
   int i;
   for (i = 0; i < num_4byte; i++) {
