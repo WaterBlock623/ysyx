@@ -25,6 +25,7 @@
 #include <regex.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -129,6 +130,7 @@ static void set_token(struct token *tok_ptr, int type_idx, char *str, int str_le
   tok_ptr->op = tok_op;
   switch (tok_type) {
     case TK_NUM10: {
+      printf("add number: %s\n", str);
       char *str_ptr = malloc(str_len + 1);
       Assert(str_ptr, "malloc return NULL");
       strncpy(str_ptr, str, str_len);
