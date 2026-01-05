@@ -59,6 +59,8 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   }
   if (*endptr != '\0') {
     Log("exist invalid str in reg name");
+    *success = false;
+    return 0;
   }
   if (val >= 0 && val < gpr_max) {
     return cpu.gpr[val];
