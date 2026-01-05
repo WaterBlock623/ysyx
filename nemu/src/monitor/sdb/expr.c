@@ -31,7 +31,7 @@
 #include <string.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM10,
+  TK_NOTYPE = 256, TK_EQ, TK_NUM10, TK_NUM16,
 
 
 };
@@ -72,7 +72,8 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[^x]([0-9]+)[^x]", 1, TK_NUM10, {false}},
+  {"^0(x|X)[0-9]+", 0, TK_NUM16, {false}},
+  {"^([0-9]+)([^xX0-9]|$)", 1, TK_NUM10, {false}},
   {" +", 0, TK_NOTYPE, {false}},    // spaces
   {"\\(", 0, '(', {false}},
   {"\\)", 0, ')', {false}},
