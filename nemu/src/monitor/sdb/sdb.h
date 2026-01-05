@@ -33,5 +33,6 @@ WP *gethead_wp(void);
 void traverse_wp(int (*cmd)(WP *, void *), void *arg);
 void print_wp(void);
 void free_wp_by_no(int no);
+bool have_change_and_print_wp(void);
 
 #endif

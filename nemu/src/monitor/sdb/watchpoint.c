@@ -15,6 +15,7 @@
 
 #include "debug.h"
 #include "sdb.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,4 +115,25 @@ static int free_wp_by_no_(WP *wp, void *no) {
 
 void free_wp_by_no(int no) {
   traverse_wp(free_wp_by_no_, &no);
+}
+
+static int check_print_update_wp_(WP *wp, void *have_change) {
+  bool success = true;
+  uint32_t new_val = expr(wp->str, &success);
+  if (!success) {
+    printf("watchpoint %d expr fail: %s\n", wp->NO, wp->str);
+    return 0;
+  }
+  if (new_val != wp->val) {
+    *(bool *)have_change = true;
+    printf("%d: old=%u\tnew=%u\t%s\n", wp->NO, wp->val, new_val, wp->str);
+    wp->val = new_val;
+  }
+  return 0;
+}
+
+bool have_change_and_print_wp(void) {
+  bool have_change = false;
+  traverse_wp(check_print_update_wp_, &have_change);
+  return have_change;
 }
