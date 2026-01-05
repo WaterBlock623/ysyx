@@ -192,7 +192,7 @@ static void parse_op_type(void) {
       if (ru_prev->token_type == TK_OP || ru_prev->token_type == '(') {
         Assert(ru_cur->op[1].op_type == OP_PRE, "expect a prefix operation at %d", i);
         tokens[i].op = ru_cur->op[1];
-      } else if (ru_next->token_type == TK_OP || ru_prev->token_type == ')') {
+      } else if (ru_next->token_type == TK_OP || ru_next->token_type == ')') {
         Assert(ru_cur->op[2].op_type == OP_SUF, "expect a suffix operation at %d", i);
         tokens[i].op = ru_cur->op[2];
       } else {
