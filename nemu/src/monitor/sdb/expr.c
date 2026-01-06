@@ -49,33 +49,36 @@ struct op {
   uint32_t (*calc)(uint32_t, uint32_t, bool *);
 };
 
-uint32_t calc_add(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_add(uint32_t val1, uint32_t val2, bool *success) {
   return val1 + val2;
 }
-uint32_t calc_sub(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_sub(uint32_t val1, uint32_t val2, bool *success) {
   return val1 - val2;
 }
-uint32_t calc_mul(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_mul(uint32_t val1, uint32_t val2, bool *success) {
   return val1 * val2;
 }
-uint32_t calc_div(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_div(uint32_t val1, uint32_t val2, bool *success) {
   if (val2 == 0) {
     *success = false;
     return 0;
   }
   return val1 / val2;
 }
-uint32_t calc_eq(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_eq(uint32_t val1, uint32_t val2, bool *success) {
   return val1 == val2;
 }
-uint32_t calc_ne(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_ne(uint32_t val1, uint32_t val2, bool *success) {
   return val1 != val2;
 }
-uint32_t calc_and_l(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_and_l(uint32_t val1, uint32_t val2, bool *success) {
   return val1 && val2;
 }
-uint32_t calc_deref(uint32_t val1, uint32_t val2, bool *success) {
+static uint32_t calc_deref(uint32_t val1, uint32_t val2, bool *success) {
   return vaddr_read(val2, 4);
+}
+static uint32_t calc_neg(uint32_t val1, uint32_t val2, bool *success) {
+  return -val2;
 }
 
 static struct rule {
@@ -119,7 +122,7 @@ static struct rule {
                       {NO_OP}}},        
                                       
   {"^\\-", 0, TK_OP, {{OP_BIN, 5, false, calc_sub},
-                      {NO_OP},
+                      {OP_PRE, 3, true, calc_neg},
                       {NO_OP}}},
 
   {"^\\*", 0, TK_OP, {{OP_BIN, 4, false, calc_mul},
