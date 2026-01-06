@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "sdb.h"
+#include "debug.h"
 
 static int is_batch_mode = false;
 
@@ -119,7 +120,7 @@ static int cmd_x(char *args, char *str_end) {
   bool success = true;
   vaddr_t addr = expr(expr_str, &success);
   if (success) {
-    printf("%u\n", addr);
+    Log("%u\n", addr);
   } else {
     printf("invalid EXPR\n");
     return 0;
