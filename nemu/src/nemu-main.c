@@ -13,12 +13,39 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "debug.h"
 #include <common.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+
+word_t expr(char *, bool *);
+void test_expr(void) {
+  bool success = true;
+  FILE *f = fopen("tools/gen-expr/input.txt", "r");
+  Assert(f, "file can't open");
+  char buf[65537];
+  int i = 1;
+  while (fgets(buf, 65537, f)) {
+    printf("%d start", i);
+    buf[strlen(buf) - 1] = '\0';
+    char *save_ptr = NULL;
+    strtok_r(buf, " ", &save_ptr);
+    uint32_t result = atoi(buf);
+    char *ex = buf + strlen(buf) + 1;
+    uint32_t ret = expr(ex, &success);
+	Assert(success, "success is false");
+	Assert(result == ret, "expr is wrong: file: %u  expr: %u", result, ret);
+	Log("ok");
+	i++;
+  }	
+  Log("PASS");
+}
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -27,6 +54,8 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
+
+  // test_expr();
 
   /* Start engine. */
   engine_start();

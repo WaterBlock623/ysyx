@@ -15,9 +15,16 @@
 
 #include <isa.h>
 #include <cpu/cpu.h>
+#include <memory/vaddr.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "sdb.h"
+#include "debug.h"
 
 static int is_batch_mode = false;
 
@@ -41,35 +48,141 @@ static char* rl_gets() {
 
   return line_read;
 }
-
-static int cmd_c(char *args) {
+/*
+static int get_arg(char *args, char *arg_buf[], int n) {
+  if (args == NULL)
+    return 0;
+  char *save_ptr = NULL;
+  int i;
+  for (i = 0; i < n; i++) {
+    arg_buf[i] = strtok_r(i == 0 ? args : NULL, " ", &save_ptr);
+    if (arg_buf[i] == NULL)
+      break; 
+  }
+  return i;
+}
+*/
+static int cmd_c(char *args, char *str_end) {
   cpu_exec(-1);
   return 0;
 }
 
 
-static int cmd_q(char *args) {
+static int cmd_q(char *args, char *str_end) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
-static int cmd_help(char *args);
+static int cmd_help(char *args, char *str_end);
+
+static int cmd_si(char *args, char *str_end) {
+  if (args == NULL) {
+    printf("si [N]\nNeed 1 arg\n");
+    return 0;
+  }
+  cpu_exec(atoi(args));
+  return 0;
+}  
+
+static int cmd_info(char *args, char *str_end) {
+  if (args == NULL) {
+    printf("info <r | w>\nNeed 1 arg\n");
+    return 0;
+  }
+  switch (args[0]) {
+    case 'r': {
+      isa_reg_display();
+      break;            
+    }
+    case 'w': {
+      print_wp();  
+      break;
+    }
+    default: printf("info <r | w>\nUnknown arg\n");
+  }
+  return 0;
+}
+
+static int cmd_x(char *args, char *str_end) {
+  if (args == NULL) {
+    printf("x <N> <EXPR>\nNeed 2 args\n");
+    return 0;
+  }
+  char *tok_saveptr;
+  char *ret = strtok_r(args, " ", &tok_saveptr);
+  char *expr_str = args + strlen(args) + 1;
+  if (ret == NULL || expr_str >= str_end) {
+    printf("x <N> <EXPR>\nNeed 2 args\n");
+    return 0;
+  }
+
+  int num_4byte = atoi(args);
+  bool success = true;
+  vaddr_t addr = expr(expr_str, &success);
+  if (success) {
+    Log("%u\n", addr);
+  } else {
+    printf("invalid EXPR\n");
+    return 0;
+  }
+ 
+  int i;
+  for (i = 0; i < num_4byte; i++) {
+    if (i % 4 == 0) {
+      printf("\n");
+      printf("\033[0;32m0x%.8x\033[0m:  ", addr + i * 4);
+    }
+    printf("0x%.8x ", vaddr_read(addr + i * 4, 4));
+  }
+  printf("\n\n");
+  
+  return 0;
+}
+
+static int cmd_w(char *args, char *str_end) {
+  if (args == NULL) {
+    printf("w <EXPR>\nNeed 1 arg\n");
+    return 0;
+  }
+  bool success = true;
+  uint32_t val = expr(args, &success);
+  if (!success) {
+    printf("invalid EXPR\n");
+    return 0;
+  }
+  WP *wp = new_wp(args);
+  wp->val = val;
+  return 0;
+}
+
+static int cmd_d(char *args, char *str_len) {
+  if (args == NULL) {
+    printf("d <NO>\nNeed 1 arg\n");
+  }
+  int no = atoi(args);
+  free_wp_by_no(no);
+
+  return 0;
+}
 
 static struct {
   const char *name;
   const char *description;
-  int (*handler) (char *);
+  int (*handler) (char *, char *);
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
-  /* TODO: Add more commands */
-
+  { "si", "Execute N instructions", cmd_si },
+  { "info", "Print info of registers or whatch points", cmd_info },
+  { "x", "Print 4N byte from memory that beginning address is Expr", cmd_x },
+  { "w", "New a watchpoint", cmd_w },
+  { "d", "Delete a watchpoint through NO", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
 
-static int cmd_help(char *args) {
+static int cmd_help(char *args, char *str_end) {
   /* extract the first argument */
   char *arg = strtok(NULL, " ");
   int i;
@@ -98,7 +211,7 @@ void sdb_set_batch_mode() {
 
 void sdb_mainloop() {
   if (is_batch_mode) {
-    cmd_c(NULL);
+    cmd_c(NULL, NULL);
     return;
   }
 
@@ -106,7 +219,8 @@ void sdb_mainloop() {
     char *str_end = str + strlen(str);
 
     /* extract the first token as the command */
-    char *cmd = strtok(str, " ");
+	char *tok_saveptr = NULL;
+    char *cmd = strtok_r(str, " ", &tok_saveptr);
     if (cmd == NULL) { continue; }
 
     /* treat the remaining string as the arguments,
@@ -125,7 +239,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-        if (cmd_table[i].handler(args) < 0) { return; }
+        if (cmd_table[i].handler(args, str_end) < 0) { return; }
         break;
       }
     }
