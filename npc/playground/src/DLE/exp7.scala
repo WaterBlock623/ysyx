@@ -74,7 +74,7 @@ class ParsePs2() extends Module {
   val dataCntReg = RegInit(0.U(4.W))
   dataCntReg := Mux(negEdge, Mux(dataCntReg === 10.U, 0.U, dataCntReg + 1.U), dataCntReg)
   val dataReg = RegInit(0.U(11.W))
-  dataReg := Mux(negEdge, io.ps2Dat ## dataReg(11, 1), dataReg)
+  dataReg := Mux(negEdge, io.ps2Dat ## dataReg(10, 1), dataReg)
   io.data := dataReg(8, 1)
   io.valid := negEdge & dataCntReg === 10.U
 }
