@@ -76,7 +76,7 @@ class ParsePs2() extends Module {
   val dataReg = RegInit(0.U(11.W))
   dataReg := Mux(negEdge, io.ps2Dat ## dataReg(10, 1), dataReg)
   io.data := dataReg(8, 1)
-  io.valid := negEdge & dataCntReg === 10.U
+  io.valid := RegNext(negEdge & dataCntReg === 10.U)
 }
 
 class DecoderLed extends Module {
