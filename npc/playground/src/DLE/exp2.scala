@@ -31,8 +31,8 @@ class DecoderLed extends Module {
 
 class Encoder83 extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(8.W))
-    val en  = Input(Bool())
+    val in = Input(UInt(8.W))
+    val en = Input(Bool())
     val out = Output(UInt(3.W))
   })
   
@@ -52,8 +52,8 @@ class Encoder83 extends Module {
 
 class PEncoder83 extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(8.W))
-    val en  = Input(Bool())
+    val in = Input(UInt(8.W))
+    val en = Input(Bool())
     val out = Output(UInt(3.W))
   })
 
@@ -61,9 +61,9 @@ class PEncoder83 extends Module {
   val cond  = VecInit.fill(8)(false.B)
 
   hotIn(7) := io.in(7)
-  cond(7)  := ~io.in(7)
+  cond(7) := ~io.in(7)
   for (i <- 6 to 0 by -1) {
-    cond(i)  := ~io.in(i) & cond(i + 1)
+    cond(i) := ~io.in(i) & cond(i + 1)
     hotIn(i) := io.in(i) & cond(i + 1)
   }
   
