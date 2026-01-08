@@ -184,7 +184,8 @@ static struct {
 
 static int cmd_help(char *args, char *str_end) {
   /* extract the first argument */
-  char *arg = strtok(NULL, " ");
+  char *save_ptr = NULL;
+  char *arg = strtok_r(args, " ", &save_ptr);
   int i;
 
   if (arg == NULL) {
