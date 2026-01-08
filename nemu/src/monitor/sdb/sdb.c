@@ -184,17 +184,17 @@ static struct {
 
 static int cmd_help(char *args, char *str_end) {
   /* extract the first argument */
-  char *save_ptr = NULL;
-  char *arg = strtok_r(args, " ", &save_ptr);
   int i;
 
-  if (arg == NULL) {
+  if (args == NULL) {
     /* no argument given */
     for (i = 0; i < NR_CMD; i ++) {
       printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
     }
   }
   else {
+    char *save_ptr = NULL;
+    char *arg = strtok_r(args, " ", &save_ptr);
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(arg, cmd_table[i].name) == 0) {
         printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
