@@ -77,8 +77,10 @@ WP* new_wp(const char *str) {
 }
 
 void free_wp(WP *wp) {
-  free(wp->str);
-  wp->str = NULL;
+  if (wp->str) {
+    free(wp->str);
+    wp->str = NULL;
+  }
   delete_wp(wp, &head);
   insert_wp(wp, &free_);
 }
@@ -117,7 +119,7 @@ void free_wp_by_no(int no) {
   traverse_wp(free_wp_by_no_, &no);
 }
 
-static int check_print_update_wp_(WP *wp, void *have_change) {
+static int have_change_and_print_wp_(WP *wp, void *have_change) {
   bool success = true;
   uint32_t new_val = expr(wp->str, &success);
   if (!success) {
@@ -135,6 +137,6 @@ static int check_print_update_wp_(WP *wp, void *have_change) {
 
 bool have_change_and_print_wp(void) {
   bool have_change = false;
-  traverse_wp(check_print_update_wp_, &have_change);
+  traverse_wp(have_change_and_print_wp_, &have_change);
   return have_change;
 }

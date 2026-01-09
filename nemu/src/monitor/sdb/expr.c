@@ -85,7 +85,7 @@ static struct rule {
   const char *regex;
   int group;
   int token_type;
-  struct op op[3]; // 0: OP_BIN/NO_OP   1: OP_PRE   2: OP_SUF
+  struct op op[3]; // 0: OP_BIN   1: OP_PRE   2: OP_SUF
 } rules[] = {
 
   /* TODO: Add more rules.
@@ -451,12 +451,12 @@ word_t expr(char *e, bool *success) {
   
   bool scs = true;
   uint32_t val = eval(tokens, tokens + (nr_token - 1), &scs);
+
+  free_tokens();
+
   if (!scs) {
     *success = false;
     return 0;
   }
-
-  free_tokens();
-
   return val;
 }

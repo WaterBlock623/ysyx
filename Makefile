@@ -38,7 +38,11 @@ endef
 .clean_index:
 	rm -f $(WORK_INDEX)
 
+count:
+	find ./nemu -type f -name '*.c' -o -name '*.h' | xargs cat |\
+		perl -n -e 'print if m/.+/' | wc -l
+
 _default:
 	@echo "Please run 'make' under subprojects."
 
-.PHONY: .git_commit .clean_index _default
+.PHONY: .git_commit .clean_index _default count

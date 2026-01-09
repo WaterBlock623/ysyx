@@ -5,7 +5,7 @@ import chisel3.util._
 
 class DecoderLed extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(4.W))
+    val in = Input(UInt(4.W))
     val out = Output(UInt(7.W))
   })
 
@@ -31,8 +31,8 @@ class DecoderLed extends Module {
 
 class Encoder83 extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(8.W))
-    val en  = Input(Bool())
+    val in = Input(UInt(8.W))
+    val en = Input(Bool())
     val out = Output(UInt(3.W))
   })
   
@@ -52,18 +52,18 @@ class Encoder83 extends Module {
 
 class PEncoder83 extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(8.W))
-    val en  = Input(Bool())
+    val in = Input(UInt(8.W))
+    val en = Input(Bool())
     val out = Output(UInt(3.W))
   })
 
   val hotIn = VecInit.fill(8)(false.B)
-  val cond  = VecInit.fill(8)(false.B)
+  val cond = VecInit.fill(8)(false.B)
 
   hotIn(7) := io.in(7)
-  cond(7)  := ~io.in(7)
+  cond(7) := ~io.in(7)
   for (i <- 6 to 0 by -1) {
-    cond(i)  := ~io.in(i) & cond(i + 1)
+    cond(i) := ~io.in(i) & cond(i + 1)
     hotIn(i) := io.in(i) & cond(i + 1)
   }
   
@@ -75,22 +75,22 @@ class PEncoder83 extends Module {
 
 class Exp2 extends Module {
   val io = IO(new Bundle {
-    val sw     = Input(UInt(8.W))
-    val en     = Input(Bool())
-    val led    = Output(UInt(3.W))
+    val sw = Input(UInt(8.W))
+    val en = Input(Bool())
+    val led = Output(UInt(3.W))
     val hasOne = Output(Bool())
-    val led7   = Output(UInt(7.W))
+    val led7 = Output(UInt(7.W))
   })
 
-  val pe     = Module(new PEncoder83)
+  val pe = Module(new PEncoder83)
   val decLed = Module(new DecoderLed)
 
   io.hasOne := io.sw.orR
   
-  pe.io.in  := io.sw
-  pe.io.en  := io.en
-  io.led    := pe.io.out
+  pe.io.in := io.sw
+  pe.io.en := io.en
+  io.led := pe.io.out
 
   decLed.io.in := 0.U(1.W) ## io.led
-  io.led7      := decLed.io.out
+  io.led7 := decLed.io.out
 }
