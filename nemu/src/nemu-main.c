@@ -27,7 +27,7 @@ int is_exit_status_bad();
 word_t expr(char *, bool *);
 void test_expr(void) {
   bool success = true;
-  FILE *f = fopen("tools/gen-expr/input.txt", "r");
+  FILE *f = fopen("tools/gen-expr/test.txt", "r");
   Assert(f, "file can't open");
   char buf[65537];
   int i = 1;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
-  // test_expr();
+  test_expr();
 
   /* Start engine. */
   engine_start();
