@@ -38,6 +38,10 @@ enum {
                                 (BITS(i, 19, 12) << 12) | \
                                 (BITS(i, 20, 20) << 11) | \
                                 (BITS(i, 30, 21) << 1), 21); } while(0)
+#define immB() do { *imm = SEXT(BITS(i, 31, 31) << 12 | \
+								BITS(i, 7, 7) << 11 | \
+								BITS(i, 30, 25) << 5 | \
+								BITS(i, 11, 8) << 1, 13); } while(0)
 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
   uint32_t i = s->isa.inst;
@@ -49,6 +53,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     case TYPE_U:                   immU(); break;
     case TYPE_S: src1R(); src2R(); immS(); break;
 	case TYPE_J:				   immJ(); break;
+	case TYPE_B: src1R(); src2R(); immB(); break;
     case TYPE_N: break;
     default: panic("unsupported type = %d", type);
   }
@@ -74,6 +79,8 @@ static int decode_exec(Decode *s) {
 		  R(rd) = src1 < imm ? 1u : 0u);
   INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add    , N, R(rd) = src1 + src2);
   INSTPAT("0100000 ????? ????? 000 ????? 01100 11", sub    , N, R(rd) = src1 - src2);
+  INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq    , B, \
+		  if (src1 == src2) s->dnpc = s->pc + imm);
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->snpc; \
 		  s->dnpc = s->pc + imm); 
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->snpc; \
