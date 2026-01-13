@@ -92,7 +92,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"^0(x|X)[0-9]+", 0, TK_NUM16},
+  {"^0(x|X)[0-9a-fA-F]+", 0, TK_NUM16},
   {"^([0-9]+)([^xX0-9]|$)", 1, TK_NUM10},
   {"^\\$[0-9a-zA-Z]+", 0, TK_REG},
   {"^ +", 0, TK_IGNORE},    // spaces
