@@ -448,6 +448,7 @@ static uint32_t eval(Token *start, Token *end, bool *success) {
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
+    free_tokens();
     return 0;
   }
   
