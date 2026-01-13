@@ -165,6 +165,16 @@ static int cmd_d(char *args, char *str_len) {
   return 0;
 }
 
+static int cmd_p(char *args, char *str_len) {
+  if (args == NULL) {
+    printf("p <EXPR>\nNeed 1 arg\n");
+  }
+  bool success = true;
+  uint32_t val = expr(args, &success);
+  printf("%u\n", val);
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -178,6 +188,7 @@ static struct {
   { "x", "Print 4N byte from memory that beginning address is Expr", cmd_x },
   { "w", "New a watchpoint", cmd_w },
   { "d", "Delete a watchpoint through NO", cmd_d },
+  { "p", "Expression evaluation", cmd_p }
 };
 
 #define NR_CMD ARRLEN(cmd_table)
