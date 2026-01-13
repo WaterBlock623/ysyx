@@ -312,6 +312,8 @@ static int check_parentheses(Token *start, Token *end) {
     }
     if (cnt == 0 && p != end)
       is_outer_pair = false;
+    if (cnt < 0)
+      return -1;
     p++;
   }
   if (cnt != 0) {
