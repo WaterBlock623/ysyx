@@ -76,6 +76,10 @@ static int decode_exec(Decode *s) {
 #define SHIFT_RA(n, b) ((n) >> 31 ? (n) >> BITS((b), 4, 0) | \
 								~BITMASK(32 - BITS((b), 4, 0)) : \
 								(n) >> BITS((b), 4, 0))
+#define MUX_DIV_ZERO(y, normal_result, zero_result) ((y) ? (normal_result) : (zero_result))
+#define MUX_DIV_OVERFLOW(x, y, normal_result, overflow_result) \
+	(SIGN(x) == INT32_MIN && SIGN(y) == -1 ? (overflow_result) : (normal_result))
+								
 
   INSTPAT_START();
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
@@ -136,13 +140,17 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 001 ????? 01100 11", mulh   , R, \
 		  R(rd) = ((int64_t)SIGN(src1) * (int64_t)SIGN(src2)) >> 32);
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div    , R, \
-		  R(rd) = SIGN(src1) / SIGN(src2));
+		  R(rd) = MUX_DIV_ZERO(src2, \
+					MUX_DIV_OVERFLOW(src1, src2, SIGN(src1)/SIGN(src2), src1), \
+					-1));
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu   , R, \
-		  R(rd) = src1 / src2);
+		  R(rd) = MUX_DIV_ZERO(src2, src1/src2, -1));
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem    , R, \
-		  R(rd) = SIGN(src1) % SIGN(src2));
+		  R(rd) = MUX_DIV_ZERO(src2, \
+					MUX_DIV_OVERFLOW(src1, src2, SIGN(src1)%SIGN(src2), 0), \
+					src1));
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu   , R, \
-		  R(rd) = src1 % src2);
+		  R(rd) = MUX_DIV_ZERO(src2, src1%src2, 0));
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 
