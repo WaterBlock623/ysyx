@@ -21,7 +21,13 @@ char *strcat(char *dst, const char *src) {
 }
 
 int strcmp(const char *s1, const char *s2) {
-  panic("Not implemented");
+  while (1) {
+    int result = (unsigned char)*s1 - (unsigned char)*s2;
+    if (result != 0 || *s1 == '\0' || *s2 == '\0')
+      return result;
+    s1++;
+    s2++;
+  }
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
@@ -41,7 +47,13 @@ void *memcpy(void *out, const void *in, size_t n) {
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  panic("Not implemented");
+  int i;
+  for (i = 0; i < n; i++) {
+    int result = ((unsigned char *)s1)[i] - ((unsigned char *)s2)[i];
+    if (result != 0)
+      return result;
+  }
+  return 0;
 }
 
 #endif
