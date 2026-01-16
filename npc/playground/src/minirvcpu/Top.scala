@@ -276,8 +276,7 @@ class RegisterFile(implicit val cfg: Config) extends Module {
     val rData = Output(UInt(cfg.xlen.W))
   })
   
-  val regs = Reg(Vec(cfg.registerNum - 1, UInt(cfg.xlen.W)))
-  val regFile = VecInit(0.U +: regs.toSeq)
+  val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
   when (io.wEn) {
     regFile(io.wAddr) := io.wData
   }
