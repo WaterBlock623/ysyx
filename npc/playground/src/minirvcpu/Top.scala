@@ -6,6 +6,7 @@ import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
 import scala.collection.mutable.ListBuffer
 
+/*
 class DecodePairSaver[T] {
   private val _all = ListBuffer[T]()
   def r(p: T): T = {
@@ -252,6 +253,7 @@ class SCpu extends Module {
   led7Reg(1) := Mux(isWriteLed7, led7Dcd(1).io.out, led7Reg(1))
   io.led7 := led7Reg.asUInt
 }
+*/
 
 case class Config(
   val xlen: Int = 32,
