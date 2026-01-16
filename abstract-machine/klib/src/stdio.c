@@ -74,7 +74,7 @@ static int print_num(char *out, unsigned long long u, int base, int width, int f
   return out - start;
 }
 
-static void parse_arg(const char **fmt, va_list ap, 
+static void parse_arg(const char **fmt, va_list *ap, 
                       uint32_t *flags, int *width, int *precision,
                       int *long_mod) {
   if (**fmt != '%')
@@ -96,7 +96,7 @@ static void parse_arg(const char **fmt, va_list ap,
   }
 
   if (**fmt == '*') {
-    *width = va_arg(ap, int);
+    *width = va_arg(*ap, int);
     (*fmt)++;
     if (*width < 0) {
       *width = -*width;
@@ -109,7 +109,7 @@ static void parse_arg(const char **fmt, va_list ap,
   if (**fmt == '.') {
     (*fmt)++;
     if (**fmt == '*') {
-      *precision = va_arg(ap, int);
+      *precision = va_arg(*ap, int);
       (*fmt)++;
     } else if (IS_DIGIT(**fmt)) {
       *precision = atoip(fmt);
@@ -130,7 +130,7 @@ static void parse_arg(const char **fmt, va_list ap,
   } while (is_mod);
 }
 
-static int print_arg(char *out, const char **fmt, va_list ap) {
+static int print_arg(char *out, const char **fmt, va_list *ap) {
   char *start = out;
   uint32_t flags = 0;
   int width = -1;
@@ -146,7 +146,7 @@ static int print_arg(char *out, const char **fmt, va_list ap) {
 
   switch (type) {
     case 's':
-      str_arg = va_arg(ap, char *);
+      str_arg = va_arg(*ap, char *);
       if (!str_arg)
           str_arg = "(null)";
       int len = strlen(str_arg);
@@ -167,11 +167,11 @@ static int print_arg(char *out, const char **fmt, va_list ap) {
     case 'd': {
       long long val;
       if (long_mod == 0) 
-        val = va_arg(ap, int);
+        val = va_arg(*ap, int);
       else if (long_mod == 1) 
-        val = va_arg(ap, long);
+        val = va_arg(*ap, long);
       else 
-        val = va_arg(ap, long long);
+        val = va_arg(*ap, long long);
       
       if (val < 0) {
         is_neg = 1;
@@ -185,18 +185,18 @@ static int print_arg(char *out, const char **fmt, va_list ap) {
     
     case 'x': {
       if (long_mod == 0)
-        num_val = (unsigned int)va_arg(ap, int);
+        num_val = (unsigned int)va_arg(*ap, int);
       else if (long_mod == 1)
-        num_val = (unsigned long)va_arg(ap, long);
+        num_val = (unsigned long)va_arg(*ap, long);
       else
-        num_val = (unsigned long long)va_arg(ap, long long);
+        num_val = (unsigned long long)va_arg(*ap, long long);
       
       out += print_num(out, num_val, 16, width, flags, 0);
       break;
     }
 
     case 'p':
-      num_val = (uintptr_t)va_arg(ap, void *);
+      num_val = (uintptr_t)va_arg(*ap, void *);
       flags |= F_ALT; 
       out += print_num(out, num_val, 16, width, flags, 0);
       break;
@@ -206,7 +206,7 @@ static int print_arg(char *out, const char **fmt, va_list ap) {
         while (width-- > 1)
           *out++ = ' ';
       }
-      *out++ = (char)va_arg(ap, int);
+      *out++ = (char)va_arg(*ap, int);
       break;
 
     case '%':
@@ -230,7 +230,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
   int cnt = 0;
   while (*fmt) {
     if (*fmt == '%') {
-      int len = print_arg(out, &fmt, ap);    
+      int len = print_arg(out, &fmt, &ap);    
       cnt += len;
       out += len;
     } else {
