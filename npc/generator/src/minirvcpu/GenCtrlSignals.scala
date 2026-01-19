@@ -5,6 +5,6 @@ import common.InstDecodeCollector
 
 object GenCtrlSignals extends App {
   val collector = InstDecodeCollector()
-  val gen = new BundleGenerator("minirvcpu.util", "CtrlSignals", collector.allFields) 
+  val gen = new BundleGenerator("playground.minirvcpu", "CtrlSignals", collector.allFields) 
   gen.generate(args(0))
 }
