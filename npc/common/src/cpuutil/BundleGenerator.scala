@@ -1,4 +1,4 @@
-package util
+package cpuutil
 
 import chisel3._
 

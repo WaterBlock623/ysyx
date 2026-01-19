@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util.experimental.decode._
 import chisel3.util.BitPat
 import scala.collection.immutable.ListMap
-import util.CanAutoGenSig
+import cpuutil.CanAutoGenSig
 
 trait HasMoreSignalInfo extends CanAutoGenSig {
   def extType: ExtType.Value

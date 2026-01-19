@@ -1,4 +1,4 @@
-package util
+package cpuutil
 
 import java.io.{File, PrintWriter}
 import chisel3._
