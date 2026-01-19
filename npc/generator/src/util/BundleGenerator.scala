@@ -1,14 +1,9 @@
-package cpu.util
+package generator.util
 
+import common.util.CanAutoGenSig
 import java.io.{File, PrintWriter}
 import chisel3._
 import chisel3.util.experimental.decode._
-import cpu.util.BundleGenerator.getChiselTypeName
-
-trait CanAutoGenSig {
-  def stage: String
-  def chiselType: Data
-}
 
 object BundleGenerator {
   def getChiselTypeName(d: Data): String = d match {

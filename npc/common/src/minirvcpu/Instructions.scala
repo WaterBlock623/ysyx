@@ -1,11 +1,11 @@
-package minirvcpu.util
+package common.minirvcpu
 
 import chisel3._
 import chisel3.util.experimental.decode._
 import chisel3.util.BitPat
 import scala.collection.immutable.ListMap
-import cpu.util.CanAutoGenSig
-import minirvcpu.core.{CoreConfig, ExtType, InstType}
+import common.util.CanAutoGenSig
+import playground.minirvcpu.{CoreConfig, ExtType, InstType}
 
 trait HasMoreSignalInfo extends CanAutoGenSig {
   def extType: ExtType.Value
