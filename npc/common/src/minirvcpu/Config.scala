@@ -1,4 +1,4 @@
-package common.minirvcpu
+package minirvcpu
 
 object ExtType extends Enumeration {
   type ExtType = Value

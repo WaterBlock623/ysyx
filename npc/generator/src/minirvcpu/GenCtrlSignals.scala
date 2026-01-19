@@ -1,10 +1,9 @@
-package generator.minirvcpu
+package minirvcpu
 
-import generator.util.BundleGenerator
-import common.minirvcpu.InstDecodeCollector
+import util.BundleGenerator
 
 object GenCtrlSignals extends App {
   val collector = InstDecodeCollector()
-  val gen = new BundleGenerator("playground.minirvcpu", "CtrlSignals", collector.allFields) 
+  val gen = new BundleGenerator("minirvcpu", "CtrlSignals", collector.allFields) 
   gen.generate(args(0) + "CtrlSignals.scala")
 }

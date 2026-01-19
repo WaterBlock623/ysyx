@@ -1,4 +1,4 @@
-package common.util
+package util
 
 import chisel3._
 

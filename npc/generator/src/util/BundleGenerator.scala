@@ -1,6 +1,5 @@
-package generator.util
+package util
 
-import common.util.CanAutoGenSig
 import java.io.{File, PrintWriter}
 import chisel3._
 import chisel3.util.experimental.decode._
