@@ -54,10 +54,6 @@ object playground extends BaseModule {
 
     Seq(PathRef(Task.dest))
   }
-
-	override def allSourceFiles = Task {
-    super.allSourceFiles() ++ generatedSources().flatMap(p => os.walk(p.path)).filter(_.ext == "scala").map(PathRef(_))
-  }
   
   def repositoriesTask = Task.Anon {
     Seq(
