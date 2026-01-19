@@ -2,7 +2,7 @@ package playground.minirvcpu
 
 import chisel3._
 import chisel3.util.experimental.decode._
-import common.minirvcpu.InstDecodeCollector
+import common.minirvcpu._
 
 // 指令译码Module
 class IDU(implicit private val cfg: CoreConfig) extends Module {
