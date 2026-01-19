@@ -4,7 +4,8 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
-import scala.collection.mutable.ListBuffer
+import scala.reflect.runtime.universe._
+import chisel3.properties.ClassType
 
 /*
 class DecodePairSaver[T] {
@@ -255,19 +256,7 @@ class SCpu extends Module {
 }
 */
 
-case class Config(
-  val xlen: Int = 32,
-  val registerAddrWidth: Int = 4,
-  val registerReadPortNum: Int = 2,
-  ) {
-  require(Integer.bitCount(xlen) == 1)
-  val registerNum: Int = scala.math.pow(2, registerAddrWidth).toInt
-}
-object Config {
-  implicit val cfg: Config = Config()
-}
-
-class RegisterFile(implicit val cfg: Config) extends Module {
+class RegisterFile(implicit val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val wAddr = Input(UInt(cfg.registerAddrWidth.W))
     val wData = Input(UInt(cfg.xlen.W))
@@ -283,3 +272,5 @@ class RegisterFile(implicit val cfg: Config) extends Module {
   regFile(0) := 0.U
   io.rData := regFile(io.rAddr)
 }
+
+
