@@ -122,7 +122,18 @@ config CC_ASAN
   depends on MODE_SYSTEM
   bool "Enable address sanitizer"
   default n
+
+config CC_UBSAN
+  depends on MODE_SYSTEM
+  bool "Enable undefined sanitizer"
+  default n
+
+config CC_LKSAN
+  depends on MODE_SYSTEM
+  bool "Enable leak sanitizer"
+  default n
 endmenu
+
 
 menu "Testing and Debugging"
 
