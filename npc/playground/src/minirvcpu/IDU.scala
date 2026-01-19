@@ -8,7 +8,7 @@ class IDU(implicit private val cfg: CoreConfig) extends Module {
   val inst = IO(Input(UInt(cfg.xlen.W)))
 
   val decodeCollector = InstDecodeCollector()
-  val ctrlSignals = IO(new CtrlSignals(decodeCollector.allFields))
+  val ctrlSignals = IO(new CtrlSignals())
 
   val decodeTable = new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
   val decodeResult = decodeTable.decode(inst)
