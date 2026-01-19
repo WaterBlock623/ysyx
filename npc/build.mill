@@ -49,7 +49,7 @@ object playground extends BaseModule {
     os.proc(
       "java", 
       "-cp", cp.map(_.path).mkString(":"), 
-      "generator.minirvcpu.GenCtrlSignals",
+      "minirvcpu.GenCtrlSignals",
       dest.toString()
     ).call()
 
