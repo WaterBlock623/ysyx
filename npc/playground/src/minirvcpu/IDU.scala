@@ -98,7 +98,7 @@ class IDU(implicit val cfg: CoreConfig) extends Module {
   val decodeTable = new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
   val decodeResult = decodeTable.decode(inst)
   decodeCollector.allFields.foreach { f =>
-    ctrlSignals.elements(f.stage).asInstanceOf[Bundle].elements(f.name) := 
+    ctrlSignals.elements(f.stage).asInstanceOf[Record].elements(f.name) := 
       decodeResult(f.asInstanceOf[DecodeField[_, _ <: Data]])
   }
 }
