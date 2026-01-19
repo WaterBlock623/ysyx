@@ -42,18 +42,17 @@ object playground extends BaseModule {
 
   override def moduleDeps = Seq(common) 
 
-  override def generatedSources = Task {
-    val dest = Task.dest
+  override def generatedSources: T[Seq[PathRef]] = Task {
     val cp = generator.runClasspath()
     
     os.proc(
       "java", 
       "-cp", cp.map(_.path).mkString(":"), 
       "minirvcpu.GenCtrlSignals",
-      dest.toString()
+      Task.dest.toString()
     ).call()
 
-    Seq(PathRef(dest))
+    Seq(PathRef(Task.dest))
   }
 
 	override def allSourceFiles = Task {
