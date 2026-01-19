@@ -67,7 +67,7 @@ case class InstDecodeCollector()(implicit private val cfg: CoreConfig) {
 
 class IDU(implicit val cfg: CoreConfig) extends Module {
   val ctrlSignals = IO(new CtrlSignals)
-  val inst = IO(UInt(cfg.xlen.W))
+  val inst = IO(Input(UInt(cfg.xlen.W)))
 
   val decodeCollector = InstDecodeCollector()
   val decodeTable = new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
