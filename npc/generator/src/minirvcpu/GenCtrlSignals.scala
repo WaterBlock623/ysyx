@@ -1,7 +1,7 @@
 package generator.minirvcpu
 
 import generator.util.BundleGenerator
-import common.InstDecodeCollector
+import common.minirvcpu.InstDecodeCollector
 
 object GenCtrlSignals extends App {
   val collector = InstDecodeCollector()
