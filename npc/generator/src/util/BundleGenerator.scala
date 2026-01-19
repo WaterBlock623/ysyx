@@ -4,7 +4,6 @@ import common.util.CanAutoGenSig
 import java.io.{File, PrintWriter}
 import chisel3._
 import chisel3.util.experimental.decode._
-import generator.util.BundleGenerator.getChiselTypeName
 
 object BundleGenerator {
   def getChiselTypeName(d: Data): String = d match {
@@ -35,7 +34,7 @@ class BundleGenerator(
     groupedFields.keys.toSeq.sorted.foreach { unit =>
       code.append(s"  val $unit = new Bundle {\n") 
       groupedFields(unit).foreach { field =>
-        code.append(s"    val ${field.name} = ${getChiselTypeName(field.chiselType)}\n")
+        code.append(s"    val ${field.name} = ${BundleGenerator.getChiselTypeName(field.chiselType)}\n")
       }
       code.append("  }\n")
     }
