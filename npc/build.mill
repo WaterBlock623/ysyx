@@ -10,7 +10,7 @@ import mill.scalalib._
 // support BSP
 import mill.bsp._
 
-object BaseModule extends ScalaModule {
+trait BaseModule extends ScalaModule {
   override def scalaVersion = "2.13.15"
 
   override def scalacOptions = Seq(
