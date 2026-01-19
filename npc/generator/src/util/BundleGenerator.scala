@@ -4,6 +4,7 @@ import common.util.CanAutoGenSig
 import java.io.{File, PrintWriter}
 import chisel3._
 import chisel3.util.experimental.decode._
+import generator.util.BundleGenerator.getChiselTypeName
 
 object BundleGenerator {
   def getChiselTypeName(d: Data): String = d match {
