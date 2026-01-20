@@ -1,9 +1,12 @@
 #include "verilated.h"
 #include "verilated_fst_c.h"
-#include <nvboard.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#ifndef NO_NVBOARD
+#include <nvboard.h>
+#endif
 
 void nvboard_bind_all_pins(TOP_NAME* top);
 
@@ -16,8 +19,10 @@ void sim_init(int argc, char** argv)
     contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
     top = new TOP_NAME{contextp};
+#ifndef NO_NVBOARD
 	nvboard_bind_all_pins(top);
 	nvboard_init();
+#endif
 #ifdef ENAWAVE
 	Verilated::traceEverOn(true);
 	tfp = new VerilatedFstC;
@@ -34,7 +39,9 @@ void sim_close(void)
 #endif
     delete top;
     delete contextp;
+#ifndef NO_NVBOARD
 	nvboard_quit();
+#endif
 }
 
 void single_cycle(void)
@@ -63,7 +70,9 @@ int main(int argc, char** argv) {
 	sim_init(argc, argv);
 	reset(10);
     while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
+#ifndef NO_NVBOARD
 		nvboard_update();
+#endif
 		single_cycle();
 	}
 	sim_close();
