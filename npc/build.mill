@@ -30,6 +30,7 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
       ivy"edu.berkeley.cs::chiseltest:6.0.0"
     )
   }
+
 }
 
 object common extends BaseModule

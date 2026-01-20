@@ -10,11 +10,21 @@ trait HasMoreSignalInfo extends CanAutoGenSig {
   def extType: ExtType.Value
 }
 
+object AluSourceEnum extends ChiselEnum {
+  val imm, rd2 = Value
+}
+
+object AluOpEnum extends ChiselEnum {
+  val add = Value
+}
+
 case class InstPatternMaker(
   name: String,
   bp: String,
   instType: InstType.InstType,
   isWriteBackReg: Boolean = false,
+  aluSrc2: Data = DontCare,
+  aluOp: Data = DontCare,
   ) extends DecodePattern {
     def bitPat: BitPat = BitPat("b" + bp)
 }
@@ -22,9 +32,12 @@ case class InstPatternMaker(
 // 指令定义
 object InstPatterns {
   import InstType._
+  import AluSourceEnum._
+  import AluOpEnum._
+
   val instsBase: Seq[InstPatternMaker] = Seq(
     InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", I, 
-      isWriteBackReg = true),
+      isWriteBackReg = true, aluSrc2 = imm, aluOp = add),
     )
 //  val instsExtM: Seq[InstPatternMaker] = Seq.empty
 }
@@ -37,7 +50,35 @@ object InstFields {
       def extType = ExtType.I
       def stage = "wb"
       def genTable(i: InstPatternMaker) = if (i.isWriteBackReg) y else n
-    }
+    },
+    
+    new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
+      def name = "aluSrc2"
+      def extType = ExtType.I
+      def stage = "ex"
+      def chiselType = UInt(AluSourceEnum.getWidth.W)
+      def genTable(i: InstPatternMaker) = {
+        i.aluSrc2 match {
+          case e: AluSourceEnum.Type => BitPat(e.litValue.U(AluSourceEnum.getWidth.W))
+          case DontCare => dc
+          case v => throw new IllegalArgumentException(s"Invalid aluSrc2 value: $v")
+        } 
+      }
+    },
+
+    new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
+      def name = "aluOp"
+      def extType = ExtType.I
+      def stage = "ex"
+      def chiselType = UInt(AluOpEnum.getWidth.W)
+      def genTable(i: InstPatternMaker) = {
+        i.aluOp match {
+          case e: AluOpEnum.Type => BitPat(e.litValue.U(AluOpEnum.getWidth.W))
+          case DontCare => dc
+          case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
+        } 
+      }
+    },
   )
 }
 
