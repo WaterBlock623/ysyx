@@ -61,7 +61,7 @@ object InstFields {
         i.aluSrc2 match {
           case e: AluSourceEnum.Type => BitPat(e.litValue.U(AluSourceEnum.getWidth.W))
           // case DontCare => dc
-          case DontCare => throw new IllegalArgumentException(s"dc aluSrc2 value: $v")
+          case DontCare => throw new IllegalArgumentException(s"dc aluSrc2 value")
           case v => throw new IllegalArgumentException(s"Invalid aluSrc2 value: $v")
         } 
       }
@@ -76,7 +76,7 @@ object InstFields {
         i.aluOp match {
           case e: AluOpEnum.Type => BitPat(e.litValue.U(AluOpEnum.getWidth.W))
           // case DontCare => dc
-          case DontCare => throw new IllegalArgumentException(s"dc aluOp value: $v")
+          case DontCare => throw new IllegalArgumentException(s"dc aluOp value")
           case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
         } 
       }
