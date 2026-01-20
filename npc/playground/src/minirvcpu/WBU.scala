@@ -46,7 +46,7 @@ class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val isWriteBranchVal = Bool()
   }
   val registerFile = new Bundle {
-    val rAddr = UInt(cfg.registerAddrWidth.W)
+    val rAddr = Vec(2, UInt(cfg.registerAddrWidth.W))
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val wData = UInt(cfg.xlen.W)
     val wEn = Bool()
