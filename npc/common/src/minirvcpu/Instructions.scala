@@ -29,6 +29,7 @@ object AluOpEnum extends ChiselEnum {
 case class InstPatternMaker(
   name: String,
   bp: String,
+  extType: ExtTypeEnum.Type,
   instType: InstTypeEnum.Type,
   isWriteBackReg: Boolean = false,
   aluSrc2: Data = DontCare,
@@ -44,7 +45,7 @@ object InstPatterns {
   import AluOpEnum._
 
   val instsBase: Seq[InstPatternMaker] = Seq(
-    InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", I, 
+    InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", ExtTypeEnum.I, I, 
       isWriteBackReg = true, aluSrc2 = imm, aluOp = add),
     )
 //  val instsExtM: Seq[InstPatternMaker] = Seq.empty
@@ -96,9 +97,9 @@ object InstFields {
       def stage = "ex"
       def chiselType = UInt(ExtTypeEnum.getWidth.W)
       def genTable(i: InstPatternMaker) = {
-        i.aluOp match {
-          case e: InstTypeEnum.Type => BitPat(e.litValue.U(ExtTypeEnum.getWidth.W))
-          case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
+        i.extType match {
+          case e: ExtTypeEnum.Type => BitPat(e.litValue.U(ExtTypeEnum.getWidth.W))
+          case v => throw new IllegalArgumentException(s"Invalid extType value: $v")
         } 
       }
     },
