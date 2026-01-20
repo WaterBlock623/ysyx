@@ -19,7 +19,7 @@ object InstTypeEnum extends ChiselEnum {
 }
 
 object AluSourceEnum extends ChiselEnum {
-  val imm, rd2 = Value
+  val imm, rs2 = Value
 }
 
 object AluOpEnum extends ChiselEnum {
