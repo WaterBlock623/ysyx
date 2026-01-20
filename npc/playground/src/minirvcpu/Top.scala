@@ -23,10 +23,11 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   val iduOut = idu.io.iduOut
   val exuOut = exu.io.exuOut
   val wbuOut = wbu.io.wbuOut
-
+  
   io.ifuOut := ifuOut
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
+  ifu.io.pcRegisterIn := pcRegisterOut
   ifu.io.lsuIn := io.lsuIn
   idu.io.ifuIn := ifuOut
   exu.io.iduIn := iduOut
