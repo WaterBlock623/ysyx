@@ -7,7 +7,15 @@ import scala.collection.immutable.ListMap
 import cpuutil.CanAutoGenSig
 
 trait HasMoreSignalInfo extends CanAutoGenSig {
-  def extType: ExtType.Value
+  def extType: ExtTypeEnum.Type
+}
+
+object ExtTypeEnum extends ChiselEnum {
+  val I, M = Value
+}
+
+object InstTypeEnum extends ChiselEnum {
+  val I = Value
 }
 
 object AluSourceEnum extends ChiselEnum {
@@ -21,7 +29,7 @@ object AluOpEnum extends ChiselEnum {
 case class InstPatternMaker(
   name: String,
   bp: String,
-  instType: InstType.InstType,
+  instType: InstTypeEnum.Type,
   isWriteBackReg: Boolean = false,
   aluSrc2: Data = DontCare,
   aluOp: Data = DontCare,
@@ -31,16 +39,13 @@ case class InstPatternMaker(
 
 // 指令定义
 object InstPatterns {
-  import InstType._
+  import InstTypeEnum._
   import AluSourceEnum._
   import AluOpEnum._
 
   val instsBase: Seq[InstPatternMaker] = Seq(
     InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", I, 
       isWriteBackReg = true, aluSrc2 = imm, aluOp = add),
-
-    InstPatternMaker("sub", "???????????? ????? 001 ????? 0010011", I, 
-      isWriteBackReg = true, aluSrc2 = rd2, aluOp = sub),
     )
 //  val instsExtM: Seq[InstPatternMaker] = Seq.empty
 }
@@ -50,14 +55,14 @@ object InstFields {
   val fieldsBase = Seq(
     new BoolDecodeField[InstPatternMaker] with HasMoreSignalInfo {
       def name = "isWriteBackReg"
-      def extType = ExtType.I
+      def extType = ExtTypeEnum.I
       def stage = "wb"
       def genTable(i: InstPatternMaker) = if (i.isWriteBackReg) y else n
     },
     
     new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
       def name = "aluSrc2"
-      def extType = ExtType.I
+      def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(AluSourceEnum.getWidth.W)
       def genTable(i: InstPatternMaker) = {
@@ -72,7 +77,7 @@ object InstFields {
 
     new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
       def name = "aluOp"
-      def extType = ExtType.I
+      def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(AluOpEnum.getWidth.W)
       def genTable(i: InstPatternMaker) = {
@@ -84,22 +89,48 @@ object InstFields {
         } 
       }
     },
+
+    new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
+      def name = "extTypeEnum"
+      def extType = ExtTypeEnum.I
+      def stage = "ex"
+      def chiselType = UInt(ExtTypeEnum.getWidth.W)
+      def genTable(i: InstPatternMaker) = {
+        i.aluOp match {
+          case e: InstTypeEnum.Type => BitPat(e.litValue.U(ExtTypeEnum.getWidth.W))
+          case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
+        } 
+      }
+    },
+
+    new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
+      def name = "instTypeEnum"
+      def extType = ExtTypeEnum.I
+      def stage = "id"
+      def chiselType = UInt(InstTypeEnum.getWidth.W)
+      def genTable(i: InstPatternMaker) = {
+        i.aluOp match {
+          case e: InstTypeEnum.Type => BitPat(e.litValue.U(InstTypeEnum.getWidth.W))
+          case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
+        } 
+      }
+    },
   )
 }
 
 // 根据启用的扩展生成Seq[DecodePattern]和Seq[DecodeField]
 case class InstDecodeCollector()(implicit private val cfg: CoreConfig) {
   private val patternMap = Map(
-    ExtType.I -> InstPatterns.instsBase,
+    ExtTypeEnum.I -> InstPatterns.instsBase,
 //    ExtType.M -> InstPatterns.instsExtM,
     )
 
   private val fieldMap = Map(
-    ExtType.I -> InstFields.fieldsBase,
+    ExtTypeEnum.I -> InstFields.fieldsBase,
 //    ExtType.M -> InstFields.fieldsExtM,
     )
 
-  private def genSeq[T](m: Map[ExtType.Value, Seq[T]]): Seq[T] = {
+  private def genSeq[T](m: Map[ExtTypeEnum.Type, Seq[T]]): Seq[T] = {
     cfg.extensions.flatMap { key =>
       m.getOrElse(key, 
         throw new IllegalArgumentException(s"Unsupported extension: $key is not in $m"))
