@@ -5,7 +5,7 @@ import chisel3.util._
 import scala.collection.immutable.ListMap
 
 class AluInput(implicit private val cfg: CoreConfig) extends Bundle {
-  val aluOp = Input(AluOpEnum())
+  val aluOp = Input(UInt(AluOpEnum.getWidth.W))
   val src1 = Input(UInt(cfg.xlen.W))
   val src2 = Input(UInt(cfg.xlen.W))
 }
@@ -24,7 +24,7 @@ class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
 
   import AluOpEnum._
   io.out := MuxLookup(io.in.aluOp, addResult)(Seq(
-    add -> addResult
+    add.asUInt -> addResult
     ))
 }
 

@@ -8,7 +8,7 @@ import chisel3.util.Fill
 class ImmParser(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(cfg.xlen.W))
-    val instType = Input(InstTypeEnum())
+    val instType = Input(UInt(InstTypeEnum.getWidth.W))
     val imm = Output(UInt(cfg.xlen.W))
   }) 
 
@@ -24,11 +24,11 @@ class ImmParser(implicit private val cfg: CoreConfig) extends Module {
       Fill(cfg.xlen - 20, inst(31)) ## inst(19, 12) ## inst(20) ## inst(30, 21) ## 0.U(1.W)
     
     io.imm := MuxLookup(io.instType, immTypeI)(Seq(
-      InstTypeEnum.I -> immTypeI,
-      InstTypeEnum.S -> immTypeS,
-      InstTypeEnum.B -> immTypeB,
-      InstTypeEnum.U -> immTypeU,
-      InstTypeEnum.J -> immTypeJ
+      InstTypeEnum.I.asUInt -> immTypeI,
+      InstTypeEnum.S.asUInt -> immTypeS,
+      InstTypeEnum.B.asUInt -> immTypeB,
+      InstTypeEnum.U.asUInt -> immTypeU,
+      InstTypeEnum.J.asUInt -> immTypeJ
       ))
   } else {
     throw new IllegalArgumentException("Unsupported extension")
