@@ -59,7 +59,7 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   // 根据扩展选择输出
   val muxSeq: Seq[(ExtTypeEnum.Type, UInt)] = 
     alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) => ext -> alu.io.out }.toSeq
-  io.aluOut := MuxLookup(io.extType, 0.U)(muxSeq)
+  io.aluOut := MuxLookup(io.extType, muxSeq.head._2)(muxSeq)
 }
 
 
