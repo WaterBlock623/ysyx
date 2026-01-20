@@ -13,7 +13,7 @@ class ImmParser(implicit private val cfg: CoreConfig) extends Module {
   }) 
 
   if (cfg.extensions.contains(ExtTypeEnum.I)) {
-    val inst = io.inst(32, 0)
+    val inst = io.inst(31, 0)
 
     val immTypeI = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 20)
     val immTypeS = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 25) ## inst(11, 7)
