@@ -39,6 +39,8 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
     val exuOut = new EXUSignals
   })
 
+  val ctrlSig = io.iduIn.ctrlSignals.ex
+
   // 根据扩展实例化Alu
   val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
     case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
@@ -46,13 +48,13 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   }.to(ListMap)
  
   // 连接Alu输入
-  val src2 = MuxLookup(io.iduIn.ctrlSignals.ex.aluSrc2, io.iduIn.imm)(Seq(
+  val src2 = MuxLookup(ctrlSig.aluSrc2, io.iduIn.imm)(Seq(
     AluSourceEnum.imm.asUInt -> io.iduIn.imm,
     AluSourceEnum.rs2.asUInt -> io.regFileIn.rData(1),
     ))
 
   val aluIn = Wire(Output(new AluInput))
-  aluIn.aluOp := io.iduIn.ctrlSignals.ex.aluOp
+  aluIn.aluOp := ctrlSig.aluOp
   aluIn.src1 := io.regFileIn.rData(0)
   aluIn.src2 := src2
   alus.foreach(alu => alu._2.io.in := aluIn) 
@@ -60,7 +62,7 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   // 根据扩展选择输出
   val muxSeq: Seq[(UInt, UInt)] = 
     alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) => ext.asUInt -> alu.io.out }.toSeq
-  io.exuOut.aluResult := MuxLookup(io.ctrlSignals.ex.extType, muxSeq.head._2)(muxSeq)
+  io.exuOut.aluResult := MuxLookup(ctrlSig.extType, muxSeq.head._2)(muxSeq)
 }
 
 
