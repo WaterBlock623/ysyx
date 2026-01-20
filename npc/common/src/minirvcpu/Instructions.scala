@@ -15,7 +15,7 @@ object ExtTypeEnum extends ChiselEnum {
 }
 
 object InstTypeEnum extends ChiselEnum {
-  val I = Value
+  val R, I, S, B, U, J = Value
 }
 
 object AluSourceEnum extends ChiselEnum {
@@ -105,7 +105,7 @@ object InstFields {
     },
 
     new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
-      def name = "instTypeEnum"
+      def name = "instType"
       def extType = ExtTypeEnum.I
       def stage = "id"
       def chiselType = UInt(InstTypeEnum.getWidth.W)
