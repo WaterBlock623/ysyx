@@ -139,6 +139,7 @@ object InstFields {
       def genTable(i: InstPatternMaker) = {
         i.branchValSrc match {
           case e: BranchValSrcEnum.Type => BitPat(e.litValue.U(BranchValSrcEnum.getWidth.W))
+          case DontCare => dc
           case v => throw new IllegalArgumentException(s"Invalid branchValSrc value: $v")
         } 
       }
