@@ -24,6 +24,7 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   val exuOut = exu.io.exuOut
   val wbuOut = wbu.io.wbuOut
 
+  io.ifuOut := ifuOut
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
   ifu.io.lsuIn := io.lsuIn
