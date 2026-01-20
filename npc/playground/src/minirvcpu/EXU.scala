@@ -28,6 +28,7 @@ class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
     add -> addResult
     ))
   */
+ io.out := DontCare
  switch (io.in.aluOp) {
    is (add) {
      io.out := addResult
