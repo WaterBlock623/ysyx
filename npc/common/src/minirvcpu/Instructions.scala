@@ -15,7 +15,7 @@ object AluSourceEnum extends ChiselEnum {
 }
 
 object AluOpEnum extends ChiselEnum {
-  val add = Value
+  val add, sub = Value
 }
 
 case class InstPatternMaker(
@@ -38,6 +38,9 @@ object InstPatterns {
   val instsBase: Seq[InstPatternMaker] = Seq(
     InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", I, 
       isWriteBackReg = true, aluSrc2 = imm, aluOp = add),
+
+    InstPatternMaker("sub", "???????????? ????? 001 ????? 0010011", I, 
+      isWriteBackReg = true, aluSrc2 = rd2, aluOp = sub),
     )
 //  val instsExtM: Seq[InstPatternMaker] = Seq.empty
 }
@@ -60,8 +63,8 @@ object InstFields {
       def genTable(i: InstPatternMaker) = {
         i.aluSrc2 match {
           case e: AluSourceEnum.Type => BitPat(e.litValue.U(AluSourceEnum.getWidth.W))
-          // case DontCare => dc
-          case DontCare => throw new IllegalArgumentException(s"dc aluSrc2 value")
+          case DontCare => dc
+          // case DontCare => throw new IllegalArgumentException(s"dc aluSrc2 value")
           case v => throw new IllegalArgumentException(s"Invalid aluSrc2 value: $v")
         } 
       }
@@ -75,8 +78,8 @@ object InstFields {
       def genTable(i: InstPatternMaker) = {
         i.aluOp match {
           case e: AluOpEnum.Type => BitPat(e.litValue.U(AluOpEnum.getWidth.W))
-          // case DontCare => dc
-          case DontCare => throw new IllegalArgumentException(s"dc aluOp value")
+          case DontCare => dc
+          // case DontCare => throw new IllegalArgumentException(s"dc aluOp value")
           case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
         } 
       }
