@@ -109,9 +109,9 @@ object InstFields {
       def stage = "id"
       def chiselType = UInt(InstTypeEnum.getWidth.W)
       def genTable(i: InstPatternMaker) = {
-        i.aluOp match {
+        i.instType match {
           case e: InstTypeEnum.Type => BitPat(e.litValue.U(InstTypeEnum.getWidth.W))
-          case v => throw new IllegalArgumentException(s"Invalid aluOp value: $v")
+          case v => throw new IllegalArgumentException(s"Invalid instType value: $v")
         } 
       }
     },
