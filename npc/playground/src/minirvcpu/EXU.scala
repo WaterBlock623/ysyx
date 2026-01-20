@@ -41,7 +41,7 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
 
   // 根据扩展实例化Alu
   val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
-    case ExtTypeEnum.I => ExtTypeEnum.I -> new AluBase
+    case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
     case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
   }.to(ListMap)
  
