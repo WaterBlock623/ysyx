@@ -60,6 +60,7 @@ void single_cycle(void)
 	contextp->timeInc(1);
 
 	top->io_lsuIn_rData_0 = pmem_read(top->io_ifuOut_memRAddr);
+	printf("%0#32u\n", top->io_ifuOut_memRAddr);
 
 #ifdef ENAWAVE
 	tfp->dump(contextp->time());
@@ -80,7 +81,7 @@ void reset(int n) {
 
 int main(int argc, char** argv) {
 	//int sim_time = 2 * 25000000;
-	int sim_time = 20;
+	int sim_time = 50;
 	sim_init(argc, argv);
 	reset(10);
     while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
