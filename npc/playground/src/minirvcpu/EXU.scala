@@ -1,7 +1,7 @@
 package minirvcpu
 
 import chisel3._
-import chisel3.util.MuxLookup
+import chisel3.util._
 import scala.collection.immutable.ListMap
 
 class AluInput(implicit private val cfg: CoreConfig) extends Bundle {
@@ -23,9 +23,16 @@ class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
   val addResult = io.in.src1 + io.in.src2
 
   import AluOpEnum._
-  io.out := MuxLookup(io.in.aluOp, DontCare.asUInt)(Seq(
+  /*
+  io.out := MuxLookup(io.in.aluOp, 0.U)(Seq(
     add -> addResult
     ))
+  */
+ switch (io.in.aluOp) {
+   is (add) {
+     io.out := addResult
+   }
+ }
 }
 
 class EXU(implicit private val cfg: CoreConfig) extends Module {
