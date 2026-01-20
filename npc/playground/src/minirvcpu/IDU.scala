@@ -50,20 +50,31 @@ class InstDecoder(implicit private val cfg: CoreConfig) extends Module {
   }
 }
 
-class IDU(implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(new Bundle {
-    val inst = Input(UInt(cfg.xlen.W))
+class IDUSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val ctrlSignals = Output(new CtrlSignals())
     val imm = Output(UInt(cfg.xlen.W))
+    val regFileRAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
+    val regFileWAddr = Output(UInt(cfg.registerAddrWidth.W))
+}
+
+class IDU(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val ifuIn = Flipped(new IFUSignals)
+    val iduOut = new IDUSignals
   })
   
+  io.iduOut.regFileRAddr(0) := io.ifuIn.inst(19, 15)
+  io.iduOut.regFileRAddr(1) := io.ifuIn.inst(24, 20)
+
+  io.iduOut.regFileWAddr := io.ifuIn.inst(11, 7)
+
   val instDecoder = Module(new InstDecoder())
   val immParser = Module(new ImmParser())
 
-  instDecoder.io.inst := io.inst
-  io.ctrlSignals := instDecoder.io.ctrlSignals
+  instDecoder.io.inst := io.ifuIn.inst
+  io.iduOut.ctrlSignals := instDecoder.io.ctrlSignals
 
-  immParser.io.inst := io.inst
-  immParser.io.instType := io.ctrlSignals.id.instType
-  io.imm := immParser.io.imm 
+  immParser.io.inst := io.ifuIn.inst
+  immParser.io.instType := io.iduOut.ctrlSignals.id.instType
+  io.iduOut.imm := immParser.io.imm 
 }

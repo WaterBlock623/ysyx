@@ -3,63 +3,77 @@ package minirvcpu
 import chisel3._
 import chisel3.util.MuxLookup
 
-class MemSignalsTemplate(private val rPortNum: Int, private val wPortNum: Int
-  , private val addrWidth: Int, private val dataWidth: Int) extends Bundle {
-    val rAddr = Input(Vec(rPortNum, UInt(addrWidth.W)))
-    val rData = Output(Vec(rPortNum, UInt(dataWidth.W)))
-    val wAddr = Input(Vec(wPortNum, UInt(addrWidth.W)))
-    val wData = Input(Vec(wPortNum, UInt(dataWidth.W)))
-    val wEn = Input(Bool())
+class RegisterFileSignals(implicit private val cfg: CoreConfig) extends Bundle {
+  val rData = Output(Vec(2, UInt(cfg.xlen.W)))
 }
 
-class RegFileSignals(implicit val cfg: CoreConfig) 
-  extends MemSignalsTemplate(rPortNum = 2,
-                             wPortNum = 1,
-                             addrWidth = cfg.registerAddrWidth,
-                             dataWidth = cfg.xlen)
+class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val wbuIn = Flipped(new WBUSignals)
+    val registerFileOut = new RegisterFileSignals
+  })
 
-class RegisterFile(implicit val cfg: CoreConfig) extends Module {
-  val io = IO(new RegFileSignals)
-
+  val sigIn = io.wbuIn.registerFile
   val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
-  when (io.wEn) {
-    regFile(io.wAddr(0)) := io.wData(0)
+  when (sigIn.wEn) {
+    regFile(sigIn.wAddr) := sigIn.wData
   }
   regFile(0) := 0.U
-  io.rData(0) := regFile(io.rAddr(0))
-  io.rData(1) := regFile(io.rAddr(1))
+  io.registerFileOut.rData(0) := regFile(sigIn.rAddr(0))
+  io.registerFileOut.rData(1) := regFile(sigIn.rAddr(1))
 }
 
-class PcRegSignals(implicit private val cfg: CoreConfig) extends Bundle {
-    val isBrach = Input(Bool())
-    val imm = Input(UInt(cfg.xlen.W))
-    val aluResult = Input(UInt(cfg.xlen.W))
-    val branchValSrc = Input(BranchValSrcEnum())
+class PcRegisterSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val pc = Output(UInt(cfg.xlen.W))
 }
 
 class PcRegister(implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(new PcRegSignals)
+  val io = IO(new Bundle {
+    val wbuIn = Flipped(new WBUSignals)
+    val pcRegisterOut = new PcRegisterSignals
+  })
 
-  val branchVal = MuxLookup(io.branchValSrc, io.imm)(Seq(
-    BranchValSrcEnum.imm -> io.imm,
-    BranchValSrcEnum.alu -> io.aluResult
-    ))
-  val isWriteBranchVal = io.isBrach && io.aluResult(0)
+  val sigIn = io.wbuIn.pcRegister
   val pcReg = RegInit(0.U(cfg.xlen.W))
-  val pcNext = Mux(isWriteBranchVal, branchVal, pcReg + 4.U)
+  val pcNext = Mux(sigIn.isWriteBranchVal, sigIn.branchVal, pcReg + 4.U)
   pcReg := pcNext
-  io.pc := pcReg
+  io.pcRegisterOut.pc := pcReg
+}
+
+class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+  val pcRegister = new Bundle {
+    val branchVal = UInt(cfg.xlen.W)
+    val isWriteBranchVal = Bool()
+  }
+  val registerFile = new Bundle {
+    val rAddr = UInt(cfg.registerAddrWidth.W)
+    val wAddr = UInt(cfg.registerAddrWidth.W)
+    val wData = UInt(cfg.xlen.W)
+    val wEn = Bool()
+  }
 }
 
 class WBU(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val pcRegSignals = new PcRegSignals
-    val regFileSignals = new RegFileSignals
+    val iduIn = Flipped(new IDUSignals)
+    val exuIn = Flipped(new EXUSignals)
+    val wbuOut = new WBUSignals
   }) 
 
-  val pcRegister = Module(new PcRegister)
-  val regFile = Module(new RegisterFile)
-  io.pcRegSignals :<>= pcRegister.io
-  io.regFileSignals :<>= regFile.io
+
+  val ctrlSig = io.iduIn.ctrlSignals.wb
+  val pcRegOut = io.wbuOut.pcRegister
+  val regFileOut = io.wbuOut.registerFile
+
+  pcRegOut.branchVal := MuxLookup(ctrlSig.branchValSrc, io.iduIn.imm)(Seq(
+      BranchValSrcEnum.imm.asUInt -> io.iduIn.imm,
+      BranchValSrcEnum.alu.asUInt -> io.exuIn.aluResult
+    ))
+
+  pcRegOut.isWriteBranchVal := ctrlSig.isBranch && io.exuIn.aluResult(0)
+
+  regFileOut.rAddr := io.iduIn.regFileRAddr
+  regFileOut.wAddr := io.iduIn.regFileWAddr
+  regFileOut.wData := io.exuIn.aluResult
+  regFileOut.wEn := ctrlSig.isWriteBackReg
 }

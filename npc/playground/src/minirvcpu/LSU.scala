@@ -2,12 +2,15 @@ package minirvcpu
 
 import chisel3._
 
-class MemSignals(implicit val cfg: CoreConfig) 
-  extends MemSignalsTemplate(rPortNum = 2,
-                             wPortNum = 1,
-                             addrWidth = cfg.memoryAddrWidth,
-                             dataWidth = cfg.xlen)
+class LSUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+  val rData = Vec(2, UInt(cfg.xlen.W))
+}
 
 class LSU(implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(new MemSignals)
+  val io = IO(new Bundle {
+    val ifuIn = Flipped(new IFUSignals)
+    val lsuOut = new LSUSignals
+  })
+  
+
 }

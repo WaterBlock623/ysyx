@@ -28,15 +28,15 @@ class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
     ))
 }
 
+class EXUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+  val aluResult = Output(UInt(cfg.xlen.W))
+}
+
 class EXU(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val aluOp = Input(AluOpEnum())
-    val extType = Input(ExtTypeEnum())
-    val aluSrc2 = Input(AluSourceEnum())
-    val rs1 = Input(UInt(cfg.xlen.W))
-    val rs2 = Input(UInt(cfg.xlen.W))
-    val imm = Input(UInt(cfg.xlen.W))
-    val aluOut = Output(UInt(cfg.xlen.W))
+    val iduIn = Flipped(new IDUSignals)
+    val regFileIn = Flipped(new RegisterFileSignals)
+    val exuOut = new EXUSignals
   })
 
   // 根据扩展实例化Alu
@@ -46,20 +46,21 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   }.to(ListMap)
  
   // 连接Alu输入
-  val src2 = MuxLookup(io.aluSrc2, io.imm)(Seq(
-    AluSourceEnum.imm -> io.imm,
-    AluSourceEnum.rs2 -> io.rs2,
+  val src2 = MuxLookup(io.iduIn.ctrlSignals.ex.aluSrc2, io.iduIn.imm)(Seq(
+    AluSourceEnum.imm.asUInt -> io.iduIn.imm,
+    AluSourceEnum.rs2.asUInt -> io.regFileIn.rData(1),
     ))
+
   val aluIn = Wire(Output(new AluInput))
-  aluIn.aluOp := io.aluOp
-  aluIn.src1 := io.rs1
+  aluIn.aluOp := io.iduIn.ctrlSignals.ex.aluOp
+  aluIn.src1 := io.regFileIn.rData(0)
   aluIn.src2 := src2
   alus.foreach(alu => alu._2.io.in := aluIn) 
 
   // 根据扩展选择输出
-  val muxSeq: Seq[(ExtTypeEnum.Type, UInt)] = 
-    alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) => ext -> alu.io.out }.toSeq
-  io.aluOut := MuxLookup(io.extType, muxSeq.head._2)(muxSeq)
+  val muxSeq: Seq[(UInt, UInt)] = 
+    alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) => ext.asUInt -> alu.io.out }.toSeq
+  io.exuOut.aluResult := MuxLookup(io.ctrlSignals.ex.extType, muxSeq.head._2)(muxSeq)
 }
 
 
