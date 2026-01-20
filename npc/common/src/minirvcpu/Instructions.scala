@@ -26,15 +26,21 @@ object AluOpEnum extends ChiselEnum {
   val add, sub = Value
 }
 
+object BranchValSrcEnum extends ChiselEnum {
+  val imm, alu = Value
+}
+
+// 指令属性
 case class InstPatternMaker(
   name: String,
   bp: String,
   extType: ExtTypeEnum.Type,
   instType: InstTypeEnum.Type,
   isWriteBackReg: Boolean = false,
-  isBranch: Boolean = false,
   aluSrc2: Data = DontCare,
   aluOp: Data = DontCare,
+  isBranch: Boolean = false,
+  branchValSrc: Data = DontCare,
   ) extends DecodePattern {
     def bitPat: BitPat = BitPat("b" + bp)
 }
@@ -100,7 +106,7 @@ object InstFields {
     },
 
     new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
-      def name = "extTypeEnum"
+      def name = "extType"
       def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(ExtTypeEnum.getWidth.W)
@@ -121,6 +127,19 @@ object InstFields {
         i.instType match {
           case e: InstTypeEnum.Type => BitPat(e.litValue.U(InstTypeEnum.getWidth.W))
           case v => throw new IllegalArgumentException(s"Invalid instType value: $v")
+        } 
+      }
+    },
+
+    new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
+      def name = "branchValSrc"
+      def extType = ExtTypeEnum.I
+      def stage = "wb"
+      def chiselType = UInt(BranchValSrcEnum.getWidth.W)
+      def genTable(i: InstPatternMaker) = {
+        i.branchValSrc match {
+          case e: BranchValSrcEnum.Type => BitPat(e.litValue.U(BranchValSrcEnum.getWidth.W))
+          case v => throw new IllegalArgumentException(s"Invalid branchValSrc value: $v")
         } 
       }
     },

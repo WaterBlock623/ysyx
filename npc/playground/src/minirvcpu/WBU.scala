@@ -1,6 +1,7 @@
 package minirvcpu
 
 import chisel3._
+import chisel3.util.MuxLookup
 
 class MemSignalsTemplate(private val rPortNum: Int, private val wPortNum: Int
   , private val addrWidth: Int, private val dataWidth: Int) extends Bundle {
@@ -29,20 +30,36 @@ class RegisterFile(implicit val cfg: CoreConfig) extends Module {
   io.rData(1) := regFile(io.rAddr(1))
 }
 
-class PcRegister(implicit val cfg: CoreConfig) extends Module {
-  val io = IO(new Bundle {
-    val wData = Input(UInt(cfg.xlen.W))
-    val wEn = Input(Bool())
+class PcRegSignals(implicit private val cfg: CoreConfig) extends Bundle {
+    val isBrach = Input(Bool())
+    val imm = Input(UInt(cfg.xlen.W))
+    val aluResult = Input(UInt(cfg.xlen.W))
+    val branchValSrc = Input(BranchValSrcEnum())
     val pc = Output(UInt(cfg.xlen.W))
-  })
+}
 
+class PcRegister(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new PcRegSignals)
+
+  val branchVal = MuxLookup(io.branchValSrc, io.imm)(Seq(
+    BranchValSrcEnum.imm -> io.imm,
+    BranchValSrcEnum.alu -> io.aluResult
+    ))
+  val isWriteBranchVal = io.isBrach && io.aluResult(0)
   val pcReg = RegInit(0.U(cfg.xlen.W))
-  when (io.wEn) {
-    pcReg := io.wData
-  }
+  val pcNext = Mux(isWriteBranchVal, branchVal, pcReg + 4.U)
+  pcReg := pcNext
   io.pc := pcReg
 }
 
 class WBU(implicit private val cfg: CoreConfig) extends Module {
-  
+  val io = IO(new Bundle {
+    val pcRegSignals = new PcRegSignals
+    val regFileSignals = new RegFileSignals
+  }) 
+
+  val pcRegister = Module(new PcRegister)
+  val regFile = Module(new RegisterFile)
+  io.pcRegSignals :<>= pcRegister.io
+  io.regFileSignals :<>= regFile.io
 }
