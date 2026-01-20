@@ -60,7 +60,7 @@ void single_cycle(void)
 	contextp->timeInc(1);
 
 	top->io_lsuIn_rData_0 = pmem_read(top->io_ifuOut_memRAddr);
-	printf("%0#32u\n", top->io_ifuOut_memRAddr);
+	printf("%0#8u\n", top->io_ifuOut_memRAddr);
 
 #ifdef ENAWAVE
 	tfp->dump(contextp->time());
