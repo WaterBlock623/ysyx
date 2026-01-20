@@ -32,6 +32,7 @@ case class InstPatternMaker(
   extType: ExtTypeEnum.Type,
   instType: InstTypeEnum.Type,
   isWriteBackReg: Boolean = false,
+  isBranch: Boolean = false,
   aluSrc2: Data = DontCare,
   aluOp: Data = DontCare,
   ) extends DecodePattern {
@@ -61,6 +62,13 @@ object InstFields {
       def genTable(i: InstPatternMaker) = if (i.isWriteBackReg) y else n
     },
     
+    new BoolDecodeField[InstPatternMaker] with HasMoreSignalInfo {
+      def name = "isBranch"
+      def extType = ExtTypeEnum.I
+      def stage = "wb"
+      def genTable(i: InstPatternMaker) = if (i.isBranch) y else n
+    },
+
     new DecodeField[InstPatternMaker, UInt] with HasMoreSignalInfo {
       def name = "aluSrc2"
       def extType = ExtTypeEnum.I

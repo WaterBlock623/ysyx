@@ -64,6 +64,6 @@ class IDU(implicit private val cfg: CoreConfig) extends Module {
   io.ctrlSignals := instDecoder.io.ctrlSignals
 
   immParser.io.inst := io.inst
-  immParser.io.instType := io.ctrlSignals
-  
+  immParser.io.instType := io.ctrlSignals.id.instType
+  io.imm := immParser.io.imm 
 }
