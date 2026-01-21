@@ -26,7 +26,7 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
   ifu.io.pcRegisterIn := pcRegisterOut
-  ifu.io.memInstFetchIO :<>= io.memInstFetchIO
+  ifu.io.memInstFetchIO <> io.memInstFetchIO
   idu.io.ifuIn := ifuOut
   exu.io.iduIn := iduOut
   exu.io.regFileIn := registerFileOut
