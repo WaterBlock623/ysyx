@@ -42,7 +42,7 @@ object InstPatternss {
 }
 
 class Test {
-  print(InstPatternss.allInsts)
+  // print(InstPatternss.allInsts)
 }
 
 // 指令属性
