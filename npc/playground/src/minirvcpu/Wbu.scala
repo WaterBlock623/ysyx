@@ -42,7 +42,7 @@ class PcRegister(implicit private val cfg: CoreConfig) extends Module {
 
 class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val pcRegister = new Bundle {
-    val branchVal = UInt(cfg.xlen.W)
+    val jumpAddr = UInt(cfg.xlen.W)
     val isJump = Bool()
   }
   val registerFile = new Bundle {
@@ -65,7 +65,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val pcRegOut = io.wbuOut.pcRegister
   val regFileOut = io.wbuOut.registerFile
 
-  pcRegOut.branchVal := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
+  pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
       JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
       JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
     ))
