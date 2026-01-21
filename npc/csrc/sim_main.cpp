@@ -46,9 +46,12 @@ void sim_close(void)
 }
 
 uint32_t M[1 << 22] = {
-	0x00a00093,
-	0x00508113,
-	0xff410193
+	0x01400513,
+	0x010000e7,
+	0x00c000e7,
+	0x00c00067,
+	0x00a50513,
+	0x00008067
 };
 uint32_t pmem_read(uint32_t addr) {
 	return M[addr >> 2];
