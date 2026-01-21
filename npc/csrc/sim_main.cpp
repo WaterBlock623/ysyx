@@ -59,8 +59,8 @@ void single_cycle(void)
 	top->clock = 0; top->eval();
 	contextp->timeInc(1);
 
-	top->io_lsuIn_rData_0 = pmem_read(top->io_ifuOut_memRAddr);
-	printf("%0#8x\n", top->io_ifuOut_memRAddr);
+	top->io_memInstFetchIO_rData = pmem_read(top->io_memInstFetchIO_rAddr);
+	printf("%0#8x\n", top->io_memInstFetchIO_rAddr);
 
 #ifdef ENAWAVE
 	tfp->dump(contextp->time());
@@ -73,7 +73,6 @@ void single_cycle(void)
 }
 
 void reset(int n) {
-	top->io_lsuIn_rData_1 = 0;
 	top->reset = 1;
 	while (n-- > 0) single_cycle();
 	top->reset = 0;
