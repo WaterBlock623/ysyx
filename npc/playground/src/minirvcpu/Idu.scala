@@ -5,6 +5,7 @@ import chisel3.util.experimental.decode._
 import chisel3.util.MuxLookup
 import chisel3.util.Fill
 
+// 解析imm
 class ImmParser(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(cfg.xlen.W))
@@ -35,6 +36,7 @@ class ImmParser(implicit private val cfg: CoreConfig) extends Module {
   }
 }
 
+// 指令译码
 class InstDecoder(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(cfg.xlen.W))
@@ -44,8 +46,9 @@ class InstDecoder(implicit private val cfg: CoreConfig) extends Module {
   val decodeCollector = InstDecodeCollector()
   val decodeTable = new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
   val decodeResult = decodeTable.decode(io.inst)
+  // 连接输出Bundle
   decodeCollector.allFields.foreach { f =>
-    io.ctrlSignals.elements(f.stage).asInstanceOf[Record].elements(f.name) := 
+    io.ctrlSignals.elements(f.stage).asInstanceOf[Bundle].elements(f.name) := 
       decodeResult(f.asInstanceOf[DecodeField[_, _ <: Data]])
   }
 }
@@ -65,15 +68,13 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   
   io.iduOut.regFileRAddr(0) := io.ifuIn.inst(19, 15)
   io.iduOut.regFileRAddr(1) := io.ifuIn.inst(24, 20)
-
   io.iduOut.regFileWAddr := io.ifuIn.inst(11, 7)
 
   val instDecoder = Module(new InstDecoder())
-  val immParser = Module(new ImmParser())
-
   instDecoder.io.inst := io.ifuIn.inst
   io.iduOut.ctrlSignals := instDecoder.io.ctrlSignals
 
+  val immParser = Module(new ImmParser())
   immParser.io.inst := io.ifuIn.inst
   immParser.io.instType := io.iduOut.ctrlSignals.id.instType
   io.iduOut.imm := immParser.io.imm 

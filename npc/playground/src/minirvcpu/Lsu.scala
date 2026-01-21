@@ -2,15 +2,16 @@ package minirvcpu
 
 import chisel3._
 
-class LsuSignals(implicit private val cfg: CoreConfig) extends Bundle {
-  val rData = Vec(2, UInt(cfg.xlen.W))
+class MemInstFetchIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Input(UInt(cfg.memoryAddrWidth.W))
+  val rData = Output(UInt(cfg.xlen.W))
 }
 
-class Lsu(implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(new Bundle {
-    val ifuIn = Flipped(new IfuSignals)
-    val lsuOut = new LsuSignals
-  })
-  
-
+class MemLoadStoreIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Input(UInt(cfg.memoryAddrWidth.W))
+  val rData = Output(UInt(cfg.xlen.W))
+  val wAddr = Input(UInt(cfg.memoryAddrWidth.W))
+  val wData = Input(UInt(cfg.xlen.W))
+  val wEn = Input(Bool())
 }
+

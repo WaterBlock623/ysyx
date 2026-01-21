@@ -6,8 +6,7 @@ import chisel3.util._
 
 class Top(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val ifuOut = new IfuSignals
-    val lsuIn = Flipped(new LsuSignals)
+    val memInstFetchIO = new MemInstFetchIO
   })
 
   val pcRegister = Module(new PcRegister)
@@ -24,11 +23,10 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   val exuOut = exu.io.exuOut
   val wbuOut = wbu.io.wbuOut
   
-  io.ifuOut := ifuOut
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
   ifu.io.pcRegisterIn := pcRegisterOut
-  ifu.io.lsuIn := io.lsuIn
+  ifu.io.memInstFetchIO :<>= io.memInstFetchIO
   idu.io.ifuIn := ifuOut
   exu.io.iduIn := iduOut
   exu.io.regFileIn := registerFileOut

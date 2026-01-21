@@ -3,6 +3,7 @@ package minirvcpu
 import chisel3._
 import chisel3.util.MuxLookup
 
+// gpr
 class RegisterFileSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val rData = Output(Vec(2, UInt(cfg.xlen.W)))
 }
@@ -23,6 +24,7 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   io.registerFileOut.rData(1) := regFile(sigIn.rAddr(1))
 }
 
+// pc
 class PcRegisterSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val pc = Output(UInt(cfg.xlen.W))
 }
@@ -40,6 +42,7 @@ class PcRegister(implicit private val cfg: CoreConfig) extends Module {
   io.pcRegisterOut.pc := pcReg
 }
 
+// 控制pc跳转和gpr读写
 class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val pcRegister = new Bundle {
     val jumpAddr = UInt(cfg.xlen.W)
