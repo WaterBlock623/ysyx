@@ -10,7 +10,7 @@ import mill.scalalib._
 // support BSP
 import mill.bsp._
 
-object playground extends ScalaModule with ScalafmtModule { m =>
+trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   override def scalaVersion = "2.13.15"
 
   override def scalacOptions = Seq(
@@ -31,6 +31,31 @@ object playground extends ScalaModule with ScalafmtModule { m =>
     )
   }
 
+}
+
+object common extends BaseModule
+
+object generator extends BaseModule {
+  override def moduleDeps = Seq(common) 
+}
+
+object playground extends BaseModule {
+
+  override def moduleDeps = Seq(common) 
+
+  override def generatedSources: T[Seq[PathRef]] = Task {
+    val cp = generator.runClasspath()
+    
+    os.proc(
+      "java", 
+      "-cp", cp.map(_.path).mkString(":"), 
+      "minirvcpu.GenCtrlSignals",
+      Task.dest.toString()
+    ).call()
+
+    Seq(PathRef(Task.dest))
+  }
+  
   def repositoriesTask = Task.Anon {
     Seq(
       coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),

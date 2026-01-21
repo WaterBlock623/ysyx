@@ -38,14 +38,22 @@ test_path:
 # project source
 VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-CSRCS += $(SRC_AUTO_BIND)
+ifneq ($(NVBOARD), off)
+	CSRCS += $(SRC_AUTO_BIND)
+endif
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+ifeq ($(NVBOARD), off)
+	NVBOARD_ARCHIVE := 
+	CXXFLAGS += -DNO_NVBOARD
+endif
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
+
+GENERATOR = minirvcpu.util.GenCtrlSignals
 
 test:
 	$(MILL) -i $(PRJ).test

@@ -2,110 +2,79 @@ package minirvcpu
 
 import chisel3._
 import chisel3.util.experimental.decode._
-import chisel3.util.BitPat
-import scala.collection.immutable.ListMap
-import scala.language.dynamics
+import chisel3.util.MuxLookup
+import chisel3.util.Fill
 
-trait HasMoreSignalInfo {
-  def extType: ExtType.Value
-  def stage: String
-  def chiselType: Data
-}
+class ImmParser(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val inst = Input(UInt(cfg.xlen.W))
+    val instType = Input(UInt(InstTypeEnum.getWidth.W))
+    val imm = Output(UInt(cfg.xlen.W))
+  }) 
 
-case class InstPatternMaker(
-  name: String,
-  bp: String,
-  instType: InstType.InstType,
-  isWriteBackReg: Boolean = false,
-  ) extends DecodePattern {
-    def bitPat: BitPat = BitPat("b" + bp)
-}
+  if (cfg.extensions.contains(ExtTypeEnum.I)) {
+    val inst = io.inst(31, 0)
 
-// 指令定义
-object InstPatterns {
-  import InstType._
-  val instsBase: Seq[InstPatternMaker] = Seq(
-    InstPatternMaker("addi", "???????????? ????? 000 ????? 0010011", I, 
-      isWriteBackReg = true),
-    )
-//  val instsExtM: Seq[InstPatternMaker] = Seq.empty
-}
-
-// 控制信号定义
-object InstFields {
-  val fieldsBase = Seq(
-    new BoolDecodeField[InstPatternMaker] with HasMoreSignalInfo {
-      def name = "isWriteBackReg"
-      def extType = ExtType.I
-      def stage = "wb"
-      def genTable(i: InstPatternMaker) = if (i.isWriteBackReg) y else n
-    }
-  )
-}
-
-// 根据启用的扩展生成Seq[DecodePattern]和Seq[DecodeField]
-case class InstDecodeCollector()(implicit private val cfg: CoreConfig) {
-  private val patternMap = Map(
-    ExtType.I -> InstPatterns.instsBase,
-//    ExtType.M -> InstPatterns.instsExtM,
-    )
-
-  private val fieldMap = Map(
-    ExtType.I -> InstFields.fieldsBase,
-//    ExtType.M -> InstFields.fieldsExtM,
-    )
-
-  private def genSeq[T](m: Map[ExtType.Value, Seq[T]]): Seq[T] = {
-    cfg.extensions.flatMap { key =>
-      m.getOrElse(key, 
-        throw new IllegalArgumentException(s"Unsupported extension: $key is not in $m"))
-    }
-  }
-
-  val allPatterns: Seq[InstPatternMaker] = genSeq(patternMap)
-  val allFields: Seq[DecodeField[InstPatternMaker, _ <: Data] with HasMoreSignalInfo] = 
-    genSeq(fieldMap)
-}
-
-// 生成包含所有控制信号端口的集合Record <io>.<stage>.<name>
-abstract class DynamicRecord(elementsMap: ListMap[String, Data]) extends Record with Dynamic {
-  val elements = elementsMap
-  def selectDynamic(name: String): Data = {
-    elements.getOrElse(name, throw new IllegalArgumentException(
-      s"Field $name not found in Record. Available: ${elements.keys.mkString(", ")}"))
+    val immTypeI = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 20)
+    val immTypeS = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 25) ## inst(11, 7)
+    val immTypeB = 
+      Fill(cfg.xlen - 12, inst(31)) ## inst(7) ## inst(30, 25) ## inst(11, 8) ## 0.U(1.W)
+    val immTypeU = Fill(cfg.xlen - 31, inst(31)) ## inst(30, 12) ## 0.U(12.W)
+    val immTypeJ = 
+      Fill(cfg.xlen - 20, inst(31)) ## inst(19, 12) ## inst(20) ## inst(30, 21) ## 0.U(1.W)
+    
+    io.imm := MuxLookup(io.instType, immTypeI)(Seq(
+      InstTypeEnum.I.asUInt -> immTypeI,
+      InstTypeEnum.S.asUInt -> immTypeS,
+      InstTypeEnum.B.asUInt -> immTypeB,
+      InstTypeEnum.U.asUInt -> immTypeU,
+      InstTypeEnum.J.asUInt -> immTypeJ
+      ))
+  } else {
+    throw new IllegalArgumentException("Unsupported extension")
   }
 }
 
-class StageSignals(fields: Seq[DecodeField[InstPatternMaker, _] with HasMoreSignalInfo])
-  extends DynamicRecord(ListMap(fields.map(f => f.name -> f.chiselType.cloneType): _*))
-
-class CtrlSignals(allFields: Seq[DecodeField[InstPatternMaker, _] with HasMoreSignalInfo])
-  extends DynamicRecord({
-    val grouped = allFields.groupBy(_.stage)
-    ListMap(grouped.toSeq.sortBy(_._1).map { case (stageName, stageFields) =>
-      stageName -> new StageSignals(stageFields)
-    }: _*)
+class InstDecoder(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val inst = Input(UInt(cfg.xlen.W))
+    val ctrlSignals = Output(new CtrlSignals())
   })
 
-object InstDecodeCollector {
-  def getCtrlSignals: Record = {
-    new CtrlSignals(InstDecodeCollector().allFields)
-  }
-}
-
-// 指令译码Module
-class IDU(implicit private val cfg: CoreConfig) extends Module {
-  val inst = IO(Input(UInt(cfg.xlen.W)))
-
   val decodeCollector = InstDecodeCollector()
-  val ctrlSignals = IO(new CtrlSignals(decodeCollector.allFields))
-
   val decodeTable = new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
-  val decodeResult = decodeTable.decode(inst)
+  val decodeResult = decodeTable.decode(io.inst)
   decodeCollector.allFields.foreach { f =>
-    ctrlSignals.elements(f.stage).asInstanceOf[Record].elements(f.name) := 
+    io.ctrlSignals.elements(f.stage).asInstanceOf[Record].elements(f.name) := 
       decodeResult(f.asInstanceOf[DecodeField[_, _ <: Data]])
   }
 }
 
+class IDUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+    val ctrlSignals = Output(new CtrlSignals())
+    val imm = Output(UInt(cfg.xlen.W))
+    val regFileRAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
+    val regFileWAddr = Output(UInt(cfg.registerAddrWidth.W))
+}
 
+class IDU(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val ifuIn = Flipped(new IFUSignals)
+    val iduOut = new IDUSignals
+  })
+  
+  io.iduOut.regFileRAddr(0) := io.ifuIn.inst(19, 15)
+  io.iduOut.regFileRAddr(1) := io.ifuIn.inst(24, 20)
+
+  io.iduOut.regFileWAddr := io.ifuIn.inst(11, 7)
+
+  val instDecoder = Module(new InstDecoder())
+  val immParser = Module(new ImmParser())
+
+  instDecoder.io.inst := io.ifuIn.inst
+  io.iduOut.ctrlSignals := instDecoder.io.ctrlSignals
+
+  immParser.io.inst := io.ifuIn.inst
+  immParser.io.instType := io.iduOut.ctrlSignals.id.instType
+  io.iduOut.imm := immParser.io.imm 
+}
