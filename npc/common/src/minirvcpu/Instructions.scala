@@ -5,6 +5,7 @@ import chisel3.util.experimental.decode._
 import chisel3.util.BitPat
 import scala.collection.immutable.ListMap
 import cpuutil.CanAutoGenSig
+import org.chipsalliance.rvdecoderdb
 
 trait HasMoreSignalInfo extends CanAutoGenSig {
   def extType: ExtTypeEnum.Type
@@ -28,6 +29,20 @@ object AluOpEnum extends ChiselEnum {
 
 object BranchValSrcEnum extends ChiselEnum {
   val imm, alu = Value
+}
+
+case class InstPattern(inst: rvdecoderdb.Instruction) {
+  def bitPat: BitPat = BitPat("b" + inst.encoding.toString)
+}
+
+object InstPatternss {
+  val allInsts = rvdecoderdb.instructions(os.pwd / "rvdecoderdb" / "riscv-opcodes")
+  val i = allInsts.filter(inst => inst.pseudoFrom.isEmpty &&
+                          inst.ratified)
+}
+
+class Test {
+  print(InstPatternss.i)
 }
 
 // 指令属性
