@@ -49,6 +49,7 @@ object playground extends BaseModule {
      PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb")
     )
   }
+  print(sources)
   override def moduleDeps = Seq(common) 
 
   override def generatedSources: T[Seq[PathRef]] = Task {
