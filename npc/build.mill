@@ -58,6 +58,10 @@ object playground extends BaseModule {
     Seq(PathRef(Task.dest))
   }
   
+  override def forkArgs = T {
+    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
+  }
+
   def repositoriesTask = Task.Anon {
     Seq(
       coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),

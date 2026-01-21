@@ -8,7 +8,7 @@ case class CoreConfig(
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth: Int = 24,
   ) {
-  require(xlen == 32 || xlen == 64 || xlen == 128)
+  require(xlen == 32 || xlen == 64)
   val registerNum: Int = 1 << registerAddrWidth
   require(memoryAddrWidth <= 32)
 }
