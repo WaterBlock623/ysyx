@@ -37,7 +37,7 @@ case class InstPattern(inst: rvdecoderdb.Instruction) {
 
 object InstPatternss {
   val allInsts = rvdecoderdb.instructions(os.pwd / "rvdecoderdb" / "riscv-opcodes")
-  print(allInsts.toString)
+  print("abc :" + allInsts.toString)
   //val i = allInsts.filter(inst => inst.pseudoFrom.isEmpty &&
   //                        inst.ratified)
 }
