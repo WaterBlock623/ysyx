@@ -1,7 +1,7 @@
 package minirvcpu
 
 object Elaborate extends App {
-  new minirvcpu.Test
+  new minirvcpu.MyTest
   val firtoolOptions = Array(
     "--lowering-options=" + List(
       // make yosys happy

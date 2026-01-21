@@ -42,7 +42,7 @@ object InstPatternss {
   //                        inst.ratified)
 }
 
-class Test {
+class MyTest {
   val a = InstPatternss.allInsts
   // print(InstPatternss.allInsts)
 }
