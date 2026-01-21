@@ -135,7 +135,7 @@ object InstFields {
     },
 
     new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
-      def name = "ExuOutSel"
+      def name = "exuOutSel"
       def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(ExtTypeEnum.getWidth.W)

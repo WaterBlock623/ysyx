@@ -50,17 +50,17 @@ class InstDecoder(implicit private val cfg: CoreConfig) extends Module {
   }
 }
 
-class IDUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+class IduSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val ctrlSignals = Output(new CtrlSignals())
     val imm = Output(UInt(cfg.xlen.W))
     val regFileRAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
     val regFileWAddr = Output(UInt(cfg.registerAddrWidth.W))
 }
 
-class IDU(implicit private val cfg: CoreConfig) extends Module {
+class Idu(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val ifuIn = Flipped(new IFUSignals)
-    val iduOut = new IDUSignals
+    val ifuIn = Flipped(new IfuSignals)
+    val iduOut = new IduSignals
   })
   
   io.iduOut.regFileRAddr(0) := io.ifuIn.inst(19, 15)

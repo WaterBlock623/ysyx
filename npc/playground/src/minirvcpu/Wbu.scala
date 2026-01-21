@@ -9,7 +9,7 @@ class RegisterFileSignals(implicit private val cfg: CoreConfig) extends Bundle {
 
 class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val wbuIn = Flipped(new WBUSignals)
+    val wbuIn = Flipped(new WbuSignals)
     val registerFileOut = new RegisterFileSignals
   })
 
@@ -29,21 +29,21 @@ class PcRegisterSignals(implicit private val cfg: CoreConfig) extends Bundle {
 
 class PcRegister(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val wbuIn = Flipped(new WBUSignals)
+    val wbuIn = Flipped(new WbuSignals)
     val pcRegisterOut = new PcRegisterSignals
   })
 
   val sigIn = io.wbuIn.pcRegister
   val pcReg = RegInit(0.U(cfg.xlen.W))
-  val pcNext = Mux(sigIn.isWriteBranchVal, sigIn.branchVal, pcReg + 4.U)
+  val pcNext = Mux(sigIn.isJump, sigIn.jumpAddr, pcReg + 4.U)
   pcReg := pcNext
   io.pcRegisterOut.pc := pcReg
 }
 
-class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val pcRegister = new Bundle {
     val branchVal = UInt(cfg.xlen.W)
-    val isWriteBranchVal = Bool()
+    val isJump = Bool()
   }
   val registerFile = new Bundle {
     val rAddr = Vec(2, UInt(cfg.registerAddrWidth.W))
@@ -53,11 +53,11 @@ class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
   }
 }
 
-class WBU(implicit private val cfg: CoreConfig) extends Module {
+class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val iduIn = Flipped(new IDUSignals)
-    val exuIn = Flipped(new EXUSignals)
-    val wbuOut = new WBUSignals
+    val iduIn = Flipped(new IduSignals)
+    val exuIn = Flipped(new ExuSignals)
+    val wbuOut = new WbuSignals
   }) 
 
 
@@ -65,12 +65,12 @@ class WBU(implicit private val cfg: CoreConfig) extends Module {
   val pcRegOut = io.wbuOut.pcRegister
   val regFileOut = io.wbuOut.registerFile
 
-  pcRegOut.branchVal := MuxLookup(ctrlSig.branchValSrc, io.iduIn.imm)(Seq(
-      BranchValSrcEnum.imm.asUInt -> io.iduIn.imm,
-      BranchValSrcEnum.alu.asUInt -> io.exuIn.aluResult
+  pcRegOut.branchVal := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
+      JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
+      JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
     ))
 
-  pcRegOut.isWriteBranchVal := ctrlSig.isBranch && io.exuIn.aluResult(0)
+  pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(0))
 
   regFileOut.rAddr := io.iduIn.regFileRAddr
   regFileOut.wAddr := io.iduIn.regFileWAddr
