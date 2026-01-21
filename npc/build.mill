@@ -33,7 +33,13 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 
 }
 
-object common extends BaseModule
+object common extends BaseModule {
+  def sources = T.sources {
+    super.sources() ++ Seq(
+    PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb")
+    )
+  }
+}
 
 object generator extends BaseModule {
   override def moduleDeps = Seq(common) 
