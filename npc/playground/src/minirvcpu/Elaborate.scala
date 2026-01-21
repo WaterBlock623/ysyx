@@ -12,7 +12,7 @@ object Elaborate extends App {
   )
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(CoreConfig(
-    rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes"
-    )), args, firtoolOptions)
+  val cfg = CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
+  println("Root path: " + workspacePath)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(cfg), args, firtoolOptions)
 }
