@@ -44,12 +44,12 @@ object generator extends BaseModule {
 
 object playground extends BaseModule {
 
-  def sources = T.sources {
+  override def sources = T.sources {
     super.sources() ++ Seq(
      PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb")
     )
   }
-  print(sources)
+  print(PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb"))
   override def moduleDeps = Seq(common) 
 
   override def generatedSources: T[Seq[PathRef]] = Task {
