@@ -34,7 +34,7 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 }
 
 object common extends BaseModule {
-  def customSources = Task.Sources(PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb"))
+  def customSources = Task.Sources(os.pwd / "rvdecoderdb" / "rvdecoderdb")
   def sources = Task { super.sources() ++ customSources() }
 }
 
