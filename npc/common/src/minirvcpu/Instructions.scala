@@ -31,6 +31,9 @@ object JumpAddrSelEnum extends ChiselEnum {
   val imm, alu = Value
 }
 
+object WriteBackSelEnum extends ChiselEnum {
+  val alu, staticNextPc = Value
+}
 
 /*
 // 指令属性
@@ -102,15 +105,10 @@ object InstFields {
       def stage = "ex"
       def chiselType = UInt(AluInSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
-        if (i.inArgs("rs2")) {
+        if (rvdecoderdb.Utils.readRs2(i.inst)) {
           bitPatEnum(AluInSelEnum.rs2)
-        } else if (i.inArgs("imm12") ||
-                   i.inArgs("imm20") ||
-                   i.inArgs("imm12lo") ||
-                   i.inArgs("bimm12lo")) {
-          bitPatEnum(AluInSelEnum.imm)
         } else {
-          dc
+          bitPatEnum(AluInSelEnum.imm)
         }
       }
     },
@@ -176,6 +174,17 @@ object InstFields {
         } else {
           dc
         }
+      }
+    },
+
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
+      def name = "writeBackSel"
+      def stage = "wb"
+      def chiselType = UInt(WriteBackSelEnum.getWidth.W)
+      def genTable(i: InstPattern) = i.inst.name match {
+        case "jal" | "jalr" => bitPatEnum(WriteBackSelEnum.staticNextPc)
+        case _ if rvdecoderdb.Utils.writeRd(i.inst) => bitPatEnum(WriteBackSelEnum.alu)
+        case _ => dc
       }
     },
   )
