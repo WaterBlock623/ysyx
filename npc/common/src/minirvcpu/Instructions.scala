@@ -7,10 +7,6 @@ import scala.collection.immutable.ListMap
 import cpuutil.CanAutoGenSig
 import org.chipsalliance.rvdecoderdb
 
-trait HasMoreSignalInfo extends CanAutoGenSig {
-  def extType: ExtTypeEnum.Type
-}
-
 object ExtTypeEnum extends ChiselEnum {
   val I, M = Value
 }
@@ -80,23 +76,20 @@ object InstFields {
   private def bitPatEnum(e: EnumType): BitPat = BitPat(e.litValue.U((e.getWidth).W))
 
   val fieldsBase = Seq(
-    new BoolDecodeField[InstPattern] with HasMoreSignalInfo {
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isWriteBackReg"
-      def extType = ExtTypeEnum.I
       def stage = "wb"
       def genTable(i: InstPattern) = if (rvdecoderdb.Utils.writeRd(i.inst)) y else n
     },
     
-    new BoolDecodeField[InstPattern] with HasMoreSignalInfo {
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isBranch"
-      def extType = ExtTypeEnum.I
       def stage = "wb"
       def genTable(i: InstPattern) = if (rvdecoderdb.Utils.isB(i.inst)) y else n
     },
 
-    new BoolDecodeField[InstPattern] with HasMoreSignalInfo {
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isJump"
-      def extType = ExtTypeEnum.I
       def stage = "wb"
       def genTable(i: InstPattern) = i.inst.name match {
         case "jal" | "jalr" => y
@@ -104,9 +97,8 @@ object InstFields {
       }
     },
 
-    new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "aluIn2Sel"
-      def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(AluInSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
@@ -123,9 +115,8 @@ object InstFields {
       }
     },
 
-    new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "aluOp"
-      def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(AluOpEnum.getWidth.W)
       def genTable(i: InstPattern) = i.inst.name match {
@@ -134,9 +125,8 @@ object InstFields {
       }
     },
 
-    new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "exuOutSel"
-      def extType = ExtTypeEnum.I
       def stage = "ex"
       def chiselType = UInt(ExtTypeEnum.getWidth.W)
       def genTable(i: InstPattern) = {
@@ -151,9 +141,8 @@ object InstFields {
       }    
     },
 
-    new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "instType"
-      def extType = ExtTypeEnum.I
       def stage = "id"
       def chiselType = UInt(InstTypeEnum.getWidth.W)
       def genTable(i: InstPattern) = {
@@ -175,9 +164,8 @@ object InstFields {
       }
     },
 
-    new DecodeField[InstPattern, UInt] with HasMoreSignalInfo {
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "jumpAddrSel"
-      def extType = ExtTypeEnum.I
       def stage = "wb"
       def chiselType = UInt(JumpAddrSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
@@ -225,7 +213,7 @@ case class InstDecodeCollector()(implicit private val cfg: CoreConfig) {
         throw new IllegalArgumentException(s"Unsupported extension: $key is not in $m"))
     }.toSeq
   }
-  val allFields: Seq[DecodeField[InstPattern, _ <: Data] with HasMoreSignalInfo] = 
+  val allFields: Seq[DecodeField[InstPattern, _ <: Data] with CanAutoGenSig] = 
     genSeq(fieldMap)
 
   // 生成Patterns
