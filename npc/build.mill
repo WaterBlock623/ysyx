@@ -34,11 +34,8 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 }
 
 object common extends BaseModule {
-  def sources = T.sources {
-    super.sources() ++ Seq(
-    PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb")
-    )
-  }
+  def customSources = Task.Sources(PathRef(os.pwd / "rvdecoderdb" / "rvdecoderdb"))
+  def sources = Task { super.sources() ++ customSources() }
 }
 
 object generator extends BaseModule {
