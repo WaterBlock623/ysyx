@@ -84,11 +84,13 @@ int main(int argc, char** argv) {
 	int sim_time = 50;
 	sim_init(argc, argv);
 	reset(10);
-    while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
+	int i = 0;
+    while ((i < sim_time | sim_time == -1) && !contextp->gotFinish()) {
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif
 		single_cycle();
+		i++;
 	}
 	sim_close();
     return 0;
