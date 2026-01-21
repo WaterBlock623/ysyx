@@ -44,7 +44,7 @@ object generator extends BaseModule {
 
 object playground extends BaseModule {
 
-  def customSources = Task.Sources(PathRef("rvdecoderdb/rvdecoderdb"))
+  def customSources = Task.Sources(PathRef(os.pwd / "../rvdecoderdb/rvdecoderdb"))
   def sources = Task { super.sources() ++ customSources() }
 
   override def moduleDeps = Seq(common) 
