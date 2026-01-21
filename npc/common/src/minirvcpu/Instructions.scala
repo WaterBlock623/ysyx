@@ -45,7 +45,7 @@ object InstPatternss {
 
 class MyTest() {
   InstPatternss.i.foreach(println(_))
-  InstPatternss.i.foreach(i => println(i.simpleName))
+  InstPatternss.i.foreach(i => println(i.instructionSets))
   
 }
 
