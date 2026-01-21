@@ -54,6 +54,7 @@ object playground extends BaseModule {
     
     os.proc(
       "java", 
+      s"-Dproject.root=${T.workspace}",
       "-cp", cp.map(_.path).mkString(":"), 
       "minirvcpu.GenCtrlSignals",
       Task.dest.toString()
