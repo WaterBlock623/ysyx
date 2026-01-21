@@ -1,7 +1,9 @@
 package minirvcpu
 
 case class CoreConfig(
-  val rvOpcodesPath: os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
+  // val rvOpcodesPath: os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
+  val rvOpcodesPath: os.Path = 
+    os.Path(System.getProperty("project.root")) / "rvdecoderdb" / "riscv-opcodes",
   val xlen: Int = 32,
   val extensions: Set[ExtTypeEnum.Type] = Set(ExtTypeEnum.I),
   val registerAddrWidth: Int = 4,

@@ -10,9 +10,5 @@ object Elaborate extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  val rootStr = System.getProperty("project.root")
-  val workspacePath = os.Path(rootStr)
-  val cfg = CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
-  println("Root path: " + workspacePath)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(cfg), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top(), args, firtoolOptions)
 }
