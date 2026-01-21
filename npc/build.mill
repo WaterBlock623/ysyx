@@ -31,6 +31,10 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
     )
   }
 
+  override def forkArgs = T {
+    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
+  }
+
 }
 
 object common extends BaseModule {
@@ -58,9 +62,6 @@ object playground extends BaseModule {
     Seq(PathRef(Task.dest))
   }
   
-  override def forkArgs = T {
-    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
-  }
 
   def repositoriesTask = Task.Anon {
     Seq(
