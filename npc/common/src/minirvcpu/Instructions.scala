@@ -37,11 +37,13 @@ case class InstPattern(inst: rvdecoderdb.Instruction) {
 
 object InstPatternss {
   val allInsts = rvdecoderdb.instructions(os.pwd / "rvdecoderdb" / "riscv-opcodes")
-  val i = allInsts.filter(inst => inst.pseudoFrom.isEmpty &&
-                          inst.ratified)
+  print(allInsts.toString)
+  //val i = allInsts.filter(inst => inst.pseudoFrom.isEmpty &&
+  //                        inst.ratified)
 }
 
 class Test {
+  val a = InstPatternss.allInsts
   // print(InstPatternss.allInsts)
 }
 
