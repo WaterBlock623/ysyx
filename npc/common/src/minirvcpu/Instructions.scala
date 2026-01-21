@@ -36,13 +36,17 @@ case class InstPattern(inst: rvdecoderdb.Instruction) {
 }
 
 object InstPatternss {
+  val set = Set("rv_i", "rv32_i")
   val allInsts = rvdecoderdb.instructions(os.pwd / "rvdecoderdb" / "riscv-opcodes")
   val i = allInsts.filter(inst => inst.pseudoFrom.isEmpty &&
-                          inst.ratified)
+                          inst.ratified
+                          set.contains(inst.instructionSet.name))
 }
 
 class MyTest() {
   InstPatternss.i.foreach(println(_))
+  InstPatternss.i.foreach(println(_.args))
+  
 }
 
 // 指令属性
