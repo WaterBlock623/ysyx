@@ -42,7 +42,7 @@ object InstPatternss {
 }
 
 class MyTest() {
-  println(InstPatternss.i)
+  InstPatternss.i.foreach(println(_))
 }
 
 // 指令属性
