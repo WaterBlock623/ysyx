@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util.experimental.decode._
 import chisel3.util.MuxLookup
 import chisel3.util.Fill
+import org.chipsalliance.rvdecoderdb
 
 class ImmParser(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
