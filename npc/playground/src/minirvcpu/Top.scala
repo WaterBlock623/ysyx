@@ -32,5 +32,6 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   exu.io.regFileIn := registerFileOut
   wbu.io.exuIn := exuOut
   wbu.io.iduIn := iduOut
+  wbu.io.pcRegisterIn := pcRegisterOut
 }
 
