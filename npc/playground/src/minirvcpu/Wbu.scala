@@ -60,6 +60,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val iduIn = Flipped(new IduSignals)
     val exuIn = Flipped(new ExuSignals)
+    val pcRegisterIn = Flipped(new PcRegisterSignals)
     val wbuOut = new WbuSignals
   }) 
 
@@ -68,15 +69,19 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val pcRegOut = io.wbuOut.pcRegister
   val regFileOut = io.wbuOut.registerFile
 
+  // pc
   pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
       JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
       JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
     ))
-
   pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(0))
 
+  // gpr
   regFileOut.rAddr := io.iduIn.regFileRAddr
   regFileOut.wAddr := io.iduIn.regFileWAddr
-  regFileOut.wData := io.exuIn.aluResult
   regFileOut.wEn := ctrlSig.isWriteBackReg
+  regFileOut.wData := MuxLookup(ctrlSig.writeBackSel, io.exuIn.aluResult)(Seq(
+    WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
+    WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U)
+    ))
 }
