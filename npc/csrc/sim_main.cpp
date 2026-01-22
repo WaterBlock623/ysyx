@@ -91,11 +91,11 @@ extern "C" void check_ebreak(int is_ebreak) {
 void load_bin(const char *path) {
 	FILE *bin = fopen(path, "r");
 	assert(bin);
-	size_t size = fread(M, sizeof(M), 1, bin);
+	size_t size = fread(M, 1, sizeof(M), bin);
 	if (size == sizeof(M))
 		printf("Warning: M is full\n");
 	else
-		printf("Load bin successful: %lu bytes", size);
+		printf("Load bin successful: %lu bytes\n", size);
 }
 
 int main(int argc, char** argv) {
