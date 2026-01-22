@@ -63,12 +63,14 @@ extern "C" uint32_t pmem_read(uint32_t raddr) {
 	return M[raddr >> 2];
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
+	printf("addr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
 	uint32_t mask = 0u;
 	int i;
 	for (i = 0; i < 4; i++) {
 		if (wmask & (1u << i))
 			mask |= 0xff << (i * 8);
 	}
+	printf("write data: %#.8x\n", wdata & mask);
 	M[waddr >> 2] = wdata & mask;
 }
 
