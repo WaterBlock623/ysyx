@@ -65,7 +65,7 @@ verilog:
 	-$(MAKE) lint
 
 help:
-	$(MILL) -i $(PRJ).runMain Elaborate --help
+	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
 
 reformat:
 	$(MILL) -i __.reformat
