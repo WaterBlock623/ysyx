@@ -36,7 +36,7 @@ class MemDpiC(
         |  input [$memAddrMsb:0] ls_wAddr,
         |  input [31:0]  ls_wData,
         |  input ls_valid, 
-        |  input ls_wEn)
+        |  input ls_wEn);
         |always @(*) begin
         |  if (valid) begin
         |    ls_rData = pmem_read(ls_rAddr);
