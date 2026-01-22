@@ -20,8 +20,8 @@ class EbreakDpiC extends ExtModule {
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
-  val inst = new MemInstFetchIO
-  val ls = new MemLoadStoreIO
+  val inst = IO(new MemInstFetchIO)
+  val ls = IO(new MemLoadStoreIO)
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   setInline(
     "MemDpiC.sv",
