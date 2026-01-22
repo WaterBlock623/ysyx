@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
 	reset(10);
 	int i = 0;
     while ((i < sim_time | sim_time == -1) && !contextp->gotFinish() && !stop_flag) {
+		printf("cycles: %d\n", i);
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif
