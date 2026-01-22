@@ -24,7 +24,6 @@ class MemDpiC(
   val ls = IO(new MemLoadStoreIO)
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
-  private val addrZero = 32 - cfg.memoryAddrWidth
   private val maskZero = 8 - (cfg.xlen >> 3)
   setInline(
     "MemDpiC.sv",
@@ -43,9 +42,9 @@ class MemDpiC(
         |  input ls_wEn);
         |always @(*) begin
         |  if (ls_valid) begin
-        |    ls_rData = pmem_read({$addrZero'b0, ls_rAddr});
+        |    ls_rData = pmem_read(ls_rAddr);
         |    if (ls_wEn) begin
-        |      pmem_write({$addrZero'b0, ls_wAddr}, {ls_wData}, {$maskZero'b0, ls_wMask});
+        |      pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
         |    end
         |  end
         |  else begin
@@ -53,7 +52,7 @@ class MemDpiC(
         |  end
         |end
         |always @(*) begin
-        |  inst_rData = pmem_read({$addrZero'b0, inst_rAddr});
+        |  inst_rData = pmem_read(inst_rAddr);
         |end
         |endmodule
         |""".stripMargin
