@@ -46,12 +46,18 @@ void sim_close(void)
 }
 
 uint32_t M[1 << 22] = {
-	0x01402083,
-	0x01404103,
-	0x01504183,
-	0x01604203,
-	0x01704283,
-	0x12345678,
+	0x02802503,
+	0x09000493,
+	0x029005a3,
+	0x0ab00493,
+	0x02900523,
+	0x0cd00493,
+	0x029004a3,
+	0x0ef00493,
+	0x02900423,
+	0x02802503,
+	0x12345678
+	
 };
 extern "C" uint32_t pmem_read(uint32_t raddr) {
 	return M[raddr >> 2];
@@ -112,7 +118,7 @@ int main(int argc, char** argv) {
 //	M[138] = 0x00100073;
 //	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
-	int sim_time = 8;
+	int sim_time = -1;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
