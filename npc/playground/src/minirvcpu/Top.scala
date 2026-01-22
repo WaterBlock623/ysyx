@@ -49,7 +49,7 @@ class MemDpiC(
         |  end
         |end
         |always @(*) begin
-        |  insn_rData = pmem_read(inst_rAddr)
+        |  insn_rData = pmem_read(inst_rAddr);
         |end
         |endmodule
         |""".stripMargin
