@@ -10,7 +10,7 @@ class EbreakDpiC extends ExtModule {
     """import "DPI-C" function void check_ebreak(input int is_ebreak);
       |module EbreakDpiC(input isEbreak);
       |always @(*) begin
-      | check_ebreak(isEbreak);
+      | check_ebreak({31'b0, isEbreak});
       |end
       |endmodule
     """.stripMargin)

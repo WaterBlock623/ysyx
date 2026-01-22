@@ -49,7 +49,8 @@ uint32_t M[1 << 22] = {
 	0x01400513,
 	0x010000e7,
 	0x00c000e7,
-	0x00c00067,
+//	0x00c00067,
+	0x00100073,
 	0x00a50513,
 	0x00008067
 };
@@ -81,13 +82,20 @@ void reset(int n) {
 	top->reset = 0;
 }
 
+int stop_flag = 0;
+
+int check_ebreak(int is_ebreak) {
+	printf("is_ebreak: %d\n", is_ebreak);
+	stop_flag = is_ebreak;
+}
+
 int main(int argc, char** argv) {
 	//int sim_time = 2 * 25000000;
 	int sim_time = 50;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
-    while ((i < sim_time | sim_time == -1) && !contextp->gotFinish()) {
+    while ((i < sim_time | sim_time == -1) && !contextp->gotFinish() && !stop_flag) {
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif
