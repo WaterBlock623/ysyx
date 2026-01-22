@@ -76,6 +76,11 @@ case class InstPattern(inst: rvdecoderdb.Instruction) extends DecodePattern {
 
 // 控制信号定义
 object InstFields {
+  private val instBaseLoad = Set("lb", "lh", "lw", "lbu", "lhu")
+  private val instBaseStore = Set("sb", "sh", "sw")
+  private val instBaseJump = Set("jal", "jalr")
+
+
   val fieldsBase = Seq(
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isEbreak"
@@ -100,7 +105,23 @@ object InstFields {
       def name = "isJump"
       def stage = "wb"
       def genTable(i: InstPattern) = i.inst.name match {
-        case "jal" | "jalr" => y
+        case i if instBaseJump.contains(i) => y
+        case _              => n
+      }
+    },
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = "isLoad"
+      def stage = "ls"
+      def genTable(i: InstPattern) = i.inst.name match {
+        case i if instBaseLoad.contains(i) => y
+        case _              => n
+      }
+    },
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = "isStore"
+      def stage = "ls"
+      def genTable(i: InstPattern) = i.inst.name match {
+        case i if instBaseStore.contains(i) => y
         case _              => n
       }
     },
@@ -122,6 +143,7 @@ object InstFields {
       def chiselType = UInt(AluOpEnum.getWidth.W)
       def genTable(i: InstPattern) = i.inst.name match {
         case "addi" | "add" => BitPat(AluOpEnum.add)
+        case i if (instBaseLoad ++ instBaseStore).contains(i) => BitPat(AluOpEnum.add)
         case _              => dc
       }
     },
@@ -181,7 +203,7 @@ object InstFields {
       def stage = "wb"
       def chiselType = UInt(WriteBackSelEnum.getWidth.W)
       def genTable(i: InstPattern) = i.inst.name match {
-        case "jal" | "jalr" => BitPat(WriteBackSelEnum.staticNextPc)
+        case i if instBaseJump.contains(i) => BitPat(WriteBackSelEnum.staticNextPc)
         case "lui"          => BitPat(WriteBackSelEnum.imm)
         case _ if rvdecoderdb.Utils.writeRd(i.inst) =>
           BitPat(WriteBackSelEnum.alu)

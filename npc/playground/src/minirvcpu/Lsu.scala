@@ -20,3 +20,15 @@ class MemLoadStoreIO(
   val wMask = Input(UInt((cfg.xlen >> 3).W))
   val wEn = Input(Bool())
 }
+
+class Lsu(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val memLoadStoreIO = Flipped(new MemLoadStoreIO)
+    val iduIn = Flipped(new IduSignals)
+  })
+
+  val ctrlSig = io.iduIn.ctrlSignals.ls
+  io.memLoadStoreIO.valid := ctrlSig.isLoad || ctrlSig.isStore
+  io.memLoadStoreIO.wEn := ctrlSig.isStore
+
+}
