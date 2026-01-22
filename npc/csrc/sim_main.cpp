@@ -106,7 +106,7 @@ void load_bin(const char *path) {
 }
 
 int main(int argc, char** argv) {
-	load_bin("util/bin/mem.bin");
+//	load_bin("util/bin/mem.bin");
 //	M[138] = 0x00100073;
 //	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
