@@ -44,7 +44,7 @@ class PcRegister(
   })
 
   val sigIn = io.wbuIn.pcRegister
-  val pcReg = RegInit(0.U(cfg.xlen.W))
+  val pcReg = RegInit("h80000000".U(cfg.xlen.W))
   val pcNext = Mux(sigIn.isJump, sigIn.jumpAddr, pcReg + 4.U)
   pcReg := pcNext
   io.pcRegisterOut.pc := pcReg

@@ -60,10 +60,12 @@ uint32_t M[1 << 22] = {
 	
 };
 extern "C" uint32_t pmem_read(uint32_t raddr) {
+	raddr -= 0x80000000;
 	return M[raddr >> 2];
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
 //	printf("addr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
+	waddr -= 0x80000000;
 	uint32_t mask = 0u;
 	int i;
 	for (i = 0; i < 4; i++) {
@@ -117,16 +119,18 @@ void load_bin(const char *path) {
 }
 
 int main(int argc, char** argv) {
-	load_bin("util/bin/mem.bin");
+	if (argc > 1)
+		load_bin(argv[1])
 //	M[138] = 0x00100073;
-	M[1160] = 0x00100073;
+//	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
 	int sim_time = -1;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
     while ((i < sim_time | sim_time == -1) && !contextp->gotFinish() && !stop_flag) {
-		printf("cycles: %d\n", i);
+		if (i % 100 == 0)
+			printf("cycles: %d\n", i);
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif

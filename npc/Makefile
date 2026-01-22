@@ -54,6 +54,9 @@ endif
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 
+# am
+ARGS ?=
+IMG ?=
 
 test:
 	$(MILL) -i $(PRJ).test
@@ -86,7 +89,7 @@ clean:
 
 sim: lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN)
+	@$(BIN) $(IMG) $(ARGS)
 
 simwave: VERILATOR_CFLAGS += --trace-fst
 simwave: CXXFLAGS += -DENAWAVE
