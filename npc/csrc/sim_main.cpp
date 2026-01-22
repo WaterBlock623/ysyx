@@ -84,7 +84,7 @@ void reset(int n) {
 
 int stop_flag = 0;
 
-int check_ebreak(int is_ebreak) {
+extern "C" void check_ebreak(int is_ebreak) {
 	printf("is_ebreak: %d\n", is_ebreak);
 	stop_flag = is_ebreak;
 }
