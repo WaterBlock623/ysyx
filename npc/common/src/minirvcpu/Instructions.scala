@@ -133,7 +133,7 @@ object InstFields {
     new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "loadStoreLength"
       def stage = "ls"
-      def chiselType = UInt(AluOpEnum.getWidth.W)
+      def chiselType = UInt(LoadStoreLengthEnum.getWidth.W)
       def genTable(i: InstPattern) = i.inst.name match {
         case "lb" | "lbu" | "sb" => BitPat(LoadStoreLengthEnum.b)
         case "lh" | "lhu" | "sh" => BitPat(LoadStoreLengthEnum.h)
@@ -176,7 +176,7 @@ object InstFields {
     new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "exuOutSel"
       def stage = "ex"
-      def chiselType = UInt(ExtTypeEnum.getWidth.W)
+      def chiselType = UInt(ExuOutSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
         InstructionSetParser.parse(i.inst.instructionSet.name) match {
           case (format, n, x, y) =>
