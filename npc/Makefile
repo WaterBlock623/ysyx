@@ -1,8 +1,9 @@
-BUILD_DIR = ./build
 PRJ = playground
+PACKAGE_NAME = minirvcpu
+BUILD_DIR = ./build
 MILL = ./mill
 
-ELABORATE_SCALA = ./playground/src/Elaborate.scala
+ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
 			  grep "new " | \
 			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
@@ -53,7 +54,6 @@ endif
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 
-PACKAGE_NAME = minirvcpu
 
 test:
 	$(MILL) -i $(PRJ).test
