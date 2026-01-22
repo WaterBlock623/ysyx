@@ -76,6 +76,9 @@ class Top(
   val exuOut = exu.io.exuOut
   val wbuOut = wbu.io.wbuOut
 
+  ebreakDpiC.isEbreak := idu.io.iduOut.ctrlSignals.debug.isEbreak
+  memDpiC.ls := DontCare
+
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
   ifu.io.pcRegisterIn := pcRegisterOut
@@ -86,5 +89,4 @@ class Top(
   wbu.io.exuIn := exuOut
   wbu.io.iduIn := iduOut
   wbu.io.pcRegisterIn := pcRegisterOut
-
 }
