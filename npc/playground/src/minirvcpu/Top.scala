@@ -23,6 +23,7 @@ class MemDpiC(
   val inst = IO(new MemInstFetchIO)
   val ls = IO(new MemLoadStoreIO)
   private val memAddrMsb = cfg.memoryAddrWidth - 1
+  private val maskMsb = cfg.xlen >> 3 - 1
   setInline(
     "MemDpiC.sv",
     s"""|import "DPI-C" function int pmem_read(input int raddr);
@@ -35,10 +36,11 @@ class MemDpiC(
         |  output reg [31:0] ls_rData, 
         |  input [$memAddrMsb:0] ls_wAddr,
         |  input [31:0]  ls_wData,
+        |  input [$maskMsb:0] ls_wMask
         |  input ls_valid, 
         |  input ls_wEn);
         |always @(*) begin
-        |  if (valid) begin
+        |  if (ls_valid) begin
         |    ls_rData = pmem_read(ls_rAddr);
         |    if (ls_wEn) begin
         |      pmem_write(ls_wAddr, ls_wData, ls_wMask);
@@ -49,7 +51,7 @@ class MemDpiC(
         |  end
         |end
         |always @(*) begin
-        |  insn_rData = pmem_read(inst_rAddr);
+        |  inst_rData = pmem_read(inst_rAddr);
         |end
         |endmodule
         |""".stripMargin
