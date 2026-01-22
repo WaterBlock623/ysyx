@@ -2,11 +2,15 @@ package minirvcpu
 
 import chisel3._
 
-class IfuSignals(implicit private val cfg: CoreConfig) extends Bundle {
+class IfuSignals(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val inst = Output(UInt(cfg.xlen.W))
 }
 
-class Ifu(implicit private val cfg: CoreConfig) extends Module {
+class Ifu(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val io = IO(new Bundle {
     val pcRegisterIn = Flipped(new PcRegisterSignals)
     val memInstFetchIO = Flipped(new MemInstFetchIO)

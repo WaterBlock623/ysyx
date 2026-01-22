@@ -4,11 +4,15 @@ import chisel3._
 import chisel3.util.MuxLookup
 
 // gpr
-class RegisterFileSignals(implicit private val cfg: CoreConfig) extends Bundle {
+class RegisterFileSignals(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val rData = Output(Vec(2, UInt(cfg.xlen.W)))
 }
 
-class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
+class RegisterFile(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val io = IO(new Bundle {
     val wbuIn = Flipped(new WbuSignals)
     val registerFileOut = new RegisterFileSignals
@@ -16,7 +20,7 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
 
   val sigIn = io.wbuIn.registerFile
   val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
-  when (sigIn.wEn) {
+  when(sigIn.wEn) {
     regFile(sigIn.wAddr) := sigIn.wData
   }
   regFile(0) := 0.U
@@ -25,11 +29,15 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
 }
 
 // pc
-class PcRegisterSignals(implicit private val cfg: CoreConfig) extends Bundle {
-    val pc = Output(UInt(cfg.xlen.W))
+class PcRegisterSignals(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
+  val pc = Output(UInt(cfg.xlen.W))
 }
 
-class PcRegister(implicit private val cfg: CoreConfig) extends Module {
+class PcRegister(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val io = IO(new Bundle {
     val wbuIn = Flipped(new WbuSignals)
     val pcRegisterOut = new PcRegisterSignals
@@ -43,7 +51,9 @@ class PcRegister(implicit private val cfg: CoreConfig) extends Module {
 }
 
 // 控制pc跳转和gpr读写
-class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
+class WbuSignals(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val pcRegister = new Bundle {
     val jumpAddr = UInt(cfg.xlen.W)
     val isJump = Bool()
@@ -56,32 +66,40 @@ class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   }
 }
 
-class Wbu(implicit private val cfg: CoreConfig) extends Module {
+class Wbu(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val io = IO(new Bundle {
     val iduIn = Flipped(new IduSignals)
     val exuIn = Flipped(new ExuSignals)
     val pcRegisterIn = Flipped(new PcRegisterSignals)
     val wbuOut = new WbuSignals
-  }) 
-
+  })
 
   val ctrlSig = io.iduIn.ctrlSignals.wb
   val pcRegOut = io.wbuOut.pcRegister
   val regFileOut = io.wbuOut.registerFile
 
   // pc
-  pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
+  pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(
+    Seq(
       JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
       JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
-    ))
-  pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(0))
+    )
+  )
+  pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(
+    0
+  ))
 
   // gpr
   regFileOut.rAddr := io.iduIn.regFileRAddr
   regFileOut.wAddr := io.iduIn.regFileWAddr
   regFileOut.wEn := ctrlSig.isWriteBackReg
-  regFileOut.wData := MuxLookup(ctrlSig.writeBackSel, io.exuIn.aluResult)(Seq(
-    WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
-    WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U)
-    ))
+  regFileOut.wData := MuxLookup(ctrlSig.writeBackSel, io.exuIn.aluResult)(
+    Seq(
+      WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
+      WriteBackSelEnum.imm.asUInt -> io.iduIn.imm,
+      WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U)
+    )
+  )
 }

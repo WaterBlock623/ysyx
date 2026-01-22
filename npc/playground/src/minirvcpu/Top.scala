@@ -5,22 +5,63 @@ import chisel3.util._
 
 class EbreakDpiC extends ExtModule {
   val isEbreak = IO(Input(Bool()))
-
-  setInline("EbreakDpiC.sv", 
-    """import "DPI-C" function void check_ebreak(input int is_ebreak);
-      |module EbreakDpiC(input isEbreak);
-      |always @(*) begin
-      | check_ebreak({31'b0, isEbreak});
-      |end
-      |endmodule
-    """.stripMargin)
+  setInline(
+    "EbreakDpiC.sv",
+    """|import "DPI-C" function void check_ebreak(input int is_ebreak);
+       |module EbreakDpiC(input isEbreak);
+       |always @(*) begin
+       | check_ebreak({31'b0, isEbreak});
+       |end
+       |endmodule
+    """.stripMargin
+  )
 }
 
-class Top(implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(new Bundle {
-    val memInstFetchIO = Flipped(new MemInstFetchIO)
-  })
+class MemDpiC(
+  implicit private val cfg: CoreConfig)
+    extends ExtModule {
+  val inst = new MemInstFetchIO
+  val ls = new MemLoadStoreIO
+  private val memAddrMsb = cfg.memoryAddrWidth - 1
+  setInline(
+    "MemDpiC.sv",
+    s"""|import "DPI-C" function int pmem_read(input int raddr);
+        |import "DPI-C" function void pmem_write(
+        |  input int waddr, input int wdata, input byte wmask);
+        |module MemDpiC(
+        |  input [$memAddrMsb:0] inst_rAddr, 
+        |  output reg [31:0] inst_rData, 
+        |  input [$memAddrMsb:0] ls_rAddr, 
+        |  output reg [31:0] ls_rData, 
+        |  input [$memAddrMsb:0] ls_wAddr,
+        |  input [31:0]  ls_wData,
+        |  input ls_valid, 
+        |  input ls_wEn)
+        |always @(*) begin
+        |  if (valid) begin
+        |    ls_rData = pmem_read(ls_rAddr);
+        |    if (ls_wEn) begin
+        |      pmem_write(ls_wAddr, ls_wData, ls_wMask);
+        |    end
+        |  end
+        |  else begin
+        |    ls_rData = 0;
+        |  end
+        |end
+        |always @(*) begin
+        |  insn_rData = pmem_read(inst_rAddr)
+        |end
+        |endmodule
+        |"""
+  )
+}
 
+class Top(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  val ebreakDpiC = Module(new EbreakDpiC)
+  val memDpiC = Module(new MemDpiC)
+  
   val pcRegister = Module(new PcRegister)
   val registerFile = Module(new RegisterFile)
   val ifu = Module(new Ifu)
@@ -34,11 +75,11 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   val iduOut = idu.io.iduOut
   val exuOut = exu.io.exuOut
   val wbuOut = wbu.io.wbuOut
-  
+
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
   ifu.io.pcRegisterIn := pcRegisterOut
-  ifu.io.memInstFetchIO :<>= io.memInstFetchIO
+  ifu.io.memInstFetchIO :<>= memDpiC.inst
   idu.io.ifuIn := ifuOut
   exu.io.iduIn := iduOut
   exu.io.regFileIn := registerFileOut
@@ -46,7 +87,4 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   wbu.io.iduIn := iduOut
   wbu.io.pcRegisterIn := pcRegisterOut
 
-  val ebreakDpiC = Module(new EbreakDpiC)
-  ebreakDpiC.isEbreak := iduOut.ctrlSignals.debug.isEbreak
 }
-

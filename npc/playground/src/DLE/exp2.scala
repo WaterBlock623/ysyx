@@ -9,24 +9,26 @@ class DecoderLed extends Module {
     val out = Output(UInt(7.W))
   })
 
-  io.out := ~MuxLookup(io.in, 0.U)(Seq(
-    0.U -> "b1111110".U,
-    1.U -> "b0110000".U,
-    2.U -> "b1101101".U,
-    3.U -> "b1111001".U,
-    4.U -> "b0110011".U,
-    5.U -> "b1011011".U,
-    6.U -> "b1011111".U,
-    7.U -> "b1110000".U,
-    8.U -> "b1111111".U,
-    9.U -> "b1111011".U,
-    10.U -> "b1110111".U,
-    11.U -> "b0011111".U,
-    12.U -> "b1001110".U,
-    13.U -> "b0111101".U,
-    14.U -> "b1001111".U,
-    15.U -> "b1000111".U
-  ))
+  io.out := ~MuxLookup(io.in, 0.U)(
+    Seq(
+      0.U -> "b1111110".U,
+      1.U -> "b0110000".U,
+      2.U -> "b1101101".U,
+      3.U -> "b1111001".U,
+      4.U -> "b0110011".U,
+      5.U -> "b1011011".U,
+      6.U -> "b1011111".U,
+      7.U -> "b1110000".U,
+      8.U -> "b1111111".U,
+      9.U -> "b1111011".U,
+      10.U -> "b1110111".U,
+      11.U -> "b0011111".U,
+      12.U -> "b1001110".U,
+      13.U -> "b0111101".U,
+      14.U -> "b1001111".U,
+      15.U -> "b1000111".U
+    )
+  )
 }
 
 class Encoder83 extends Module {
@@ -35,18 +37,20 @@ class Encoder83 extends Module {
     val en = Input(Bool())
     val out = Output(UInt(3.W))
   })
-  
+
   val enc = WireDefault(0.U(3.W))
-  enc := Mux1H(Seq(
-    io.in(0) -> 0.U,
-    io.in(1) -> 1.U,
-    io.in(2) -> 2.U,
-    io.in(3) -> 3.U,
-    io.in(4) -> 4.U,
-    io.in(5) -> 5.U,
-    io.in(6) -> 6.U,
-    io.in(7) -> 7.U
-  ))
+  enc := Mux1H(
+    Seq(
+      io.in(0) -> 0.U,
+      io.in(1) -> 1.U,
+      io.in(2) -> 2.U,
+      io.in(3) -> 3.U,
+      io.in(4) -> 4.U,
+      io.in(5) -> 5.U,
+      io.in(6) -> 6.U,
+      io.in(7) -> 7.U
+    )
+  )
   io.out := Mux(io.en, enc, 0.U)
 }
 
@@ -66,7 +70,7 @@ class PEncoder83 extends Module {
     cond(i) := ~io.in(i) & cond(i + 1)
     hotIn(i) := io.in(i) & cond(i + 1)
   }
-  
+
   val enc83 = Module(new Encoder83)
   enc83.io.in := hotIn.asUInt
   enc83.io.en := io.en
@@ -86,7 +90,7 @@ class Exp2 extends Module {
   val decLed = Module(new DecoderLed)
 
   io.hasOne := io.sw.orR
-  
+
   pe.io.in := io.sw
   pe.io.en := io.en
   io.led := pe.io.out

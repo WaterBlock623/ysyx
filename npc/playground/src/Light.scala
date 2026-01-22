@@ -11,5 +11,3 @@ class Light(maxCnt: Int = 5000000) extends Module {
   ledReg := Mux(cntReg === maxCnt.U, ledReg(14, 0) ## ledReg(15), ledReg)
   io.led := ledReg
 }
-
-

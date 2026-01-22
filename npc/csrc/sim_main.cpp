@@ -54,17 +54,24 @@ uint32_t M[1 << 22] = {
 	0x00a50513,
 	0x00008067
 };
-uint32_t pmem_read(uint32_t addr) {
-	return M[addr >> 2];
+extern "C" uint32_t pmem_read(uint32_t raddr) {
+	return M[raddr >> 2];
 }
+extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
+	uint32_t mask = 0u;
+	int i;
+	for (i = 0; i < 4; i++) {
+		if (wmask & (1u << i))
+			mask |= 0xff << (i * 8);
+	}
+	M[waddr >> 2] = wdata & mask;
+}
+
 
 void single_cycle(void)
 {
 	top->clock = 0; top->eval();
 	contextp->timeInc(1);
-
-	top->io_memInstFetchIO_rData = pmem_read(top->io_memInstFetchIO_rAddr);
-	printf("%0#8x\n", top->io_memInstFetchIO_rAddr);
 
 #ifdef ENAWAVE
 	tfp->dump(contextp->time());
@@ -85,13 +92,13 @@ void reset(int n) {
 int stop_flag = 0;
 
 extern "C" void check_ebreak(int is_ebreak) {
-	printf("is_ebreak: %d\n", is_ebreak);
+//	printf("is_ebreak: %d\n", is_ebreak);
 	stop_flag = is_ebreak;
 }
 
 int main(int argc, char** argv) {
 	//int sim_time = 2 * 25000000;
-	int sim_time = 50;
+	int sim_time = -1;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
