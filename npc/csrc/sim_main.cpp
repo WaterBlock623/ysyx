@@ -45,15 +45,7 @@ void sim_close(void)
 #endif
 }
 
-uint32_t M[1 << 22] = {
-	0x01400513,
-	0x010000e7,
-	0x00c000e7,
-//	0x00c00067,
-	0x00100073,
-	0x00a50513,
-	0x00008067
-};
+uint32_t M[1 << 22];
 extern "C" uint32_t pmem_read(uint32_t raddr) {
 	return M[raddr >> 2];
 }
@@ -96,7 +88,19 @@ extern "C" void check_ebreak(int is_ebreak) {
 	stop_flag = is_ebreak;
 }
 
+void load_bin(const char *path) {
+	FILE *bin = fopen(path, "r");
+	assert(bin);
+	size_t size = fread(M, sizeof(M), 1, bin);
+	if (size == sizeof(M))
+		printf("Warning: M is full\n");
+	else
+		printf("Load bin successful: %lu bytes", size);
+}
+
 int main(int argc, char** argv) {
+	load_bin("util/bin/sum.bin");
+	M[138] = 0x00100073;
 	//int sim_time = 2 * 25000000;
 	int sim_time = -1;
 	sim_init(argc, argv);
