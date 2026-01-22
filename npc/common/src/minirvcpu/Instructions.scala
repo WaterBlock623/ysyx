@@ -35,6 +35,10 @@ object WriteBackSelEnum extends ChiselEnum {
   val alu, imm, staticNextPc = Value
 }
 
+object LoadStoreLengthEnum extends ChiselEnum {
+  val b, h, w = Value
+}
+
 /*
 // 指令属性
 case class InstPatternMaker(
@@ -118,6 +122,26 @@ object InstFields {
       }
     },
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = "isUnsignedLoad"
+      def stage = "ls"
+      def genTable(i: InstPattern) = i.inst.name match {
+        case "lbu" | "lhu" => y
+        case i if instBaseLoad.contains(i)  => n
+        case _ => BitPat.dontCare(1)
+      }
+    },
+    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
+      def name = "loadStoreLength"
+      def stage = "ls"
+      def chiselType = UInt(AluOpEnum.getWidth.W)
+      def genTable(i: InstPattern) = i.inst.name match {
+        case "lb" | "lbu" | "sb" => BitPat(LoadStoreLengthEnum.b)
+        case "lh" | "lhu" | "sh" => BitPat(LoadStoreLengthEnum.h)
+        case "lw" | "sw" => BitPat(LoadStoreLengthEnum.w)
+        case _              => dc
+      }
+    },
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isStore"
       def stage = "ls"
       def genTable(i: InstPattern) = i.inst.name match {
@@ -130,7 +154,9 @@ object InstFields {
       def stage = "ex"
       def chiselType = UInt(AluInSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
-        if (rvdecoderdb.Utils.readRs2(i.inst)) {
+        if (instBaseStore.contains(i.inst.name)) {
+          BitPat(AluInSelEnum.imm)
+        } else if (rvdecoderdb.Utils.readRs2(i.inst)) {
           BitPat(AluInSelEnum.rs2)
         } else {
           BitPat(AluInSelEnum.imm)
