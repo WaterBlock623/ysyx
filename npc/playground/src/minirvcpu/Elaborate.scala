@@ -14,5 +14,6 @@ object Elaborate extends App {
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
   val cfg = CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
+  println(firtoolOptions)
   circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(cfg), args, firtoolOptions)
 }
