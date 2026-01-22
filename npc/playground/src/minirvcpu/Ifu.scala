@@ -17,6 +17,6 @@ class Ifu(
     val ifuOut = new IfuSignals
   })
 
-  io.memInstFetchIO.rAddr := io.pcRegisterIn.pc(cfg.memoryAddrWidth - 1, 0)
+  io.memInstFetchIO.rAddr := io.pcRegisterIn.pc
   io.ifuOut.inst := io.memInstFetchIO.rData
 }
