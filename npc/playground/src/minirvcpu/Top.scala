@@ -83,7 +83,7 @@ class Top(
   val wbuOut = wbu.io.wbuOut
 
   ebreakDpiC.isEbreak := idu.io.iduOut.ctrlSignals.debug.isEbreak
-  memDpiC.ls :<>= lsu.io.memLoadStoreIO
+  lsu.io.memLoadStoreIO :<>= memDpiC.ls
 
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
