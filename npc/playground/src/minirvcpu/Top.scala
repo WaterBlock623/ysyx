@@ -43,7 +43,7 @@ class MemDpiC(
         |  input ls_wEn);
         |always @(*) begin
         |  if (ls_valid) begin
-        |    ls_rData = pmem_read(ls_rAddr);
+        |    ls_rData = pmem_read({$addrZero'b0, ls_rAddr});
         |    if (ls_wEn) begin
         |      pmem_write({$addrZero'b0, ls_wAddr}, {ls_wData}, {$maskZero'b0, ls_wMask});
         |    end
