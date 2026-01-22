@@ -45,7 +45,14 @@ void sim_close(void)
 #endif
 }
 
-uint32_t M[1 << 22];
+uint32_t M[1 << 22] = {
+	0x01402083,
+	0x01404103,
+	0x01504183,
+	0x01604203,
+	0x01704283,
+	0x12345678,
+};
 extern "C" uint32_t pmem_read(uint32_t raddr) {
 	return M[raddr >> 2];
 }
@@ -101,9 +108,9 @@ void load_bin(const char *path) {
 int main(int argc, char** argv) {
 	load_bin("util/bin/mem.bin");
 //	M[138] = 0x00100073;
-	M[1160] = 0x00100073;
+//	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
-	int sim_time = -1;
+	int sim_time = 8;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
