@@ -32,7 +32,7 @@ object JumpAddrSelEnum extends ChiselEnum {
 }
 
 object WriteBackSelEnum extends ChiselEnum {
-  val alu, imm, staticNextPc = Value
+  val alu, imm, staticNextPc, lsu = Value
 }
 
 object LoadStoreLengthEnum extends ChiselEnum {
@@ -230,6 +230,7 @@ object InstFields {
       def chiselType = UInt(WriteBackSelEnum.getWidth.W)
       def genTable(i: InstPattern) = i.inst.name match {
         case i if instBaseJump.contains(i) => BitPat(WriteBackSelEnum.staticNextPc)
+        case i if instBaseLoad.contains(i) => BitPat(WriteBackSelEnum.lsu)
         case "lui"          => BitPat(WriteBackSelEnum.imm)
         case _ if rvdecoderdb.Utils.writeRd(i.inst) =>
           BitPat(WriteBackSelEnum.alu)

@@ -71,6 +71,7 @@ class Top(
   val ifu = Module(new Ifu)
   val idu = Module(new Idu)
   val exu = Module(new Exu)
+  val lsu = Module(new Lsu)
   val wbu = Module(new Wbu)
 
   val pcRegisterOut = pcRegister.io.pcRegisterOut
@@ -78,10 +79,11 @@ class Top(
   val ifuOut = ifu.io.ifuOut
   val iduOut = idu.io.iduOut
   val exuOut = exu.io.exuOut
+  val lsuOut = lsu.io.lsuOut
   val wbuOut = wbu.io.wbuOut
 
   ebreakDpiC.isEbreak := idu.io.iduOut.ctrlSignals.debug.isEbreak
-  memDpiC.ls := DontCare
+  memDpiC.ls :<>= lsu.io.memLoadStoreIO
 
   pcRegister.io.wbuIn := wbuOut
   registerFile.io.wbuIn := wbuOut
@@ -90,7 +92,11 @@ class Top(
   idu.io.ifuIn := ifuOut
   exu.io.iduIn := iduOut
   exu.io.regFileIn := registerFileOut
+  lsu.io.exuIn := exuOut
+  lsu.io.iduIn := iduOut
+  lsu.io.registerFileIn := registerFileOut
   wbu.io.exuIn := exuOut
   wbu.io.iduIn := iduOut
   wbu.io.pcRegisterIn := pcRegisterOut
+  wbu.io.lsuIn := lsuOut
 }

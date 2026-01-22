@@ -73,6 +73,7 @@ class Wbu(
     val iduIn = Flipped(new IduSignals)
     val exuIn = Flipped(new ExuSignals)
     val pcRegisterIn = Flipped(new PcRegisterSignals)
+    val lsuIn = Flipped(new LsuSignals)
     val wbuOut = new WbuSignals
   })
 
@@ -99,7 +100,8 @@ class Wbu(
     Seq(
       WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
       WriteBackSelEnum.imm.asUInt -> io.iduIn.imm,
-      WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U)
+      WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U),
+      WriteBackSelEnum.lsu.asUInt -> io.lsuIn.loadData,
     )
   )
 }
