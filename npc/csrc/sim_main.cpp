@@ -63,16 +63,16 @@ extern "C" uint32_t pmem_read(uint32_t raddr) {
 	return M[raddr >> 2];
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
-	printf("addr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
+//	printf("addr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
 	uint32_t mask = 0u;
 	int i;
 	for (i = 0; i < 4; i++) {
 		if (wmask & (1u << i))
 			mask |= 0xff << (i * 8);
 	}
-	printf("write data: %#.8x\n", wdata & mask);
+//	printf("write data: %#.8x\n", wdata & mask);
 	M[waddr >> 2] = (M[waddr >> 2] & ~mask) | (wdata & mask);
-	printf("mem: %#.8x\n", M[10]);
+//	printf("mem: %#.8x\n", M[10]);
 }
 
 
@@ -117,11 +117,11 @@ void load_bin(const char *path) {
 }
 
 int main(int argc, char** argv) {
-//	load_bin("util/bin/mem.bin");
-//	M[138] = 0x00100073;
+	load_bin("util/bin/sum.bin");
+	M[138] = 0x00100073;
 //	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
-	int sim_time = 15;
+	int sim_time = -1;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
