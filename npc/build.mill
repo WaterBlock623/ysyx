@@ -31,16 +31,22 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
     )
   }
 
+  override def forkArgs = T {
+    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
+  }
+
 }
 
-object common extends BaseModule
+object common extends BaseModule {
+  def customSources = Task.Sources(T.workspace / "rvdecoderdb" / "rvdecoderdb")
+  def sources = Task { super.sources() ++ customSources() }
+}
 
 object generator extends BaseModule {
   override def moduleDeps = Seq(common) 
 }
 
 object playground extends BaseModule {
-
   override def moduleDeps = Seq(common) 
 
   override def generatedSources: T[Seq[PathRef]] = Task {
@@ -48,6 +54,7 @@ object playground extends BaseModule {
     
     os.proc(
       "java", 
+      s"-Dproject.root=${T.workspace}",
       "-cp", cp.map(_.path).mkString(":"), 
       "minirvcpu.GenCtrlSignals",
       Task.dest.toString()
@@ -56,6 +63,7 @@ object playground extends BaseModule {
     Seq(PathRef(Task.dest))
   }
   
+
   def repositoriesTask = Task.Anon {
     Seq(
       coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),

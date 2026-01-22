@@ -4,21 +4,25 @@ import chisel3._
 import chisel3.util._
 import scala.collection.immutable.ListMap
 
+// Alu输入信号
 class AluInput(implicit private val cfg: CoreConfig) extends Bundle {
   val aluOp = Input(UInt(AluOpEnum.getWidth.W))
   val src1 = Input(UInt(cfg.xlen.W))
   val src2 = Input(UInt(cfg.xlen.W))
 }
 
+// Alu输出信号
 class AluSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val in = new AluInput
   val out = Output(UInt(cfg.xlen.W))
 }
 
+// Alu父类
 class AluParent(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new AluSignals())
 }
 
+// 主Alu
 class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
   val addResult = io.in.src1 + io.in.src2
 
@@ -28,15 +32,16 @@ class AluBase(implicit private val cfg: CoreConfig) extends AluParent {
     ))
 }
 
-class EXUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+// 实例化Alu 提供Alu输入信号 根据extType选择输出
+class ExuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val aluResult = Output(UInt(cfg.xlen.W))
 }
 
-class EXU(implicit private val cfg: CoreConfig) extends Module {
+class Exu(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val iduIn = Flipped(new IDUSignals)
+    val iduIn = Flipped(new IduSignals)
     val regFileIn = Flipped(new RegisterFileSignals)
-    val exuOut = new EXUSignals
+    val exuOut = new ExuSignals
   })
 
   val ctrlSig = io.iduIn.ctrlSignals.ex
@@ -48,9 +53,9 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   }.to(ListMap)
  
   // 连接Alu输入
-  val src2 = MuxLookup(ctrlSig.aluSrc2, io.iduIn.imm)(Seq(
-    AluSourceEnum.imm.asUInt -> io.iduIn.imm,
-    AluSourceEnum.rs2.asUInt -> io.regFileIn.rData(1),
+  val src2 = MuxLookup(ctrlSig.aluIn2Sel, io.iduIn.imm)(Seq(
+    AluInSelEnum.imm.asUInt -> io.iduIn.imm,
+    AluInSelEnum.rs2.asUInt -> io.regFileIn.rData(1),
     ))
 
   val aluIn = Wire(Output(new AluInput))
@@ -60,9 +65,9 @@ class EXU(implicit private val cfg: CoreConfig) extends Module {
   alus.foreach(alu => alu._2.io.in := aluIn) 
 
   // 根据扩展选择输出
-  val muxSeq: Seq[(UInt, UInt)] = 
+  val outTable: Seq[(UInt, UInt)] = 
     alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) => ext.asUInt -> alu.io.out }.toSeq
-  io.exuOut.aluResult := MuxLookup(ctrlSig.extType, muxSeq.head._2)(muxSeq)
+  io.exuOut.aluResult := MuxLookup(ctrlSig.exuOutSel, outTable.head._2)(outTable)
 }
 
 

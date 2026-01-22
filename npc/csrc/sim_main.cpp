@@ -46,9 +46,12 @@ void sim_close(void)
 }
 
 uint32_t M[1 << 22] = {
-	0x00a00093,
-	0x00508113,
-	0xff410193
+	0x01400513,
+	0x010000e7,
+	0x00c000e7,
+	0x00c00067,
+	0x00a50513,
+	0x00008067
 };
 uint32_t pmem_read(uint32_t addr) {
 	return M[addr >> 2];
@@ -59,8 +62,8 @@ void single_cycle(void)
 	top->clock = 0; top->eval();
 	contextp->timeInc(1);
 
-	top->io_lsuIn_rData_0 = pmem_read(top->io_ifuOut_memRAddr);
-	printf("%0#8x\n", top->io_ifuOut_memRAddr);
+	top->io_memInstFetchIO_rData = pmem_read(top->io_memInstFetchIO_rAddr);
+	printf("%0#8x\n", top->io_memInstFetchIO_rAddr);
 
 #ifdef ENAWAVE
 	tfp->dump(contextp->time());
@@ -73,7 +76,6 @@ void single_cycle(void)
 }
 
 void reset(int n) {
-	top->io_lsuIn_rData_1 = 0;
 	top->reset = 1;
 	while (n-- > 0) single_cycle();
 	top->reset = 0;
@@ -84,11 +86,13 @@ int main(int argc, char** argv) {
 	int sim_time = 50;
 	sim_init(argc, argv);
 	reset(10);
-    while ((contextp->time() < sim_time | sim_time == -1) && !contextp->gotFinish()) {
+	int i = 0;
+    while ((i < sim_time | sim_time == -1) && !contextp->gotFinish()) {
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif
 		single_cycle();
+		i++;
 	}
 	sim_close();
     return 0;

@@ -3,13 +3,14 @@ package minirvcpu
 import chisel3._
 import chisel3.util.MuxLookup
 
+// gpr
 class RegisterFileSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val rData = Output(Vec(2, UInt(cfg.xlen.W)))
 }
 
 class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val wbuIn = Flipped(new WBUSignals)
+    val wbuIn = Flipped(new WbuSignals)
     val registerFileOut = new RegisterFileSignals
   })
 
@@ -23,27 +24,29 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   io.registerFileOut.rData(1) := regFile(sigIn.rAddr(1))
 }
 
+// pc
 class PcRegisterSignals(implicit private val cfg: CoreConfig) extends Bundle {
     val pc = Output(UInt(cfg.xlen.W))
 }
 
 class PcRegister(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val wbuIn = Flipped(new WBUSignals)
+    val wbuIn = Flipped(new WbuSignals)
     val pcRegisterOut = new PcRegisterSignals
   })
 
   val sigIn = io.wbuIn.pcRegister
   val pcReg = RegInit(0.U(cfg.xlen.W))
-  val pcNext = Mux(sigIn.isWriteBranchVal, sigIn.branchVal, pcReg + 4.U)
+  val pcNext = Mux(sigIn.isJump, sigIn.jumpAddr, pcReg + 4.U)
   pcReg := pcNext
   io.pcRegisterOut.pc := pcReg
 }
 
-class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
+// 控制pc跳转和gpr读写
+class WbuSignals(implicit private val cfg: CoreConfig) extends Bundle {
   val pcRegister = new Bundle {
-    val branchVal = UInt(cfg.xlen.W)
-    val isWriteBranchVal = Bool()
+    val jumpAddr = UInt(cfg.xlen.W)
+    val isJump = Bool()
   }
   val registerFile = new Bundle {
     val rAddr = Vec(2, UInt(cfg.registerAddrWidth.W))
@@ -53,11 +56,12 @@ class WBUSignals(implicit private val cfg: CoreConfig) extends Bundle {
   }
 }
 
-class WBU(implicit private val cfg: CoreConfig) extends Module {
+class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val iduIn = Flipped(new IDUSignals)
-    val exuIn = Flipped(new EXUSignals)
-    val wbuOut = new WBUSignals
+    val iduIn = Flipped(new IduSignals)
+    val exuIn = Flipped(new ExuSignals)
+    val pcRegisterIn = Flipped(new PcRegisterSignals)
+    val wbuOut = new WbuSignals
   }) 
 
 
@@ -65,15 +69,19 @@ class WBU(implicit private val cfg: CoreConfig) extends Module {
   val pcRegOut = io.wbuOut.pcRegister
   val regFileOut = io.wbuOut.registerFile
 
-  pcRegOut.branchVal := MuxLookup(ctrlSig.branchValSrc, io.iduIn.imm)(Seq(
-      BranchValSrcEnum.imm.asUInt -> io.iduIn.imm,
-      BranchValSrcEnum.alu.asUInt -> io.exuIn.aluResult
+  // pc
+  pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(Seq(
+      JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
+      JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
     ))
+  pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(0))
 
-  pcRegOut.isWriteBranchVal := ctrlSig.isBranch && io.exuIn.aluResult(0)
-
+  // gpr
   regFileOut.rAddr := io.iduIn.regFileRAddr
   regFileOut.wAddr := io.iduIn.regFileWAddr
-  regFileOut.wData := io.exuIn.aluResult
   regFileOut.wEn := ctrlSig.isWriteBackReg
+  regFileOut.wData := MuxLookup(ctrlSig.writeBackSel, io.exuIn.aluResult)(Seq(
+    WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
+    WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U)
+    ))
 }

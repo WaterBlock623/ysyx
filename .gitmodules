@@ -1,0 +1,3 @@
+[submodule "npc/rvdecoderdb"]
+	path = npc/rvdecoderdb
+	url = git@github.com:chipsalliance/rvdecoderdb.git

@@ -53,7 +53,7 @@ endif
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 
-GENERATOR = minirvcpu.util.GenCtrlSignals
+PACKAGE_NAME = minirvcpu
 
 test:
 	$(MILL) -i $(PRJ).test
@@ -61,7 +61,7 @@ test:
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
-	$(MILL) -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
+	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(BUILD_DIR)
 	-$(MAKE) lint
 
 help:
