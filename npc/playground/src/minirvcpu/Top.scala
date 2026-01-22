@@ -23,7 +23,7 @@ class MemDpiC(
   val inst = IO(new MemInstFetchIO)
   val ls = IO(new MemLoadStoreIO)
   private val memAddrMsb = cfg.memoryAddrWidth - 1
-  private val maskMsb = cfg.xlen >> 3 - 1
+  private val maskMsb = (cfg.xlen >> 3) - 1
   private val addrZero = 32 - cfg.memoryAddrWidth
   private val maskZero = 8 - (cfg.xlen >> 3)
   setInline(
