@@ -71,7 +71,7 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) 
 			mask |= 0xff << (i * 8);
 	}
 	printf("write data: %#.8x\n", wdata & mask);
-	M[waddr >> 2] = M[waddr >> 2] | (wdata & mask);
+	M[waddr >> 2] = (M[waddr >> 2] & ~mask) | (wdata & mask);
 	printf("mem: %#.8x\n", M[10]);
 }
 
