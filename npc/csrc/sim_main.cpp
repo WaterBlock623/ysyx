@@ -9,6 +9,8 @@
 #include <nvboard.h>
 #endif
 
+int stop_flag = 0;
+
 void nvboard_bind_all_pins(TOP_NAME* top);
 
 VerilatedContext* contextp = NULL;
@@ -61,10 +63,10 @@ uint32_t M[1 << 22] = {
 };
 extern "C" uint32_t pmem_read(uint32_t raddr) {
 	printf("rAddr: %#.8x\n", raddr);
-	if (raddr != 0) {
+	if (raddr >= 0x80000000) {
 		raddr -= 0x80000000;
 		return M[raddr >> 2];
-	} else 
+	} else 		
 		return 0;
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
@@ -103,7 +105,6 @@ void reset(int n) {
 	top->reset = 0;
 }
 
-int stop_flag = 0;
 
 extern "C" void check_ebreak(int is_ebreak) {
 //	printf("is_ebreak: %d\n", is_ebreak);
