@@ -36,7 +36,7 @@ class MemDpiC(
         |  output reg [31:0] ls_rData, 
         |  input [$memAddrMsb:0] ls_wAddr,
         |  input [31:0]  ls_wData,
-        |  input [$maskMsb:0] ls_wMask
+        |  input [$maskMsb:0] ls_wMask,
         |  input ls_valid, 
         |  input ls_wEn);
         |always @(*) begin
