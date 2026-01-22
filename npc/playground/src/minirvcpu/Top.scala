@@ -3,6 +3,18 @@ package minirvcpu
 import chisel3._
 import chisel3.util._
 
+class EbreakDpiC extends ExtModule {
+  val isEbreak = IO(Input(Bool()))
+
+  setInline("EbreakDpiC.sv", 
+    """import "DPI-C" function void check_ebreak(input int is_ebreak);
+      |module EbreakDpiC(input isEbreak);
+      |always @(*) begin
+      | check_ebreak(isEbreak)
+      |end
+      |endmodule
+    """.stripMargin)
+}
 
 class Top(implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
@@ -33,5 +45,8 @@ class Top(implicit private val cfg: CoreConfig) extends Module {
   wbu.io.exuIn := exuOut
   wbu.io.iduIn := iduOut
   wbu.io.pcRegisterIn := pcRegisterOut
+
+  val ebreakDpiC = Module(new EbreakDpiC)
+  ebreakDpiC.isEbreak := iduOut.ctrlSignals.debug.isEbreak
 }
 

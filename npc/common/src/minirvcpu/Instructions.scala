@@ -80,6 +80,15 @@ object InstFields {
 
   val fieldsBase = Seq(
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = "isEbreak"
+      def stage = "debug"
+      def genTable(i: InstPattern) = i.inst.name match {
+        case "ebreak" => y
+        case _ => n
+      }
+    },
+
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isWriteBackReg"
       def stage = "wb"
       def genTable(i: InstPattern) = if (rvdecoderdb.Utils.writeRd(i.inst)) y else n
