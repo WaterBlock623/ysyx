@@ -87,7 +87,7 @@ clean:
 
 .PHONY: test verilog help reformat checkformat clean
 
-sim: lint $(BIN)
+sim: verilog lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN) $(IMG) $(ARGS)
 
