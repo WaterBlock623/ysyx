@@ -66,12 +66,12 @@ extern "C" uint32_t pmem_read(uint32_t raddr) {
 		raddr -= 0x80000000;
 		return M[raddr >> 2];
 	} else {		
-		printf("Invalid rAddr: %#.8x\n", raddr);
+		printf("[npc] Invalid rAddr: %#.8x\n", raddr);
 		return 0;
 	}
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
-	printf("wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
+	printf("[npc] wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
 	waddr -= 0x80000000;
 	uint32_t mask = 0u;
 	int i;
@@ -111,7 +111,7 @@ extern "C" void check_ebreak(int is_ebreak) {
 //	printf("is_ebreak: %d\n", is_ebreak);
 	stop_flag = is_ebreak;
 	if (is_ebreak)
-		printf("stop by ebreak\n");
+		printf("[npc] stop by ebreak\n");
 }
 
 void load_bin(const char *path) {
@@ -119,9 +119,9 @@ void load_bin(const char *path) {
 	assert(bin);
 	size_t size = fread(M, 1, sizeof(M), bin);
 	if (size == sizeof(M))
-		printf("Warning: M is full\n");
+		printf("[npc] Warning: M is full\n");
 	else
-		printf("Load bin successful: %lu bytes\n", size);
+		printf("[npc] Load bin successful: %lu bytes\n", size);
 }
 
 int main(int argc, char** argv) {
@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
 	int i = 0;
     while ((i < sim_time | sim_time == -1) && !contextp->gotFinish() && !stop_flag) {
 		if (i % 100 == 0)
-			printf("cycles: %d\n", i);
+			printf("[npc] cycles: %d\n", i);
 #ifndef NO_NVBOARD
 		nvboard_update();
 #endif
