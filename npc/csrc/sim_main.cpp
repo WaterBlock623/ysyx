@@ -47,20 +47,7 @@ void sim_close(void)
 #endif
 }
 
-uint32_t M[1 << 22] = {
-	0x02802503,
-	0x09000493,
-	0x029005a3,
-	0x0ab00493,
-	0x02900523,
-	0x0cd00493,
-	0x029004a3,
-	0x0ef00493,
-	0x02900423,
-	0x02802503,
-	0x12345678
-	
-};
+uint32_t M[1 << 22];
 extern "C" uint32_t pmem_read(uint32_t raddr) {
 	if (raddr != 0) {
 		raddr -= 0x80000000;
@@ -124,6 +111,11 @@ void load_bin(const char *path) {
 		printf("[npc] Load bin successful: %lu bytes\n", size);
 }
 
+int32_t ret_val;
+extern "C" void get_ret(uint32_t a0) {
+	ret_val = a0;	
+}
+
 int main(int argc, char** argv) {
 	if (argc > 1)
 		load_bin(argv[1]);
@@ -143,7 +135,6 @@ int main(int argc, char** argv) {
 		single_cycle();
 		i++;
 	}
-	int ret_val = top->RegisterFile->regFile_10;
 	sim_close();
     return ret_val;
 }
