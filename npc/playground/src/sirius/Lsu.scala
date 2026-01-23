@@ -30,7 +30,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
 
   // load
   val rData = exte.mem.rData
-  val lbu = (rData >> rem * 8.U)(7, 0)
+  val lbu = 0.U(1.W) ## (rData >> rem * 8.U)(6, 0)
   val lbData = Mux(ctrl.isUnsignedLoad, 0.U((cfg.xlen - 8).W), 
     Fill(cfg.xlen - 8, lbu(7))) ## lbu
   val lhu = (rData >> (rem(1) * 16.U))(15, 0)
