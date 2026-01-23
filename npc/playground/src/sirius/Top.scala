@@ -60,13 +60,13 @@ class MemDpiC(
 }
 
 class GetRetDpiC extends ExtModule {
-  val reg = IO(Input(UInt(32.W)))
+  val a0 = IO(Input(UInt(32.W)))
   setInline(
     "GetRetDpiC.sv",
-    """|import "DPI-C" function void get_ret(input int reg);
-       |module EbreakDpiC(input reg);
+    """|import "DPI-C" function void get_ret(input int a0);
+       |module EbreakDpiC(input [31:0] a0);
        |always @(*) begin
-       |  get_ret(reg);
+       |  get_ret(a0);
        |end
        |endmodule
     """.stripMargin
@@ -97,7 +97,7 @@ class Top(
     ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
-    getRetDpiC.reg := registerFile.debug.get(10)
+    getRetDpiC.a0 := registerFile.debug.get(10)
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
