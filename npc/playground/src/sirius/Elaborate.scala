@@ -1,4 +1,4 @@
-package minirvcpu
+package sirius
 
 object Elaborate extends App {
   val firtoolOptions = Array(
@@ -16,5 +16,5 @@ object Elaborate extends App {
   val cfg =
     CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
   firtoolOptions.foreach(s => println(s))
-  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(cfg), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new sirius.Top()(cfg), args, firtoolOptions)
 }

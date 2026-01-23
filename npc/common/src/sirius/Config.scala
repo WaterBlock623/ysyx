@@ -1,4 +1,4 @@
-package minirvcpu
+package sirius
 
 case class CoreConfig(
   val rvOpcodesPath:       os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",

@@ -1,9 +1,10 @@
-package minirvcpu
+package sirius
 
 import chisel3._
 import chisel3.util.experimental.decode._
 import chisel3.util.MuxLookup
 import chisel3.util.Fill
+import chisel3.experimental.dataview._
 
 // 解析imm
 class ImmParser(
@@ -21,10 +22,8 @@ class ImmParser(
     val immTypeI = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 20)
     val immTypeS = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 25) ## inst(11, 7)
     val immTypeB =
-      Fill(cfg.xlen - 12, inst(31)) ## inst(7) ## inst(30, 25) ## inst(
-        11,
-        8
-      ) ## 0.U(1.W)
+      Fill(cfg.xlen - 12, inst(31)) ## inst(7) ## inst(30, 25) ## 
+        inst(11, 8) ## 0.U(1.W)
     val immTypeU = Fill(cfg.xlen - 31, inst(31)) ## inst(30, 12) ## 0.U(12.W)
     val immTypeJ =
       Fill(cfg.xlen - 20, inst(31)) ## inst(19, 12) ## inst(20) ## inst(
@@ -66,33 +65,36 @@ class InstDecoder(
   }
 }
 
-class IduSignals(
-  implicit private val cfg: CoreConfig)
-    extends Bundle {
-  val ctrlSignals = Output(new CtrlSignals())
-  val imm = Output(UInt(cfg.xlen.W))
-  val regFileRAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
-  val regFileWAddr = Output(UInt(cfg.registerAddrWidth.W))
-}
-
-class Idu(
-  implicit private val cfg: CoreConfig)
-    extends Module {
-  val io = IO(new Bundle {
-    val ifuIn = Flipped(new IfuSignals)
-    val iduOut = new IduSignals
+class Idu(implicit private val cfg: CoreConfig) extends Module {
+  val exte = IO(new Bundle {
+    val regFile = new IduToRegFileIO
   })
+  val in = IO(Flipped(new IfuToIduIO))
+  val out = IO(new IduToExuIO)
 
-  io.iduOut.regFileRAddr(0) := io.ifuIn.inst(19, 15)
-  io.iduOut.regFileRAddr(1) := io.ifuIn.inst(24, 20)
-  io.iduOut.regFileWAddr := io.ifuIn.inst(11, 7)
+  out.iduPayload.viewAsSupertype(new IfuPayload) := in.ifuPayload
 
+  val inst = in.ifuPayload.ifu.inst
+  // rs1
+  exte.regFile.rAddr(0) := inst(19, 15)
+  out.iduPayload.idu.rs1Data := exte.regFile.rData(0)
+  // rs2
+  exte.regFile.rAddr(1) := inst(24, 20)
+  out.iduPayload.idu.rs2Data := exte.regFile.rData(1)
+  // rd
+  out.iduPayload.idu.wAddr := inst(11, 7)
+
+  // ctrl
   val instDecoder = Module(new InstDecoder())
-  instDecoder.io.inst := io.ifuIn.inst
-  io.iduOut.ctrlSignals := instDecoder.io.ctrlSignals
+  instDecoder.io.inst := inst
+  val ctrl = instDecoder.io.ctrlSignals
+  out.ctrl.exuCtrl := ctrl.ex
+  out.ctrl.lsuCtrl := ctrl.ls
+  out.ctrl.wbuCtrl := ctrl.wb
 
+  // imm
   val immParser = Module(new ImmParser())
-  immParser.io.inst := io.ifuIn.inst
-  immParser.io.instType := io.iduOut.ctrlSignals.id.instType
-  io.iduOut.imm := immParser.io.imm
+  immParser.io.inst := inst
+  immParser.io.instType := ctrl.id.instType
+  out.iduPayload.idu.imm := immParser.io.imm
 }

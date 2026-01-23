@@ -1,0 +1,76 @@
+package sirius
+
+import chisel3._
+import chisel3.util._
+import scala.collection.immutable.ListMap
+import chisel3.experimental.dataview._
+
+class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val src1 = Output(UInt(cfg.xlen.W))
+  val src2 = Output(UInt(cfg.xlen.W))
+  val aluOp = Output(UInt(AluOpEnum.getWidth.W))
+  val out = Input(UInt(cfg.xlen.W))
+}
+
+// Alu父类
+class AluParent(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  val io = IO(Flipped(new AluIO()))
+}
+
+// 主Alu
+class AluBase(
+  implicit private val cfg: CoreConfig)
+    extends AluParent {
+  val addResult = io.src1 + io.src2
+
+  import AluOpEnum._
+  io.out := MuxLookup(io.aluOp, addResult)(
+    Seq(
+      add.asUInt -> addResult
+    )
+  )
+}
+
+class Exu(implicit private val cfg: CoreConfig) extends Module {
+  val in = IO(Flipped(new IduToExuIO))
+  val out = IO(new ExuToLsuIO)
+
+  out.exuPayload.viewAsSupertype(new IduPayload) := in.iduPayload
+  out.ctrl := in.ctrl.viewAsSupertype(new LsuCtrl)
+
+  val ctrl = in.ctrl.exuCtrl
+  val imm = in.iduPayload.idu.imm
+  val rs1Data = in.iduPayload.idu.rs1Data
+  val rs2Data = in.iduPayload.idu.rs2Data
+
+  // 根据扩展实例化Alu
+  val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
+    case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
+    case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
+  }.to(ListMap)
+
+  // 连接Alu输入
+  val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
+    Seq(
+      AluInSelEnum.imm.asUInt -> imm,
+      AluInSelEnum.rs2.asUInt -> rs2Data,
+    )
+  )
+
+  val aluIn = Wire(new AluIO)
+  aluIn.aluOp := ctrl.aluOp
+  aluIn.src1 := rs1Data
+  aluIn.src2 := src2
+  alus.foreach(alu => alu._2.io :<= aluIn)
+
+  // 根据扩展选择输出
+  val outTable: Seq[(UInt, UInt)] =
+    alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) =>
+      ext.asUInt -> alu.io.out
+    }.toSeq
+  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+    outTable
+  )
+}

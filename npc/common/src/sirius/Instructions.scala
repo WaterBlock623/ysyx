@@ -1,4 +1,4 @@
-package minirvcpu
+package sirius
 
 import chisel3._
 import chisel3.util.experimental.decode._
@@ -27,7 +27,7 @@ object ExuOutSelEnum extends ChiselEnum {
   val aluBase = Value
 }
 
-object JumpAddrSelEnum extends ChiselEnum {
+object JumpTargetSelEnum extends ChiselEnum {
   val imm, alu = Value
 }
 
@@ -211,14 +211,14 @@ object InstFields {
       }
     },
     new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "jumpAddrSel"
+      def name = "jumpTargetSel"
       def stage = "wb"
-      def chiselType = UInt(JumpAddrSelEnum.getWidth.W)
+      def chiselType = UInt(JumpTargetSelEnum.getWidth.W)
       def genTable(i: InstPattern) = {
         if (i.inst.name == "jal") {
-          BitPat(JumpAddrSelEnum.imm)
+          BitPat(JumpTargetSelEnum.imm)
         } else if (i.inst.name == "jalr" || rvdecoderdb.Utils.isB(i.inst)) {
-          BitPat(JumpAddrSelEnum.alu)
+          BitPat(JumpTargetSelEnum.alu)
         } else {
           dc
         }

@@ -1,4 +1,4 @@
-package minirvcpu
+package sirius
 
 import cpuutil.BundleGenerator
 
@@ -8,6 +8,6 @@ object GenCtrlSignals extends App {
   val cfg =
     CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
   val collector = InstDecodeCollector()(cfg)
-  val gen = new BundleGenerator("minirvcpu", "CtrlSignals", collector.allFields)
+  val gen = new BundleGenerator("sirius", "CtrlSignals", collector.allFields)
   gen.generate(args(0) + "/CtrlSignals.scala")
 }

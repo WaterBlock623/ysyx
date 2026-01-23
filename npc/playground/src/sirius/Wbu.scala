@@ -1,15 +1,9 @@
-package minirvcpu
+package sirius
 
 import chisel3._
 import chisel3.util.MuxLookup
 
 // gpr
-class RegisterFileSignals(
-  implicit private val cfg: CoreConfig)
-    extends Bundle {
-  val rData = Output(Vec(2, UInt(cfg.xlen.W)))
-}
-
 class RegisterFile(
   implicit private val cfg: CoreConfig)
     extends Module {
@@ -29,13 +23,7 @@ class RegisterFile(
 }
 
 // pc
-class PcRegisterSignals(
-  implicit private val cfg: CoreConfig)
-    extends Bundle {
-  val pc = Output(UInt(cfg.xlen.W))
-}
-
-class PcRegister(
+class PcReg(
   implicit private val cfg: CoreConfig)
     extends Module {
   val io = IO(new Bundle {
@@ -45,47 +33,28 @@ class PcRegister(
 
   val sigIn = io.wbuIn.pcRegister
   val pcReg = RegInit("h80000000".U(cfg.xlen.W))
-  val pcNext = Mux(sigIn.isJump, sigIn.jumpAddr, pcReg + 4.U)
+  val pcNext = Mux(sigIn.isJump, sigIn.target, pcReg + 4.U)
   pcReg := pcNext
   io.pcRegisterOut.pc := pcReg
 }
 
 // 控制pc跳转和gpr读写
-class WbuSignals(
-  implicit private val cfg: CoreConfig)
-    extends Bundle {
-  val pcRegister = new Bundle {
-    val jumpAddr = UInt(cfg.xlen.W)
-    val isJump = Bool()
-  }
-  val registerFile = new Bundle {
-    val rAddr = Vec(2, UInt(cfg.registerAddrWidth.W))
-    val wAddr = UInt(cfg.registerAddrWidth.W)
-    val wData = UInt(cfg.xlen.W)
-    val wEn = Bool()
-  }
-}
-
-class Wbu(
-  implicit private val cfg: CoreConfig)
-    extends Module {
-  val io = IO(new Bundle {
-    val iduIn = Flipped(new IduSignals)
-    val exuIn = Flipped(new ExuSignals)
-    val pcRegisterIn = Flipped(new PcRegisterSignals)
-    val lsuIn = Flipped(new LsuSignals)
-    val wbuOut = new WbuSignals
+class Wbu(implicit private val cfg: CoreConfig) extends Module {
+  val exte = IO(new Bundle {
+    val pcReg = new WbuToPcRegIO
+    val regFlie = new WbuToRegFileIO
   })
+  val in = IO(Flipped(new LsuToWbuIO))
 
-  val ctrlSig = io.iduIn.ctrlSignals.wb
-  val pcRegOut = io.wbuOut.pcRegister
-  val regFileOut = io.wbuOut.registerFile
+  val ctrl = in.ctrl.wbuCtrl
+  val pcReg = exte.pcReg
+  val regFile = exte.regFlie
 
   // pc
-  pcRegOut.jumpAddr := MuxLookup(ctrlSig.jumpAddrSel, io.iduIn.imm)(
+  pcReg.target := MuxLookup(ctrl.jumpTargetSel, io.iduIn.imm)(
     Seq(
-      JumpAddrSelEnum.imm.asUInt -> io.iduIn.imm,
-      JumpAddrSelEnum.alu.asUInt -> io.exuIn.aluResult
+      JumpTargetSelEnum.imm.asUInt -> io.iduIn.imm,
+      JumpTargetSelEnum.alu.asUInt -> io.exuIn.aluResult
     )
   )
   pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(

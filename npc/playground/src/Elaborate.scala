@@ -1,3 +1,4 @@
+import sirius.Top
 object Elaborate extends App {
   val firtoolOptions = Array(
     "--lowering-options=" + List(
@@ -9,7 +10,7 @@ object Elaborate extends App {
     ).reduce(_ + "," + _)
   )
   circt.stage.ChiselStage.emitSystemVerilogFile(
-    new minirvcpu.Top(),
+    new sirius.Top(),
     args,
     firtoolOptions
   )

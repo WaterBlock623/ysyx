@@ -67,7 +67,7 @@ object playground extends BaseModule {
       "java",
       s"-Dproject.root=${T.workspace}",
       "-cp", cp,
-      "minirvcpu.GenCtrlSignals",
+      "sirius.GenCtrlSignals",
       dest.toString()
     ).call(stdout = os.Inherit, stderr = os.Inherit)
 

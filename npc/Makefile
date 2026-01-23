@@ -1,5 +1,5 @@
 PRJ = playground
-PACKAGE_NAME = minirvcpu
+PACKAGE_NAME = sirius
 BUILD_DIR = ./build
 MILL = ./mill
 
