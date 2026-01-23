@@ -62,7 +62,7 @@ class MemDpiC(
 class GetRetDpiC extends ExtModule {
   val reg = IO(Input(UInt(32.W)))
   setInline(
-    "EbreakDpiC.sv",
+    "GetRetDpiC.sv",
     """|import "DPI-C" function void get_ret(input int reg);
        |module EbreakDpiC(input reg);
        |always @(*) begin
