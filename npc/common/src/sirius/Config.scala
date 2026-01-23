@@ -1,6 +1,7 @@
 package sirius
 
 case class CoreConfig(
+  val isDebug: Boolean = true,
   val rvOpcodesPath:       os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
   val xlen:                Int = 32,
   val extensions:          Set[ExtTypeEnum.Type] = Set(ExtTypeEnum.I),

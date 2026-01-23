@@ -59,11 +59,23 @@ class MemDpiC(
   )
 }
 
+class GetRetDpiC extends ExtModule {
+  val reg = IO(Input(UInt(32.W)))
+  setInline(
+    "EbreakDpiC.sv",
+    """|import "DPI-C" function void get_ret(input int reg);
+       |module EbreakDpiC(input reg);
+       |always @(*) begin
+       |  get_ret(reg);
+       |end
+       |endmodule
+    """.stripMargin
+  )
+}
+
 class Top(
   implicit private val cfg: CoreConfig)
     extends Module {
-  val ebreakDpiC = Module(new EbreakDpiC)
-  val memDpiC = Module(new MemDpiC)
   
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
@@ -78,9 +90,15 @@ class Top(
   val exuOut = exu.out
   val lsuOut = lsu.out
 
-  ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.isEbreak
-  memDpiC.inst :<>= ifu.exte.mem
-  memDpiC.ls :<>= lsu.exte.mem
+  if (cfg.isDebug) {
+    val ebreakDpiC = Module(new EbreakDpiC)
+    val memDpiC = Module(new MemDpiC)
+    val getRetDpiC = Module(new GetRetDpiC)
+    ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
+    memDpiC.inst :<>= ifu.exte.mem
+    memDpiC.ls :<>= lsu.exte.mem
+    getRetDpiC.reg := registerFile.debug.get(10)
+  }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg

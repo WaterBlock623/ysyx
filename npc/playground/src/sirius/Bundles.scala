@@ -42,7 +42,7 @@ class LsuCtrl(implicit private val cfg: CoreConfig) extends WbuCtrl {
 
 class ExuCtrl(implicit private val cfg: CoreConfig) extends LsuCtrl {
   val exuCtrl = new CtrlSignals().ex
-  val debugCtrl = new CtrlSignals().debug
+  val debugCtrl = if (cfg.isDebug) Some(new CtrlSignals().debug) else None
 }
 
 // IO

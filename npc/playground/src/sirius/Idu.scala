@@ -88,7 +88,9 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   val instDecoder = Module(new InstDecoder())
   instDecoder.io.inst := inst
   val ctrl = instDecoder.io.ctrlSignals
-  out.ctrl.debugCtrl := ctrl.debug
+  if (cfg.isDebug) {
+    out.ctrl.debugCtrl.get := ctrl.debug
+  }
   out.ctrl.exuCtrl := ctrl.ex
   out.ctrl.lsuCtrl := ctrl.ls
   out.ctrl.wbuCtrl := ctrl.wb
