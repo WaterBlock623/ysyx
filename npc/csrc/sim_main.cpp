@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
 //	M[138] = 0x00100073;
 //	M[1160] = 0x00100073;
 	//int sim_time = 2 * 25000000;
-	int sim_time = 500;
+	int sim_time = -1;
 	sim_init(argc, argv);
 	reset(10);
 	int i = 0;
