@@ -143,6 +143,7 @@ int main(int argc, char** argv) {
 		single_cycle();
 		i++;
 	}
+	int ret_val = top->RegisterFile->regFile_10;
 	sim_close();
-    return 0;
+    return ret_val;
 }
