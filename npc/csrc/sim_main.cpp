@@ -116,6 +116,14 @@ extern "C" void get_ret(uint32_t a0) {
 	ret_val = a0;	
 }
 
+void check_ret_val(void) {
+	if (ret_val == 0) {
+		printf("[npc] \033[32m[HIT GOOD TRAP]\033[0m\n");
+	} else {
+		printf("[npc] \033[31m[HIT BAD TRAP]\033[0m\n");
+	}
+}
+
 int main(int argc, char** argv) {
 	if (argc > 1)
 		load_bin(argv[1]);
@@ -136,5 +144,6 @@ int main(int argc, char** argv) {
 		i++;
 	}
 	sim_close();
+	check_ret_val();
     return ret_val;
 }
