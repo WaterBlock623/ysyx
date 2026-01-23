@@ -1,7 +1,8 @@
-package minirvcpu
+package sirius
 
 object Elaborate extends App {
   val firtoolOptions = Array(
+    "-default-layer-specialization=enable",
     "--lowering-options=" + List(
       // make yosys happy
       // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
@@ -12,6 +13,8 @@ object Elaborate extends App {
   )
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
-  val cfg = CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
-  circt.stage.ChiselStage.emitSystemVerilogFile(new minirvcpu.Top()(cfg), args, firtoolOptions)
+  val cfg =
+    CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
+  firtoolOptions.foreach(s => println(s))
+  circt.stage.ChiselStage.emitSystemVerilogFile(new sirius.Top()(cfg), args, firtoolOptions)
 }

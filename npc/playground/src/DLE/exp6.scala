@@ -15,7 +15,11 @@ class Lfsr() extends Module {
 
   val shiftReg = RegInit(io.seed)
   val newBit = shiftReg(4) ^ shiftReg(3) ^ shiftReg(2) ^ shiftReg(0)
-  shiftReg := Mux(io.load, io.seed, Mux(io.en, newBit ## shiftReg(7, 1), shiftReg))
+  shiftReg := Mux(
+    io.load,
+    io.seed,
+    Mux(io.en, newBit ## shiftReg(7, 1), shiftReg)
+  )
   io.out := shiftReg
 }
 

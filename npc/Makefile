@@ -1,8 +1,9 @@
-BUILD_DIR = ./build
 PRJ = playground
+PACKAGE_NAME = sirius
+BUILD_DIR = ./build
 MILL = ./mill
 
-ELABORATE_SCALA = ./playground/src/Elaborate.scala
+ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
 			  grep "new " | \
 			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
@@ -53,7 +54,9 @@ endif
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 
-PACKAGE_NAME = minirvcpu
+# am
+ARGS ?=
+IMG ?=
 
 test:
 	$(MILL) -i $(PRJ).test
@@ -65,7 +68,7 @@ verilog:
 	-$(MAKE) lint
 
 help:
-	$(MILL) -i $(PRJ).runMain Elaborate --help
+	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
 
 reformat:
 	$(MILL) -i __.reformat
@@ -84,9 +87,13 @@ clean:
 
 .PHONY: test verilog help reformat checkformat clean
 
-sim: lint $(BIN)
+sim: verilog lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN)
+	@$(BIN) $(IMG) $(ARGS)
+
+simbatch: $(BIN)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@$(BIN) $(IMG) $(ARGS)
 
 simwave: VERILATOR_CFLAGS += --trace-fst
 simwave: CXXFLAGS += -DENAWAVE

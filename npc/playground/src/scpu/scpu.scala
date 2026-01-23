@@ -17,7 +17,7 @@ class DecodePairSaver[T] {
 }
 
 case class InstPattern(opCode: String) extends DecodePattern {
-  def bitPat: BitPat = BitPat("b" + opCode + "??????") 
+  def bitPat: BitPat = BitPat("b" + opCode + "??????")
 }
 object InstPatterns {
   val saver = new DecodePairSaver[InstPattern]
@@ -37,7 +37,7 @@ object InstFields {
     def name = "Write registers"
     def genTable(p: InstPattern) = p match {
       case Add | Li => y
-      case _ => n
+      case _        => n
     }
   }
   r(IsWriteReg)
@@ -46,9 +46,9 @@ object InstFields {
     def name = "The source of read address 1"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add => BitPat("b0")
+      case Add   => BitPat("b0")
       case Bner0 => BitPat("b1")
-      case _ => dc
+      case _     => dc
     }
   }
   r(GprRAddr1Src)
@@ -57,8 +57,8 @@ object InstFields {
     def name = "The source of read address 2"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0|OutRs => BitPat("b0")
-      case _ => dc
+      case Add | Bner0 | OutRs => BitPat("b0")
+      case _                   => dc
     }
   }
   r(GprRAddr2Src)
@@ -67,10 +67,10 @@ object InstFields {
     def name = "Chose which operation will be excuted by ALU"
     def chiselType = UInt(2.W)
     def genTable(p: InstPattern) = p match {
-      case Add => BitPat("b00")
-      case Li => BitPat("b01")
+      case Add   => BitPat("b00")
+      case Li    => BitPat("b01")
       case Bner0 => BitPat("b10")
-      case _ => dc
+      case _     => dc
     }
   }
   r(AluOp)
@@ -79,9 +79,9 @@ object InstFields {
     def name = "The source of OP NUM a"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat("b0")
-      case Li => BitPat("b1")
-      case _ => dc
+      case Add | Bner0 => BitPat("b0")
+      case Li          => BitPat("b1")
+      case _           => dc
     }
   }
   r(AluASrc)
@@ -90,9 +90,9 @@ object InstFields {
     def name = "The source of OP NUM b"
     def chiselType = UInt(1.W)
     def genTable(p: InstPattern) = p match {
-      case Add|Bner0 => BitPat("b0")
-      case Li => BitPat("b1")
-      case _ => dc
+      case Add | Bner0 => BitPat("b0")
+      case Li          => BitPat("b1")
+      case _           => dc
     }
   }
   r(AluBSrc)
@@ -101,7 +101,7 @@ object InstFields {
     def name = "Write PC"
     def genTable(p: InstPattern) = p match {
       case Bner0 => y
-      case _ => n
+      case _     => n
     }
   }
   r(IsBranch)
@@ -110,21 +110,21 @@ object InstFields {
     def name = "Update Led7"
     def genTable(p: InstPattern) = p match {
       case OutRs => y
-      case _ => n
+      case _     => n
     }
   }
   r(IsWriteLed7)
 }
 
 class SelSignal extends Bundle {
-    val isWriteReg = Bool()
-    val gprRAddr1Src = UInt(1.W)
-    val gprRAddr2Src = UInt(1.W)
-    val aluOp = UInt(2.W)
-    val aluASrc = UInt(1.W)
-    val aluBSrc = UInt(1.W)
-    val isBranch = Bool()
-    val isWriteLed7 = Bool()
+  val isWriteReg = Bool()
+  val gprRAddr1Src = UInt(1.W)
+  val gprRAddr2Src = UInt(1.W)
+  val aluOp = UInt(2.W)
+  val aluASrc = UInt(1.W)
+  val aluBSrc = UInt(1.W)
+  val isBranch = Bool()
+  val isWriteLed7 = Bool()
 }
 
 class Decoder extends Module {
@@ -161,8 +161,8 @@ class Gpr extends Module {
 
   val wEn = io.selSignal.isWriteReg
   val gpReg = RegInit(VecInit.fill(4)(0.U(8.W)))
-  
-  when (wEn) {
+
+  when(wEn) {
     gpReg(io.wAddr) := io.wData
   }
 
@@ -182,21 +182,27 @@ class Alu extends Module {
   val a = Wire(UInt(8.W))
   val b = Wire(UInt(8.W))
 
-  a := MuxLookup(io.selSignal.aluASrc, 0.U)(Seq(
-    0.U -> io.rData(0),
-    1.U -> io.rs1
-  ))
+  a := MuxLookup(io.selSignal.aluASrc, 0.U)(
+    Seq(
+      0.U -> io.rData(0),
+      1.U -> io.rs1
+    )
+  )
 
-  b := MuxLookup(io.selSignal.aluBSrc, 0.U)(Seq(
-    0.U -> io.rData(1),
-    1.U -> io.rs2
-  ))
+  b := MuxLookup(io.selSignal.aluBSrc, 0.U)(
+    Seq(
+      0.U -> io.rData(1),
+      1.U -> io.rs2
+    )
+  )
 
-  io.out := MuxLookup(io.selSignal.aluOp, 0.U)(Seq(
-    0.U -> (a + b),
-    1.U -> (a(1, 0) ## b(1, 0)),
-    2.U -> (a =/= b)
-  ))
+  io.out := MuxLookup(io.selSignal.aluOp, 0.U)(
+    Seq(
+      0.U -> (a + b),
+      1.U -> (a(1, 0) ## b(1, 0)),
+      2.U -> (a =/= b)
+    )
+  )
 }
 
 class SCpu extends Module {
@@ -234,15 +240,18 @@ class SCpu extends Module {
 //  gpr.io.rAddr(1) := Mux(decoder.io.selSignal.gprRAddr2Src === 1.U, 2.U, rs2)
   gpr.io.rAddr(1) := rs2
   gpr.io.wData := alu.io.out
-  gpr.io.wAddr := rd 
+  gpr.io.wAddr := rd
 
   alu.io.selSignal <> decoder.io.selSignal
   alu.io.rData := gpr.io.rData
   alu.io.rs1 := rs1
   alu.io.rs2 := rs2
 
-  pcReg := Mux(decoder.io.selSignal.isBranch, Mux(alu.io.out(0), branchAddr, pcReg + 1.U), 
-                                              pcReg + 1.U)
+  pcReg := Mux(
+    decoder.io.selSignal.isBranch,
+    Mux(alu.io.out(0), branchAddr, pcReg + 1.U),
+    pcReg + 1.U
+  )
 
   val led7Reg = RegInit(0.U.asTypeOf(Vec(2, UInt(7.W))))
   val led7Dcd = Seq.fill(2)(Module(new DecoderLed))

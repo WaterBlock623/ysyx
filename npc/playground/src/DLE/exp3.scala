@@ -13,7 +13,7 @@ class Alu4() extends Module {
     val carry = Output(Bool())
   })
 
-  val sub = io.inst === "b001".U || io.inst === "b110".U || io.inst === "b111".U  
+  val sub = io.inst === "b001".U || io.inst === "b110".U || io.inst === "b111".U
 
   val norB = io.b ^ Fill(4, sub)
   val asResult = io.a +& norB + sub
@@ -25,7 +25,8 @@ class Alu4() extends Module {
   val subCarry = lt
   val equ = ~asOut.orR
 
-  val out = VecInit(asOut, asOut, ~io.a, io.a & io.b, io.a | io.b, io.a ^ io.b, lt, equ)
+  val out =
+    VecInit(asOut, asOut, ~io.a, io.a & io.b, io.a | io.b, io.a ^ io.b, lt, equ)
   io.out := out(io.inst)
   io.overflow := asOverflow
   io.carry := Mux(sub, subCarry, addCarry)

@@ -72,7 +72,11 @@ class ParsePs2() extends Module {
 
   val negEdge = ~io.ps2Clk & RegNext(io.ps2Clk)
   val dataCntReg = RegInit(0.U(4.W))
-  dataCntReg := Mux(negEdge, Mux(dataCntReg === 10.U, 0.U, dataCntReg + 1.U), dataCntReg)
+  dataCntReg := Mux(
+    negEdge,
+    Mux(dataCntReg === 10.U, 0.U, dataCntReg + 1.U),
+    dataCntReg
+  )
   val dataReg = RegInit(0.U(11.W))
   dataReg := Mux(negEdge, io.ps2Dat ## dataReg(10, 1), dataReg)
   io.data := dataReg(8, 1)
@@ -81,29 +85,35 @@ class ParsePs2() extends Module {
 
 class DecoderLed extends Module {
   val io = IO(new Bundle {
-    val in  = Input(UInt(4.W))
+    val in = Input(UInt(4.W))
     val en = Input(Bool())
     val out = Output(UInt(7.W))
   })
 
-  io.out := ~Mux(io.en, MuxLookup(io.in, 0.U)(Seq(
-    0.U -> "b1111110".U,
-    1.U -> "b0110000".U,
-    2.U -> "b1101101".U,
-    3.U -> "b1111001".U,
-    4.U -> "b0110011".U,
-    5.U -> "b1011011".U,
-    6.U -> "b1011111".U,
-    7.U -> "b1110000".U,
-    8.U -> "b1111111".U,
-    9.U -> "b1111011".U,
-    10.U -> "b1110111".U,
-    11.U -> "b0011111".U,
-    12.U -> "b1001110".U,
-    13.U -> "b0111101".U,
-    14.U -> "b1001111".U,
-    15.U -> "b1000111".U
-  )), 0.U)
+  io.out := ~Mux(
+    io.en,
+    MuxLookup(io.in, 0.U)(
+      Seq(
+        0.U -> "b1111110".U,
+        1.U -> "b0110000".U,
+        2.U -> "b1101101".U,
+        3.U -> "b1111001".U,
+        4.U -> "b0110011".U,
+        5.U -> "b1011011".U,
+        6.U -> "b1011111".U,
+        7.U -> "b1110000".U,
+        8.U -> "b1111111".U,
+        9.U -> "b1111011".U,
+        10.U -> "b1110111".U,
+        11.U -> "b0011111".U,
+        12.U -> "b1001110".U,
+        13.U -> "b0111101".U,
+        14.U -> "b1001111".U,
+        15.U -> "b1000111".U
+      )
+    ),
+    0.U
+  )
 }
 
 class Exp7() extends Module {
@@ -120,7 +130,7 @@ class Exp7() extends Module {
   ps.io.ps2Dat := io.ps2Dat
   val dataReg = RegEnable(ps.io.data, 0.U(8.W), ps.io.valid)
   val isKeyDown = ps.io.data =/= "hf0".U && dataReg =/= "hf0".U
-  val keyDownReg = RegEnable(isKeyDown, false.B, ps.io.valid) 
+  val keyDownReg = RegEnable(isKeyDown, false.B, ps.io.valid)
 
   val scanDcdLed1 = Module(new DecoderLed)
   val scanDcdLed2 = Module(new DecoderLed)
@@ -149,5 +159,3 @@ class Exp7() extends Module {
   cntDcdLed2.io.in := cntReg(7, 4)
   io.led7Cnt := cntDcdLed2.io.out ## cntDcdLed1.io.out
 }
-
-
