@@ -78,7 +78,7 @@ class Top(
   val exuOut = exu.out
   val lsuOut = lsu.out
 
-  ebreakDpiC.isEbreak := idu.ctrl.debug.isEbreak
+  ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.isEbreak
   memDpiC.inst :<>= ifu.exte.mem
   memDpiC.ls :<>= lsu.exte.mem
 
