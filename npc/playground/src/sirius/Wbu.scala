@@ -54,7 +54,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   pcReg.isJump := ctrl.isJump || (ctrl.isBranch && aluOut(0))
 
   // gpr
-  val wAddr = in.lsuPayload.idu.wAddr
+  regFile.wAddr := in.lsuPayload.idu.wAddr
   val pc = in.lsuPayload.ifu.pc
   val loadData = in.lsuPayload.lsu.loadData
   regFile.wEn := ctrl.isWriteBackReg

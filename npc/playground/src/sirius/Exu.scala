@@ -60,6 +60,7 @@ class Exu(implicit private val cfg: CoreConfig) extends Module {
   )
 
   val aluIn = Wire(new AluIO)
+  aluIn.out := DontCare
   aluIn.aluOp := ctrl.aluOp
   aluIn.src1 := rs1Data
   aluIn.src2 := src2
