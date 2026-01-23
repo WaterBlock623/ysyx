@@ -91,6 +91,10 @@ sim: verilog lint $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN) $(IMG) $(ARGS)
 
+simbatch: $(BIN)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@$(BIN) $(IMG) $(ARGS)
+
 simwave: VERILATOR_CFLAGS += --trace-fst
 simwave: CXXFLAGS += -DENAWAVE
 simwave: sim

@@ -18,7 +18,7 @@ MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
 CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINARGS_PLACEHOLDER)
 
 # WAVE=wave to enabale wave
-WAVE ?=
+NPCCMD ?=
 
 NPCFLAGS ?=
 
@@ -31,6 +31,6 @@ image: image-dep
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	$(MAKE) -C $(NPC_HOME) sim$(WAVE) $(NPCFLAGS) IMG=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) $(NPCCMD) $(NPCFLAGS) IMG=$(IMAGE).bin
 
 .PHONY: insert-arg
