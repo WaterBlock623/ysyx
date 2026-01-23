@@ -27,16 +27,16 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   exte.mem.wAddr := addr
 
   val rem = addr(1, 0)
-
   // load
   val rData = exte.mem.rData
-  val lbu = (rData >> rem * 8.U)(7, 0)
+  val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
+  val lbu = byteData(rem)
   val lbData = Mux(ctrl.isUnsignedLoad, 0.U((cfg.xlen - 8).W), 
     Fill(cfg.xlen - 8, lbu(7))) ## lbu
-  val lhu = (rData >> (rem(1) * 16.U))(15, 0)
+  val lhu = Mux(rem(1), rData(31, 16), rData(15, 0)) 
   val lhData = Mux(ctrl.isUnsignedLoad, 0.U((cfg.xlen - 16).W), 
     Fill(cfg.xlen - 16, lhu(15))) ## lhu
-  val lwData = rData(31, 0).pad(cfg.xlen)
+  val lwData = rData(31, 0)
   out.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(Seq(
     LoadStoreLengthEnum.w.asUInt -> lwData,
     LoadStoreLengthEnum.h.asUInt -> lhData,
