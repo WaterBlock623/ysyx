@@ -29,10 +29,10 @@ class PcReg(
   val ifuIn = IO(Flipped(new IfuToPcRegIO))
   val wbuIn = IO(Flipped(new WbuToPcRegIO))
 
-  val pcRegister = RegInit("h80000000".U(cfg.xlen.W))
-  val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcRegister + 4.U)
-  pcRegister := pcNext
-  ifuIn.pc := pcRegister
+  val pcReg = RegInit("h80000000".U(cfg.xlen.W))
+  val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
+  pcReg := pcNext
+  ifuIn.pc := pcReg
 }
 
 // 控制pc跳转和gpr读写
