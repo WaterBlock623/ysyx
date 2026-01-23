@@ -102,13 +102,14 @@ extern "C" void check_ebreak(int is_ebreak) {
 }
 
 void load_bin(const char *path) {
+	printf("[npc] Load bin: %s\n", path);
 	FILE *bin = fopen(path, "r");
 	assert(bin);
 	size_t size = fread(M, 1, sizeof(M), bin);
 	if (size == sizeof(M))
 		printf("[npc] Warning: M is full\n");
 	else
-		printf("[npc] Load bin successful: %lu bytes\n", size);
+		printf("""[npc] Load bin successful: %lu bytes\n", size);
 }
 
 int32_t ret_val;
