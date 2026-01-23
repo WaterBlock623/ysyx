@@ -145,6 +145,7 @@ int main(int argc, char** argv) {
 		i++;
 	}
 	sim_close();
+	printf("[npc] Cycles: %d\n", i);
 	check_ret_val();
     return ret_val;
 }
