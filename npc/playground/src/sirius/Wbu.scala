@@ -3,38 +3,6 @@ package sirius
 import chisel3._
 import chisel3.util.MuxLookup
 
-// gpr
-class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
-  val iduIn = IO(Flipped(new IduToRegFileIO))
-  val wbuIn = IO(Flipped(new WbuToRegFileIO))
-  val debug = if (cfg.isDebug) Some(IO(Output(Vec(cfg.registerNum, UInt(cfg.xlen.W))))) else None
-
-  val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
-  when(wbuIn.wEn) {
-    regFile(wbuIn.wAddr) := wbuIn.wData
-  }
-  regFile(0) := 0.U
-  iduIn.rData(0) := regFile(iduIn.rAddr(0))
-  iduIn.rData(1) := regFile(iduIn.rAddr(1))
-
-  if (cfg.isDebug) {
-    debug.get := regFile
-  }
-}
-
-// pc
-class PcReg(
-  implicit private val cfg: CoreConfig)
-    extends Module {
-  val ifuIn = IO(Flipped(new IfuToPcRegIO))
-  val wbuIn = IO(Flipped(new WbuToPcRegIO))
-
-  val pcReg = RegInit("h80000000".U(cfg.xlen.W))
-  val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
-  pcReg := pcNext
-  ifuIn.pc := pcReg
-}
-
 // 控制pc跳转和gpr读写
 class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
