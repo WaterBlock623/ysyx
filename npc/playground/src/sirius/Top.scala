@@ -20,8 +20,8 @@ class EbreakDpiC extends ExtModule {
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
-  val inst = IO(new MemInstFetchIO)
-  val ls = IO(new MemLoadStoreIO)
+  val inst = IO(Flipped(new IfuToMemIO))
+  val ls = IO(Flipped(new LsuToMemIO))
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 8 - (cfg.xlen >> 3)
@@ -65,7 +65,7 @@ class Top(
   val ebreakDpiC = Module(new EbreakDpiC)
   val memDpiC = Module(new MemDpiC)
   
-  val pcRegister = Module(new PcRegister)
+  val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val ifu = Module(new Ifu)
   val idu = Module(new Idu)
@@ -73,29 +73,21 @@ class Top(
   val lsu = Module(new Lsu)
   val wbu = Module(new Wbu)
 
-  val pcRegisterOut = pcRegister.io.pcRegisterOut
-  val registerFileOut = registerFile.io.registerFileOut
-  val ifuOut = ifu.io.ifuOut
-  val iduOut = idu.io.iduOut
-  val exuOut = exu.io.exuOut
-  val lsuOut = lsu.io.lsuOut
-  val wbuOut = wbu.io.wbuOut
+  val ifuOut = ifu.out
+  val iduOut = idu.out
+  val exuOut = exu.out
+  val lsuOut = lsu.out
 
-  ebreakDpiC.isEbreak := idu.io.iduOut.ctrlSignals.debug.isEbreak
-  lsu.io.memLoadStoreIO :<>= memDpiC.ls
+  ebreakDpiC.isEbreak := idu.ctrl.debug.isEbreak
+  memDpiC.inst :<>= ifu.exte.mem
+  memDpiC.ls :<>= lsu.exte.mem
 
-  pcRegister.io.wbuIn := wbuOut
-  registerFile.io.wbuIn := wbuOut
-  ifu.io.pcRegisterIn := pcRegisterOut
-  ifu.io.memInstFetchIO :<>= memDpiC.inst
-  idu.io.ifuIn := ifuOut
-  exu.io.iduIn := iduOut
-  exu.io.regFileIn := registerFileOut
-  lsu.io.exuIn := exuOut
-  lsu.io.iduIn := iduOut
-  lsu.io.registerFileIn := registerFileOut
-  wbu.io.exuIn := exuOut
-  wbu.io.iduIn := iduOut
-  wbu.io.pcRegisterIn := pcRegisterOut
-  wbu.io.lsuIn := lsuOut
+  pcReg.ifuIn :<>= ifu.exte.pcReg
+  pcReg.wbuIn :<>= wbu.exte.pcReg
+  registerFile.iduIn :<>= idu.exte.regFile
+  registerFile.wbuIn :<>= wbu.exte.regFlie
+  idu.in :<>= ifuOut
+  exu.in :<>= iduOut
+  lsu.in :<>= exuOut
+  wbu.in :<>= lsuOut
 }

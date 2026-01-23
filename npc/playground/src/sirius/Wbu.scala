@@ -4,38 +4,30 @@ import chisel3._
 import chisel3.util.MuxLookup
 
 // gpr
-class RegisterFile(
-  implicit private val cfg: CoreConfig)
-    extends Module {
-  val io = IO(new Bundle {
-    val wbuIn = Flipped(new WbuSignals)
-    val registerFileOut = new RegisterFileSignals
-  })
+class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
+  val iduIn = IO(Flipped(new IduToRegFileIO))
+  val wbuIn = IO(Flipped(new WbuToRegFileIO))
 
-  val sigIn = io.wbuIn.registerFile
   val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
-  when(sigIn.wEn) {
-    regFile(sigIn.wAddr) := sigIn.wData
+  when(wbuIn.wEn) {
+    regFile(wbuIn.wAddr) := wbuIn.wData
   }
   regFile(0) := 0.U
-  io.registerFileOut.rData(0) := regFile(sigIn.rAddr(0))
-  io.registerFileOut.rData(1) := regFile(sigIn.rAddr(1))
+  iduIn.rData(0) := regFile(iduIn.rAddr(0))
+  iduIn.rData(1) := regFile(iduIn.rAddr(1))
 }
 
 // pc
 class PcReg(
   implicit private val cfg: CoreConfig)
     extends Module {
-  val io = IO(new Bundle {
-    val wbuIn = Flipped(new WbuSignals)
-    val pcRegisterOut = new PcRegisterSignals
-  })
+  val ifuIn = IO(Flipped(new IfuToPcRegIO))
+  val wbuIn = IO(Flipped(new WbuToPcRegIO))
 
-  val sigIn = io.wbuIn.pcRegister
   val pcReg = RegInit("h80000000".U(cfg.xlen.W))
-  val pcNext = Mux(sigIn.isJump, sigIn.target, pcReg + 4.U)
+  val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
   pcReg := pcNext
-  io.pcRegisterOut.pc := pcReg
+  ifuIn.pc := pcReg
 }
 
 // 控制pc跳转和gpr读写
@@ -49,28 +41,29 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val ctrl = in.ctrl.wbuCtrl
   val pcReg = exte.pcReg
   val regFile = exte.regFlie
+  val imm = in.lsuPayload.idu.imm
+  val aluOut = in.lsuPayload.exu.aluOut
 
   // pc
-  pcReg.target := MuxLookup(ctrl.jumpTargetSel, io.iduIn.imm)(
+  pcReg.target := MuxLookup(ctrl.jumpTargetSel, imm)(
     Seq(
-      JumpTargetSelEnum.imm.asUInt -> io.iduIn.imm,
-      JumpTargetSelEnum.alu.asUInt -> io.exuIn.aluResult
+      JumpTargetSelEnum.imm.asUInt -> imm,
+      JumpTargetSelEnum.alu.asUInt -> aluOut
     )
   )
-  pcRegOut.isJump := ctrlSig.isJump || (ctrlSig.isBranch && io.exuIn.aluResult(
-    0
-  ))
+  pcReg.isJump := ctrl.isJump || (ctrl.isBranch && aluOut(0))
 
   // gpr
-  regFileOut.rAddr := io.iduIn.regFileRAddr
-  regFileOut.wAddr := io.iduIn.regFileWAddr
-  regFileOut.wEn := ctrlSig.isWriteBackReg
-  regFileOut.wData := MuxLookup(ctrlSig.writeBackSel, io.exuIn.aluResult)(
+  val wAddr = in.lsuPayload.idu.wAddr
+  val pc = in.lsuPayload.ifu.pc
+  val loadData = in.lsuPayload.lsu.loadData
+  regFile.wEn := ctrl.isWriteBackReg
+  regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
-      WriteBackSelEnum.alu.asUInt -> io.exuIn.aluResult,
-      WriteBackSelEnum.imm.asUInt -> io.iduIn.imm,
-      WriteBackSelEnum.staticNextPc.asUInt -> (io.pcRegisterIn.pc + 4.U),
-      WriteBackSelEnum.lsu.asUInt -> io.lsuIn.loadData,
+      WriteBackSelEnum.alu.asUInt -> aluOut,
+      WriteBackSelEnum.imm.asUInt -> imm,
+      WriteBackSelEnum.staticNextPc.asUInt -> (pc + 4.U),
+      WriteBackSelEnum.lsu.asUInt -> loadData,
     )
   )
 }
