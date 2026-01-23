@@ -70,8 +70,8 @@ class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val rAddr = Input(Vec(2, UInt(cfg.registerAddrWidth.W)))
-  val rData = Output(Vec(2, UInt(cfg.xlen.W)))
+  val rAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
+  val rData = Input(Vec(2, UInt(cfg.xlen.W)))
 }
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
