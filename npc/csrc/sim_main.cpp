@@ -58,7 +58,7 @@ extern "C" uint32_t pmem_read(uint32_t raddr) {
 	}
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
-	printf("[npc] wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
+//	printf("[npc] wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
 	waddr -= 0x80000000;
 	uint32_t mask = 0u;
 	int i;
