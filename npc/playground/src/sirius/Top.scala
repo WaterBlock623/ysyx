@@ -90,7 +90,7 @@ class Top(
   val exuOut = exu.out
   val lsuOut = lsu.out
 
-  if (cfg.isDebug) {
+  // if (cfg.isDebug) {
     val ebreakDpiC = Module(new EbreakDpiC)
     val memDpiC = Module(new MemDpiC)
     val getRetDpiC = Module(new GetRetDpiC)
@@ -98,7 +98,7 @@ class Top(
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
     getRetDpiC.a0 := registerFile.debug.get(10)
-  }
+  // }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
