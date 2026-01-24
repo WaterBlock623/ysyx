@@ -284,7 +284,7 @@ static void putchcmd(char c, char **save_ptr) {
 }
 
 int vprintf(const char *fmt, va_list ap) {
-  return vcmdprintf(putchcmd, NULL, fmt, &ap); 
+  return vcmdprintf(putchcmd, NULL, fmt, ap); 
 }
 
 int printf(const char *fmt, ...) {
@@ -297,7 +297,7 @@ int printf(const char *fmt, ...) {
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
   char *save_ptr = out;
-  return vcmdprintf(sputchcmd, &save_ptr, fmt, &ap); 
+  return vcmdprintf(sputchcmd, &save_ptr, fmt, ap); 
 }
 
 int sprintf(char *out, const char *fmt, ...) {
