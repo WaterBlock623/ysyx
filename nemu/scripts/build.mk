@@ -27,7 +27,7 @@ LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
-# BINARY_DEPS += $(WORK_DIR)/.config
+BINARY_DEPS += $(WORK_DIR)/.config
 
 # Compilation patterns
 $(OBJ_DIR)/%.o: %.c
@@ -51,7 +51,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
-$(BINARY):: $(OBJS) $(ARCHIVES) # $(BINARY_DEPS)
+$(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 
