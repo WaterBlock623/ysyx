@@ -3,10 +3,21 @@
 #include <klib-macros.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+typedef void (*putchcmd_t)(char, char **);
+
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
+
+static int putnstrcmd(putchcmd_t put, char **save_ptr, const char *str, int max) {
+  int i;
+  for (i = 0; max < 0 ? *str : i < max; i++, str++) {
+    put(*str, save_ptr);
+  }
+  return i;
+}
 
 static int atoip(const char **s) {
     int i = 0;
@@ -21,8 +32,9 @@ static int atoip(const char **s) {
 #define F_SPACE 8  // ' '
 #define F_PLUS  16 // '+'
 
-static int print_num(char *out, unsigned long long u, int base, int width, int flags, int neg) {
-  char *start = out;
+static int print_num(putchcmd_t put, char **save_ptr, unsigned long long u, 
+                     int base, int width, int flags, int neg) {
+  int cnt = 0;
   char prefix[4];
   int prefix_len = 0;
   if (neg) {
@@ -38,7 +50,7 @@ static int print_num(char *out, unsigned long long u, int base, int width, int f
     prefix[prefix_len++] = 'x';
   }
 
-  char tmp[100];
+  char tmp[128];
   int i = 0;
   if (u == 0) {
     tmp[i++] = '0';
@@ -54,29 +66,37 @@ static int print_num(char *out, unsigned long long u, int base, int width, int f
   int num_len = i;
   int total_len = prefix_len + num_len;
   int padding = width > total_len ? width - total_len : 0;
+  cnt += total_len + padding;
 
   if (!(flags & F_LEFT) && !(flags & F_ZERO)) {
-    while (padding-- > 0) *out++ = ' ';
+    while (padding-- > 0) {
+      put(' ', save_ptr);
+    }
   }
-  for (int k = 0; k < prefix_len; k++) {
-    *out++ = prefix[k];
+  int k;
+  for (k = 0; k < prefix_len; k++) {
+    put(prefix[k], save_ptr);
   }
   if (!(flags & F_LEFT) && (flags & F_ZERO)) {
-    while (padding-- > 0) *out++ = '0';
+    while (padding-- > 0) {
+      put('0', save_ptr);
+    }
   }
   while (i-- > 0) {
-    *out++ = tmp[i];
+    put(tmp[i], save_ptr);
   }
   if (flags & F_LEFT) {
-    while (padding-- > 0) *out++ = ' ';
+    while (padding-- > 0) {
+      put(' ', save_ptr);
+    }
   }
 
-  return out - start;
+  return cnt;
 }
 
 static void parse_arg(const char **fmt, va_list *ap, 
                       uint32_t *flags, int *width, int *precision,
-                      int *long_mod) {
+                      int *long_mod, char *type) {
   if (**fmt != '%')
     panic("Invalid fmt");
   (*fmt)++; 
@@ -128,26 +148,27 @@ static void parse_arg(const char **fmt, va_list *ap,
     if (is_mod)
       (*fmt)++;
   } while (is_mod);
+
+  *type = *(*fmt)++;
 }
 
-static int print_arg(char *out, const char **fmt, va_list *ap) {
-  char *start = out;
+static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list *ap) {
+  int cnt = 0;
   uint32_t flags = 0;
   int width = -1;
   int precision = -1;
   int long_mod = 0;
+  char type;
 
-  parse_arg(fmt, ap, &flags, &width, &precision, &long_mod);
+  parse_arg(fmt, ap, &flags, &width, &precision, 
+            &long_mod, &type);
 
-  char type = *(*fmt)++;
-  char *str_arg;
-  unsigned long long num_val = 0;
-  int is_neg = 0;
 
   switch (type) {
-    case 's':
+    case 's': {
+      char *str_arg;
       str_arg = va_arg(*ap, char *);
-      if (!str_arg)
+      if (str_arg == NULL)
           str_arg = "(null)";
       int len = strlen(str_arg);
       if (precision >= 0 && len > precision)
@@ -155,14 +176,20 @@ static int print_arg(char *out, const char **fmt, va_list *ap) {
       
       int fill_len = width > len ? width - len : 0;
       if (!(flags & F_LEFT)) {
-          while (fill_len--) *out++ = ' ';
+        while (fill_len--) {
+          put(' ', save_ptr);
+          cnt++;
+        }
       }
-      memcpy(out, str_arg, len);
-      out += len;
+      cnt += putnstrcmd(put, save_ptr, str_arg, len);
       if (flags & F_LEFT) {
-          while (fill_len--) *out++ = ' ';
+        while (fill_len--) {
+          put(' ', save_ptr);
+          cnt++;
+        }
       }
       break;
+    }
 
     case 'd': {
       long long val;
@@ -173,73 +200,104 @@ static int print_arg(char *out, const char **fmt, va_list *ap) {
       else 
         val = va_arg(*ap, long long);
       
+      unsigned long long uval = 0;
+      int is_neg = 0;
       if (val < 0) {
         is_neg = 1;
-        num_val = (unsigned long long)(-val);
+        uval = (unsigned long long)(-val);
       } else {
-        num_val = (unsigned long long)val;
+        uval = (unsigned long long)val;
       }
-      out += print_num(out, num_val, 10, width, flags, is_neg);
+      cnt += print_num(put, save_ptr, uval, 10, width, flags, is_neg);
       break;
     }
     
     case 'x': {
+      unsigned long long uval = 0;
       if (long_mod == 0)
-        num_val = (unsigned int)va_arg(*ap, int);
+        uval = (unsigned int)va_arg(*ap, int);
       else if (long_mod == 1)
-        num_val = (unsigned long)va_arg(*ap, long);
+        uval = (unsigned long)va_arg(*ap, long);
       else
-        num_val = (unsigned long long)va_arg(*ap, long long);
+        uval = (unsigned long long)va_arg(*ap, long long);
       
-      out += print_num(out, num_val, 16, width, flags, 0);
+      cnt += print_num(put, save_ptr, uval, 16, width, flags, 0);
       break;
     }
 
-    case 'p':
-      num_val = (uintptr_t)va_arg(*ap, void *);
+    case 'p': {
+      uintptr_t uval = (uintptr_t)va_arg(*ap, void *);
       flags |= F_ALT; 
-      out += print_num(out, num_val, 16, width, flags, 0);
+      cnt += print_num(put, save_ptr, uval, 16, width, flags, 0);
       break;
+    }
 
     case 'c':
+      cnt += width > 1 ? width : 1;
       if (!(flags & F_LEFT)) {
-        while (width-- > 1)
-          *out++ = ' ';
+        while (width-- > 1) {
+          put(' ', save_ptr);
+        }
       }
-      *out++ = (char)va_arg(*ap, int);
+      put((char)va_arg(*ap, int), save_ptr);
       break;
 
     case '%':
-      *out++ = '%';
+      put('%', save_ptr);
+      cnt++;
       break;
 
     default:
-      *out++ = '%';
-      *out++ = type;
+      put('%', save_ptr);
+      put(type, save_ptr);
+      cnt += 2;
       break;
   }
 
-  return out - start;
+  return cnt;
 }
 
-int printf(const char *fmt, ...) {
-  panic("Not implemented");
-}
-
-int vsprintf(char *out, const char *fmt, va_list ap) {
+static int vcmdprintf(putchcmd_t put, char **save_ptr, const char *fmt, va_list ap) {
   int cnt = 0;
   while (*fmt) {
     if (*fmt == '%') {
-      int len = print_arg(out, &fmt, &ap);    
+      int len = print_arg(put, save_ptr, &fmt, &ap);    
       cnt += len;
-      out += len;
     } else {
-      *out++ = *fmt++;
+      put(*fmt++, save_ptr);
       cnt++;
     }
   }
-  *out = '\0';
+  put('\0', save_ptr);
   return cnt;
+}
+
+static void sputchcmd(char c, char **save_ptr) {
+  if (save_ptr == NULL) {
+    panic("save_ptr is NULL");
+  }
+  *(*save_ptr)++ = c;
+}
+
+static void putchcmd(char c, char **save_ptr) {
+  putch(c);
+}
+
+int vprintf(const char *fmt, va_list ap) {
+  return vcmdprintf(putchcmd, NULL, fmt, &ap); 
+}
+
+int printf(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  int ret = vprintf(fmt, ap);
+  va_end(ap);
+  return ret;
+}
+
+int vsprintf(char *out, const char *fmt, va_list ap) {
+  char *save_ptr = out;
+  return vcmdprintf(sputchcmd, &save_ptr, fmt, &ap); 
 }
 
 int sprintf(char *out, const char *fmt, ...) {
