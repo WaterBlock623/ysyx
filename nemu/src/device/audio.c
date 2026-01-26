@@ -76,6 +76,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 
 static void sbuf_io_handler(uint32_t offset, int len, bool is_write) {
   if (is_write) {
+    sbuf_head = sbuf_start;
     audio_base[reg_count] = offset + len; 
     sbuf_tail = sbuf_start + offset + len;
     assert(sbuf_tail <= sbuf_end);
