@@ -37,6 +37,7 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 }
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
+  while (inl(AUDIO_COUNT_ADDR) != 0);
   uint8_t *start = (uint8_t *)ctl->buf.start;
   uint8_t *end = (uint8_t *)ctl->buf.end;
   uintptr_t addr = (uintptr_t)AUDIO_SBUF_ADDR;
