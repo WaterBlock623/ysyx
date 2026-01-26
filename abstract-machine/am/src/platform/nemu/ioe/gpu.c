@@ -4,6 +4,8 @@
 
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 
+void __am_gpu_init() {
+}
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
   uint32_t data_raw = inl(VGACTL_ADDR);
@@ -16,21 +18,19 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
   };
 }
 
-void __am_gpu_init() {
-}
-
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   if (ctl->sync) {
     outl(SYNC_ADDR, 1);
   }
   int width = inl(VGACTL_ADDR) >> 16;
-  int i;
-  for (i = 0; i < (ctl->w * ctl->h); i++) {
-    uintptr_t addr = FB_ADDR + 
-      ctl->y * width * sizeof(uint32_t) + 
-      ctl->x * sizeof(uint32_t) + 
-      i * sizeof(uint32_t);
-    outl(addr, ((uint32_t *)ctl->pixels)[i]);
+  int i, j;
+  for (i = 0; i < ctl->h; i++) {
+    for (j = 0; j < ctl->w; j++) {
+      uintptr_t addr = FB_ADDR + 
+        (ctl->y + i) * width * sizeof(uint32_t) + 
+        (ctl->x + j) * sizeof(uint32_t);
+      outl(addr, ((uint32_t *)ctl->pixels)[i * ctl->w + j]);
+    }
   }
 }
 
