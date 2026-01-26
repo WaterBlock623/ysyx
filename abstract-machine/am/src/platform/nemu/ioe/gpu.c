@@ -19,19 +19,23 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 }
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
-  if (ctl->sync) {
-    outl(SYNC_ADDR, 1);
+  static int width = 0;
+  if (width == 0) {
+    width = inl(VGACTL_ADDR) >> 16;
   }
-  int width = inl(VGACTL_ADDR) >> 16;
+  uintptr_t first_col_addr = (FB_ADDR + ctl->y * width + ctl->x) * sizeof(uint32_t);
+  uintptr_t addr;
   int i, j;
   int cnt = 0;
   for (i = 0; i < ctl->h; i++) {
+    addr = first_col_addr;
     for (j = 0; j < ctl->w; j++) {
-      uintptr_t addr = FB_ADDR + 
-        (ctl->y + i) * width * sizeof(uint32_t) + 
-        (ctl->x + j) * sizeof(uint32_t);
-      outl(addr, ((uint32_t *)ctl->pixels)[cnt++]);
+      outl(addr++, ((uint32_t *)ctl->pixels)[cnt++]);
     }
+    first_col_addr += ctl->w;
+  }
+  if (ctl->sync) {
+    outl(SYNC_ADDR, 1);
   }
 }
 
