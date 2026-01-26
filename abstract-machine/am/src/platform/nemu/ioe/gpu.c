@@ -31,9 +31,9 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     addr = first_col_addr;
     for (j = 0; j < ctl->w; j++) {
       outl(addr, ((uint32_t *)ctl->pixels)[cnt++]);
-      addr += 4;
+      addr += sizeof(uint32_t);
     }
-    first_col_addr += width;
+    first_col_addr += width * sizeof(uint32_t);
   }
   if (ctl->sync) {
     outl(SYNC_ADDR, 1);
