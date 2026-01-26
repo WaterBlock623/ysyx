@@ -32,7 +32,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     for (j = 0; j < ctl->w; j++) {
       outl(addr++, ((uint32_t *)ctl->pixels)[cnt++]);
     }
-    first_col_addr += ctl->w;
+    first_col_addr += width;
   }
   if (ctl->sync) {
     outl(SYNC_ADDR, 1);
