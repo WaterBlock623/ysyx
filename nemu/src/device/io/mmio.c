@@ -13,8 +13,11 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
+#include "utils.h"
 #include <device/map.h>
 #include <memory/paddr.h>
+#include <stdio.h>
 
 #define NR_MAP 16
 
@@ -53,11 +56,30 @@ void add_mmio_map(const char *name, paddr_t addr, void *space, uint32_t len, io_
   nr_map ++;
 }
 
+static void dtrace(IOMap *map, bool is_write, paddr_t addr, int len, word_t data) {
+#define DTRACE_MSG "Device %s %s:  Data="FMT_WORD"  Len=%d  Addr="FMT_PADDR"\n", \
+              map->name, is_write ? "write" : "read", data, len, addr
+#ifdef CONFIG_DTRACE_COND
+  if (DTRACE_COND) {
+    log_write(DTRACE_MSG);
+  }
+#endif
+  extern bool g_print_step;
+  if (g_print_step) {
+    IFDEF(CONFIG_DTRACE, printf(DTRACE_MSG));
+  }
+}
+
 /* bus interface */
 word_t mmio_read(paddr_t addr, int len) {
-  return map_read(addr, len, fetch_mmio_map(addr));
+  IOMap *map = fetch_mmio_map(addr);
+  word_t data = map_read(addr, len, map);
+  dtrace(map, false, addr, len, data);
+  return data;
 }
 
 void mmio_write(paddr_t addr, int len, word_t data) {
-  map_write(addr, len, data, fetch_mmio_map(addr));
+  IOMap *map = fetch_mmio_map(addr);
+  dtrace(map, true, addr, len, data);
+  map_write(addr, len, data, map);
 }
