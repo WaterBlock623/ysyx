@@ -30,7 +30,8 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   for (i = 0; i < ctl->h; i++) {
     addr = first_col_addr;
     for (j = 0; j < ctl->w; j++) {
-      outl(addr++, ((uint32_t *)ctl->pixels)[cnt++]);
+      outl(addr, ((uint32_t *)ctl->pixels)[cnt++]);
+      addr += 4;
     }
     first_col_addr += width;
   }
