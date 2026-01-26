@@ -23,7 +23,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   if (width == 0) {
     width = inl(VGACTL_ADDR) >> 16;
   }
-  uintptr_t first_col_addr = (FB_ADDR + ctl->y * width + ctl->x) * sizeof(uint32_t);
+  uintptr_t first_col_addr = FB_ADDR + (ctl->y * width + ctl->x) * sizeof(uint32_t);
   uintptr_t addr;
   int i, j;
   int cnt = 0;
