@@ -25,12 +25,12 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   }
   uintptr_t first_col_addr = FB_ADDR + (ctl->y * width + ctl->x) * sizeof(uint32_t);
   uintptr_t addr;
+  uint32_t *pixels = (uint32_t *)ctl->pixels;
   int i, j;
-  int cnt = 0;
   for (i = 0; i < ctl->h; i++) {
     addr = first_col_addr;
     for (j = 0; j < ctl->w; j++) {
-      outl(addr, ((uint32_t *)ctl->pixels)[cnt++]);
+      outl(addr, *pixels++);
       addr += sizeof(uint32_t);
     }
     first_col_addr += width * sizeof(uint32_t);
