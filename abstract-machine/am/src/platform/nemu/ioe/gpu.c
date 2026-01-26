@@ -24,12 +24,13 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   }
   int width = inl(VGACTL_ADDR) >> 16;
   int i, j;
+  int cnt = 0;
   for (i = 0; i < ctl->h; i++) {
     for (j = 0; j < ctl->w; j++) {
       uintptr_t addr = FB_ADDR + 
         (ctl->y + i) * width * sizeof(uint32_t) + 
         (ctl->x + j) * sizeof(uint32_t);
-      outl(addr, ((uint32_t *)ctl->pixels)[i * ctl->w + j]);
+      outl(addr, ((uint32_t *)ctl->pixels)[cnt++]);
     }
   }
 }
