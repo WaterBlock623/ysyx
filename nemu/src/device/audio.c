@@ -44,6 +44,7 @@ static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
     memcpy(stream, sbuf_head, length); 
     audio_base[reg_count] -= length;
     sbuf_head += length;
+    printf("count: %u\n", audio_base[reg_count]);
   } 
 }
 
