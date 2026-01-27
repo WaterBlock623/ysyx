@@ -45,6 +45,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   static uint32_t sbuf_tail = 0;
   uint8_t *start = (uint8_t *)ctl->buf.start;
   uint8_t *end = (uint8_t *)ctl->buf.end;
+  while ((sbuf_size - inl(AUDIO_COUNT_ADDR)) < (end - start));
   while (start + 4 < end) {
     outl(AUDIO_SBUF_ADDR + sbuf_tail, *(uint32_t *)start);
     start += 4;
