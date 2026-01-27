@@ -45,11 +45,13 @@ static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
   assert(audio_base[reg_count] == sbuf_used);
   if (sbuf_used > 0) {
     uint32_t length = sbuf_used < len ? sbuf_used : len;
-    if (sbuf_tail > sbuf_head) {
+    if (sbuf_tail + length < CONFIG_SB_SIZE) {
       memcpy(stream, sbuf_start + sbuf_head, length); 
     } else {
-      uint8_t *addr = mempcpy(stream, sbuf_start + sbuf_head, CONFIG_SB_SIZE - sbuf_head);
-      memcpy(addr, sbuf_start, sbuf_tail);
+      uint32_t len1 = CONFIG_SB_SIZE - sbuf_head;
+      uint32_t len2 = length - len1;
+      uint8_t *addr = mempcpy(stream, sbuf_start + sbuf_head, len1);
+      memcpy(addr, sbuf_start, len2);
     }
     sbuf_head = (sbuf_head + length) % CONFIG_SB_SIZE;
     audio_base[reg_count] -= length;
