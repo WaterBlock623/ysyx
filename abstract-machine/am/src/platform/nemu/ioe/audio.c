@@ -42,21 +42,18 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   if (sbuf_size == 0) {
     sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
   }
-  static uint8_t *tail = NULL;
-  if (tail == NULL) {
-    tail = (uint8_t *)AUDIO_SBUF_ADDR;
-  }
+  static uint32_t sbuf_tail = 0;
   uint8_t *start = (uint8_t *)ctl->buf.start;
   uint8_t *end = (uint8_t *)ctl->buf.end;
   while (start + 4 < end) {
-    outl((uintptr_t)tail, *(uint32_t *)start);
+    outl(AUDIO_SBUF_ADDR + sbuf_tail, *(uint32_t *)start);
     start += 4;
-    tail += 4;
+    sbuf_tail = (sbuf_tail + 4) % sbuf_size;
   }
   while (start < end) {
-    outb((uintptr_t)tail, *start);
+    outb(AUDIO_SBUF_ADDR + sbuf_tail, *start);
     start++;
-    tail++;
+    sbuf_tail = (sbuf_tail + 1) % sbuf_size;
   }
-  outl(AUDIO_TAIL_OFFSET_ADDR, (uint32_t)(tail - AUDIO_SBUF_ADDR));
+  outl(AUDIO_TAIL_OFFSET_ADDR, sbuf_tail);
 }

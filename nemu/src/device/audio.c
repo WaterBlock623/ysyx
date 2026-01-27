@@ -35,7 +35,7 @@ enum {
 };
 
 static uint8_t *sbuf_start = NULL, *sbuf_end = NULL;
-static uint8_t *sbuf_head = NULL, *sbuf_tail = NULL;
+static uint32_t sbuf_head = 0, sbuf_tail = 0;
 static uint32_t *audio_base = NULL;
 
 
@@ -46,12 +46,12 @@ static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
   if (sbuf_used > 0) {
     uint32_t length = sbuf_used < len ? sbuf_used : len;
     if (sbuf_tail > sbuf_head) {
-      memcpy(stream, sbuf_head, length); 
+      memcpy(stream, sbuf_start + sbuf_head, length); 
     } else {
-      uint8_t *addr = mempcpy(stream, sbuf_head, sbuf_end - sbuf_head);
-      memcpy(addr, sbuf_start, sbuf_tail - sbuf_start);
+      uint8_t *addr = mempcpy(stream, sbuf_start + sbuf_head, CONFIG_SB_SIZE - sbuf_head);
+      memcpy(addr, sbuf_start, sbuf_tail);
     }
-    sbuf_head = (uint8_t *)(((uintptr_t)sbuf_head + length) % CONFIG_SB_SIZE);
+    sbuf_head = (sbuf_head + length) % CONFIG_SB_SIZE;
     audio_base[reg_count] -= length;
   } 
 }
@@ -83,7 +83,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
         }
         break;
       case reg_tail_offset:
-        sbuf_tail = sbuf_start + audio_base[reg_tail_offset];
+        sbuf_tail = audio_base[reg_tail_offset];
         audio_base[reg_count] = (sbuf_tail - sbuf_head) % CONFIG_SB_SIZE;
         break;
     }
@@ -108,7 +108,5 @@ void init_audio() {
   audio_base[reg_sbuf_size] = CONFIG_SB_SIZE;
   sbuf_start = (uint8_t *)new_space(CONFIG_SB_SIZE);
   sbuf_end = sbuf_start + CONFIG_SB_SIZE;
-  sbuf_head = sbuf_start;
-  sbuf_tail = sbuf_head;
   add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, NULL);
 }
