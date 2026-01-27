@@ -15,6 +15,7 @@
 
 #include "debug.h"
 #include "difftest-def.h"
+#include <SDL2/SDL_audio.h>
 #include <assert.h>
 #include <common.h>
 #include <device/map.h>
@@ -29,6 +30,7 @@ enum {
   reg_sbuf_size,
   reg_init,
   reg_count,
+  reg_lock,
   nr_reg
 };
 
@@ -70,6 +72,11 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
                     audio_base[reg_samples]);
       audio_base[reg_init] = 0;
     }
+    if (audio_base[reg_lock] != 0) {
+      SDL_LockAudio();
+    } else {
+      SDL_UnlockAudio();
+    }
   } else {
     audio_base[reg_count] = sbuf_head - sbuf_tail;
   }
@@ -89,6 +96,7 @@ void init_audio() {
   uint32_t space_size = sizeof(uint32_t) * nr_reg;
   audio_base = (uint32_t *)new_space(space_size);
   audio_base[reg_count] = 0;
+  audio_base[reg_lock] = 0;
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else

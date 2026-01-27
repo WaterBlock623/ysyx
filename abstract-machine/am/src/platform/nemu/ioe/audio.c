@@ -10,6 +10,7 @@
 #define AUDIO_SBUF_SIZE_ADDR (AUDIO_ADDR + 0x0c)
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
+#define AUDIO_LOCK_ADDR      (AUDIO_ADDR + 0x18)
 
 void __am_audio_init() {
 }
@@ -41,6 +42,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint8_t *start = (uint8_t *)ctl->buf.start;
   uint8_t *end = (uint8_t *)ctl->buf.end;
   uintptr_t addr = (uintptr_t)AUDIO_SBUF_ADDR;
+  outl(AUDIO_LOCK_ADDR, 1u);
   while (start + 4 < end) {
     outl(addr, *(uint32_t *)start);
     start += 4;
@@ -51,4 +53,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     start++;
     addr++;
   }
+  outl(AUDIO_LOCK_ADDR, 0u);
 }
