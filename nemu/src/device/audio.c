@@ -76,8 +76,8 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
       printf("Lock!\n");
       SDL_LockAudio();
     } else {
-      printf("Unlock!\n");
-      SDL_UnlockAudio();
+      //printf("Unlock!\n");
+      //SDL_UnlockAudio();
     }
   } else {
     audio_base[reg_count] = sbuf_head - sbuf_tail;
@@ -98,7 +98,7 @@ void init_audio() {
   uint32_t space_size = sizeof(uint32_t) * nr_reg;
   audio_base = (uint32_t *)new_space(space_size);
   audio_base[reg_count] = 0;
-  audio_base[reg_lock] = 0;
+  audio_base[reg_lock] = 1;
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
