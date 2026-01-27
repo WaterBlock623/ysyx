@@ -39,8 +39,8 @@ static uint32_t *audio_base = NULL;
 
 static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
   memset(stream, 0, len);
-  if (audio_base[reg_count] > 0) {
-    uint32_t sbuf_used = sbuf_tail - sbuf_head;
+  uint32_t sbuf_used = sbuf_tail - sbuf_head;
+  if (sbuf_used > 0) {
     int length = sbuf_used < len ? sbuf_used : len;
     memcpy(stream, sbuf_head, length); 
     sbuf_head += length;
@@ -97,7 +97,8 @@ void init_audio() {
 
   audio_base[reg_sbuf_size] = CONFIG_SB_SIZE;
   sbuf_start = (uint8_t *)new_space(CONFIG_SB_SIZE);
-  sbuf_head = sbuf_start;
   sbuf_end = sbuf_start + CONFIG_SB_SIZE;
+  sbuf_head = sbuf_start;
+  sbuf_tail = sbuf_head;
   add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, sbuf_io_handler);
 }
