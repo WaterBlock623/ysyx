@@ -31,6 +31,7 @@ enum {
   reg_init,
   reg_count,
   reg_tail_offset,
+  reg_lock,
   nr_reg
 };
 
@@ -88,6 +89,12 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
         sbuf_tail = audio_base[reg_tail_offset];
         audio_base[reg_count] = (sbuf_tail - sbuf_head) % CONFIG_SB_SIZE;
         break;
+      case reg_lock:
+        if (audio_base[reg_lock]) {
+          SDL_LockAudio();
+        } else {
+          SDL_UnlockAudio();
+        }
     }
   } else {
     if (offset / 4 == reg_count) {
@@ -101,6 +108,7 @@ void init_audio() {
   audio_base = (uint32_t *)new_space(space_size);
   audio_base[reg_count] = 0;
   audio_base[reg_tail_offset] = 0;
+  audio_base[reg_lock] = 0;
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
