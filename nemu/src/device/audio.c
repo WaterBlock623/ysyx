@@ -73,8 +73,10 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
       audio_base[reg_init] = 0;
     }
     if (audio_base[reg_lock] != 0) {
+      printf("Lock!\n");
       SDL_LockAudio();
     } else {
+      printf("Unlock!\n");
       SDL_UnlockAudio();
     }
   } else {
