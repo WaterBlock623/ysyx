@@ -30,7 +30,7 @@ enum {
   reg_sbuf_size,
   reg_init,
   reg_count,
-  reg_lock,
+  reg_tail_offset,
   nr_reg
 };
 
@@ -41,11 +41,18 @@ static uint32_t *audio_base = NULL;
 
 static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
   memset(stream, 0, len);
-  uint32_t sbuf_used = sbuf_tail - sbuf_head;
+  uint32_t sbuf_used = (sbuf_tail - sbuf_head) % CONFIG_SB_SIZE;
+  assert(audio_base[reg_count] == sbuf_used);
   if (sbuf_used > 0) {
-    int length = sbuf_used < len ? sbuf_used : len;
-    memcpy(stream, sbuf_head, length); 
-    sbuf_head += length;
+    uint32_t length = sbuf_used < len ? sbuf_used : len;
+    if (sbuf_tail > sbuf_head) {
+      memcpy(stream, sbuf_head, length); 
+    } else {
+      uint8_t *addr = mempcpy(stream, sbuf_head, sbuf_end - sbuf_head);
+      memcpy(addr, sbuf_start, sbuf_tail - sbuf_start);
+    }
+    sbuf_head = (uint8_t *)(((uintptr_t)sbuf_head + length) % CONFIG_SB_SIZE);
+    audio_base[reg_count] -= length;
   } 
 }
 
@@ -67,30 +74,19 @@ static void init_sdlaudio(uint32_t freq, uint32_t channels, uint32_t samples) {
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
   assert(offset % 4 == 0);
   if (is_write) {
-    if (audio_base[reg_init] != 0) {
-      init_sdlaudio(audio_base[reg_freq], audio_base[reg_channels], 
-                    audio_base[reg_samples]);
-      audio_base[reg_init] = 0;
+    switch (offset / 4) {
+      case reg_init:
+        if (audio_base[reg_init] != 0) {
+          init_sdlaudio(audio_base[reg_freq], audio_base[reg_channels], 
+                        audio_base[reg_samples]);
+          audio_base[reg_init] = 0;
+        }
+        break;
+      case reg_tail_offset:
+        sbuf_tail = sbuf_start + audio_base[reg_tail_offset];
+        audio_base[reg_count] = (sbuf_tail - sbuf_head) % CONFIG_SB_SIZE;
+        break;
     }
-    if (audio_base[reg_lock] != 0) {
-      printf("Lock!\n");
-      SDL_LockAudio();
-    } else {
-      //printf("Unlock!\n");
-      //SDL_UnlockAudio();
-    }
-  } else {
-    audio_base[reg_count] = sbuf_head - sbuf_tail;
-  }
-}
-
-static inline void sbuf_io_handler(uint32_t offset, int len, bool is_write) {
-  if (is_write) {
-    sbuf_head = sbuf_start;
-    sbuf_tail = sbuf_start + offset + len;
-    assert(sbuf_tail <= sbuf_end);
-  } else {
-    panic("sbuf is write only");
   }
 }
 
@@ -98,7 +94,7 @@ void init_audio() {
   uint32_t space_size = sizeof(uint32_t) * nr_reg;
   audio_base = (uint32_t *)new_space(space_size);
   audio_base[reg_count] = 0;
-  audio_base[reg_lock] = 1;
+  audio_base[reg_tail_offset] = 0;
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
@@ -110,5 +106,5 @@ void init_audio() {
   sbuf_end = sbuf_start + CONFIG_SB_SIZE;
   sbuf_head = sbuf_start;
   sbuf_tail = sbuf_head;
-  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, sbuf_io_handler);
+  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, NULL);
 }
