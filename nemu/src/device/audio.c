@@ -40,11 +40,10 @@ static uint32_t *audio_base = NULL;
 static void sdlaudio_callback(void *userdata, uint8_t *stream, int len) {
   memset(stream, 0, len);
   if (audio_base[reg_count] > 0) {
-    int length = audio_base[reg_count] < len ? audio_base[reg_count] : len;
+    uint32_t sbuf_used = sbuf_tail - sbuf_head;
+    int length = sbuf_used < len ? sbuf_used : len;
     memcpy(stream, sbuf_head, length); 
-    audio_base[reg_count] -= length;
     sbuf_head += length;
-    printf("count: %u\n", audio_base[reg_count]);
   } 
 }
 
@@ -71,13 +70,14 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
                     audio_base[reg_samples]);
       audio_base[reg_init] = 0;
     }
+  } else {
+    audio_base[reg_count] = sbuf_head - sbuf_tail;
   }
 }
 
-static void sbuf_io_handler(uint32_t offset, int len, bool is_write) {
+static inline void sbuf_io_handler(uint32_t offset, int len, bool is_write) {
   if (is_write) {
     sbuf_head = sbuf_start;
-    audio_base[reg_count] = offset + len; 
     sbuf_tail = sbuf_start + offset + len;
     assert(sbuf_tail <= sbuf_end);
   } else {
