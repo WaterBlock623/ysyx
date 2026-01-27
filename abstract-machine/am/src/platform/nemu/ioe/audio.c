@@ -48,10 +48,12 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     start += 4;
     addr += 4;
   }
+  /*
   while (start < end) {
     outb(addr, *start);
     start++;
     addr++;
   }
+  */
   outl(AUDIO_LOCK_ADDR, 0u);
 }
