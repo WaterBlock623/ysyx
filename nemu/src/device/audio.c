@@ -89,7 +89,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
     }
   } else {
     if (offset / 4 == reg_count) {
-      printf("count: %u", audio_base[reg_count]);
+//      printf("count: %u", audio_base[reg_count]);
     }
   }
 }
