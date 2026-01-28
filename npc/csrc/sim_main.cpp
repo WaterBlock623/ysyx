@@ -10,6 +10,42 @@
 #endif
 
 int stop_flag = 0;
+int32_t ret_val;
+uint32_t M[1 << 22];
+
+extern "C" uint32_t pmem_read(uint32_t raddr) {
+	if (raddr != 0) {
+		raddr -= 0x80000000;
+		return M[raddr >> 2];
+	} else {		
+		printf("[npc] Invalid rAddr: %#.8x\n", raddr);
+		return 0;
+	}
+}
+extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
+//	printf("[npc] wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
+	waddr -= 0x80000000;
+	uint32_t mask = 0u;
+	int i;
+	for (i = 0; i < 4; i++) {
+		if (wmask & (1u << i))
+			mask |= 0xff << (i * 8);
+	}
+//	printf("write data: %#.8x\n", wdata & mask);
+	M[waddr >> 2] = (M[waddr >> 2] & ~mask) | (wdata & mask);
+//	printf("mem: %#.8x\n", M[10]);
+}
+
+extern "C" void check_ebreak(int is_ebreak) {
+//	printf("is_ebreak: %d\n", is_ebreak);
+	stop_flag = is_ebreak;
+	if (is_ebreak)
+		printf("[npc] stop by ebreak\n");
+}
+
+extern "C" void get_ret(uint32_t a0) {
+	ret_val = a0;	
+}
 
 void nvboard_bind_all_pins(TOP_NAME* top);
 
@@ -47,31 +83,6 @@ void sim_close(void)
 #endif
 }
 
-uint32_t M[1 << 22];
-extern "C" uint32_t pmem_read(uint32_t raddr) {
-	if (raddr != 0) {
-		raddr -= 0x80000000;
-		return M[raddr >> 2];
-	} else {		
-		printf("[npc] Invalid rAddr: %#.8x\n", raddr);
-		return 0;
-	}
-}
-extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, unsigned char wmask) {
-//	printf("[npc] wAddr: %#.8x  data: %#.8x  mask: %#.8x\n", waddr, wdata, wmask);
-	waddr -= 0x80000000;
-	uint32_t mask = 0u;
-	int i;
-	for (i = 0; i < 4; i++) {
-		if (wmask & (1u << i))
-			mask |= 0xff << (i * 8);
-	}
-//	printf("write data: %#.8x\n", wdata & mask);
-	M[waddr >> 2] = (M[waddr >> 2] & ~mask) | (wdata & mask);
-//	printf("mem: %#.8x\n", M[10]);
-}
-
-
 void single_cycle(void)
 {
 	top->clock = 0; top->eval();
@@ -93,14 +104,6 @@ void reset(int n) {
 	top->reset = 0;
 }
 
-
-extern "C" void check_ebreak(int is_ebreak) {
-//	printf("is_ebreak: %d\n", is_ebreak);
-	stop_flag = is_ebreak;
-	if (is_ebreak)
-		printf("[npc] stop by ebreak\n");
-}
-
 void load_bin(const char *path) {
 	printf("[npc] Load bin: %s\n", path);
 	FILE *bin = fopen(path, "r");
@@ -110,11 +113,6 @@ void load_bin(const char *path) {
 		printf("[npc] Warning: M is full\n");
 	else
 		printf("""[npc] Load bin successful: %lu bytes\n", size);
-}
-
-int32_t ret_val;
-extern "C" void get_ret(uint32_t a0) {
-	ret_val = a0;	
 }
 
 void check_ret_val(void) {
