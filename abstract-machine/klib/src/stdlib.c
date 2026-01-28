@@ -20,14 +20,21 @@ int abs(int x) {
   return (x < 0 ? -x : x);
 }
 
-int atoi(const char* nptr) {
-  int x = 0;
-  while (*nptr == ' ') { nptr ++; }
+long strtol(const char *nptr, char **endptr, int base) {
+  assert(base == 10);
+  long x = 0;
+  while (*nptr == ' ') { nptr++; }
   while (*nptr >= '0' && *nptr <= '9') {
     x = x * 10 + *nptr - '0';
-    nptr ++;
+    nptr++;
   }
+  if (endptr)
+    *endptr = (char *)nptr;
   return x;
+}
+
+int atoi(const char* nptr) {
+  return strtol(nptr, NULL, 10);
 }
 
 void *malloc(size_t size) {

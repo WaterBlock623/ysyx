@@ -19,7 +19,8 @@
 #include "local-include/reg.h"
 #include "common.h"
 #include "debug.h"
-#include "string.h"
+#include <string.h>
+#include <stdlib.h>
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
