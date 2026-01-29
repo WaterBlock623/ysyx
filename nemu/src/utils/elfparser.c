@@ -99,8 +99,8 @@ static void parse_symbol_table(FILE *elf) {
   for (i = 0; i < nr_sym; i++) {
     fseek(elf, strtab + sym[i].st_name, SEEK_SET);
     fstrncpy(sym_name[i], elf, SYM_NAME_MAX);
-    log_write("Symbol %d: name: %s  value: %#x  size: %u\n", 
-        i, sym_name[i], sym[i].st_value, sym[i].st_size);
+    log_write("Symbol %d: name: %s  info: %u  value: %#x  size: %u\n", 
+        i, sym_name[i], sym[i].st_info, sym[i].st_value, sym[i].st_size);
   } 
 }
 
