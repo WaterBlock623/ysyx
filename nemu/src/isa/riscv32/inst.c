@@ -181,6 +181,7 @@ int isa_exec_once(Decode *s) {
   snprint_disassemble(s->logbuf, sizeof(s->logbuf), 
 		  s->isa.inst, s->pc, s->snpc); 
 #endif
+  printf("disassemble: %s\n", s->logbuf);
   Assert(0, "");
   return decode_exec(s);
 }
