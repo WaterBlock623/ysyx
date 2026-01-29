@@ -83,7 +83,7 @@ void snprint_disassemble(char *buf, int n, word_t instruction,
                                 vaddr_t pc, vaddr_t snpc) {
 #ifdef CONFIG_ITRACE
   char *p = buf;
-  buf += snprintf(buf, n, FMT_WORD ":", pc);
+  p += snprintf(buf, n, FMT_WORD ":", pc);
   printf("A: %s\n", buf);
   int ilen = snpc - pc;
   int i;
