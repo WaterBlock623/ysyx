@@ -86,6 +86,7 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
   }} while(0) 
 
   static int cnt = 0;
+  static bool last_is_ret = false;
   bool is_call = false;
   bool is_ret = false;
   bool rd_is_addr = rd == 1 || rd == 5;
@@ -93,11 +94,15 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 
   if (rd_is_addr) {
     is_call = true;
+    last_is_ret = false;
     cnt++;
   }
   if (rd != rs1 && rs1_is_addr) {
     is_ret = true;
-    cnt--;
+    if (last_is_ret) {
+      cnt--;
+    }
+    last_is_ret = true;
   }
 
   const char *pc_func_name_raw = get_function_name(pc);
