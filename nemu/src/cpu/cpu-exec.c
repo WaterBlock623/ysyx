@@ -13,13 +13,16 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "debug.h"
 #include "isa.h"
+#include "macro.h"
 #include "utils.h"
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <stdio.h>
+#include <string.h>
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -32,16 +35,40 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 bool g_print_step = false;
+IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
+IFDEF(CONFIG_ITRACE, int iringbuf_ptr = 0);
 
 void device_update();
 bool have_change_and_print_wp(void);
 
+void iringbuf_display(void) {
+#ifdef CONFIG_ITRACE
+  if (g_nr_guest_inst == 0) {
+    return;
+  }
+  int len = LENGTH(iringbuf);
+  int i = g_nr_guest_inst <= len ? 0 : (iringbuf_ptr + 1) % len;
+  for (; i != iringbuf_ptr; i = (i + 1) % len) {
+    printf("%s\n", iringbuf[i]);
+  }
+#endif
+}
+
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
+  // ITRACE
+#ifdef CONFIG_ITRACE
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
-#endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+#endif // CONFIG_ITRACE_COND
+  if (g_print_step) { puts(_this->logbuf); }
+  memcpy(iringbuf + iringbuf_ptr, _this->logbuf, LENGTH(_this->logbuf));
+  iringbuf_ptr = (iringbuf_ptr + 1) % LENGTH(iringbuf);
+#endif // CONFIG_ITRACE
+       
+  // DIFFTEST
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+
+  // WATCHPOINT
 #ifdef CONFIG_WATCHPOINT
   if (have_change_and_print_wp() && nemu_state.state == NEMU_RUNNING) {
 	 nemu_state.state = NEMU_STOP; 
@@ -85,6 +112,7 @@ static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
+    assert(g_nr_guest_inst < 3);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
@@ -103,6 +131,7 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
+  iringbuf_display();
   statistic();
 }
 
