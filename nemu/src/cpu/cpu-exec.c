@@ -84,7 +84,6 @@ void snprint_disassemble(char *buf, int n, word_t instruction,
 #ifdef CONFIG_ITRACE
   char *p = buf;
   p += snprintf(buf, n, FMT_WORD ":", pc);
-  printf("A: %s\n", buf);
   int ilen = snpc - pc;
   int i;
   uint8_t *inst = (uint8_t *)&instruction;
@@ -94,20 +93,17 @@ void snprint_disassemble(char *buf, int n, word_t instruction,
   for (i = ilen - 1; i >= 0; i --) {
 #endif
     p += snprintf(p, 4, " %02x", inst[i]);
-    printf("B: %s\n", buf);
   }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
   space_len = space_len * 3 + 1;
   memset(p, ' ', space_len);
-  printf("C: %s\n", buf);
   p += space_len;
 
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, buf + n - p,
       MUXDEF(CONFIG_ISA_x86, snpc, pc), inst, ilen);
-  printf("D: %s\n", buf);
 #endif
 }
 
@@ -116,7 +112,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
-  snprint_disassemble(s->logbuf, sizeof(s->logbuf), s->isa.inst, s->pc, s->snpc); 
 }
 
 static void execute(uint64_t n) {
