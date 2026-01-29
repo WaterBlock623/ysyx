@@ -172,16 +172,13 @@ static int decode_exec(Decode *s) {
   return 0;
 }
 
-void snprint_disassemble(char *buf, int n, word_t instruction, 
-                                vaddr_t pc, vaddr_t snpc);
+void snprint_disassemble(Decode *);
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
 #ifdef CONFIG_ITRACE
-  snprint_disassemble(s->logbuf, sizeof(s->logbuf), 
-		  s->isa.inst, s->pc, s->snpc); 
+  snprint_disassemble(s);
 #endif
-  printf("disassemble: %s\n", s->logbuf);
   Assert(0, "");
   return decode_exec(s);
 }

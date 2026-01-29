@@ -58,16 +58,6 @@ void iringbuf_display(void) {
 }
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-  // ITRACE
-#ifdef CONFIG_ITRACE
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
-#endif // CONFIG_ITRACE_COND
-  if (g_print_step) { puts(_this->logbuf); }
-  memcpy(iringbuf + iringbuf_ptr, _this->logbuf, LENGTH(_this->logbuf));
-  iringbuf_ptr = (iringbuf_ptr + 1) % LENGTH(iringbuf);
-#endif // CONFIG_ITRACE
-       
   // DIFFTEST
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
@@ -80,14 +70,14 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-void snprint_disassemble(char *buf, int n, word_t instruction, 
-                                vaddr_t pc, vaddr_t snpc) {
+void snprint_disassemble(Decode *s) {
 #ifdef CONFIG_ITRACE
-  char *p = buf;
-  p += snprintf(buf, n, FMT_WORD ":", pc);
-  int ilen = snpc - pc;
+  char *p = s->logbuf;
+  p += snprintf(s->logbuf, sizeof(s->logbuf), 
+      FMT_WORD ":", s->pc);
+  int ilen = s->snpc - s->pc;
   int i;
-  uint8_t *inst = (uint8_t *)&instruction;
+  uint8_t *inst = (uint8_t *)&s->isa.inst;
 #ifdef CONFIG_ISA_x86
   for (i = 0; i < ilen; i ++) {
 #else
@@ -103,8 +93,16 @@ void snprint_disassemble(char *buf, int n, word_t instruction,
   p += space_len;
 
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, buf + n - p,
-      MUXDEF(CONFIG_ISA_x86, snpc, pc), inst, ilen);
+  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
+      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), inst, ilen);
+
+  // Log
+#ifdef CONFIG_ITRACE_COND
+  if (ITRACE_COND) { log_write("%s\n", s->logbuf); }
+#endif // CONFIG_ITRACE_COND
+  if (g_print_step) { puts(s->logbuf); }
+  memcpy(iringbuf + iringbuf_ptr, s->logbuf, LENGTH(s->logbuf));
+  iringbuf_ptr = (iringbuf_ptr + 1) % LENGTH(iringbuf);
 #endif
 }
 
