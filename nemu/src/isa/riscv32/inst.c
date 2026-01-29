@@ -176,9 +176,6 @@ void print_disassemble(Decode *);
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
-#ifdef CONFIG_ITRACE
-  print_disassemble(s);
-#endif
-  Assert(0, "");
+  IFDEF(CONFIG_ITRACE, print_disassemble(s));
   return decode_exec(s);
 }
