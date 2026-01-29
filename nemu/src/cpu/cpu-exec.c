@@ -79,10 +79,12 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-static void snprint_disassemble(char *buf, int n, word_t instruction, vaddr_t pc, vaddr_t snpc) {
+static void snprint_disassemble(char *buf, int n, word_t instruction, 
+                                vaddr_t pc, vaddr_t snpc) {
 #ifdef CONFIG_ITRACE
   char *p = buf;
   buf += snprintf(buf, n, FMT_WORD ":", pc);
+  printf(FMT_WORD ":", pc);
   int ilen = snpc - pc;
   int i;
   uint8_t *inst = (uint8_t *)&instruction;
@@ -118,7 +120,6 @@ static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
-    Assert(g_nr_guest_inst < 3, "");
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
