@@ -45,7 +45,6 @@ bool have_change_and_print_wp(void);
 
 void iringbuf_display(void) {
 #ifdef CONFIG_ITRACE
-  printf("nr: %lu\n", g_nr_guest_inst);
   if (g_nr_guest_inst == 0) {
     return;
   }
@@ -70,7 +69,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-void snprint_disassemble(Decode *s) {
+void print_disassemble(Decode *s) {
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(s->logbuf, sizeof(s->logbuf), 

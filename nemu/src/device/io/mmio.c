@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include "common.h"
+#include "macro.h"
 #include "utils.h"
 #include <device/map.h>
 #include <memory/paddr.h>
@@ -66,7 +67,7 @@ static void dtrace(IOMap *map, bool is_write, paddr_t addr, int len, word_t data
 #endif
   extern bool g_print_step;
   if (g_print_step) {
-    IFDEF(CONFIG_DTRACE, printf(DTRACE_MSG));
+    printf(DTRACE_MSG);
   }
 }
 
@@ -74,12 +75,12 @@ static void dtrace(IOMap *map, bool is_write, paddr_t addr, int len, word_t data
 word_t mmio_read(paddr_t addr, int len) {
   IOMap *map = fetch_mmio_map(addr);
   word_t data = map_read(addr, len, map);
-  dtrace(map, false, addr, len, data);
+  IFDEF(CONFIG_DTRACE, dtrace(map, false, addr, len, data));
   return data;
 }
 
 void mmio_write(paddr_t addr, int len, word_t data) {
   IOMap *map = fetch_mmio_map(addr);
-  dtrace(map, true, addr, len, data);
+  IFDEF(CONFIG_DTRACE, dtrace(map, true, addr, len, data));
   map_write(addr, len, data, map);
 }

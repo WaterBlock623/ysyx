@@ -172,12 +172,12 @@ static int decode_exec(Decode *s) {
   return 0;
 }
 
-void snprint_disassemble(Decode *);
+void print_disassemble(Decode *);
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
 #ifdef CONFIG_ITRACE
-  snprint_disassemble(s);
+  print_disassemble(s);
 #endif
   Assert(0, "");
   return decode_exec(s);
