@@ -45,9 +45,15 @@ void init_elf(const char *elf_file) {
     elf_shdr_t *s = sh + i;
     fread_assert(s, eh.e_shentsize, elf);
   }
-  
+
   // Section header name
-  word_t shstrtab = sh[eh.e_shstrndx].sh_offset;
+  word_t shstrtab;
+  if (eh.e_shstrndx == SHN_XINDEX) {
+    Assert(sh[0].sh_link != 0, "Invalid shstrtab");
+    shstrtab = sh[0].sh_link;
+  } else {
+    shstrtab = sh[eh.e_shstrndx].sh_offset;
+  }
   for (i = 0; i < eh.e_shnum; i++) {
     fseek(elf, shstrtab + sh[i].sh_name, SEEK_SET);
     fread_assert(sh_name[i], SH_NAME_MAX, elf);
@@ -57,4 +63,6 @@ void init_elf(const char *elf_file) {
         i, sh_name[i], sh[i].sh_addr, sh[i].sh_offset, 
         sh[i].sh_size, sh[i].sh_entsize);
   }
+
+
 }
