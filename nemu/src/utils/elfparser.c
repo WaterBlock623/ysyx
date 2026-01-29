@@ -129,7 +129,6 @@ const char *get_function_name(paddr_t addr) {
   for (i = 0; i < nr_sym; i++) {
     if (ELF_ST_TYPE(sym[i].st_info) == STT_FUNC && sym[i].st_size > 0 &&
         addr >= sym[i].st_value && addr < (sym[i].st_value + sym[i].st_size)) {
-      printf("Func find: %s\n", sym_name[i]);
       return sym_name[i];
     }
   }
