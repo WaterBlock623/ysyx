@@ -10,6 +10,7 @@ typedef MUXDEF(CONFIG_ISA64, Elf64_Phdr, Elf32_Phdr) elf_phdr_t;
 typedef MUXDEF(CONFIG_ISA64, Elf64_Shdr, Elf32_Shdr) elf_shdr_t;
 typedef MUXDEF(CONFIG_ISA64, Elf64_Sym, Elf32_Sym) elf_sym_t;
 
+#define ELF_ST_TYPE MUXDEF(CONFIG_ISA64, ELF64_ST_TYPE, ELF32_ST_TYPE)
 #define SH_MAX 64
 #define SH_NAME_MAX 128
 #define SYM_MAX 512
@@ -100,7 +101,7 @@ static void parse_symbol_table(FILE *elf) {
     fseek(elf, strtab + sym[i].st_name, SEEK_SET);
     fstrncpy(sym_name[i], elf, SYM_NAME_MAX);
     log_write("Symbol %d: name: %s  info: %u  value: %#x  size: %u\n", 
-        i, sym_name[i], sym[i].st_info, sym[i].st_value, sym[i].st_size);
+        i, sym_name[i], ELF_ST_TYPE(sym[i].st_info), sym[i].st_value, sym[i].st_size);
   } 
 }
 
@@ -126,7 +127,7 @@ void init_elf(const char *elf_file) {
 const char *get_function_name(paddr_t addr) {
   int i;
   for (i = 0; i < nr_sym; i++) {
-    if (sym[i].st_info == STT_FUNC && sym[i].st_size > 0 &&
+    if (ELF_ST_TYPE(sym[i].st_info) == STT_FUNC && sym[i].st_size > 0 &&
         addr >= sym[i].st_value && addr < (sym[i].st_value + sym[i].st_size)) {
       printf("Func find: %s\n", sym_name[i]);
       return sym_name[i];
