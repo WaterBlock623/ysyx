@@ -17,8 +17,10 @@ typedef MUXDEF(CONFIG_ISA64, Elf64_Sym, Elf32_Sym) elf_sym_t;
 static elf_ehdr_t eh;
 static elf_shdr_t sh[SH_MAX];
 static char sh_name[SH_MAX][SH_NAME_MAX];
+static word_t nr_sh = 0;
 static elf_sym_t sym[SYM_MAX];
 static char sym_name[SYM_MAX][SYM_NAME_MAX];
+static word_t nr_sym = 0;
 
 static size_t fread_assert(void *ptr, size_t byte, FILE *stream) {
   size_t ret = fread(ptr, 1, byte, stream);
@@ -45,10 +47,11 @@ static void parse_elf_header(FILE *elf) {
 }
 
 static void parse_section_header(FILE *elf) {
-  Assert(eh.e_shnum <= SH_MAX, "SH_MAX is not enough. At least %u", eh.e_shnum);
+  nr_sh = eh.e_shnum;
+  Assert(nr_sh <= SH_MAX, "SH_MAX is not enough. At least %u", nr_sh);
   int i;
   fseek(elf, eh.e_shoff, SEEK_SET);
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (i = 0; i < nr_sh; i++) {
     elf_shdr_t *s = sh + i;
     fread_assert(s, eh.e_shentsize, elf);
   }
@@ -61,30 +64,32 @@ static void parse_section_header(FILE *elf) {
   } else {
     shstrtab = sh[eh.e_shstrndx].sh_offset;
   }
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (i = 0; i < nr_sh; i++) {
     fseek(elf, shstrtab + sh[i].sh_name, SEEK_SET);
     fstrncpy(sh_name[i], elf, SH_NAME_MAX);
+    /*
     Log("Section header %d: "
         "name: %s  addr: %#x  off: %#x  size: %u  entsize: %u\n", 
         i, sh_name[i], sh[i].sh_addr, sh[i].sh_offset, 
         sh[i].sh_size, sh[i].sh_entsize);
+    */
   }
 }
 
 static void parse_symbol_table(FILE *elf) {
   int i;
   word_t sh_symtab;
-  for (i = 0; i < eh.e_shnum; i++) {
+  for (i = 0; i < nr_sh; i++) {
     if (sh[i].sh_type == SHT_SYMTAB) {
       sh_symtab = i;
       break;
     }
   }
-  Assert(i < eh.e_shnum, "symtab is not found");
-  word_t symtab_num = sh[sh_symtab].sh_size / sh[sh_symtab].sh_entsize;
-  Assert(symtab_num <= SYM_MAX, "SYM_MAX is not enough. At least %u", symtab_num);
+  Assert(i < nr_sh, "symtab is not found");
+  nr_sym = sh[sh_symtab].sh_size / sh[sh_symtab].sh_entsize;
+  Assert(nr_sym <= SYM_MAX, "SYM_MAX is not enough. At least %u", nr_sym);
   fseek(elf, sh[sh_symtab].sh_offset, SEEK_SET);
-  for (i = 0; i < symtab_num; i++) {
+  for (i = 0; i < nr_sym; i++) {
     elf_sym_t *s = sym + i;
     fread_assert(s, sh[sh_symtab].sh_entsize, elf);
   } 
@@ -92,11 +97,13 @@ static void parse_symbol_table(FILE *elf) {
   // Symbol table name
   word_t sh_strtab = sh[sh_symtab].sh_link;
   word_t strtab = sh[sh_strtab].sh_offset;
-  for (i = 0; i < symtab_num; i++) {
+  for (i = 0; i < nr_sym; i++) {
     fseek(elf, strtab + sym[i].st_name, SEEK_SET);
     fstrncpy(sym_name[i], elf, SYM_NAME_MAX);
+    /*
     Log("Symbol %d: name: %s  value: %#x  size: %u", 
         i, sym_name[i], sym[i].st_value, sym[i].st_size);
+    */
   } 
 }
 
@@ -117,4 +124,15 @@ void init_elf(const char *elf_file) {
 
   // Symbol table
   parse_symbol_table(elf);
+}
+
+const char *get_function_name(paddr_t addr) {
+  int i;
+  for (i = 0; i < nr_sym; i++) {
+    if (sym[i].st_info == STT_FUNC && 
+        addr >= sym[i].st_value && addr < (sym[i].st_value + sym[i].st_size)) {
+      return sym_name[i];
+    }
+  }
+  return NULL;
 }

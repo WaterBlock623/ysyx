@@ -70,7 +70,6 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 }
 
 void print_disassemble(Decode *s) {
-#ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(s->logbuf, sizeof(s->logbuf), 
       FMT_WORD ":", s->pc);
@@ -102,7 +101,6 @@ void print_disassemble(Decode *s) {
   if (g_print_step) { puts(s->logbuf); }
   memcpy(iringbuf + iringbuf_ptr, s->logbuf, LENGTH(s->logbuf));
   iringbuf_ptr = (iringbuf_ptr + 1) % LENGTH(iringbuf);
-#endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
