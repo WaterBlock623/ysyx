@@ -53,8 +53,8 @@ void init_mem() {
 }
 
 static void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
-#define MTRACE_MSG "Memory %s:  Data="FMT_WORD"  Len=%d  Addr="FMT_PADDR"\n", \
-              is_write ? "write" : "read", data, len, addr
+#define MTRACE_MSG "Memory %s:  Addr="FMT_PADDR"  Len=%d  Data="FMT_WORD"\n", \
+              is_write ? "write" : "read", addr, len, data 
 #ifdef CONFIG_DTRACE_COND
   if (MTRACE_COND) {
     log_write(MTRACE_MSG);
