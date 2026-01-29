@@ -23,7 +23,7 @@ static size_t fread_assert(void *ptr, size_t byte, FILE *stream) {
   return byte;
 }
 
-void elf_init(const char *elf_file) {
+void init_elf(const char *elf_file) {
   if (elf_file == NULL) {
     Log("No ELF file");
     return;
