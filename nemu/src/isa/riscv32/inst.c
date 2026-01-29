@@ -94,8 +94,10 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 
   if (rd_is_addr) {
     is_call = true;
+    if (!last_is_ret) {
+      cnt++;
+    }
     last_is_ret = false;
-    cnt++;
   }
   if (rd != rs1 && rs1_is_addr) {
     is_ret = true;
