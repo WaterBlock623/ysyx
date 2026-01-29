@@ -45,6 +45,7 @@ bool have_change_and_print_wp(void);
 
 void iringbuf_display(void) {
 #ifdef CONFIG_ITRACE
+  printf("nr: %lu\n", g_nr_guest_inst);
   if (g_nr_guest_inst == 0) {
     return;
   }
