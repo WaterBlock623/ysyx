@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
 #include "debug.h"
 #include "isa.h"
 #include "macro.h"
@@ -21,6 +22,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -36,7 +38,7 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 bool g_print_step = false;
 IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
-IFDEF(CONFIG_ITRACE, int iringbuf_ptr = 0);
+IFDEF(CONFIG_ITRACE, unsigned int iringbuf_ptr = 0);
 
 void device_update();
 bool have_change_and_print_wp(void);
@@ -77,17 +79,13 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-static void exec_once(Decode *s, vaddr_t pc) {
-  s->pc = pc;
-  s->snpc = pc;
-  isa_exec_once(s);
-  cpu.pc = s->dnpc;
+static void snprint_disassemble(char *buf, int n, word_t instruction, vaddr_t pc, vaddr_t snpc) {
 #ifdef CONFIG_ITRACE
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
+  char *p = buf;
+  buf += snprintf(buf, n, FMT_WORD ":", pc);
+  int ilen = snpc - pc;
   int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst;
+  uint8_t *inst = (uint8_t *)&instruction;
 #ifdef CONFIG_ISA_x86
   for (i = 0; i < ilen; i ++) {
 #else
@@ -103,9 +101,17 @@ static void exec_once(Decode *s, vaddr_t pc) {
   p += space_len;
 
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
+  disassemble(p, buf + n - p,
+      MUXDEF(CONFIG_ISA_x86, snpc, pc), inst, ilen);
 #endif
+}
+
+static void exec_once(Decode *s, vaddr_t pc) {
+  s->pc = pc;
+  s->snpc = pc;
+  isa_exec_once(s);
+  cpu.pc = s->dnpc;
+  snprint_disassemble(s->logbuf, sizeof(s->logbuf), s->isa.inst, s->pc, s->snpc); 
 }
 
 static void execute(uint64_t n) {
