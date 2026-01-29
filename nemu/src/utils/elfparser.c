@@ -69,7 +69,7 @@ static void parse_section_header(FILE *elf) {
     fseek(elf, shstrtab + sh[i].sh_name, SEEK_SET);
     fstrncpy(sh_name[i], elf, SH_NAME_MAX);
     log_write("Section header %d: "
-        "name: %s  addr: %#x  off: %#x  size: %u  entsize: %u\n\n", 
+        "name: %s  addr: %#x  off: %#x  size: %u  entsize: %u\n", 
         i, sh_name[i], sh[i].sh_addr, sh[i].sh_offset, 
         sh[i].sh_size, sh[i].sh_entsize);
   }
