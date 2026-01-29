@@ -69,7 +69,7 @@ static void parse_section_header(FILE *elf) {
     fseek(elf, shstrtab + sh[i].sh_name, SEEK_SET);
     fstrncpy(sh_name[i], elf, SH_NAME_MAX);
     log_write("Section header %d: "
-        "name: %s  addr: %#x  off: %#x  size: %u  entsize: %u\n", 
+        "name: %s  addr: %#x  off: %#x  size: %u  entsize: %u\n\n", 
         i, sh_name[i], sh[i].sh_addr, sh[i].sh_offset, 
         sh[i].sh_size, sh[i].sh_entsize);
   }
@@ -99,7 +99,7 @@ static void parse_symbol_table(FILE *elf) {
   for (i = 0; i < nr_sym; i++) {
     fseek(elf, strtab + sym[i].st_name, SEEK_SET);
     fstrncpy(sym_name[i], elf, SYM_NAME_MAX);
-    log_write("Symbol %d: name: %s  value: %#x  size: %u", 
+    log_write("Symbol %d: name: %s  value: %#x  size: %u\n", 
         i, sym_name[i], sym[i].st_value, sym[i].st_size);
   } 
 }
