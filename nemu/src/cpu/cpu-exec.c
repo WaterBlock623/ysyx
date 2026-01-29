@@ -79,7 +79,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-static void snprint_disassemble(char *buf, int n, word_t instruction, 
+void snprint_disassemble(char *buf, int n, word_t instruction, 
                                 vaddr_t pc, vaddr_t snpc) {
 #ifdef CONFIG_ITRACE
   char *p = buf;
