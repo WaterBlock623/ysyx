@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include "common.h"
+#include "debug.h"
 #include "local-include/reg.h"
 #include "macro.h"
 #include <cpu/cpu.h>
@@ -180,5 +181,6 @@ int isa_exec_once(Decode *s) {
   snprint_disassemble(s->logbuf, sizeof(s->logbuf), 
 		  s->isa.inst, s->pc, s->snpc); 
 #endif
+  Assert(0, "");
   return decode_exec(s);
 }
