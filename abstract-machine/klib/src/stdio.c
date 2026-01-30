@@ -7,6 +7,10 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+typedef union {
+  va_list ap;
+} va_list_wrapper;
+
 typedef void (*putchcmd_t)(char, char **);
 
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
@@ -94,7 +98,7 @@ static int print_num(putchcmd_t put, char **save_ptr, unsigned long long u,
   return cnt;
 }
 
-static void parse_arg(const char **fmt, va_list *ap, 
+static void parse_arg(const char **fmt, va_list_wrapper *apw, 
                       uint32_t *flags, int *width, int *precision,
                       int *long_mod, char *type) {
   if (**fmt != '%')
@@ -116,7 +120,7 @@ static void parse_arg(const char **fmt, va_list *ap,
   }
 
   if (**fmt == '*') {
-    *width = va_arg(*ap, int);
+    *width = va_arg(apw->ap, int);
     (*fmt)++;
     if (*width < 0) {
       *width = -*width;
@@ -129,7 +133,7 @@ static void parse_arg(const char **fmt, va_list *ap,
   if (**fmt == '.') {
     (*fmt)++;
     if (**fmt == '*') {
-      *precision = va_arg(*ap, int);
+      *precision = va_arg(apw->ap, int);
       (*fmt)++;
     } else if (IS_DIGIT(**fmt)) {
       *precision = atoip(fmt);
@@ -152,7 +156,7 @@ static void parse_arg(const char **fmt, va_list *ap,
   *type = *(*fmt)++;
 }
 
-static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list *ap) {
+static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list_wrapper *apw) {
   int cnt = 0;
   uint32_t flags = 0;
   int width = -1;
@@ -160,14 +164,14 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list 
   int long_mod = 0;
   char type;
 
-  parse_arg(fmt, ap, &flags, &width, &precision, 
+  parse_arg(fmt, apw, &flags, &width, &precision, 
             &long_mod, &type);
 
 
   switch (type) {
     case 's': {
       char *str_arg;
-      str_arg = va_arg(*ap, char *);
+      str_arg = va_arg(apw->ap, char *);
       if (str_arg == NULL)
           str_arg = "(null)";
       int len = strlen(str_arg);
@@ -194,11 +198,11 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list 
     case 'd': {
       long long val;
       if (long_mod == 0) 
-        val = va_arg(*ap, int);
+        val = va_arg(apw->ap, int);
       else if (long_mod == 1) 
-        val = va_arg(*ap, long);
+        val = va_arg(apw->ap, long);
       else 
-        val = va_arg(*ap, long long);
+        val = va_arg(apw->ap, long long);
       
       unsigned long long uval = 0;
       int is_neg = 0;
@@ -215,18 +219,18 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list 
     case 'x': {
       unsigned long long uval = 0;
       if (long_mod == 0)
-        uval = (unsigned int)va_arg(*ap, int);
+        uval = (unsigned int)va_arg(apw->ap, int);
       else if (long_mod == 1)
-        uval = (unsigned long)va_arg(*ap, long);
+        uval = (unsigned long)va_arg(apw->ap, long);
       else
-        uval = (unsigned long long)va_arg(*ap, long long);
+        uval = (unsigned long long)va_arg(apw->ap, long long);
       
       cnt += print_num(put, save_ptr, uval, 16, width, flags, 0);
       break;
     }
 
     case 'p': {
-      uintptr_t uval = (uintptr_t)va_arg(*ap, void *);
+      uintptr_t uval = (uintptr_t)va_arg(apw->ap, void *);
       flags |= F_ALT; 
       cnt += print_num(put, save_ptr, uval, 16, width, flags, 0);
       break;
@@ -239,7 +243,7 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list 
           put(' ', save_ptr);
         }
       }
-      put((char)va_arg(*ap, int), save_ptr);
+      put((char)va_arg(apw->ap, int), save_ptr);
       break;
 
     case '%':
@@ -259,9 +263,11 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list 
 
 static int vcmdprintf(putchcmd_t put, char **save_ptr, const char *fmt, va_list ap) {
   int cnt = 0;
+  va_list_wrapper apw;
+  va_copy(apw.ap, ap);
   while (*fmt) {
     if (*fmt == '%') {
-      int len = print_arg(put, save_ptr, &fmt, &ap);    
+      int len = print_arg(put, save_ptr, &fmt, &apw);    
       cnt += len;
     } else {
       put(*fmt++, save_ptr);
