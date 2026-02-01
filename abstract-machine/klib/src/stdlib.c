@@ -1,6 +1,7 @@
 #include <am.h>
 #include <klib.h>
 #include <klib-macros.h>
+#include <stdint.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 static unsigned long int next = 1;
@@ -19,14 +20,21 @@ int abs(int x) {
   return (x < 0 ? -x : x);
 }
 
-int atoi(const char* nptr) {
-  int x = 0;
-  while (*nptr == ' ') { nptr ++; }
+long strtol(const char *nptr, char **endptr, int base) {
+  assert(base == 10);
+  long x = 0;
+  while (*nptr == ' ') { nptr++; }
   while (*nptr >= '0' && *nptr <= '9') {
     x = x * 10 + *nptr - '0';
-    nptr ++;
+    nptr++;
   }
+  if (endptr)
+    *endptr = (char *)nptr;
   return x;
+}
+
+int atoi(const char* nptr) {
+  return strtol(nptr, NULL, 10);
 }
 
 void *malloc(size_t size) {
@@ -34,9 +42,17 @@ void *malloc(size_t size) {
   // Therefore do not call panic() here, else it will yield a dead recursion:
   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+  // panic("Not implemented");
 #endif
-  return NULL;
+  static char *addr = NULL;
+  if (addr == NULL) {
+    addr = (void *)ROUNDUP(heap.start, 8);
+  }
+  size = ROUNDUP(size, 8);
+  char *old = addr;
+  addr += size;
+  assert((uintptr_t)addr < (uintptr_t)heap.end);
+  return old; 
 }
 
 void free(void *ptr) {

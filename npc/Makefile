@@ -52,7 +52,7 @@ endif
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h# -O0 -ggdb3
 
 # am
 ARGS ?=
@@ -92,7 +92,7 @@ sim: verilog lint $(BIN)
 	@$(BIN) $(IMG) $(ARGS)
 
 simbatch: $(BIN)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+#	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN) $(IMG) $(ARGS)
 
 simwave: VERILATOR_CFLAGS += --trace-fst
