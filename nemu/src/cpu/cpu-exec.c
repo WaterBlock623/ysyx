@@ -37,24 +37,10 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 bool g_print_step = false;
-IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
-IFDEF(CONFIG_ITRACE, unsigned int iringbuf_ptr = 0);
 
 void device_update();
 bool have_change_and_print_wp(void);
-
-void iringbuf_display(void) {
-#ifdef CONFIG_ITRACE
-  if (g_nr_guest_inst == 0) {
-    return;
-  }
-  int len = LENGTH(iringbuf);
-  int i = g_nr_guest_inst <= len ? 0 : (iringbuf_ptr + 1) % len;
-  for (; i != iringbuf_ptr; i = (i + 1) % len) {
-    printf("%s\n", iringbuf[i]);
-  }
-#endif
-}
+void iringbuf_display(void);
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   // DIFFTEST
@@ -67,40 +53,6 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 	 printf("stop by watchpoint\n");
   }
 #endif
-}
-
-void print_disassemble(Decode *s) {
-  char *p = s->logbuf;
-  p += snprintf(s->logbuf, sizeof(s->logbuf), 
-      FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
-  int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst;
-#ifdef CONFIG_ISA_x86
-  for (i = 0; i < ilen; i ++) {
-#else
-  for (i = ilen - 1; i >= 0; i --) {
-#endif
-    p += snprintf(p, 4, " %02x", inst[i]);
-  }
-  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-  int space_len = ilen_max - ilen;
-  if (space_len < 0) space_len = 0;
-  space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
-  p += space_len;
-
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), inst, ilen);
-
-  // Log
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", s->logbuf); }
-#endif // CONFIG_ITRACE_COND
-  if (g_print_step) { puts(s->logbuf); }
-  memcpy(iringbuf + iringbuf_ptr, s->logbuf, LENGTH(s->logbuf));
-  iringbuf_ptr = (iringbuf_ptr + 1) % LENGTH(iringbuf);
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

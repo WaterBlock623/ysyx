@@ -52,19 +52,7 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
-static void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
-#define MTRACE_MSG "Memory %s:  Addr="FMT_PADDR"  Len=%d  Data="FMT_WORD"\n", \
-              is_write ? "write" : "read", addr, len, data 
-#ifdef CONFIG_DTRACE_COND
-  if (MTRACE_COND) {
-    log_write(MTRACE_MSG);
-  }
-#endif
-  extern bool g_print_step;
-  if (g_print_step) {
-    printf(MTRACE_MSG);
-  }
-}
+void mtrace(bool is_write, paddr_t addr, int len, word_t data);
 
 word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_pmem(addr))) {
