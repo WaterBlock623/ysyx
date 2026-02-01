@@ -13,18 +13,17 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-DIRS-y += $(NEMU_HOME)/src/device/io
-SRCS-$(CONFIG_DEVICE) += $(NEMU_HOME)/src/device/device.c \
-	$(NEMU_HOME)/src/device/alarm.c $(NEMU_HOME)/src/device/intr.c
-SRCS-$(CONFIG_HAS_SERIAL) += $(NEMU_HOME)/src/device/serial.c
-SRCS-$(CONFIG_HAS_TIMER) += $(NEMU_HOME)/src/device/timer.c
-SRCS-$(CONFIG_HAS_KEYBOARD) += $(NEMU_HOME)/src/device/keyboard.c
-SRCS-$(CONFIG_HAS_VGA) += $(NEMU_HOME)/src/device/vga.c
-SRCS-$(CONFIG_HAS_AUDIO) += $(NEMU_HOME)/src/device/audio.c
-SRCS-$(CONFIG_HAS_DISK) += $(NEMU_HOME)/src/device/disk.c
-SRCS-$(CONFIG_HAS_SDCARD) += $(NEMU_HOME)/src/device/sdcard.c
+DIRS-y += src/device/io
+SRCS-$(CONFIG_DEVICE) += src/device/device.c src/device/alarm.c src/device/intr.c
+SRCS-$(CONFIG_HAS_SERIAL) += src/device/serial.c
+SRCS-$(CONFIG_HAS_TIMER) += src/device/timer.c
+SRCS-$(CONFIG_HAS_KEYBOARD) += src/device/keyboard.c
+SRCS-$(CONFIG_HAS_VGA) += src/device/vga.c
+SRCS-$(CONFIG_HAS_AUDIO) += src/device/audio.c
+SRCS-$(CONFIG_HAS_DISK) += src/device/disk.c
+SRCS-$(CONFIG_HAS_SDCARD) += src/device/sdcard.c
 
-SRCS-BLACKLIST-$(CONFIG_TARGET_AM) += $(NEMU_HOME)/src/device/alarm.c
+SRCS-BLACKLIST-$(CONFIG_TARGET_AM) += src/device/alarm.c
 
 ifdef CONFIG_DEVICE
 ifndef CONFIG_TARGET_AM

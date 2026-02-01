@@ -13,10 +13,10 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-SRCS-y += $(NEMU_HOME)/src/nemu-main.c
-DIRS-y += $(NEMU_HOME)/src/cpu $(NEMU_HOME)/src/monitor $(NEMU_HOME)/src/utils
-DIRS-$(CONFIG_MODE_SYSTEM) += $(NEMU_HOME)/src/memory
-DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += $(NEMU_HOME)/src/monitor/sdb
+SRCS-y += src/nemu-main.c
+DIRS-y += src/cpu src/monitor src/utils
+DIRS-$(CONFIG_MODE_SYSTEM) += src/memory
+DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += src/monitor/sdb
 
 SHARE = $(if $(CONFIG_TARGET_SHARE),1,0)
 LIBS += $(if $(CONFIG_TARGET_NATIVE_ELF),-lreadline -ldl -pie,)
@@ -24,5 +24,5 @@ LIBS += $(if $(CONFIG_TARGET_NATIVE_ELF),-lreadline -ldl -pie,)
 ifdef mainargs
 ASFLAGS += -DBIN_PATH=\"$(mainargs)\"
 endif
-SRCS-$(CONFIG_TARGET_AM) += $(NEMU_HOME)/src/am-bin.S
-.PHONY: $(NEMU_HOME)/src/am-bin.S
+SRCS-$(CONFIG_TARGET_AM) += src/am-bin.S
+.PHONY: src/am-bin.S

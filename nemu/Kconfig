@@ -29,7 +29,7 @@ config ISA64
 
 
 if ISA_riscv
-source "$(shell,echo $NEMU_HOME)/src/isa/riscv32/Kconfig"
+source "src/isa/riscv32/Kconfig"
 endif
 
 choice
@@ -239,8 +239,8 @@ config DIFFTEST_REF_NAME
 endmenu
 
 if MODE_SYSTEM
-source "$(shell,echo $NEMU_HOME)/src/memory/Kconfig"
-source "$(shell,echo $NEMU_HOME)/src/device/Kconfig"
+source "src/memory/Kconfig"
+source "src/device/Kconfig"
 endif
 
 
