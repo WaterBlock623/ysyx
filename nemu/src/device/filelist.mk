@@ -14,7 +14,8 @@
 #**************************************************************************************/
 
 DIRS-y += $(NEMU_HOME)/src/device/io
-SRCS-$(CONFIG_DEVICE) += $(NEMU_HOME)/src/device/device.c src/device/alarm.c src/device/intr.c
+SRCS-$(CONFIG_DEVICE) += $(NEMU_HOME)/src/device/device.c \
+	$(NEMU_HOME)/src/device/alarm.c $(NEMU_HOME)/src/device/intr.c
 SRCS-$(CONFIG_HAS_SERIAL) += $(NEMU_HOME)/src/device/serial.c
 SRCS-$(CONFIG_HAS_TIMER) += $(NEMU_HOME)/src/device/timer.c
 SRCS-$(CONFIG_HAS_KEYBOARD) += $(NEMU_HOME)/src/device/keyboard.c

@@ -14,7 +14,7 @@
 #**************************************************************************************/
 
 SRCS-y += $(NEMU_HOME)/src/nemu-main.c
-DIRS-y += $(NEMU_HOME)/src/cpu $(NEMU_HOME)/src/monitor src/utils
+DIRS-y += $(NEMU_HOME)/src/cpu $(NEMU_HOME)/src/monitor $(NEMU_HOME)/src/utils
 DIRS-$(CONFIG_MODE_SYSTEM) += $(NEMU_HOME)/src/memory
 DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += $(NEMU_HOME)/src/monitor/sdb
 
