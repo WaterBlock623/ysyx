@@ -7,7 +7,7 @@ CFLAGS  += -fPIC -fvisibility=hidden
 LDFLAGS += -shared -fPIC
 endif
 
-WORK_DIR  = $(shell pwd)
+WORK_DIR  ?= $(shell pwd)
 BUILD_DIR = $(WORK_DIR)/build
 
 INC_PATH := $(WORK_DIR)/include $(INC_PATH)
