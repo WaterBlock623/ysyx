@@ -11,6 +11,7 @@ WORK_DIR  ?= $(shell pwd)
 BUILD_DIR = $(WORK_DIR)/build
 
 INC_PATH := $(WORK_DIR)/include $(INC_PATH)
+$(info echo $(INC_PATH))
 OBJ_DIR  = $(BUILD_DIR)/obj-$(NAME)$(SO)
 BINARY   = $(BUILD_DIR)/$(NAME)$(SO)
 
@@ -27,7 +28,6 @@ LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
-BINARY_DEPS += $(WORK_DIR)/.config
 
 # Compilation patterns
 $(OBJ_DIR)/%.o: %.c
