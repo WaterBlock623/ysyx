@@ -2,7 +2,7 @@ include $(NEMU_HOME)/scripts/config.mk
 
 WORK_DIR = $(shell pwd)
 
-run:
+run: $(ARCHIVE)
 	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
 
 PRJ = playground
@@ -139,7 +139,6 @@ verilog:
 # simwave: CXXFLAGS += -DENAWAVE
 # simwave: sim
 #
-test: $(ARCHIVE)
 
 $(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
