@@ -42,7 +42,6 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
                                 unsigned char wmask) {
   waddr &= ~3u;
   wmask &= ~15u;
-  Log(FMT_PADDR " " FMT_PADDR " " FMT_PADDR, waddr, wdata, wmask);
   if (wmask == 0) {
     return;
   }
@@ -55,6 +54,7 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
     len++;
     wmask >>= 1;
   }
+  Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
   paddr_write(waddr, len, wdata);
 }
 
