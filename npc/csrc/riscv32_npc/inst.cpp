@@ -43,7 +43,7 @@ int isa_exec_once(Decode *s) {
   sync_npc_gpr();
   if (s->pc >= 0x8000000c) {
     sim_close();
-    panic("SIM CLOSE");
+    nemu_state.state = NEMU_END;
   }
   return 0;
 }
