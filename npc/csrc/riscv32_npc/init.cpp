@@ -18,12 +18,13 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
+#include "local-include/reg.h"
 
 VerilatedContext *contextp = NULL;
 __TOP_NAME__ *top = NULL;
 VerilatedFstC *tfp = NULL;
 
-int stop_flag = 0;
+bool npc_stop_flag = false;
 CPU_state npc_state = {};
 ISADecodeInfo npc_inst = {};
 
@@ -52,10 +53,10 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void check_ebreak(int is_ebreak) {
-  stop_flag = is_ebreak;
-  if (is_ebreak)
-    Log("[npc] stop by ebreak\n");
+extern "C" void set_debug_info(bool is_ebreak, uint32_t pc, uint32_t inst) {
+  npc_stop_flag = is_ebreak;
+  npc_state.pc = pc;
+  npc_inst.inst = inst;
 }
 
 // extern "C" void get_ret(uint32_t a0) {
@@ -112,13 +113,17 @@ static const uint32_t img[] = {
     0xdeadbeef, // some data
 };
 
+void sync_npc_gpr(void) {
+  int i;
+  for (i = 0; i < LENGTH(cpu.gpr); i++) {
+    gpr(i) = npc_state.gpr[i];
+  }
+}
+
 static void restart() {
   reset(20);
-  /* Set the initial program counter. */
-  cpu.pc = top->rootp->Top__DOT__pcReg__DOT__pcReg;
-
-  /* The zero register is always 0. */
-  top
+  cpu.pc = npc_state.pc;
+  sync_npc_gpr();
 }
 
 __BEGIN_DECLS
