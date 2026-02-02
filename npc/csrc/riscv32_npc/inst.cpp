@@ -38,6 +38,7 @@ int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   s->dnpc = npc_dnpc;
+  Log(FMT_PADDR, s->isa.inst);
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   single_cycle(); 
   sync_npc_gpr();
