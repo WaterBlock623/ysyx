@@ -15,7 +15,7 @@ class DebugInfoDpiC(
     s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
         |  input int pc, input int dnpc, input int inst);
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
-        |  input [${cfg.xlen - 1}:0] inst);
+        |  input [${cfg.xlen - 1}:0] dnpc, input [${cfg.xlen - 1}:0] inst);
         |always @(*) begin
         | set_debug_info({31'b0, isEbreak}, pc, dnpc, inst);
         |end
