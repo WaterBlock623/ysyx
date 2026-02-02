@@ -12,7 +12,7 @@ class DebugInfoDpiC(
   setInline(
     "DebugInfoDpiC.sv",
     s"""|import "DPI-C" function void set_debug_info(input logic is_ebreak, 
-        |  input logic [${cfg.xlen - 1}:0] pc, input logic [${cfg.xlen - 1}:0] inst);
+        |  input int pc, input logic [${cfg.xlen - 1}:0] inst);
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
         |  input [${cfg.xlen - 1}:0] inst);
         |always @(*) begin
