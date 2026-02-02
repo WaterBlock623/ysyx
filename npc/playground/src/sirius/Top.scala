@@ -48,9 +48,9 @@ class MemDpiC(
         |  input ls_wEn);
         |always @(*) begin
         |  if (ls_valid) begin
-        |    ls_rData = pmem_read(ls_rAddr);
+        |    ls_rData = dpic_pmem_read(ls_rAddr);
         |    if (ls_wEn) begin
-        |      pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
+        |      dpic_pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
         |    end
         |  end
         |  else begin
@@ -58,7 +58,7 @@ class MemDpiC(
         |  end
         |end
         |always @(*) begin
-        |  inst_rData = pmem_read(inst_rAddr);
+        |  inst_rData = dpic_pmem_read(inst_rAddr);
         |end
         |endmodule
         |""".stripMargin
