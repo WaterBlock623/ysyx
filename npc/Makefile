@@ -1,4 +1,7 @@
 include $(NEMU_HOME)/scripts/config.mk
+
+run:
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(shell pwd)
 # PRJ = playground
 # PACKAGE_NAME = sirius
 # BUILD_DIR = ./build
