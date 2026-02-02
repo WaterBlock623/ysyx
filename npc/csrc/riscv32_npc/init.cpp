@@ -40,11 +40,11 @@ extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
 
 extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
                                 unsigned char wmask) {
+  waddr &= ~3u;
+  wmask &= ~15u;
   if (wmask == 0) {
     return;
   }
-  waddr &= ~3u;
-  wmask &= ~15u;
   while ((wmask & 1u) == 0) {
     waddr++;
     wmask >>= 1;
