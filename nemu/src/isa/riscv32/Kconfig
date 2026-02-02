@@ -7,4 +7,8 @@ config RV64
 config RVE
   bool "Use E extension"
   default n
+
+config NPC
+  bool "Use NPC"
+  default n
 endmenu

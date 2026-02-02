@@ -24,11 +24,13 @@
 #define CONFIG_CC_OPT "-O2"
 #define CONFIG_MTRACE 1
 #define CONFIG_RT_CHECK 1
+#define CONFIG_NPC 1
 #define CONFIG_ITRACE_COND "true"
 #define CONFIG_CC "gcc"
 #define CONFIG_DIFFTEST_REF_PATH "none"
+#define CONFIG_RVE 1
 #define CONFIG_TRACE_START 0
 #define CONFIG_CC_GCC 1
 #define CONFIG_TRACE 1
-#define CONFIG_ISA "riscv32"
+#define CONFIG_ISA "riscv32_npc"
 #define CONFIG_PMEM_GARRAY 1

@@ -17,8 +17,10 @@ config ISA
   string
   default "x86" if ISA_x86
   default "mips32" if ISA_mips32
-  default "riscv32" if ISA_riscv && !RV64
-  default "riscv64" if ISA_riscv &&  RV64
+  default "riscv32" if ISA_riscv && !RV64 && !NPC
+  default "riscv64" if ISA_riscv &&  RV64 && !NPC
+  default "riscv32_npc" if ISA_riscv && !RV64 && NPC
+  default "riscv64_npc" if ISA_riscv &&  RV64 && NPC
   default "loongarch32r" if ISA_loongarch32r
   default "none"
 
