@@ -2,8 +2,6 @@ include $(NEMU_HOME)/scripts/config.mk
 
 WORK_DIR = $(shell pwd)
 
-run: $(ARCHIVE)
-	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
 
 PRJ = playground
 PACKAGE_NAME = sirius
@@ -147,7 +145,9 @@ $(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR) 
-	# -o $(abspath $(ARCHIVE))
+
+run: $(ARCHIVE)
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
 
 # $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 # 	@rm -rf $(OBJ_DIR)

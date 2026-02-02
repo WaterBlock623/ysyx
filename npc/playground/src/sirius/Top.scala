@@ -33,8 +33,8 @@ class MemDpiC(
   private val maskZero = 8 - (cfg.xlen >> 3)
   setInline(
     "MemDpiC.sv",
-    s"""|import "DPI-C" function int pmem_read(input int raddr);
-        |import "DPI-C" function void pmem_write(
+    s"""|import "DPI-C" function int dpic_pmem_read(input int raddr);
+        |import "DPI-C" function void dpic_pmem_write(
         |  input int waddr, input int wdata, input byte wmask);
         |module MemDpiC(
         |  input [$memAddrMsb:0] inst_rAddr, 
