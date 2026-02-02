@@ -73,6 +73,27 @@ class GetRetDpiC extends ExtModule {
   )
 }
 
+class GetGPRDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
+  val regNum = cfg.registerNum
+  val xlen = cfg.xlen
+
+  val gpr = IO(Input(Vec(regNum, UInt(xlen.W))))
+  
+  val portDecls = (0 until regNum).map(i => s"input [${xlen-1}:0] gpr_$i").mkString(", ")
+  val portNames = (0 until regNum).map(i => s"gpr_$i").mkString(", ")
+
+  setInline(
+    "GetGPRDpiC.sv",
+    s"""|import "DPI-C" function void sync_gprs(input logic [${xlen-1}:0] values []);
+        |module GetGPRDpiC($portDecls);
+        |  always @(*) begin
+        |    sync_gprs('{$portNames});
+        |  end
+        |endmodule
+     """.stripMargin
+  )
+}
+
 class Top(
   implicit private val cfg: CoreConfig)
     extends Module {

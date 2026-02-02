@@ -15,6 +15,8 @@
 
 #ifndef __ISA_H__
 #define __ISA_H__
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
 // Located at src/isa/$(GUEST_ISA)/include/isa-def.h
 #include <isa-def.h>
@@ -55,4 +57,5 @@ word_t isa_query_intr();
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc);
 void isa_difftest_attach();
 
+__END_DECLS
 #endif

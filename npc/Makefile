@@ -3,38 +3,38 @@ include $(NEMU_HOME)/scripts/config.mk
 WORK_DIR = $(shell pwd)
 
 run:
-	+$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
 
-# PRJ = playground
+PRJ = playground
 PACKAGE_NAME = sirius
 BUILD_DIR = $(WORK_DIR)/build
-# MILL = ./mill
-#
+MILL = ./mill
+
 ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
 			  grep "new " | \
 			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
 			  sed 's/.*\.//'
 TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
-# NXDC_FILES = constr/$(TOPNAME).nxdc
+NXDC_FILES = constr/$(TOPNAME).nxdc
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --cc --build \
 				-O3 --x-assign fast --x-initial fast --noassert
 # #				--trace-fst
 #
-# GTKWAVE = gtkwave
+GTKWAVE = gtkwave
 #
 OBJ_DIR = $(BUILD_DIR)/obj_dir
-# WAVE_DIR = $(OBJ_DIR)/wave
-# WAVE = $(WAVE_DIR)/sim.fst
+WAVE_DIR = $(OBJ_DIR)/wave
+WAVE = $(WAVE_DIR)/sim.fst
 # BIN = $(BUILD_DIR)/$(TOPNAME)
 ARCHIVE = $(OBJ_DIR)/libV$(TOPNAME).a
 $(info $(ARCHIVE))
-#
-#
-# $(shell mkdir -p $(BUILD_DIR))
-#
+
+
+$(shell mkdir -p $(BUILD_DIR))
+
 # # constraint file
 # SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 # $(SRC_AUTO_BIND): $(NXDC_FILES)
@@ -101,11 +101,11 @@ CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h#
 # test:
 # 	$(MILL) -i $(PRJ).test
 #
-# verilog:
-# 	$(call git_commit, "generate verilog")
-# 	mkdir -p $(BUILD_DIR)
-# 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(BUILD_DIR)
-# 	-$(MAKE) lint
+verilog:
+	$(call git_commit, "generate verilog")
+	# mkdir -p $(BUILD_DIR)
+	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(BUILD_DIR)
+	-$(MAKE) lint
 #
 # help:
 # 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
@@ -161,9 +161,9 @@ $(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 # wave:
 # 	$(GTKWAVE) $(WAVE)
 #
-# lint:
-# 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
+lint:
+	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 #
 # .PHONY: wave lint sim
 #
-# include ../Makefile
+include ../Makefile

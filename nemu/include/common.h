@@ -16,6 +16,9 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -46,4 +49,5 @@ typedef uint16_t ioaddr_t;
 
 #include <debug.h>
 
+__END_DECLS
 #endif

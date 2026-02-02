@@ -73,9 +73,9 @@ extern bool g_print_step;
 
 static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 #define FUNC_NAME_MAX 128
-#define FRONT_MSG "FTrace: "FMT_PADDR": ", pc
+#define FRONT_MSG "FTrace: " FMT_PADDR ": ", pc
 #define RET_MSG "ret  [%s]\n", pc_func_name
-#define CALL_MSG "call [%s @ "FMT_PADDR"]\n", dnpc_func_name, dnpc
+#define CALL_MSG "call [%s @ " FMT_PADDR "]\n", dnpc_func_name, dnpc
 #define PRINT_MSG(cmd) do { \
   if (is_ret) { \
     cmd(FRONT_MSG); \
