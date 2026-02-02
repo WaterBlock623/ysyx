@@ -85,7 +85,7 @@ class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
   setInline(
     "GetGprDpiC.sv",
     s"""|import "DPI-C" function void sync_gprs(input logic [${xlen-1}:0] values []);
-        |module GetGPRDpiC($portDecls);
+        |module GetGprDpiC($portDecls);
         |  always @(*) begin
         |    sync_gprs('{$portNames});
         |  end
