@@ -41,10 +41,10 @@ int isa_exec_once(Decode *s) {
   s->snpc = s->pc + 4;
   s->dnpc = npc_dnpc;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
-  Log("%d", npc_stop_flag);
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
     sim_close();
+    return 0;
   }
   single_cycle(); 
   sync_npc_gpr();
