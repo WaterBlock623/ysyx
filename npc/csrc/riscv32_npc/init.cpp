@@ -87,13 +87,13 @@ static void sim_init(void) {
   Verilated::traceEverOn(true);
   tfp = new VerilatedFstC;
   top->trace(tfp, 99);
-  tfp->open("sim.fst");
+  tfp->open("sim_wave.fst");
 #endif
 }
 
 void sim_close(void)
 {
-#ifdef ENAWAVE
+#ifdef __ENAWAVE__
 	tfp->close();
 #endif
     delete top;
