@@ -33,7 +33,7 @@ paddr_t npc_dnpc;
 
 // DIP-C
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-  if (raddr < 0x80000000) {
+  if (raddr == 0) {
     Log("Invalid raddr: %u", raddr);
     return 0;
   }
