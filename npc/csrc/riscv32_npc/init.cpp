@@ -20,6 +20,8 @@
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
 
+#define __ENAWAVE__
+
 VerilatedContext *contextp = NULL;
 __TOP_NAME__ *top = NULL;
 VerilatedFstC *tfp = NULL;

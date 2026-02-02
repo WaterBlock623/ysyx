@@ -18,8 +18,8 @@ NXDC_FILES = constr/$(TOPNAME).nxdc
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --cc --build \
-				-O3 --x-assign fast --x-initial fast --noassert
-# #				--trace-fst
+				-O3 --x-assign fast --x-initial fast --noassert 
+VERILATOR_CFLAGS +=	--trace-fst
 #
 GTKWAVE = gtkwave
 #
@@ -27,7 +27,7 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 WAVE_DIR = $(OBJ_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 # BIN = $(BUILD_DIR)/$(TOPNAME)
-ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a
+ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 $(info $(ARCHIVES))
 
 
@@ -149,10 +149,10 @@ $(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		--Mdir $(OBJ_DIR) 
 
 run: $(ARCHIVES) $(VSRCS) $(CSRCS)
-	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)"
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 gdb: $(ARCHIVES)
-	$(MAKE) -C $(NEMU_HOME) gdb WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)"
+	$(MAKE) -C $(NEMU_HOME) gdb WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 # $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 # 	@rm -rf $(OBJ_DIR)
