@@ -91,6 +91,15 @@ static void sim_init(void) {
 #endif
 }
 
+void sim_close(void)
+{
+#ifdef ENAWAVE
+	tfp->close();
+#endif
+    delete top;
+    delete contextp;
+}
+
 void single_cycle(void) {
   top->clock = 0;
   top->eval();
