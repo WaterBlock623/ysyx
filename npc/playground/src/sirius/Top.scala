@@ -83,7 +83,7 @@ class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
   private val portNames = (0 until regNum).map(i => s"gpr_$i").mkString(", ")
 
   setInline(
-    "GetGPRDpiC.sv",
+    "GetGprDpiC.sv",
     s"""|import "DPI-C" function void sync_gprs(input logic [${xlen-1}:0] values []);
         |module GetGPRDpiC($portDecls);
         |  always @(*) begin
