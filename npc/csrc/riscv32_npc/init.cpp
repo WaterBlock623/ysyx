@@ -13,12 +13,12 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
+#include "local-include/reg.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
-#include "local-include/reg.h"
 
 VerilatedContext *contextp = NULL;
 __TOP_NAME__ *top = NULL;
@@ -108,11 +108,21 @@ static void reset(int n) {
 // this is not consistent with uint8_t
 // but it is ok since we do not access the array directly
 static const uint32_t img[] = {
-    0x00000297, // auipc t0,0
-    0x00028823, // sb  zero,16(t0)
-    0x0102c503, // lbu a0,16(t0)
-    0x00100073, // ebreak (used as nemu_trap)
-    0xdeadbeef, // some data
+    // 0x00000297, // auipc t0,0
+    // 0x00028823, // sb  zero,16(t0)
+    // 0x0102c503, // lbu a0,16(t0)
+    // 0x00100073, // ebreak (used as nemu_trap)
+    // 0xdeadbeef, // some data
+    0x0000a537, // lui x10, 0xa
+    0x50050513, // addi x10, x10, 1280
+    0x00a505b3, // add x11, x10, x10
+    0x00b52023, // sw x11, 0(x10)
+    0x00b54023, // lbu x11, 0(x10)
+    0x00052583, // lw x11, 0(x10)
+    0x00b50023, // sb x11, 0(x10)
+    0x000000ef, // jal x1, 8 (offset to jalr)
+    0x00008067, // jalr x0, 0(x1)
+    0x00100073, // ebreak
 };
 
 void sync_npc_gpr(void) {
