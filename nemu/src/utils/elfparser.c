@@ -78,7 +78,7 @@ static void parse_section_header(FILE *elf) {
 
 static void parse_symbol_table(FILE *elf) {
   int i;
-  word_t sh_symtab;
+  word_t sh_symtab = 0;
   for (i = 0; i < nr_sh; i++) {
     if (sh[i].sh_type == SHT_SYMTAB) {
       sh_symtab = i;

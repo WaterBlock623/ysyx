@@ -52,6 +52,7 @@ static uint64_t get_uptime(void) {
   return seconds * 1000000 + (useconds + 500);
 }
 
+// DIP-C
 extern "C" uint32_t pmem_read(uint32_t raddr) {
   switch (raddr) {
     case RTC_ADDR:
