@@ -30,7 +30,8 @@ ISADecodeInfo npc_inst = {};
 
 // DIP-C
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-  if (raddr == 0) {
+  if (raddr < 0x80000000) {
+    Log("Invalid raddr: %u", raddr);
     return 0;
   }
   raddr &= ~3u;
