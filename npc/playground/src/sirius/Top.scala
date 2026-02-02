@@ -11,12 +11,12 @@ class DebugInfoDpiC(
   val inst = IO(Input(UInt(cfg.xlen.W)))
   setInline(
     "DebugInfoDpiC.sv",
-    s"""|import "DPI-C" function void set_debug_info(input logic is_ebreak, 
-        |  input int pc, input logic [${cfg.xlen - 1}:0] inst);
+    s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
+        |  input int pc, input int inst);
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
         |  input [${cfg.xlen - 1}:0] inst);
         |always @(*) begin
-        | set_debug_info(isEbreak, pc, inst);
+        | set_debug_info({31'b0, isEbreak}, pc, inst);
         |end
         |endmodule
     """.stripMargin
