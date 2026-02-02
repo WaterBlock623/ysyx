@@ -3,16 +3,22 @@ package sirius
 import chisel3._
 import chisel3.util._
 
-class EbreakDpiC extends ExtModule {
+class DebugInfoDpiC(
+  implicit private val cfg: CoreConfig)
+    extends ExtModule {
   val isEbreak = IO(Input(Bool()))
+  val pc = IO(Input(UInt(cfg.xlen.W)))
+  val inst = IO(Input(UInt(cfg.xlen.W)))
   setInline(
-    "EbreakDpiC.sv",
-    """|import "DPI-C" function void check_ebreak(input int is_ebreak);
-       |module EbreakDpiC(input isEbreak);
-       |always @(*) begin
-       | check_ebreak({31'b0, isEbreak});
-       |end
-       |endmodule
+    "DebugInfoDpiC.sv",
+    s"""|import "DPI-C" function void check_ebreak(input logic is_ebreak, 
+        |  input logic [${cfg.xlen - 1}:0] pc, input logic [${cfg.xlen - 1}:0] inst);
+        |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
+        |  input [${cfg.xlen - 1}:0] inst);
+        |always @(*) begin
+        | check_ebreak(isEbreak, pc, inst);
+        |end
+        |endmodule
     """.stripMargin
   )
 }
@@ -59,33 +65,37 @@ class MemDpiC(
   )
 }
 
-class GetRetDpiC extends ExtModule {
-  val a0 = IO(Input(UInt(32.W)))
-  setInline(
-    "GetRetDpiC.sv",
-    """|import "DPI-C" function void get_ret(input int a0);
-       |module GetRetDpiC(input [31:0] a0);
-       |always @(*) begin
-       |  get_ret(a0);
-       |end
-       |endmodule
-    """.stripMargin
-  )
-}
+// class GetRetDpiC extends ExtModule {
+//   val a0 = IO(Input(UInt(32.W)))
+//   setInline(
+//     "GetRetDpiC.sv",
+//     """|import "DPI-C" function void get_ret(input int a0);
+//        |module GetRetDpiC(input [31:0] a0);
+//        |always @(*) begin
+//        |  get_ret(a0);
+//        |end
+//        |endmodule
+//     """.stripMargin
+//   )
+// }
 
-class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
+class GetGprDpiC(
+  implicit private val cfg: CoreConfig)
+    extends ExtModule {
   private val regNum = cfg.registerNum
   private val xlen = cfg.xlen
   val gpr = IO(Input(Vec(regNum, UInt(xlen.W))))
-  val portDecls = (0 until regNum).map(i => s"input [${xlen-1}:0] gpr_$i").mkString(", ")
-  val assignLogic = (0 until regNum).map(i => s"    temp_regs[$i] = gpr_$i;").mkString("\n")
+  val portDecls =
+    (0 until regNum).map(i => s"input [${xlen - 1}:0] gpr_$i").mkString(", ")
+  val assignLogic =
+    (0 until regNum).map(i => s"    temp_regs[$i] = gpr_$i;").mkString("\n")
 
   setInline(
     "GetGprDpiC.sv",
-    s"""|import "DPI-C" function void set_gpr_ptr(input int idx, input logic [${xlen-1}:0] val);
+    s"""|import "DPI-C" function void set_gpr_ptr(input int idx, input logic [${xlen - 1}:0] val);
         |
         |module GetGprDpiC($portDecls);
-        |  reg [${xlen-1}:0] temp_regs [$regNum];
+        |  reg [${xlen - 1}:0] temp_regs [$regNum];
         |
         |  always @(*) begin
         |$assignLogic
@@ -101,7 +111,7 @@ class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
 class Top(
   implicit private val cfg: CoreConfig)
     extends Module {
-  
+
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val ifu = Module(new Ifu)
@@ -116,11 +126,14 @@ class Top(
   val lsuOut = lsu.out
 
   if (cfg.isDebug) {
-    val ebreakDpiC = Module(new EbreakDpiC)
+    val debugInfoDpiC = Module(new DebugInfoDpiC)
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
+
+    debugInfoDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
+    debugInfoDpiC.pc := pcReg.debug.get
+    debugInfoDpiC.inst := ifu.debug.get
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
     // getRetDpiC.a0 := registerFile.debug.get(10)
