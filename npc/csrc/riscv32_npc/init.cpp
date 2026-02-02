@@ -128,6 +128,7 @@ static void restart() {
 
 __BEGIN_DECLS
 void init_isa() {
+  sim_init();
   /* Load built-in image. */
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
