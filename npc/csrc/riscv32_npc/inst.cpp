@@ -34,16 +34,12 @@ extern ISADecodeInfo npc_inst;
 extern paddr_t npc_dnpc;
 
 int isa_exec_once(Decode *s) {
-  static bool is_first = true;
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
-  if (!is_first) {
-    single_cycle(); 
-  }
-  IFDEF(CONFIG_ITRACE, print_disassemble(s));
   s->dnpc = npc_dnpc;
+  IFDEF(CONFIG_ITRACE, print_disassemble(s));
+  single_cycle(); 
   sync_npc_gpr();
-  is_first = false;
   return 0;
 }
 
