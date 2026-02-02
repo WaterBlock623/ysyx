@@ -113,16 +113,17 @@ static const uint32_t img[] = {
     // 0x0102c503, // lbu a0,16(t0)
     // 0x00100073, // ebreak (used as nemu_trap)
     // 0xdeadbeef, // some data
-    0x0000a537, // lui x10, 0xa
-    0x50050513, // addi x10, x10, 1280
+    0x80000537, // lui x10, 0x80000
+    0x10050513, // addi x10, x10, 256
     0x00a505b3, // add x11, x10, x10
     0x00b52023, // sw x11, 0(x10)
-    0x00b54023, // lbu x11, 0(x10)
+    0x00b54023, // sb x11, 0(x10)
     0x00052583, // lw x11, 0(x10)
-    0x00b50023, // sb x11, 0(x10)
-    0x000000ef, // jal x1, 8 (offset to jalr)
+    0x00054583, // lbu x11, 0(x10)
+    0x00c000ef, // jal x1, 12
+    0x00100073, // ebreak (should not be here)
     0x00008067, // jalr x0, 0(x1)
-    0x00100073, // ebreak
+    0x00100073, // ebreak 
 };
 
 void sync_npc_gpr(void) {
