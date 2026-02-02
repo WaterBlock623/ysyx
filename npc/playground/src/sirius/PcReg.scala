@@ -7,7 +7,10 @@ class PcReg(
     extends Module {
   val ifuIn = IO(Flipped(new IfuToPcRegIO))
   val wbuIn = IO(Flipped(new WbuToPcRegIO))
-  val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
+  val debug = Option.when(cfg.isDebug)(IO(new Bundle {
+    val pc = Output(UInt(cfg.xlen.W))
+    val dnpc = Output(UInt(cfg.xlen.W))
+  }))
 
   val pcReg = RegInit("h80000000".U(cfg.xlen.W))
   val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
@@ -15,6 +18,7 @@ class PcReg(
   ifuIn.pc := pcReg
 
   if (cfg.isDebug) {
-    debug.get := pcReg
+    debug.get.pc := pcReg
+    debug.get.dnpc := pcNext
   }
 }

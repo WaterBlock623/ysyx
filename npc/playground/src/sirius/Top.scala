@@ -8,15 +8,16 @@ class DebugInfoDpiC(
     extends ExtModule {
   val isEbreak = IO(Input(Bool()))
   val pc = IO(Input(UInt(cfg.xlen.W)))
+  val dnpc = IO(Input(UInt(cfg.xlen.W)))
   val inst = IO(Input(UInt(cfg.xlen.W)))
   setInline(
     "DebugInfoDpiC.sv",
     s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
-        |  input int pc, input int inst);
+        |  input int pc, input int dnpc, input int inst);
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
         |  input [${cfg.xlen - 1}:0] inst);
         |always @(*) begin
-        | set_debug_info({31'b0, isEbreak}, pc, inst);
+        | set_debug_info({31'b0, isEbreak}, pc, dnpc, inst);
         |end
         |endmodule
     """.stripMargin
@@ -132,7 +133,8 @@ class Top(
     val getGprDpiC = Module(new GetGprDpiC)
 
     debugInfoDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
-    debugInfoDpiC.pc := pcReg.debug.get
+    debugInfoDpiC.pc := pcReg.debug.get.pc
+    debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem

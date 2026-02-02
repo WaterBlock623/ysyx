@@ -27,6 +27,7 @@ VerilatedFstC *tfp = NULL;
 int npc_stop_flag = 0;
 CPU_state npc_state = {};
 ISADecodeInfo npc_inst = {};
+paddr_t npc_dnpc;
 
 // DIP-C
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
@@ -59,9 +60,10 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t inst) {
+extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc, uint32_t inst) {
   npc_stop_flag = is_ebreak;
   npc_state.pc = pc;
+  npc_dnpc = dnpc;
   npc_inst.inst = inst;
   Log("%u %u %u", is_ebreak, pc, inst);
 }
