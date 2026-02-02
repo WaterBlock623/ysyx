@@ -148,7 +148,7 @@ $(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR) 
 
-run: $(ARCHIVES)
+run: $(ARCHIVES) $(VSRCS) $(CSRCS)
 	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)"
 
 gdb: $(ARCHIVES)
