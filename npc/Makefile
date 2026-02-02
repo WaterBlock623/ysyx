@@ -27,8 +27,8 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 WAVE_DIR = $(OBJ_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 # BIN = $(BUILD_DIR)/$(TOPNAME)
-ARCHIVE = $(OBJ_DIR)/libV$(TOPNAME).a
-$(info $(ARCHIVE))
+ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a
+$(info $(ARCHIVES))
 
 
 $(shell mkdir -p $(BUILD_DIR))
@@ -138,7 +138,9 @@ verilog:
 # simwave: sim
 #
 
-$(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+test: $(ARCHIVES)
+
+$(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	# @mkdir -p $(WAVE_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
@@ -146,8 +148,8 @@ $(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR) 
 
-run: $(ARCHIVE)
-	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
+run: $(ARCHIVES)
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)"
 
 # $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 # 	@rm -rf $(OBJ_DIR)
