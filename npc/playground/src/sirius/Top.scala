@@ -92,7 +92,7 @@ class GetGprDpiC(
 
   setInline(
     "GetGprDpiC.sv",
-    s"""|import "DPI-C" function void set_gpr_ptr(input int idx, input logic [${xlen - 1}:0] val);
+    s"""|import "DPI-C" function void set_gpr_ptr(input int idx, input int val);
         |
         |module GetGprDpiC($portDecls);
         |  reg [${xlen - 1}:0] temp_regs [$regNum];
