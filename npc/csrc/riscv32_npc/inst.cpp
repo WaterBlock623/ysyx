@@ -42,10 +42,10 @@ int isa_exec_once(Decode *s) {
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   single_cycle(); 
   sync_npc_gpr();
-  if (s->pc >= 0x80000010) {
-    sim_close();
-    nemu_state.state = NEMU_END;
-  }
+  // if (s->pc >= 0x80000010) {
+  //   sim_close();
+  //   nemu_state.state = NEMU_END;
+  // }
   return 0;
 }
 
