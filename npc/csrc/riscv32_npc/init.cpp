@@ -57,7 +57,7 @@ extern "C" void set_debug_info(bool is_ebreak, uint32_t pc, uint32_t inst) {
   npc_stop_flag = is_ebreak;
   npc_state.pc = pc;
   npc_inst.inst = inst;
-  Log("%u", pc);
+  Log("%u %u %u", is_ebreak, pc, inst);
 }
 
 // extern "C" void get_ret(uint32_t a0) {
