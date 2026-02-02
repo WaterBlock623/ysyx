@@ -87,7 +87,7 @@ static void sim_init(void) {
   Verilated::traceEverOn(true);
   tfp = new VerilatedVcdC;
   top->trace(tfp, 99);
-  tfp->open("./build/obj_dir/sim.vcd");
+  tfp->open("sim.vcd");
 #endif
 }
 
