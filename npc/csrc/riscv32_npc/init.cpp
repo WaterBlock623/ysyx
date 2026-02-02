@@ -44,7 +44,7 @@ extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
 extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
                                 uint32_t wmask) {
   waddr &= ~3u;
-  wmask &= ~15u;
+  wmask &= 15u;
   Log("Front " FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, wmask);
   if (wmask == 0) {
     return;
