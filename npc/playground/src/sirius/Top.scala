@@ -73,30 +73,13 @@ class GetRetDpiC extends ExtModule {
   )
 }
 
-class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
-  private val regNum = cfg.registerNum
-  private val xlen = cfg.xlen
-
-  val gpr = IO(Input(Vec(regNum, UInt(xlen.W))))
-  
-  private val portDecls = (0 until regNum).map(i => s"input [${xlen-1}:0] gpr_$i").mkString(", ")
-  private val portNames = (0 until regNum).map(i => s"gpr_$i").mkString(", ")
-
-  setInline(
-    "GetGprDpiC.sv",
-    s"""|import "DPI-C" function void sync_gprs(input logic [${xlen-1}:0] values []);
-        |module GetGprDpiC($portDecls);
-        |  always @(*) begin
-        |    sync_gprs('{$portNames});
-        |  end
-        |endmodule
-     """.stripMargin
-  )
-}
-
 class Top(
   implicit private val cfg: CoreConfig)
     extends Module {
+  val debug = Option.when(cfg.isDebug)(IO(new Bundle{
+    val pc = Output(UInt(cfg.xlen.W))
+    val gpr = Output(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
+  }))
   
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
@@ -115,12 +98,12 @@ class Top(
     val ebreakDpiC = Module(new EbreakDpiC)
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
-    val getGprDpiC = Module(new GetGprDpiC)
+    debug.get.pc := pcReg.debug.get
+    debug.get.gpr := registerFile.debug.get
     ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
     // getRetDpiC.a0 := registerFile.debug.get(10)
-    getGprDpiC.gpr :<>= registerFile.debug.get
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
