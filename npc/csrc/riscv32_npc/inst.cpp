@@ -42,8 +42,8 @@ int isa_exec_once(Decode *s) {
   s->dnpc = npc_dnpc;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   if (npc_stop_flag != 0) {
-    sim_close();
     set_nemu_state(NEMU_END, s->pc, gpr(10));
+    sim_close();
   }
   single_cycle(); 
   sync_npc_gpr();

@@ -45,7 +45,7 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
                                 uint32_t wmask) {
   waddr &= ~3u;
   wmask &= 15u;
-  Log("Front " FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, wmask);
+  // Log("Front " FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, wmask);
   if (wmask == 0) {
     return;
   }
@@ -58,7 +58,7 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
     len++;
     wmask >>= 1;
   }
-  Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
+  // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
   paddr_write(waddr, len, wdata);
 }
 
@@ -68,7 +68,7 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
   npc_state.pc = pc;
   npc_dnpc = dnpc;
   npc_inst.inst = inst;
-  Log("%u %u %u", is_ebreak, pc, inst);
+  // Log("%u %u %u", is_ebreak, pc, inst);
 }
 
 // extern "C" void get_ret(uint32_t a0) {
