@@ -27,25 +27,25 @@ __BEGIN_DECLS
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
+#include "local-include/reg.h"
 
 void print_disassemble(Decode *);
 
 extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
 extern paddr_t npc_dnpc;
+extern int npc_stop_flag;
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   s->dnpc = npc_dnpc;
-  Log(FMT_PADDR, s->isa.inst);
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
+  if (npc_stop_flag != 0) {
+    set_nemu_state(NEMU_END, s->pc, gpr(10));
+  }
   single_cycle(); 
   sync_npc_gpr();
-  // if (s->pc >= 0x80000010) {
-  //   sim_close();
-  //   nemu_state.state = NEMU_END;
-  // }
   return 0;
 }
 
