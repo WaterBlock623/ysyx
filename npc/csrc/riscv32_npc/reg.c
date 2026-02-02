@@ -13,6 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include <errno.h>
 #include <isa.h>
 #include <stdio.h>
@@ -74,3 +77,5 @@ word_t isa_reg_str2val(const char *s, bool *success) {
     return 0;
   }
 }
+
+__END_DECLS

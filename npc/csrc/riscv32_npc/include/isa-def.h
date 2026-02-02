@@ -13,31 +13,24 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <isa.h>
-#include <memory/paddr.h>
+#ifndef __ISA_RISCV_H__
+#define __ISA_RISCV_H__
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
-// this is not consistent with uint8_t
-// but it is ok since we do not access the array directly
-static const uint32_t img [] = {
-  0x00000297,  // auipc t0,0
-  0x00028823,  // sb  zero,16(t0)
-  0x0102c503,  // lbu a0,16(t0)
-  0x00100073,  // ebreak (used as nemu_trap)
-  0xdeadbeef,  // some data
-};
+#include <common.h>
 
-static void restart() {
-  /* Set the initial program counter. */
-  cpu.pc = RESET_VECTOR;
+typedef struct {
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
+  vaddr_t pc;
+} MUXDEF(CONFIG_RV64, riscv64_npc_CPU_state, riscv32_npc_CPU_state);
 
-  /* The zero register is always 0. */
-  cpu.gpr[0] = 0;
-}
+// decode
+typedef struct {
+  uint32_t inst;
+} MUXDEF(CONFIG_RV64, riscv64_npc_ISADecodeInfo, riscv32_npc_ISADecodeInfo);
 
-void init_isa() {
-  /* Load built-in image. */
-  memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
-  /* Initialize this virtual computer system. */
-  restart();
-}
+__END_DECLS
+#endif

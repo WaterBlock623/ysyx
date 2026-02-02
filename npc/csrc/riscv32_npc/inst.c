@@ -13,6 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include "common.h"
 #include "debug.h"
 #include "difftest-def.h"
@@ -242,3 +245,5 @@ int isa_exec_once(Decode *s) {
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   return decode_exec(s);
 }
+
+__END_DECLS

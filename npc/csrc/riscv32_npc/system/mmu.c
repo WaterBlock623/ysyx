@@ -13,21 +13,15 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __ISA_RISCV_H__
-#define __ISA_RISCV_H__
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
-#include <common.h>
+#include <isa.h>
+#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
-typedef struct {
-  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
-  vaddr_t pc;
-} MUXDEF(CONFIG_RV64, riscv64_npc_CPU_state, riscv32_npc_CPU_state);
+paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
+  return MEM_RET_FAIL;
+}
 
-// decode
-typedef struct {
-  uint32_t inst;
-} MUXDEF(CONFIG_RV64, riscv64_npc_ISADecodeInfo, riscv32_npc_ISADecodeInfo);
-
-#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
-
-#endif
+__END_DECLS

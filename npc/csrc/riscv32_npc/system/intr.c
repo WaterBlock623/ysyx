@@ -13,20 +13,21 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include <isa.h>
-#include <cpu/difftest.h>
-#include "../local-include/reg.h"
-#include "utils.h"
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  int i;
-  for (i = 0; i < LENGTH(cpu.gpr); i++) {
-    if (gpr(i) != ref_r->gpr[i]) {
-      return false;
-    }
-  }
-  return true;
+word_t isa_raise_intr(word_t NO, vaddr_t epc) {
+  /* TODO: Trigger an interrupt/exception with ``NO''.
+   * Then return the address of the interrupt/exception vector.
+   */
+
+  return 0;
 }
 
-void isa_difftest_attach() {
+word_t isa_query_intr() {
+  return INTR_EMPTY;
 }
+
+__END_DECLS

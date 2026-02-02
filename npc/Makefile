@@ -1,32 +1,36 @@
 include $(NEMU_HOME)/scripts/config.mk
 
+WORK_DIR = $(shell pwd)
+
 run:
-	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(shell pwd)
+	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
+
 # PRJ = playground
-# PACKAGE_NAME = sirius
-# BUILD_DIR = ./build
+PACKAGE_NAME = sirius
+BUILD_DIR = $(WORK_DIR)/build
 # MILL = ./mill
 #
-# ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
-# EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
-# 			  grep "new " | \
-# 			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
-# 			  sed 's/.*\.//'
-# TOPNAME := $(strip $(shell $(EXT_TOP_CMD)))
+ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
+EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
+			  grep "new " | \
+			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
+			  sed 's/.*\.//'
+TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
 # NXDC_FILES = constr/$(TOPNAME).nxdc
-# INC_PATH ?=
-#
-# VERILATOR = verilator
-# VERILATOR_CFLAGS += -MMD --build -cc  \
-# 				-O3 --x-assign fast --x-initial fast --noassert
+
+VERILATOR = verilator
+VERILATOR_CFLAGS += -MMD --cc --build \
+				-O3 --x-assign fast --x-initial fast --noassert
 # #				--trace-fst
 #
 # GTKWAVE = gtkwave
 #
-# OBJ_DIR = $(BUILD_DIR)/obj_dir
+OBJ_DIR = $(BUILD_DIR)/obj_dir
 # WAVE_DIR = $(OBJ_DIR)/wave
 # WAVE = $(WAVE_DIR)/sim.fst
 # BIN = $(BUILD_DIR)/$(TOPNAME)
+ARCHIVE = $(OBJ_DIR)/libV$(TOPNAME).a
+$(info $(ARCHIVE))
 #
 #
 # $(shell mkdir -p $(BUILD_DIR))
@@ -41,11 +45,12 @@ run:
 # 	@echo "[$(TOPNAME)]"
 #
 # # project source
-# VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
-# CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-# ifneq ($(NVBOARD), off)
+VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
+CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+# if ($(NVBOARD))
 # 	CSRCS += $(SRC_AUTO_BIND)
 # endif
+
 #
 # # rules for NVBoard
 # include $(NVBOARD_HOME)/scripts/nvboard.mk
@@ -55,8 +60,39 @@ run:
 # endif
 #
 # # rules for verilator
-# INCFLAGS = $(addprefix -I, $(INC_PATH))
-# CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -include V$(TOPNAME).h# -O0 -ggdb3
+
+
+-include $(WORK_DIR)/include/config/auto.conf
+-include $(WORK_DIR)/include/config/auto.conf.cmd
+
+remove_quote = $(patsubst "%",%,$(1))
+
+# Extract variabls from menuconfig
+GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
+ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
+NAME    = $(GUEST_ISA)-nemu-$(ENGINE)
+
+# Include all filelist.mk to merge file lists
+FILELIST_MK = $(shell find -L $(NEMU_HOME)/src/isa -name "filelist.mk")
+include $(FILELIST_MK)
+
+# Extract compiler and options from menuconfig
+ifneq ($(CONFIG_CC),)
+CC = $(call remove_quote,$(CONFIG_CC))
+endif
+CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
+CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
+CXXFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
+
+INC_PATH := $(WORK_DIR)/csrc/riscv32_npc/include \
+						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+$(info $(INC_PATH))
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h# -O0 -ggdb3
 #
 # # am
 # ARGS ?=
@@ -103,6 +139,17 @@ run:
 # simwave: CXXFLAGS += -DENAWAVE
 # simwave: sim
 #
+test: $(ARCHIVE)
+
+$(ARCHIVE): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+	@rm -rf $(OBJ_DIR)
+	# @mkdir -p $(WAVE_DIR)
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		--top-module $(TOPNAME) $^ \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) \
+		--Mdir $(OBJ_DIR) 
+	# -o $(abspath $(ARCHIVE))
+
 # $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 # 	@rm -rf $(OBJ_DIR)
 # 	@mkdir -p $(WAVE_DIR)

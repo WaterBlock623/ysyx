@@ -51,6 +51,8 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
+$(info $(ARCHIVES))
+
 $(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
