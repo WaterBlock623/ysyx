@@ -62,7 +62,8 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc, uint32_t inst) {
+extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
+                               uint32_t inst) {
   npc_stop_flag = is_ebreak;
   npc_state.pc = pc;
   npc_dnpc = dnpc;
@@ -91,13 +92,12 @@ static void sim_init(void) {
 #endif
 }
 
-void sim_close(void)
-{
+void sim_close(void) {
 #ifdef __ENAWAVE__
-	tfp->close();
+  tfp->close();
 #endif
-    delete top;
-    delete contextp;
+  delete top;
+  delete contextp;
 }
 
 void single_cycle(void) {
@@ -132,16 +132,16 @@ static const uint32_t img[] = {
     // 0x00100073, // ebreak (used as nemu_trap)
     // 0xdeadbeef, // some data
     0x80000537, // lui x10, 0x80000
-    0x10050513, // addi x10, x10, 256
+    0x06450513, // addi x10, x10, 100
     0x00a505b3, // add x11, x10, x10
     0x00b52023, // sw x11, 0(x10)
-    0x00b54023, // sb x11, 0(x10)
     0x00052583, // lw x11, 0(x10)
     0x00054583, // lbu x11, 0(x10)
-    0x00c000ef, // jal x1, 12
-    0x00100073, // ebreak (should not be here)
+    0x00b50023, // sb x11, 0(x10)
+    0x008000ef, // jal x1, 8
+    0x00100073, // ebreak
     0x00008067, // jalr x0, 0(x1)
-    0x00100073, // ebreak 
+    0x00100073, // ebreak
 };
 
 void sync_npc_gpr(void) {
