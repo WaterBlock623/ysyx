@@ -73,14 +73,14 @@ class GetRetDpiC extends ExtModule {
   )
 }
 
-class GetGPRDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
-  val regNum = cfg.registerNum
-  val xlen = cfg.xlen
+class GetGprDpiC(implicit private val cfg: CoreConfig) extends ExtModule {
+  private val regNum = cfg.registerNum
+  private val xlen = cfg.xlen
 
   val gpr = IO(Input(Vec(regNum, UInt(xlen.W))))
   
-  val portDecls = (0 until regNum).map(i => s"input [${xlen-1}:0] gpr_$i").mkString(", ")
-  val portNames = (0 until regNum).map(i => s"gpr_$i").mkString(", ")
+  private val portDecls = (0 until regNum).map(i => s"input [${xlen-1}:0] gpr_$i").mkString(", ")
+  private val portNames = (0 until regNum).map(i => s"gpr_$i").mkString(", ")
 
   setInline(
     "GetGPRDpiC.sv",
@@ -114,11 +114,13 @@ class Top(
   if (cfg.isDebug) {
     val ebreakDpiC = Module(new EbreakDpiC)
     val memDpiC = Module(new MemDpiC)
-    val getRetDpiC = Module(new GetRetDpiC)
+    // val getRetDpiC = Module(new GetRetDpiC)
+    val getGprDpiC = Module(new GetGprDpiC)
     ebreakDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
-    getRetDpiC.a0 := registerFile.debug.get(10)
+    // getRetDpiC.a0 := registerFile.debug.get(10)
+    getGprDpiC.gpr :<>= registerFile.debug.get
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
