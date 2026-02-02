@@ -15,7 +15,7 @@
 
 #include "local-include/reg.h"
 #include "verilated.h"
-#include "verilated_vcd_c.h"
+#include "verilated_fst_c.h"
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
@@ -24,7 +24,7 @@
 
 VerilatedContext *contextp = NULL;
 __TOP_NAME__ *top = NULL;
-VerilatedVcdC *tfp = NULL;
+VerilatedFstC *tfp = NULL;
 
 int npc_stop_flag = 0;
 CPU_state npc_state = {};
@@ -85,9 +85,9 @@ static void sim_init(void) {
   top = new __TOP_NAME__{contextp};
 #ifdef __ENAWAVE__
   Verilated::traceEverOn(true);
-  tfp = new VerilatedVcdC;
+  tfp = new VerilatedFstC;
   top->trace(tfp, 99);
-  tfp->open("sim.vcd");
+  tfp->open("sim.fst");
 #endif
 }
 

@@ -19,7 +19,7 @@ NXDC_FILES = constr/$(TOPNAME).nxdc
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --cc --build \
 				-O3 --x-assign fast --x-initial fast --noassert 
-VERILATOR_CFLAGS +=	--trace-vcd
+VERILATOR_CFLAGS +=	--trace-fst
 #
 GTKWAVE = gtkwave
 #
