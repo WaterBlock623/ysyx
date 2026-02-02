@@ -3,7 +3,7 @@ include $(NEMU_HOME)/scripts/config.mk
 WORK_DIR = $(shell pwd)
 
 run:
-	$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
+	+$(MAKE) -C $(NEMU_HOME) run WORK_DIR=$(WORK_DIR) ADD_ARCHIVES=$(ARCHIVE)
 
 # PRJ = playground
 PACKAGE_NAME = sirius
