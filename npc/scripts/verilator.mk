@@ -50,12 +50,13 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-$(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+$(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) verilog
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR)
+
 
 build_ar: $(ARCHIVES)
 

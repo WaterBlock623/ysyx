@@ -5,7 +5,7 @@ $(info NPC BUILD_DIR $(BUILD_DIR))
 
 $(shell mkdir -p $(BUILD_DIR))
 
-all: verilog build_ar
+all: build_ar
 
 # Menuconfig
 include $(NEMU_HOME)/scripts/config.mk
@@ -49,7 +49,7 @@ gdb: all
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
-runbatch: build_ar
+runbatch: all
 	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
 
 clean:
