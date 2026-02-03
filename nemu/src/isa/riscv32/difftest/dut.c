@@ -22,6 +22,8 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   int i;
   for (i = 0; i < LENGTH(cpu.gpr); i++) {
     if (gpr(i) != ref_r->gpr[i]) {
+      printf("reg %d fail: nemu: " FMT_WORD "  ref: " FMT_WORD "\n", 
+          i, gpr(i), ref_r->gpr[i]);
       return false;
     }
   }
