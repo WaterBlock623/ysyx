@@ -17,7 +17,6 @@
 
 void single_cycle(void);
 void sync_npc_gpr(void);
-void sim_close(void);
 
 __BEGIN_DECLS
 
@@ -29,6 +28,7 @@ __BEGIN_DECLS
 #include <cpu/decode.h>
 #include "local-include/reg.h"
 
+void sim_close(void);
 void print_disassemble(Decode *);
 
 extern CPU_state npc_state;
