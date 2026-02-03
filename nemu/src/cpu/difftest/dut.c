@@ -109,12 +109,13 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
 
 void difftest_step(vaddr_t pc, vaddr_t npc) {
   CPU_state ref_r;
+  printf("nemu pc ptr: %p\n", &ref_r.pc);
 
   if (skip_dut_nr_inst > 0) {
     ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
     if (ref_r.pc == npc) {
       skip_dut_nr_inst = 0;
-      checkregs((CPU_state *)&ref_r, npc);
+      checkregs(&ref_r, npc);
       return;
     }
     skip_dut_nr_inst--;
@@ -135,7 +136,7 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
 
-  checkregs((CPU_state *)&ref_r, pc);
+  checkregs(&ref_r, pc);
 }
 #else
 void init_difftest(char *ref_so_file, long img_size, int port) {}

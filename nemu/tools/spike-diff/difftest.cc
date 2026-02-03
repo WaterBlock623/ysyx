@@ -62,6 +62,7 @@ void sim_t::diff_get_regs(void* diff_context) {
   }
   ctx->pc = state->pc;
   printf("PC: %lu  CTX PC: %u\n", state->pc, ctx->pc);
+  printf("PC ptr: %p  CTX PC ptr: %p\n", &state->pc, &ctx->pc);
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
