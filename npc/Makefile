@@ -3,19 +3,6 @@ BUILD_DIR = $(WORK_DIR)/build
 
 $(shell mkdir -p $(BUILD_DIR))
 
-PACKAGE_NAME = sirius
-ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
-EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
-			  grep "new " | \
-			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
-			  sed 's/.*\.//'
-TOPNAME := $(strip $(shell $(EXT_TOP_CMD)))
-
-ifeq ($(TOPNAME),)
-$(error TOPNAME cannot be empty)
-else
-$(info TOPNAME is $(TOPNAME))
-endif
 
 all: verilog build_ar
 
@@ -23,7 +10,26 @@ all: verilog build_ar
 include $(NEMU_HOME)/scripts/config.mk
 -include $(WORK_DIR)/include/config/auto.conf
 -include $(WORK_DIR)/include/config/auto.conf.cmd
+
 remove_quote = $(patsubst "%",%,$(1))
+
+ifeq ($(CONFIG_NPC_PACKAGE_NAME),)
+$(error PACKAGE_NAME cannot be empty)
+else
+PACKAGE_NAME = $(call remove_quote,$(CONFIG_NPC_PACKAGE_NAME))
+$(info PACKAGE_NAME is $(PACKAGE_NAME))
+ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
+EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
+			  grep "new " | \
+			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
+			  sed 's/.*\.//'
+TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
+ifeq ($(TOPNAME),)
+$(error TOPNAME cannot be empty)
+else
+$(info TOPNAME is $(TOPNAME))
+endif # TOPNAME
+endif # PACKAGE_NAME
 
 # Verilator
 include $(WORK_DIR)/scripts/verilator.mk

@@ -9,7 +9,11 @@ $(shell mkdir -p $(WAVE_DIR))
 
 VERILATOR_CFLAGS += -MMD --cc --build \
 				-O3 --x-assign fast --x-initial fast --noassert
+
+ifeq ($(CONFIG_NPC_WAVE),y)
+$(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
+endif
 
 VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")

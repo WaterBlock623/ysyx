@@ -13,14 +13,13 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include "local-include/reg.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include "local-include/reg.h"
+#include <generated/autoconf.h>
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
-
-#define __ENAWAVE__
 
 VerilatedContext *contextp = NULL;
 __TOP_NAME__ *top = NULL;
@@ -84,7 +83,7 @@ extern "C" void set_gpr_ptr(int idx, uint32_t val) {
 static void sim_init(void) {
   contextp = new VerilatedContext;
   top = new __TOP_NAME__{contextp};
-#ifdef __ENAWAVE__
+#ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
   tfp = new VerilatedFstC;
   top->trace(tfp, 99);
@@ -93,7 +92,7 @@ static void sim_init(void) {
 }
 
 void sim_close(void) {
-#ifdef __ENAWAVE__
+#ifdef CONFIG_NPC_WAVE
   tfp->close();
 #endif
   delete top;
@@ -105,13 +104,13 @@ void single_cycle(void) {
   top->eval();
   contextp->timeInc(1);
 
-#ifdef __ENAWAVE__
+#ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
   top->clock = 1;
   top->eval();
   contextp->timeInc(1);
-#ifdef __ENAWAVE__
+#ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
 }
