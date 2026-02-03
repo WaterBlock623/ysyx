@@ -32,6 +32,9 @@ image: image-dep
 run: insert-arg
 	$(MAKE) -C $(NPC_HOME) run 
 
+gdb: insert-arg
+	$(MAKE) -C $(NPC_HOME) gdb
+
 runbatch: ADD_ARGS += -b
 runbatch: insert-arg
 	$(MAKE) -C $(NPC_HOME) runbatch 
