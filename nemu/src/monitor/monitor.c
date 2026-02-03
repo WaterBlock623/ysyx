@@ -123,8 +123,6 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize memory. */
   init_mem();
 
-  IFDEF(CONFIG_NPC, restart());
-
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
 
@@ -133,6 +131,8 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
+
+  IFDEF(CONFIG_NPC, restart());
 
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
