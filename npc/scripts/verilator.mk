@@ -40,6 +40,7 @@ CXXFLAGS += $(CFLAGS_BUILD) -D__GUEST_ISA__=$(GUEST_ISA)
 
 INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 CXXFLAGS += -D__WAVE__=$(WAVE)
