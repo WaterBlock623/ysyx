@@ -17,6 +17,8 @@ else
 $(info TOPNAME is $(TOPNAME))
 endif
 
+all: verilog build_ar
+
 # Menuconfig
 include $(NEMU_HOME)/scripts/config.mk
 -include $(WORK_DIR)/include/config/auto.conf
@@ -35,4 +37,4 @@ include $(WORK_DIR)/../Makefile
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: clean
+.PHONY: all clean
