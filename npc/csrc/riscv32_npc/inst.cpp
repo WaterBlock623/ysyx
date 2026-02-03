@@ -38,7 +38,8 @@ extern int npc_stop_flag;
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
-  s->snpc = s->pc + 4;
+  s->pc = s->pc + 4;
+  s->snpc = s->pc;
   s->dnpc = npc_dnpc;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   if (npc_stop_flag != 0) {
