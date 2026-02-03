@@ -13,6 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include <isa.h>
 
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
@@ -26,3 +29,5 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
 word_t isa_query_intr() {
   return INTR_EMPTY;
 }
+
+__END_DECLS

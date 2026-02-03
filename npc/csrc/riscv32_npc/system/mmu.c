@@ -13,20 +13,15 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #include <isa.h>
-#include <cpu/difftest.h>
-#include "../local-include/reg.h"
-#include "utils.h"
+#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  int i;
-  for (i = 0; i < LENGTH(cpu.gpr); i++) {
-    if (gpr(i) != ref_r->gpr[i]) {
-      return false;
-    }
-  }
-  return true;
+paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
+  return MEM_RET_FAIL;
 }
 
-void isa_difftest_attach() {
-}
+__END_DECLS

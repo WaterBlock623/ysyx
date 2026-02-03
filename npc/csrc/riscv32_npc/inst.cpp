@@ -13,41 +13,42 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
-
 #include <sys/cdefs.h>
+
+void single_cycle(void);
+void sync_npc_gpr(void);
+void sim_close(void);
+
 __BEGIN_DECLS
 
-#include <stdint.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <string.h>
+#include "common.h"
+#include "difftest-def.h"
+#include "macro.h"
+#include <cpu/cpu.h>
+#include <cpu/ifetch.h>
+#include <cpu/decode.h>
+#include "local-include/reg.h"
 
-#include <generated/autoconf.h>
-#include <macro.h>
+void print_disassemble(Decode *);
 
-#ifdef CONFIG_TARGET_AM
-#include <klib.h>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#endif
+extern CPU_state npc_state;
+extern ISADecodeInfo npc_inst;
+extern paddr_t npc_dnpc;
+extern int npc_stop_flag;
 
-#if CONFIG_MBASE + CONFIG_MSIZE > 0x100000000ul
-#define PMEM64 1
-#endif
-
-typedef MUXDEF(CONFIG_ISA64, uint64_t, uint32_t) word_t;
-typedef MUXDEF(CONFIG_ISA64, int64_t, int32_t)  sword_t;
-#define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
-
-typedef word_t vaddr_t;
-typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;
-#define FMT_PADDR MUXDEF(PMEM64, "0x%016" PRIx64, "0x%08" PRIx32)
-typedef uint16_t ioaddr_t;
-
-#include <debug.h>
+int isa_exec_once(Decode *s) {
+  s->isa.inst = npc_inst.inst;
+  s->snpc = s->pc + 4;
+  s->dnpc = npc_dnpc;
+  IFDEF(CONFIG_ITRACE, print_disassemble(s));
+  if (npc_stop_flag != 0) {
+    set_nemu_state(NEMU_END, s->pc, gpr(10));
+    sim_close();
+    return 0;
+  }
+  single_cycle(); 
+  sync_npc_gpr();
+  return 0;
+}
 
 __END_DECLS
-#endif

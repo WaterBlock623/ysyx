@@ -13,21 +13,24 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __RISCV_REG_H__
-#define __RISCV_REG_H__
+#ifndef __ISA_RISCV_H__
+#define __ISA_RISCV_H__
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
 #include <common.h>
 
-static inline int check_reg_idx(int idx) {
-  IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32)));
-  return idx;
-}
+typedef struct {
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
+  vaddr_t pc;
+} MUXDEF(CONFIG_RV64, riscv64_npc_CPU_state, riscv32_npc_CPU_state);
 
-#define gpr(idx) (cpu.gpr[check_reg_idx(idx)])
+// decode
+typedef struct {
+  uint32_t inst;
+} MUXDEF(CONFIG_RV64, riscv64_npc_ISADecodeInfo, riscv32_npc_ISADecodeInfo);
 
-static inline const char* reg_name(int idx) {
-  extern const char* regs[];
-  return regs[check_reg_idx(idx)];
-}
+#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
+__END_DECLS
 #endif

@@ -5,7 +5,7 @@ import chisel3._
 class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   val iduIn = IO(Flipped(new IduToRegFileIO))
   val wbuIn = IO(Flipped(new WbuToRegFileIO))
-  val debug = if (cfg.isDebug) Some(IO(Output(Vec(cfg.registerNum, UInt(cfg.xlen.W))))) else None
+  val debug = Option.when(cfg.isDebug)(IO(Output(Vec(cfg.registerNum, UInt(cfg.xlen.W)))))
 
   val regFile = Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W)))
   when(wbuIn.wEn) {

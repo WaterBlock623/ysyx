@@ -13,10 +13,25 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <isa.h>
-#include <memory/vaddr.h>
-#include <memory/paddr.h>
+#ifndef __RISCV_REG_H__
+#define __RISCV_REG_H__
 
-paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
-  return MEM_RET_FAIL;
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <common.h>
+
+static inline int check_reg_idx(int idx) {
+  IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32)));
+  return idx;
 }
+
+#define gpr(idx) (cpu.gpr[check_reg_idx(idx)])
+
+static inline const char* reg_name(int idx) {
+  extern const char* regs[];
+  return regs[check_reg_idx(idx)];
+}
+
+__END_DECLS
+#endif

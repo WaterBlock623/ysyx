@@ -7,4 +7,22 @@ config RV64
 config RVE
   bool "Use E extension"
   default n
+
+menuconfig NPC
+  bool "Use NPC"
+  default n
+
+if NPC
+
+config NPC_WAVE
+  bool "Generate wave file"
+  default n
+
+config NPC_PACKAGE_NAME
+  string "Scala package name"
+  default "sirius"
+
+endif #NPC
+
+
 endmenu

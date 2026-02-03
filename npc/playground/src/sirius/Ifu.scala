@@ -8,10 +8,15 @@ class Ifu(implicit private val cfg: CoreConfig) extends Module {
     val mem = new IfuToMemIO
   })
   val out = IO(new IfuToIduIO)
+  val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
   val pc = exte.pcReg.pc
   exte.mem.rAddr := pc 
   val inst = exte.mem.rData
   out.ifuPayload.ifu.pc := exte.pcReg.pc
   out.ifuPayload.ifu.inst := inst
+
+  if (cfg.isDebug) {
+    debug.get := inst
+  }
 }
