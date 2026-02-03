@@ -87,7 +87,7 @@ static void sim_init(void) {
   Verilated::traceEverOn(true);
   tfp = new VerilatedFstC;
   top->trace(tfp, 99);
-  tfp->open("sim_wave.fst");
+  tfp->open(str(__WAVE__));
 #endif
 }
 

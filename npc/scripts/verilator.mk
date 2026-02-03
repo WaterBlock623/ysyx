@@ -42,6 +42,7 @@ INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
+CXXFLAGS += -D__WAVE__=$(WAVE)
 
 NEMU_MAKE_FLAGS = WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
@@ -65,4 +66,7 @@ gdb: build_ar
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
-.PHONY: lint build_ar run gdb
+wave:
+	$(GTKWAVE) $(WAVE)
+
+.PHONY: lint build_ar run gdb wave
