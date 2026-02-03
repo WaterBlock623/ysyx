@@ -153,7 +153,7 @@ void sync_npc_gpr(void) {
   }
 }
 
-static void restart() {
+extern "C" void restart() {
   reset(20);
   cpu.pc = npc_state.pc;
   sync_npc_gpr();
@@ -166,6 +166,6 @@ void init_isa() {
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
   /* Initialize this virtual computer system. */
-  restart();
+  // restart();
 }
 __END_DECLS

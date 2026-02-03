@@ -101,6 +101,8 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+void restart(void);
+
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
 
@@ -120,6 +122,8 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize memory. */
   init_mem();
+
+  IFDEF(CONFIG_NPC, restart());
 
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
