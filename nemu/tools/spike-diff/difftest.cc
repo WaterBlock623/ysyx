@@ -51,6 +51,7 @@ void sim_t::diff_init(int port) {
 }
 
 void sim_t::diff_step(uint64_t n) {
+  printf("ref exec %lu!\n", n);
   step(n);
 }
 
@@ -60,6 +61,7 @@ void sim_t::diff_get_regs(void* diff_context) {
     ctx->gpr[i] = state->XPR[i];
   }
   ctx->pc = state->pc;
+  printf("PC: %lu  CTX PC: %u\n", state->pc, ctx->pc);
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
