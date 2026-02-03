@@ -49,10 +49,10 @@ gdb: all
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
-runbatch: all
+runbatch:
 	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
 
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: all run gdb clean
+.PHONY: all run gdb runbatch clean
