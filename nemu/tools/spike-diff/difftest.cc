@@ -46,6 +46,9 @@ static processor_t *p = NULL;
 static state_t *state = NULL;
 
 void sim_t::diff_init(int port) {
+  #ifdef CONFIG_RVE
+  printf("RVE!\n");
+  #endif // CONFIG_RVE
   p = get_core("0");
   state = p->get_state();
 }
