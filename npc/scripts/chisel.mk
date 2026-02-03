@@ -10,7 +10,7 @@ verilog:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(BUILD_DIR)
 	-$(MAKE) lint
 
-help:
+chisel_help:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
 
 reformat:
@@ -25,7 +25,4 @@ bsp:
 idea:
 	$(MILL) -i mill.idea.GenIdea/idea
 
-clean:
-	-rm -rf $(BUILD_DIR)
-
-.PHONY: test verilog help reformat checkformat clean
+.PHONY: test verilog help reformat checkformat bsp idea
