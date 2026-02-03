@@ -91,7 +91,7 @@ static void sim_init(void) {
 #endif
 }
 
-void sim_close(void) {
+extern "C" void sim_close(void) {
 #ifdef CONFIG_NPC_WAVE
   tfp->close();
 #endif
