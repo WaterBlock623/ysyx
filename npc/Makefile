@@ -1,8 +1,7 @@
 WORK_DIR = $(shell pwd)
-BUILD_DIR = $(WORK_DIR)/build
+BUILD_DIR ?= $(WORK_DIR)/build
 
 $(shell mkdir -p $(BUILD_DIR))
-
 
 all: verilog build_ar
 
@@ -40,7 +39,18 @@ include $(WORK_DIR)/scripts/chisel.mk
 # Util
 include $(WORK_DIR)/../Makefile
 
+run: all
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
+
+gdb: all
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
+
+runbatch: build_ar
+	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
+
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+.PHONY: all run gdb clean

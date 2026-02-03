@@ -26,9 +26,7 @@ $(BINARY):: compile_git
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
 override ARGS += $(ARGS_DIFF)
-ifdef ARGS_ELF
-	override ARGS += --elf=$(ARGS_ELF)
-endif
+override ARGS += $(ADD_ARGS)
 
 # Command to execute NEMU
 IMG ?=

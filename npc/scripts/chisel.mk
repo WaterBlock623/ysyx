@@ -1,6 +1,8 @@
 MILL = $(WORK_DIR)/mill
-
 PRJ = playground
+# SRC_DIRS = common playground generator
+# FIND_FILTER = -type f -name '*.scala'
+# MILL_SRCS = $(shell find $(addprefix $(WORK_DIR)/,$(SRC_DIRS)) $(FIND_FILTER))
 
 test:
 	$(MILL) -i $(PRJ).test

@@ -44,7 +44,8 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 CXXFLAGS += -D__WAVE__=$(WAVE)
 
-NEMU_MAKE_FLAGS = WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
+NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
+									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
@@ -57,14 +58,6 @@ $(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		--Mdir $(OBJ_DIR)
 
 build_ar: $(ARCHIVES)
-
-run: build_ar
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
-
-gdb: build_ar
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
 wave:
 	$(GTKWAVE) $(WAVE)
