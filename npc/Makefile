@@ -1,6 +1,8 @@
 WORK_DIR = $(shell pwd)
 BUILD_DIR ?= $(WORK_DIR)/build
 
+$(info BUILD_DIR)
+
 $(shell mkdir -p $(BUILD_DIR))
 
 all: verilog build_ar
