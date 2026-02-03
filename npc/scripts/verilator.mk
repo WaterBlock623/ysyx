@@ -19,9 +19,6 @@ VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
 CSRCS = $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 
-$(info $(BUILD_DIR))
-$(info $(VSRCS))
-
 # Menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))

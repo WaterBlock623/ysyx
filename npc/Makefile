@@ -1,7 +1,7 @@
 WORK_DIR = $(shell pwd)
 BUILD_DIR ?= $(WORK_DIR)/build
 
-$(info BUILD_DIR)
+$(info NPC BUILD_DIR $(BUILD_DIR))
 
 $(shell mkdir -p $(BUILD_DIR))
 
