@@ -21,7 +21,7 @@
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool is_pass = true;
   if (pc != ref_r->pc) {
-    printf("Difftest pc fail:  nemu: " FMT_WORD "  ref: " FMT_WORD "\n", pc,
+    printf("Difftest dnpc fail:  nemu: " FMT_WORD "  ref: " FMT_WORD "\n", pc,
            ref_r->pc);
     is_pass = false;
   }
