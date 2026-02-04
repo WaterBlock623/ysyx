@@ -42,8 +42,12 @@ config RTC_PORT
   default 0x48
 
 config RTC_MMIO
-  hex "MMIO address of the timer"
+  hex "MMIO address of the rtc timer"
   default 0xa0000048
+
+config DATE_MMIO
+  hex "MMIO address of the date timer"
+  default 0xa0000700
 endif # HAS_TIMER
 
 menuconfig HAS_KEYBOARD

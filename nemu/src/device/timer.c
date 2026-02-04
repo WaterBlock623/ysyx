@@ -16,15 +16,51 @@
 #include <device/map.h>
 #include <device/alarm.h>
 #include <utils.h>
+#include <time.h>
 
 static uint32_t *rtc_port_base = NULL;
+static int32_t *date_port_base = NULL;
 
 static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
   assert(offset == 0 || offset == 4);
-  if (!is_write && offset == 4) {
+  Assert(!is_write, "RTC io is read only");
+  if (offset == 0) {
     uint64_t us = get_time();
     rtc_port_base[0] = (uint32_t)us;
+  } else {
+    uint64_t us = get_time();
     rtc_port_base[1] = us >> 32;
+  }
+}
+
+static void date_io_handler(uint32_t offset, int len, bool is_write) {
+  Assert(!is_write, "Date io is read only");
+
+  time_t t = time(NULL);
+  struct tm *lt = localtime(&t);
+  
+  switch (offset) {
+    case 0u:
+      date_port_base[0] = lt->tm_sec;
+      break;
+    case 4u:
+      date_port_base[1] = lt->tm_min;
+      break;
+    case 8u:
+      date_port_base[2] = lt->tm_hour;
+      break;
+    case 12u:
+      date_port_base[3] = lt->tm_mday;
+      break;
+    case 16u:
+      date_port_base[4] = lt->tm_mon + 1;
+      break;
+    case 20u:
+      date_port_base[5] = lt->tm_year + 1900;
+      break;
+    default:
+      panic("Invalid date io offset: %u", offset);
+      break;
   }
 }
 
@@ -43,6 +79,9 @@ void init_timer() {
   add_pio_map ("rtc", CONFIG_RTC_PORT, rtc_port_base, 8, rtc_io_handler);
 #else
   add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler);
+
+  date_port_base = (int32_t *)new_space(24);
+  add_mmio_map("date", CONFIG_DATE_MMIO, date_port_base, 8, date_io_handler);
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));
   get_time();
