@@ -15,6 +15,7 @@
 
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include __TOP_NAME_INCLUDE__
 #include "local-include/reg.h"
 #include <generated/autoconf.h>
 #include <isa.h>
