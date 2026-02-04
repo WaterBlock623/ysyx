@@ -1,9 +1,9 @@
 WORK_DIR = $(shell pwd)
 BUILD_DIR ?= $(WORK_DIR)/build
-
 $(info NPC BUILD_DIR $(BUILD_DIR))
-
 $(shell mkdir -p $(BUILD_DIR))
+
+VSRC_TIMESTAMP = $(BUILD_DIR)/.vsrc_timestamp
 
 all: build_ar
 
@@ -49,7 +49,7 @@ gdb: all
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
-runbatch:
+runbatch: all
 	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
 
 clean:
