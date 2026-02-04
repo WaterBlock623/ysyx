@@ -5,7 +5,7 @@ PRJ = playground
 VSRC_TMP_DIR = $(BUILD_DIR)/vsrc_tmp
 VSRC_DIR = $(BUILD_DIR)/vsrc
 
-RSYNC_CMD = $(RSYNC) --archive --checksum --delete --itemize-changes \
+RSYNC_CMD = $(RSYNC) -rlpgoD --checksum --delete --itemize-changes \
 						--omit-dir-times $(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)
 
 # SRC_DIRS = common playground generator
