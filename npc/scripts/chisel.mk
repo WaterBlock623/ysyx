@@ -16,6 +16,7 @@ test:
 	$(MILL) -i $(PRJ).test
 
 $(VSRC_TIMESTAMP): force
+	# Generate verilogs
 	$(call git_commit, "generate verilog")
 	-rm -rf $(VSRC_TMP_DIR)
 	-mkdir -p $(VSRC_TMP_DIR)

@@ -52,6 +52,7 @@ lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 $(ARCHIVES): $(VSRC_TIMESTAMP) $(CSRCS) $(NVBOARD_ARCHIVE)
+	# Build archives
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
