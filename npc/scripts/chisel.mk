@@ -15,22 +15,15 @@ RSYNC_CMD = $(RSYNC) -rlpgoD --checksum --delete --itemize-changes \
 test:
 	$(MILL) -i $(PRJ).test
 
-$(VSRC_TIMESTAMP): force
+verilog: force
 	# Generate verilogs
 	$(call git_commit, "generate verilog")
 	-rm -rf $(VSRC_TMP_DIR)
 	-mkdir -p $(VSRC_TMP_DIR)
 	-mkdir -p $(VSRC_DIR)
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(VSRC_TMP_DIR)
-	@if [ -n "$$($(RSYNC_CMD))" ]; then \
-		echo "Verilog changed, updating timestamp"; \
-		touch $(VSRC_TIMESTAMP); \
-	else \
-		echo "Verilog unchanged."; \
-	fi
+	$(RSYNC_CMD)
 	-$(MAKE) lint
-
-verilog: $(VSRC_TIMESTAMP)
 
 chisel_help:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
@@ -47,4 +40,4 @@ bsp:
 idea:
 	$(MILL) -i mill.idea.GenIdea/idea
 
-.PHONY: force test verilog help reformat checkformat bsp idea
+.PHONY: test verilog help reformat checkformat bsp idea

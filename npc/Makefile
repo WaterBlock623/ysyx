@@ -55,4 +55,4 @@ runbatch: all
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: all run gdb runbatch clean
+.PHONY: force all run gdb runbatch clean
