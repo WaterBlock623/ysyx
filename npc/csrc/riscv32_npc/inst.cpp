@@ -27,6 +27,7 @@ __BEGIN_DECLS
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 #include "local-include/reg.h"
+#include <unistd.h>
 
 void sim_close(void);
 void print_disassemble(Decode *);
@@ -44,6 +45,7 @@ int isa_exec_once(Decode *s) {
     first = false;
   } else {
     single_cycle(); 
+    sleep(1);
     sync_npc_gpr();
   }
   s->isa.inst = npc_inst.inst;
