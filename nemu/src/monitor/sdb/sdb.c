@@ -67,11 +67,8 @@ static int cmd_c(char *args, char *str_end) {
   return 0;
 }
 
-IFDEF(CONFIG_NPC, void sim_close(void));
-
 static int cmd_q(char *args, char *str_end) {
   nemu_state.state = NEMU_QUIT;
-  IFDEF(CONFIG_NPC, sim_close());
   return -1;
 }
 

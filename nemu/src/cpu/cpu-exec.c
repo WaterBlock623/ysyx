@@ -86,7 +86,10 @@ void assert_fail_msg() {
   isa_reg_display();
   IFDEF(CONFIG_ITRACE, iringbuf_display());
   statistic();
+  IFDEF(CONFIG_NPC, sim_close());
 }
+
+IFDEF(CONFIG_NPC, void sim_close(void));
 
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
@@ -115,6 +118,8 @@ void cpu_exec(uint64_t n) {
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
       // fall through
-    case NEMU_QUIT: statistic();
+    case NEMU_QUIT: 
+      statistic();
+      IFDEF(CONFIG_NPC, sim_close());
   }
 }
