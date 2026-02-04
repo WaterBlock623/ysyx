@@ -13,7 +13,7 @@ typedef MUXDEF(CONFIG_ISA64, Elf64_Sym, Elf32_Sym) elf_sym_t;
 #define ELF_ST_TYPE MUXDEF(CONFIG_ISA64, ELF64_ST_TYPE, ELF32_ST_TYPE)
 #define SH_MAX 64
 #define SH_NAME_MAX 128
-#define SYM_MAX 512
+#define SYM_MAX 8192
 #define SYM_NAME_MAX 128
 
 static elf_ehdr_t eh;
