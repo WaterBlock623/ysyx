@@ -73,6 +73,8 @@ static void execute(uint64_t n) {
   }
 }
 
+IFDEF(CONFIG_NPC, void sim_close(void));
+
 static void statistic() {
   IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
@@ -84,8 +86,9 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
-  iringbuf_display();
+  IFDEF(CONFIG_ITRACE, iringbuf_display());
   statistic();
+  IFDEF(CONFIG_NPC, sim_close());
 }
 
 /* Simulate how the CPU works. */
@@ -115,6 +118,8 @@ void cpu_exec(uint64_t n) {
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
       // fall through
-    case NEMU_QUIT: statistic();
+    case NEMU_QUIT: 
+      statistic();
+      IFDEF(CONFIG_NPC, sim_close());
   }
 }

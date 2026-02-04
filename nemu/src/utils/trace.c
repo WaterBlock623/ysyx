@@ -61,7 +61,7 @@ void print_disassemble(Decode *s) {
 void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
 #define MTRACE_MSG "Memory %s:  Addr="FMT_PADDR"  Len=%d  Data="FMT_WORD"\n", \
               is_write ? "write" : "read", addr, len, data 
-#ifdef CONFIG_DTRACE_COND
+#ifdef CONFIG_MTRACE_COND
   if (MTRACE_COND) {
     log_write(MTRACE_MSG);
   }

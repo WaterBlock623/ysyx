@@ -51,12 +51,14 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   while ((wmask & 1u) == 0) {
     waddr++;
     wmask >>= 1;
+    wdata >>= 8;
   }
   int len = 0;
   while (wmask & 1u) {
     len++;
     wmask >>= 1;
   }
+  Assert(wmask == 0, "Invalid wmask");
   // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
   paddr_write(waddr, len, wdata);
 }
@@ -91,7 +93,7 @@ static void sim_init(void) {
 #endif
 }
 
-void sim_close(void) {
+extern "C" void sim_close(void) {
 #ifdef CONFIG_NPC_WAVE
   tfp->close();
 #endif
@@ -153,7 +155,7 @@ void sync_npc_gpr(void) {
   }
 }
 
-static void restart() {
+extern "C" void restart() {
   reset(20);
   cpu.pc = npc_state.pc;
   sync_npc_gpr();
@@ -166,6 +168,6 @@ void init_isa() {
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
   /* Initialize this virtual computer system. */
-  restart();
+  // restart();
 }
 __END_DECLS

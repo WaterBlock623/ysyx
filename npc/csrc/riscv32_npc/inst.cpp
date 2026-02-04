@@ -17,7 +17,6 @@
 
 void single_cycle(void);
 void sync_npc_gpr(void);
-void sim_close(void);
 
 __BEGIN_DECLS
 
@@ -29,6 +28,7 @@ __BEGIN_DECLS
 #include <cpu/decode.h>
 #include "local-include/reg.h"
 
+void sim_close(void);
 void print_disassemble(Decode *);
 
 extern CPU_state npc_state;
@@ -39,13 +39,13 @@ extern int npc_stop_flag;
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
-  s->dnpc = npc_dnpc;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
-    sim_close();
+    // sim_close();
     return 0;
   }
+  s->dnpc = npc_dnpc;
   single_cycle(); 
   sync_npc_gpr();
   return 0;

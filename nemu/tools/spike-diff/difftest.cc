@@ -46,11 +46,15 @@ static processor_t *p = NULL;
 static state_t *state = NULL;
 
 void sim_t::diff_init(int port) {
+  #ifdef CONFIG_RVE
+  printf("Spike RVE!\n");
+  #endif // CONFIG_RVE
   p = get_core("0");
   state = p->get_state();
 }
 
 void sim_t::diff_step(uint64_t n) {
+  // printf("ref exec %lu!\n", n);
   step(n);
 }
 
@@ -60,6 +64,8 @@ void sim_t::diff_get_regs(void* diff_context) {
     ctx->gpr[i] = state->XPR[i];
   }
   ctx->pc = state->pc;
+  // printf("PC: %lu  CTX PC: %u\n", state->pc, ctx->pc);
+  // printf("PC ptr: %p  CTX PC ptr: %p\n", &state->pc, &ctx->pc);
 }
 
 void sim_t::diff_set_regs(void* diff_context) {

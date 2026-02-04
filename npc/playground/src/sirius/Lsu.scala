@@ -20,7 +20,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   }
 
   val ctrl = in.ctrl.lsuCtrl
-  exte.mem.valid := ctrl.isLoad || ctrl.isStore
+  exte.mem.valid := (ctrl.isLoad || ctrl.isStore) && ~reset.asBool
   exte.mem.wEn := ctrl.isStore
   val addr = in.exuPayload.exu.aluOut
   exte.mem.rAddr := addr

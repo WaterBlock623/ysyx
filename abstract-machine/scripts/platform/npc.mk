@@ -17,10 +17,9 @@ MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
 CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINARGS_PLACEHOLDER)
 
-# WAVE=wave to enabale wave
-NPCCMD ?=
-
-NPCFLAGS ?=
+export IMG = "$(IMAGE).bin"
+export ADD_ARGS += --elf "$(IMAGE).elf"
+export BUILD_DIR = $(shell pwd)/build
 
 insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) $(MAINARGS_PLACEHOLDER) "$(mainargs)"
@@ -31,6 +30,16 @@ image: image-dep
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	$(MAKE) -C $(NPC_HOME) $(NPCCMD) $(NPCFLAGS) IMG=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) run 
+
+gdb: insert-arg
+	$(MAKE) -C $(NPC_HOME) gdb
+
+runbatch: ADD_ARGS += -b
+runbatch: insert-arg
+	$(MAKE) -C $(NPC_HOME) runbatch 
+
+build_npc:
+	$(MAKE) -C $(NPC_HOME)
 
 .PHONY: insert-arg

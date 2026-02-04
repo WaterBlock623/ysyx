@@ -15,8 +15,8 @@ $(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
 endif
 
-VSRCS = $(shell find $(abspath $(BUILD_DIR)) -name "*.sv" -o -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
+CSRCS = $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 
 # Menuconfig
@@ -40,31 +40,26 @@ CXXFLAGS += $(CFLAGS_BUILD) -D__GUEST_ISA__=$(GUEST_ISA)
 
 INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
 CXXFLAGS += -D__WAVE__=$(WAVE)
 
-NEMU_MAKE_FLAGS = WORK_DIR=$(WORK_DIR) ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
+NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
+									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-$(ARCHIVES): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
-	@rm -rf $(OBJ_DIR)
+$(ARCHIVES): $(VSRC_TIMESTAMP) $(CSRCS) $(NVBOARD_ARCHIVE)
+	# Build archives
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $^ \
+		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR)
 
+
 build_ar: $(ARCHIVES)
-
-run: build_ar
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
-
-gdb: build_ar
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
 wave:
 	$(GTKWAVE) $(WAVE)
