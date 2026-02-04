@@ -17,7 +17,7 @@
 #define CONFIG_DIFFTEST 1
 #define CONFIG_ISA_riscv 1
 #define CONFIG_NPC_WAVE 1
-#define CONFIG_TRACE_END 10000
+#define CONFIG_TRACE_END 1000000
 #define CONFIG_NPC_PACKAGE_NAME "sirius"
 #define CONFIG_CC_ASAN 1
 #define CONFIG_MTRACE_COND "true"
