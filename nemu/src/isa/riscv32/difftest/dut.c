@@ -19,17 +19,21 @@
 #include <isa.h>
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
+  bool is_pass = true;
+  if (pc != ref_r->pc) {
+    printf("Difftest pc fail:  nemu: " FMT_WORD "  ref: " FMT_WORD "\n", pc,
+           ref_r->pc);
+    is_pass = false;
+  }
   int i;
   for (i = 0; i < LENGTH(cpu.gpr); i++) {
-    printf("reg %d : nemu: " FMT_WORD "  ref: " FMT_WORD "\n", i, gpr(i),
-           ref_r->gpr[i]);
     if (gpr(i) != ref_r->gpr[i]) {
-      // printf("reg %d fail: nemu: " FMT_WORD "  ref: " FMT_WORD "\n", i, gpr(i),
-      //        ref_r->gpr[i]);
-      return false;
+      printf("Difftest reg %d fail: nemu: " FMT_WORD "  ref: " FMT_WORD "\n", i,
+             gpr(i), ref_r->gpr[i]);
+      is_pass = false;
     }
   }
-  return true;
+  return is_pass;
 }
 
 void isa_difftest_attach() {}
