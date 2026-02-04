@@ -49,7 +49,16 @@ void print_disassemble(Decode *s) {
 
   // Log
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", s->logbuf); }
+  // if (ITRACE_COND) { log_write("%s\n", s->logbuf); }
+  IFDEF(CONFIG_TARGET_NATIVE_ELF,
+  do {
+    extern FILE* log_fp;
+    extern bool log_enable();
+    if (log_enable() && log_fp != NULL) {
+      fprintf(log_fp, "%s\n", s->logbuf);
+      fflush(log_fp);
+    }
+  } while (0));
 #endif // CONFIG_ITRACE_COND
   if (g_print_step) { puts(s->logbuf); }
   memcpy(iringbuf + iringbuf_ptr, s->logbuf, LENGTH(s->logbuf));
