@@ -7,7 +7,7 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
-VERILATOR_CFLAGS += -MMD --cc --build \
+VERILATOR_CFLAGS += -MMD --cc \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 ifeq ($(CONFIG_NPC_WAVE),y)
@@ -51,15 +51,12 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-$(ARCHIVES): verilog
+build_ar: verilog
 	# Build archives
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR)
-
-
-build_ar: $(ARCHIVES)
 
 wave:
 	$(GTKWAVE) $(WAVE)
