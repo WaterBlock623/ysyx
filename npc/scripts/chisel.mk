@@ -6,7 +6,7 @@ VSRC_TMP_DIR = $(BUILD_DIR)/vsrc_tmp
 VSRC_DIR = $(BUILD_DIR)/vsrc
 
 RSYNC_CMD = $(RSYNC) --archive --checksum --delete --itemize-changes \
-						$(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)
+						--omit-dir-times $(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)
 
 # SRC_DIRS = common playground generator
 # FIND_FILTER = -type f -name '*.scala'
