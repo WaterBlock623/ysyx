@@ -30,7 +30,7 @@ __BEGIN_DECLS
 
 void sim_close(void);
 void print_disassemble(Decode *);
-void restart(void);
+// void restart(void);
 
 extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
@@ -40,7 +40,7 @@ extern int npc_stop_flag;
 int isa_exec_once(Decode *s) {
   static bool first = true;
   if (first) {
-    restart();
+    // restart();
     first = false;
   } else {
     single_cycle(); 
