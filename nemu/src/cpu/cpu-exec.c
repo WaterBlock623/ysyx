@@ -73,6 +73,8 @@ static void execute(uint64_t n) {
   }
 }
 
+IFDEF(CONFIG_NPC, void sim_close(void));
+
 static void statistic() {
   IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
@@ -88,8 +90,6 @@ void assert_fail_msg() {
   statistic();
   IFDEF(CONFIG_NPC, sim_close());
 }
-
-IFDEF(CONFIG_NPC, void sim_close(void));
 
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
