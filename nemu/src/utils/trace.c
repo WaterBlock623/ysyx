@@ -49,7 +49,7 @@ void print_disassemble(Decode *s) {
 
   // Log
 #ifdef CONFIG_ITRACE_COND
-  if (CONFIG_ITRACE_COND) { log_write("%s\n", s->logbuf); }
+  if (ITRACE_COND) { log_write("%s\n", s->logbuf); }
 #endif // CONFIG_ITRACE_COND
   if (g_print_step) { puts(s->logbuf); }
   memcpy(iringbuf + iringbuf_ptr, s->logbuf, LENGTH(s->logbuf));
@@ -62,7 +62,7 @@ void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
 #define MTRACE_MSG "Memory %s:  Addr="FMT_PADDR"  Len=%d  Data="FMT_WORD"\n", \
               is_write ? "write" : "read", addr, len, data 
 #ifdef CONFIG_MTRACE_COND
-  if (CONFIG_MTRACE_COND) {
+  if (MTRACE_COND) {
     log_write(MTRACE_MSG);
   }
 #endif
@@ -78,7 +78,7 @@ void dtrace(IOMap *map, bool is_write, paddr_t addr, int len, word_t data) {
 #define DTRACE_MSG "Device %s %s:  Addr="FMT_PADDR"  Len=%d  Data="FMT_WORD"\n", \
               map->name, is_write ? "write" : "read", addr, len, data
 #ifdef CONFIG_DTRACE_COND
-  if (CONFIG_DTRACE_COND) {
+  if (DTRACE_COND) {
     log_write(DTRACE_MSG);
   }
 #endif
