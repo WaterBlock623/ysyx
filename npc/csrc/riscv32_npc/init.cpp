@@ -103,14 +103,14 @@ extern "C" void sim_close(void) {
 }
 
 void single_cycle(void) {
-  top->clock = 0;
+  top->clock = 1;
   top->eval();
   contextp->timeInc(1);
 
 #ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
-  top->clock = 1;
+  top->clock = 0;
   top->eval();
   contextp->timeInc(1);
 #ifdef CONFIG_NPC_WAVE
