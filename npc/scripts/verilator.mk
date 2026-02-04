@@ -42,7 +42,7 @@ INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
 export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="V$(TOPNAME)" -D__TOP_NAME_INCLUDE__='"V$(TOPNAME).h"'
+CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="V$(TOPNAME)" -D__TOP_NAME_INCLUDE__=''"V$(TOPNAME).h"''
 CXXFLAGS += -D__WAVE__=$(WAVE)
 
 NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
