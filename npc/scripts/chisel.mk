@@ -22,7 +22,7 @@ $(VSRC_TIMESTAMP): force
 	-mkdir -p $(VSRC_DIR)
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(VSRC_TMP_DIR)
 	@if [ -n "$$($(RSYNC_CMD))" ]; then \
-		echo "Verilog changed, updating timestamp..."; \
+		echo "Verilog changed, updating timestamp"; \
 		touch $(VSRC_TIMESTAMP); \
 	else \
 		echo "Verilog unchanged."; \
