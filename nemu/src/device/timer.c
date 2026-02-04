@@ -81,7 +81,7 @@ void init_timer() {
   add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler);
 
   date_port_base = (int32_t *)new_space(24);
-  add_mmio_map("date", CONFIG_DATE_MMIO, date_port_base, 8, date_io_handler);
+  add_mmio_map("date", CONFIG_DATE_MMIO, date_port_base, 24, date_io_handler);
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));
   get_time();
