@@ -6,7 +6,6 @@
  */
 #define CONFIG_DIFFTEST_REF_NAME "spike"
 #define CONFIG_ENGINE "interpreter"
-#define CONFIG_WATCHPOINT 1
 #define CONFIG_PC_RESET_OFFSET 0x0
 #define CONFIG_FTRACE_COND "true"
 #define CONFIG_DIFFTEST_REF_SPIKE 1
