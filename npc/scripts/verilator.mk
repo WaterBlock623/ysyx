@@ -7,7 +7,7 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
-VERILATOR_CFLAGS += -MMD --cc \
+VERILATOR_CFLAGS += -MMD --cc --build \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 ifeq ($(CONFIG_NPC_WAVE),y)
