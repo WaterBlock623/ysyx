@@ -51,7 +51,7 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-$(ARCHIVES): $(VSRC_TIMESTAMP) $(CSRCS) $(NVBOARD_ARCHIVE)
+$(ARCHIVES): $(VSRC_TIMESTAMP) $(CSRCS) $(NVBOARD_ARCHIVE) force
 	# Build archives
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
