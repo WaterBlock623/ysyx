@@ -51,12 +51,14 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   while ((wmask & 1u) == 0) {
     waddr++;
     wmask >>= 1;
+    wdata >>= 8;
   }
   int len = 0;
   while (wmask & 1u) {
     len++;
     wmask >>= 1;
   }
+  Assert(wmask == 0, "Invalid wmask");
   // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
   paddr_write(waddr, len, wdata);
 }
