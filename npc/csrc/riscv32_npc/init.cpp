@@ -159,7 +159,7 @@ void sync_npc_gpr(void) {
 extern "C" void restart() {
   reset(20);
   cpu.pc = npc_state.pc;
-  sync_npc_gpr();
+  // sync_npc_gpr();
 }
 
 __BEGIN_DECLS
