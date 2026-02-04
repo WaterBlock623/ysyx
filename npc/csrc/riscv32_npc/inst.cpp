@@ -30,6 +30,7 @@ __BEGIN_DECLS
 
 void sim_close(void);
 void print_disassemble(Decode *);
+void restart(void);
 
 extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
@@ -37,6 +38,14 @@ extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 
 int isa_exec_once(Decode *s) {
+  static bool first = true;
+  if (first) {
+    restart();
+    first = false;
+  } else {
+    single_cycle(); 
+    sync_npc_gpr();
+  }
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
@@ -46,8 +55,6 @@ int isa_exec_once(Decode *s) {
     return 0;
   }
   s->dnpc = npc_dnpc;
-  single_cycle(); 
-  sync_npc_gpr();
   return 0;
 }
 
