@@ -85,6 +85,7 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+  IFDEF(CONFIG_DIFFTEST_REF_NEMU, printf("ASSERT FROM REF\n"));
   isa_reg_display();
   IFDEF(CONFIG_ITRACE, iringbuf_display());
   statistic();
