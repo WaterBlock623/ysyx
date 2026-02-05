@@ -27,6 +27,7 @@ class DebugInfoDpiC(
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
+  val clock = IO(Input(Clock()))
   val inst = IO(Flipped(new IfuToMemIO))
   val ls = IO(Flipped(new LsuToMemIO))
   private val memAddrMsb = cfg.memoryAddrWidth - 1
@@ -38,6 +39,7 @@ class MemDpiC(
         |import "DPI-C" function void dpic_pmem_write(
         |  input int waddr, input int wdata, input int wmask);
         |module MemDpiC(
+        |  input clock,
         |  input [$memAddrMsb:0] inst_rAddr, 
         |  output reg [31:0] inst_rData, 
         |  input [$memAddrMsb:0] ls_rAddr, 
@@ -47,17 +49,21 @@ class MemDpiC(
         |  input [$maskMsb:0] ls_wMask,
         |  input ls_valid, 
         |  input ls_wEn);
+        |
+        |always @(posedge clock) begin
+        |  if (ls_valid & ls_wEn) begin
+        |    dpic_pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
+        |  end
+        |end
+        |
         |always @(*) begin
         |  if (ls_valid) begin
         |    ls_rData = dpic_pmem_read(ls_rAddr);
-        |    if (ls_wEn) begin
-        |      dpic_pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
-        |    end
-        |  end
-        |  else begin
+        |  end else begin
         |    ls_rData = 0;
         |  end
         |end
+        |
         |always @(*) begin
         |  inst_rData = dpic_pmem_read(inst_rAddr);
         |end
@@ -138,6 +144,7 @@ class Top(
     debugInfoDpiC.inst := ifu.debug.get
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
+    memDpiC.clock := clock
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
   }

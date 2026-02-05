@@ -7,7 +7,7 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
-VERILATOR_CFLAGS += -MMD --cc --build \
+VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 ifeq ($(CONFIG_NPC_WAVE),y)
@@ -36,14 +36,19 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
-CXXFLAGS += $(CFLAGS_BUILD) -D__GUEST_ISA__=$(GUEST_ISA)
+CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
+CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
+CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
+CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(CONFIG_FTRACE_COND)),true)
+CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
 INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
 export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" -include V$(TOPNAME).h
-CXXFLAGS += -D__WAVE__=$(WAVE)
+CXXFLAGS += $(INCFLAGS) -D__TOP_NAME__="\"V$(TOPNAME)\"" \
+						-D__TOP_NAME_INCLUDE__="\\\"V$(TOPNAME).h\\\"" \
+						-D__WAVE__=$(WAVE)
 
 NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
@@ -51,15 +56,12 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 lint:
 	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-$(ARCHIVES): $(VSRC_TIMESTAMP) $(CSRCS) $(NVBOARD_ARCHIVE)
+build_ar: verilog
 	# Build archives
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR)
-
-
-build_ar: $(ARCHIVES)
 
 wave:
 	$(GTKWAVE) $(WAVE)

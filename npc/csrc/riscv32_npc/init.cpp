@@ -15,6 +15,7 @@
 
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include __TOP_NAME_INCLUDE__
 #include "local-include/reg.h"
 #include <generated/autoconf.h>
 #include <isa.h>
@@ -31,9 +32,12 @@ ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
 
 // DIP-C
+#define MEM_READ_SKIP 5
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-  if (raddr == 0) {
-    Log("Invalid raddr: %u", raddr);
+  static int skip_cnt = 0;
+  if (skip_cnt < MEM_READ_SKIP) {
+    skip_cnt++;
+    Log("Skip raddr: %u", raddr);
     return 0;
   }
   raddr &= ~3u;
@@ -102,14 +106,14 @@ extern "C" void sim_close(void) {
 }
 
 void single_cycle(void) {
-  top->clock = 0;
+  top->clock = 1;
   top->eval();
   contextp->timeInc(1);
 
 #ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
-  top->clock = 1;
+  top->clock = 0;
   top->eval();
   contextp->timeInc(1);
 #ifdef CONFIG_NPC_WAVE

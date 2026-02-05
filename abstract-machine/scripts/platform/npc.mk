@@ -39,7 +39,4 @@ runbatch: ADD_ARGS += -b
 runbatch: insert-arg
 	$(MAKE) -C $(NPC_HOME) runbatch 
 
-build_npc:
-	$(MAKE) -C $(NPC_HOME)
-
 .PHONY: insert-arg

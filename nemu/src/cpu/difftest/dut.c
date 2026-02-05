@@ -31,6 +31,7 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 #ifdef CONFIG_DIFFTEST
 
 static bool is_skip_ref = false;
+static bool is_skip_next_ref = false;
 static int skip_dut_nr_inst = 0;
 
 // this is used to let ref skip instructions which
@@ -45,6 +46,10 @@ void difftest_skip_ref() {
   // will load that memory, we will encounter false negative. But such
   // situation is infrequent.
   skip_dut_nr_inst = 0;
+}
+
+void difftest_skip_next_ref(void) {
+  is_skip_next_ref = true;
 }
 
 // this is used to deal with instruction packing in QEMU.
@@ -130,7 +135,15 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     // reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
     is_skip_ref = false;
+    if (is_skip_next_ref) {
+      difftest_skip_ref();
+      is_skip_next_ref = false;
+    }
     return;
+  }
+  if (is_skip_next_ref) {
+    difftest_skip_ref();
+    is_skip_next_ref = false;
   }
 
   ref_difftest_exec(1);

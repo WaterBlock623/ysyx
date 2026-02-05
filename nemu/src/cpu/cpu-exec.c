@@ -85,6 +85,7 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+  IFDEF(CONFIG_TARGET_SHARE, printf("ASSERT FROM SHARE LIB\n"));
   isa_reg_display();
   IFDEF(CONFIG_ITRACE, iringbuf_display());
   statistic();
