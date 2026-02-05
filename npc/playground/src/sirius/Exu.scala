@@ -23,7 +23,7 @@ class AluParent(
 class AluBase(
   implicit private val cfg: CoreConfig)
     extends AluParent {
-  val addResult = io.src1 + io.src2
+  val addResult = (io.src1 + io.src2) | 1.U
 
   import AluOpEnum._
   io.out := MuxLookup(io.aluOp, addResult)(
