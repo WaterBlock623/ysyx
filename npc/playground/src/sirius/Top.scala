@@ -27,6 +27,7 @@ class DebugInfoDpiC(
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
+  val clock = IO(Input(Clock()))
   val inst = IO(Flipped(new IfuToMemIO))
   val ls = IO(Flipped(new LsuToMemIO))
   private val memAddrMsb = cfg.memoryAddrWidth - 1
@@ -143,6 +144,7 @@ class Top(
     debugInfoDpiC.inst := ifu.debug.get
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
+    memDpiC.clock := clock
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
   }
