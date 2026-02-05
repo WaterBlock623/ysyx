@@ -32,7 +32,7 @@ ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
 
 // DIP-C
-#define MEM_READ_SKIP 5
+#define MEM_READ_SKIP 10
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
   static int skip_cnt = 0;
   if (skip_cnt < MEM_READ_SKIP) {
