@@ -28,6 +28,8 @@ __BEGIN_DECLS
 #include <cpu/decode.h>
 #include "local-include/reg.h"
 
+#define R(idx) gpr(idx)
+
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, 
   TYPE_N, // none
