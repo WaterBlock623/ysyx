@@ -135,18 +135,21 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     // reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
     is_skip_ref = false;
+    if (is_skip_next_ref) {
+      difftest_skip_ref();
+      is_skip_next_ref = false;
+    }
     return;
+  }
+  if (is_skip_next_ref) {
+    difftest_skip_ref();
+    is_skip_next_ref = false;
   }
 
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
 
   checkregs(&ref_r, npc);
-
-  if (is_skip_next_ref) {
-    difftest_skip_ref();
-    is_skip_next_ref = false;
-  }
 }
 #else
 void init_difftest(char *ref_so_file, long img_size, int port) {}
