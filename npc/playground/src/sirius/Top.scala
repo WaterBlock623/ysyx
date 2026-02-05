@@ -38,6 +38,7 @@ class MemDpiC(
         |import "DPI-C" function void dpic_pmem_write(
         |  input int waddr, input int wdata, input int wmask);
         |module MemDpiC(
+        |  input clock,
         |  input [$memAddrMsb:0] inst_rAddr, 
         |  output reg [31:0] inst_rData, 
         |  input [$memAddrMsb:0] ls_rAddr, 
