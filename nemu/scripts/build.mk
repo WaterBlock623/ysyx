@@ -11,6 +11,9 @@ WORK_DIR  ?= $(shell pwd)
 BUILD_DIR ?= $(WORK_DIR)/build
 
 INC_PATH := $(ADD_INC_PATH) $(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+# ifneq ($(CONFIG_NPC),)
+# INC_PATH := $(ADD_INC_PATH) $(INC_PATH)
+# endif
 $(info NEMU INC_PATH $(INC_PATH))
 OBJ_DIR  = $(BUILD_DIR)/obj-$(NAME)$(SO)
 BINARY   = $(BUILD_DIR)/$(NAME)$(SO)
