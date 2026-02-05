@@ -20,6 +20,7 @@
 #define CONFIG_RT_CHECK 1
 #define CONFIG_CC "gcc"
 #define CONFIG_DIFFTEST_REF_PATH "none"
+#define CONFIG_RVE 1
 #define CONFIG_CC_GCC 1
 #define CONFIG_ISA "riscv32"
 #define CONFIG_PMEM_GARRAY 1
