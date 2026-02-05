@@ -8,14 +8,16 @@ VSRC_DIR = $(BUILD_DIR)/vsrc
 RSYNC_CMD = $(RSYNC) -rlpgoD --checksum --delete --itemize-changes \
 						--omit-dir-times $(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)
 
-# SRC_DIRS = common playground generator
-# FIND_FILTER = -type f -name '*.scala'
-# MILL_SRCS = $(shell find $(addprefix $(WORK_DIR)/,$(SRC_DIRS)) $(FIND_FILTER))
+SRC_DIRS = common playground generator
+SEARCH_DIRS = $(addprefix $(WORK_DIR)/,$(SRC_DIRS))
+FIND_FILTER = -type f -name '*.scala'
+MILL_SRCS = $(shell find $(SEARCH_DIRS) $(FIND_FILTER))
+VSRC_TIMESTAMP = $(BUILD_DIR)/.vsrc_timestamp
 
 test:
 	$(MILL) -i $(PRJ).test
 
-verilog: force
+$(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	# Generate verilogs
 	$(call git_commit, "generate verilog")
 	-rm -rf $(VSRC_TMP_DIR)
@@ -24,6 +26,9 @@ verilog: force
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(VSRC_TMP_DIR)
 	$(RSYNC_CMD)
 	-$(MAKE) lint
+	touch $@
+
+verilog: $(VSRC_TIMESTAMP)
 
 chisel_help:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
