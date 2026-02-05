@@ -65,10 +65,11 @@ static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1,
   }
 }
 
+
+#ifdef CONFIG_FTRACE
 const char *get_function_name(paddr_t addr);
 extern bool g_print_step;
 
-#ifdef CONFIG_FTRACE
 static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 #define FUNC_NAME_MAX 128
 #define FRONT_MSG "FTrace: "FMT_PADDR": ", pc
@@ -116,7 +117,7 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
     "???" : dnpc_func_name_raw;
   int i;
 #ifdef CONFIG_FTRACE_COND
-  if (CONFIG_FTRACE_COND) {
+  if (FTRACE_COND) {
     PRINT_MSG(log_write);
   }
 #endif 
