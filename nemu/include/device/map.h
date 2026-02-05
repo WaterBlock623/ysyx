@@ -39,11 +39,15 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr, bool i
   int i;
   for (i = 0; i < size; i ++) {
     if (map_inside(maps + i, addr)) {
+#ifdef CONFIG_NPC
       if (is_write) {
         difftest_skip_ref();
       } else {
         difftest_skip_next_ref();
       }
+#else
+      difftest_skip_ref();
+#endif
       return i;
     }
   }
