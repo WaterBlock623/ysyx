@@ -25,8 +25,8 @@
 static IOMap maps[NR_MAP] = {};
 static int nr_map = 0;
 
-static IOMap* fetch_mmio_map(paddr_t addr) {
-  int mapid = find_mapid_by_addr(maps, nr_map, addr);
+static IOMap* fetch_mmio_map(paddr_t addr, bool is_write) {
+  int mapid = find_mapid_by_addr(maps, nr_map, addr, is_write);
   return (mapid == -1 ? NULL : &maps[mapid]);
 }
 
@@ -61,14 +61,14 @@ void dtrace(IOMap *map, bool is_write, paddr_t addr, int len, word_t data);
 
 /* bus interface */
 word_t mmio_read(paddr_t addr, int len) {
-  IOMap *map = fetch_mmio_map(addr);
+  IOMap *map = fetch_mmio_map(addr, false);
   word_t data = map_read(addr, len, map);
   IFDEF(CONFIG_DTRACE, dtrace(map, false, addr, len, data));
   return data;
 }
 
 void mmio_write(paddr_t addr, int len, word_t data) {
-  IOMap *map = fetch_mmio_map(addr);
+  IOMap *map = fetch_mmio_map(addr, true);
   IFDEF(CONFIG_DTRACE, dtrace(map, true, addr, len, data));
   map_write(addr, len, data, map);
 }
