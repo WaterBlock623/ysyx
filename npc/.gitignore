@@ -15,7 +15,8 @@
 !*.py
 !*.txt
 build/
-/include/
+**/include/config/
+**/include/generated/
 
 # mill
 !*.mill
