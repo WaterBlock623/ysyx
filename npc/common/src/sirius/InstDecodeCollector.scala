@@ -33,11 +33,11 @@ case class InstDecodeCollector(
 
   // 生成Fields
   val allFields: Seq[DecodeField[InstPattern, _ <: Data] with CanAutoGenSig] =
-    cfg.fieldMap.toSeq
+    cfg.fieldMap.flatten
 
   // 生成Patterns
   private val allRvInsts = rvdecoderdb.instructions(cfg.rvOpCodesPath, cfg.curtomOpCodesPath)
   private val rvInsts = cfg.OpCodesFilter(allRvInsts)
   private val instPatterns = InstPatterns()(rvInsts, cfg)
-  val allPatterns: Seq[InstPattern] = cfg.patternMap(instPatterns).toSeq
+  val allPatterns: Seq[InstPattern] = cfg.patternMap(instPatterns).flatten
 }
