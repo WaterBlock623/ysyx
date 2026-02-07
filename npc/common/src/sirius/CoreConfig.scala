@@ -18,9 +18,9 @@ case class CoreConfig(
   ] = _.filter(inst => inst.pseudoFrom.isEmpty && inst.ratified),
 
   // 基础配置
-  val xlen:                Int = 32,
-  val extensions:          () => Set[ExtTypeEnum.Type] = () => Set(ExtTypeEnum.I),
-  val registerAddrWidth:   Int = 4,
+  val xlen:              Int = 32,
+  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(ExtTypeEnum.I),
+  val registerAddrWidth: Int = 4,
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32) {
   require(xlen == 32 || xlen == 64)
@@ -28,7 +28,7 @@ case class CoreConfig(
   require(memoryAddrWidth <= 32)
 
   // 根据配置映射解码Pattern和Field
-  val fieldMap: CfgMap[
+  def fieldMap: CfgMap[
     DecodeField[InstPattern, _ <: Data] with CanAutoGenSig,
     Seq[DecodeField[InstPattern, _ <: Data] with CanAutoGenSig]
   ] =
@@ -40,11 +40,12 @@ case class CoreConfig(
 
   println(rvOpCodesPath)
   def patternMap(instPatterns: InstPatterns)
-    : CfgMap[InstPattern, Seq[InstPattern]] = CfgMap(
-    ListMap(
-      (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternBase
+    : CfgMap[InstPattern, Seq[InstPattern]] =
+    CfgMap(
+      ListMap(
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternBase
+      )
     )
-  )
 }
 object CoreConfig {
   implicit val default: CoreConfig = CoreConfig()
