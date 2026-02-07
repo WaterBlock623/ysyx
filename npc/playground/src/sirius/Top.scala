@@ -116,7 +116,7 @@ class GetGprDpiC(
 }
 
 class Top(
-  implicit private val cfg: CoreConfig,)
+  implicit private val cfg: CoreConfig)
   // implicit private val ucfg: UnitConfig)
     extends Module {
 
