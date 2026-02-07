@@ -69,13 +69,11 @@ class Exu(implicit private val cfg: CoreConfig,
   alus.foreach(alu => alu._2.io :<= aluIn)
 
   // 根据扩展选择输出
-  // val outTable: Seq[(UInt, UInt)] =
-  //   alus.map { case (ext: ExtTypeEnum.Type, alu: AluParent) =>
-  //     ext.asUInt -> alu.io.out
-  //   }.toSeq
-  // out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
-  //   outTable
-  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, alus.head.io.out)(Seq(
-    ExuOutSelEnum.aluBase.asUInt -> alus.head._2.io.out
-  ))
+  val outTable: Seq[(UInt, UInt)] =
+    alus.map { case (ext: ExuOutSelEnum.Type, alu: AluParent) =>
+      ext.asUInt -> alu.io.out
+    }.toSeq
+  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+    outTable
+  )
 }
