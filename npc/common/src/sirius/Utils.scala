@@ -1,18 +1,19 @@
 package sirius
 
-import scala.collection.IterableOps
+import scala.collection.Factory
 
-case class CfgMap[A, CC[_]](map: Map[(Set[ExtTypeEnum.Type], Set[Int]), IterableOps[A, CC, CC[A]]]) {
-  def flatten(implicit cfg: CoreConfig): CC[A] = {
-    val filtered = map
-      .filter { case ((exts, xlens), _) =>
-        exts.forall(t => cfg.extensions.contains(t)) && xlens.contains(cfg.xlen)
-      }
-      .values
-    if (filtered.isEmpty) {
-      throw new NoSuchElementException("Nothing is matched")
-    }
-    filtered.head.iterableFactory.from(filtered.flatten)
+case class CfgMap[A, T <: Iterable[A]](
+  map: Map[(Set[ExtTypeEnum.Type], Set[Int]), T]) {
+
+  def flatten(
+    implicit cfg: CoreConfig,
+    factory:      Factory[A, T]
+  ): T = {
+    val items: Iterable[A] = map.filter { case ((exts, xlens), _) =>
+      exts.forall(t => cfg.extensions.contains(t)) && xlens.contains(cfg.xlen)
+    }.values.flatten
+
+    factory.fromSpecific(items)
   }
 }
 

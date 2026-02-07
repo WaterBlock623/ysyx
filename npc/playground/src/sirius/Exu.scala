@@ -51,7 +51,7 @@ class Exu(implicit private val cfg: CoreConfig,
   //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
   //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
   // }.to(ListMap)
-  val alus = ucfg.aluMap.flatten
+  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap.flatten
 
   // 连接Alu输入
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
