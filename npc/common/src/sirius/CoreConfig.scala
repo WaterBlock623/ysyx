@@ -28,7 +28,7 @@ case class CoreConfig(
   require(memoryAddrWidth <= 32)
 
   // 根据配置映射解码Pattern和Field
-  val fieldMap: CfgMap[DecodeField[InstPattern, _ <: Data] with CanAutoGenSig] =
+  val fieldMap: CfgMap[DecodeField[InstPattern, _ <: Data] with CanAutoGenSig, Seq] =
     CfgMap(
       ListMap(
         (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldsBase
@@ -36,7 +36,7 @@ case class CoreConfig(
     )
 
   println(rvOpCodesPath)
-  def patternMap(instPatterns: InstPatterns): CfgMap[InstPattern] = CfgMap(
+  def patternMap(instPatterns: InstPatterns): CfgMap[InstPattern, Seq] = CfgMap(
     ListMap(
       (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternBase
     )
