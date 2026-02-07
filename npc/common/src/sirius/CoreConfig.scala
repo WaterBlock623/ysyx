@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 import cpuutil.CanAutoGenSig
 import org.chipsalliance.rvdecoderdb
 
-case class CoreConfig(
+class CoreConfig(
   // Debug
   val isDebug: Boolean = true,
 
