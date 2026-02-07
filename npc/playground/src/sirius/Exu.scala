@@ -52,7 +52,7 @@ class Exu(implicit private val cfg: CoreConfig,
   //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
   //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
   // }.to(ListMap)
-  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap.flatten.map {
+  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
     case (outSel: ExuOutSelEnum.Type, alu: AluParent) => (outSel -> Module(alu))
   }
 
