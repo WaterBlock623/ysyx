@@ -36,5 +36,8 @@ case class InstDecodeCollector(
     cfg.fieldMap.toSeq
 
   // 生成Patterns
-  val allPatterns: Seq[InstPattern] = cfg.patternMap.toSeq
+  private val allRvInsts = rvdecoderdb.instructions(cfg.rvOpCodesPath, cfg.curtomOpCodesPath)
+  private val rvInsts = cfg.OpCodesFilter(allRvInsts)
+  private val instPatterns = InstPatterns()(rvInsts, cfg)
+  val allPatterns: Seq[InstPattern] = cfg.patternMap(instPatterns).toSeq
 }

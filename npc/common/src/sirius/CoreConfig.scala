@@ -37,10 +37,7 @@ case class CoreConfig(
     )
 
   println(rvOpCodesPath)
-  private val allRvInsts = rvdecoderdb.instructions(rvOpCodesPath, curtomOpCodesPath)
-  private val rvInsts = OpCodesFilter(allRvInsts)
-  private val instPatterns = InstPatterns()(rvInsts, this)
-  val patternMap: CfgMap[InstPattern] = CfgMap(
+  def patternMap(instPatterns: InstPatterns): CfgMap[InstPattern] = CfgMap(
     this,
     ListMap(
       (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternBase
