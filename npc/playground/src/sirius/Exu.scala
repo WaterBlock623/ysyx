@@ -48,7 +48,7 @@ class Exu(implicit private val cfg: CoreConfig,
   val rs2Data = in.iduPayload.idu.rs2Data
 
   // 根据扩展实例化Alu
-  // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
+  // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
   //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
   //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
   // }.to(ListMap)

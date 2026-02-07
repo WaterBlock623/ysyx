@@ -10,7 +10,7 @@ case class CfgMap[A, T <: Iterable[A]](
     factory:      Factory[A, T]
   ): T = {
     val items: Iterable[A] = map.filter { case ((exts, xlens), _) =>
-      exts.forall(t => cfg.extensions.contains(t)) && xlens.contains(cfg.xlen)
+      exts.forall(t => cfg.extensions().contains(t)) && xlens.contains(cfg.xlen)
     }.values.flatten
 
     factory.fromSpecific(items)
@@ -21,7 +21,7 @@ case class CfgMap[A, T <: Iterable[A]](
 //   def flatten(implicit cfg: CoreConfig): T = {
 //     map
 //       .filter(m =>
-//         m._1._1.forall(t => cfg.extensions.contains(t)) && m._1._2
+//         m._1._1.forall(t => cfg.extensions().contains(t)) && m._1._2
 //           .contains(cfg.xlen)
 //       )
 //       .flatMap(m => m._2)

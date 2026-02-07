@@ -16,7 +16,7 @@ class ImmParser(
     val imm = Output(UInt(cfg.xlen.W))
   })
 
-  if (cfg.extensions.contains(ExtTypeEnum.I)) {
+  if (cfg.extensions().contains(ExtTypeEnum.I)) {
     val inst = io.inst(31, 0)
 
     val immTypeI = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 20)
