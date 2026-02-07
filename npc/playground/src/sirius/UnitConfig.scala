@@ -1,5 +1,3 @@
 package sirius
 
-class UnitConfig() extends CoreConfig {
-
-}
+class UnitConfig() extends CoreConfig
