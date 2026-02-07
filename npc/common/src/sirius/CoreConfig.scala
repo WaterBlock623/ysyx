@@ -7,12 +7,17 @@ import cpuutil.CanAutoGenSig
 import org.chipsalliance.rvdecoderdb
 
 case class CoreConfig(
-  // 基础配置
+  // Debug
   val isDebug: Boolean = true,
-  // val rvOpcodesPath: os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
-  val rvInsts: Iterable[rvdecoderdb.Instruction] = rvdecoderdb
-    .instructions(os.pwd / "rvdecoderdb" / "riscv-opcodes")
-    .filter(inst => inst.pseudoFrom.isEmpty && inst.ratified),
+
+  // rvdecoderdb
+  val rvOpCodesPath:     os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
+  val curtomOpCodesPath: Iterable[os.Path] = None,
+  val OpCodesFilter:     (Iterable[rvdecoderdb.Instruction]) => Iterable[
+    rvdecoderdb.Instruction
+  ] = _.filter(inst => inst.pseudoFrom.isEmpty && inst.ratified),
+
+  // 基础配置
   val xlen:                Int = 32,
   val extensions:          Set[ExtTypeEnum.Type] = Set(ExtTypeEnum.I),
   val registerAddrWidth:   Int = 4,
@@ -31,6 +36,8 @@ case class CoreConfig(
       )
     )
 
+  private val allRvInsts = rvdecoderdb.instructions(rvOpCodesPath, curtomOpCodesPath)
+  private val rvInsts = OpCodesFilter(allRvInsts)
   private val instPatterns = InstPatterns()(rvInsts, this)
   val patternMap: CfgMap[InstPattern] = CfgMap(
     this,
