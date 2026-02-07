@@ -34,49 +34,49 @@ class AluBase(
   )
 }
 
-// class Exu(implicit private val cfg: CoreConfig, 
-//   implicit private val ucfg: UnitConfig) extends Module {
-//   val in = IO(Flipped(new IduToExuIO))
-//   val out = IO(new ExuToLsuIO)
-//
-//   out.exuPayload.viewAsSupertype(new IduPayload) := in.iduPayload
-//   out.ctrl := in.ctrl.viewAsSupertype(new LsuCtrl)
-//
-//   val ctrl = in.ctrl.exuCtrl
-//   val imm = in.iduPayload.idu.imm
-//   val rs1Data = in.iduPayload.idu.rs1Data
-//   val rs2Data = in.iduPayload.idu.rs2Data
-//
-//   // 根据扩展实例化Alu
-//   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
-//   //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
-//   //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
-//   // }.to(ListMap)
-//   val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap.flatten.map {
-//     case (outSel: ExuOutSelEnum.Type, alu: AluParent) => (outSel -> Module(alu))
-//   }
-//
-//   // 连接Alu输入
-//   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
-//     Seq(
-//       AluInSelEnum.imm.asUInt -> imm,
-//       AluInSelEnum.rs2.asUInt -> rs2Data,
-//     )
-//   )
-//
-//   val aluIn = Wire(new AluIO)
-//   aluIn.out := DontCare
-//   aluIn.aluOp := ctrl.aluOp
-//   aluIn.src1 := rs1Data
-//   aluIn.src2 := src2
-//   alus.foreach(alu => alu._2.io :<= aluIn)
-//
-//   // 根据扩展选择输出
-//   val outTable: Seq[(UInt, UInt)] =
-//     alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
-//       outSel.asUInt -> alu.io.out
-//     }.toSeq
-//   out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
-//     outTable
-//   )
-// }
+class Exu(implicit private val cfg: CoreConfig, 
+  implicit private val ucfg: UnitConfig) extends Module {
+  val in = IO(Flipped(new IduToExuIO))
+  val out = IO(new ExuToLsuIO)
+
+  out.exuPayload.viewAsSupertype(new IduPayload) := in.iduPayload
+  out.ctrl := in.ctrl.viewAsSupertype(new LsuCtrl)
+
+  val ctrl = in.ctrl.exuCtrl
+  val imm = in.iduPayload.idu.imm
+  val rs1Data = in.iduPayload.idu.rs1Data
+  val rs2Data = in.iduPayload.idu.rs2Data
+
+  // 根据扩展实例化Alu
+  // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions.collect {
+  //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
+  //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
+  // }.to(ListMap)
+  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap.flatten.map {
+    case (outSel: ExuOutSelEnum.Type, alu: AluParent) => (outSel -> Module(alu))
+  }
+
+  // 连接Alu输入
+  val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
+    Seq(
+      AluInSelEnum.imm.asUInt -> imm,
+      AluInSelEnum.rs2.asUInt -> rs2Data,
+    )
+  )
+
+  val aluIn = Wire(new AluIO)
+  aluIn.out := DontCare
+  aluIn.aluOp := ctrl.aluOp
+  aluIn.src1 := rs1Data
+  aluIn.src2 := src2
+  alus.foreach(alu => alu._2.io :<= aluIn)
+
+  // 根据扩展选择输出
+  val outTable: Seq[(UInt, UInt)] =
+    alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
+      outSel.asUInt -> alu.io.out
+    }.toSeq
+  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+    outTable
+  )
+}
