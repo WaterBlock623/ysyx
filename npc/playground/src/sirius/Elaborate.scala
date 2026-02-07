@@ -14,7 +14,7 @@ object Elaborate extends App {
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
   val cfg =
-    new UnitConfig(rvOpCodesPath =
+    CoreConfig(rvOpCodesPath =
       workspacePath / "rvdecoderdb" / "riscv-opcodes"
     )
   firtoolOptions.foreach(s => println(s))

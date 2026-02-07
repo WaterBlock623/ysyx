@@ -1,3 +1,3 @@
 package sirius
 
-class UnitConfig() extends CoreConfig
+case class UnitConfig()

@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 import cpuutil.CanAutoGenSig
 import org.chipsalliance.rvdecoderdb
 
-class CoreConfig(
+case class CoreConfig(
   // Debug
   val isDebug: Boolean = true,
 
@@ -45,5 +45,5 @@ class CoreConfig(
   )
 }
 object CoreConfig {
-  implicit val default: CoreConfig = new CoreConfig()
+  implicit val default: CoreConfig = CoreConfig()
 }
