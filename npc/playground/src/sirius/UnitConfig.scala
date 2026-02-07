@@ -6,5 +6,5 @@ case class UnitConfig(
   // val aluMap: CfgMap[Module] = 
   )
 object UnitConfig {
-  implicit val default = UnitConfig()
+  implicit val default: UnitConfig = UnitConfig()
 }
