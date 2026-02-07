@@ -1,3 +1,10 @@
 package sirius
 
-case class UnitConfig()
+import chisel3._
+
+case class UnitConfig(
+  // val aluMap: CfgMap[Module] = 
+  )
+object UnitConfig {
+  implicit val default = UnitConfig()
+}
