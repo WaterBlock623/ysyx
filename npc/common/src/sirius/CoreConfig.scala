@@ -36,6 +36,7 @@ case class CoreConfig(
       )
     )
 
+  println(rvOpCodesPath)
   private val allRvInsts = rvdecoderdb.instructions(rvOpCodesPath, curtomOpCodesPath)
   private val rvInsts = OpCodesFilter(allRvInsts)
   private val instPatterns = InstPatterns()(rvInsts, this)
