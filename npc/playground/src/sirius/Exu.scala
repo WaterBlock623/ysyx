@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import scala.collection.immutable.ListMap
 import chisel3.experimental.dataview._
+import sirius.ExuOutSelEnum.aluBase
 
 class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
   val src1 = Output(UInt(cfg.xlen.W))
@@ -54,7 +55,7 @@ class Exu(implicit private val cfg: CoreConfig,
   val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap.flatten.map {
     case (outSel: ExuOutSelEnum.Type, alu: AluParent) => (outSel -> Module(alu))
   }
-
+  
   // 连接Alu输入
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
     Seq(
