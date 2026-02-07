@@ -45,5 +45,5 @@ class CoreConfig(
   )
 }
 object CoreConfig {
-  implicit val default: CoreConfig = CoreConfig()
+  implicit val default: CoreConfig = new CoreConfig()
 }
