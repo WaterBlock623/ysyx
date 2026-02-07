@@ -5,6 +5,7 @@ import cpuutil.BundleGenerator
 object GenCtrlSignals extends App {
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
+  println(workspacePath)
   val cfg =
     CoreConfig(rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
   val collector = InstDecodeCollector()(cfg)
