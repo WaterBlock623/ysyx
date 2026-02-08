@@ -47,9 +47,9 @@ class AluBase(
     Seq(
       add.asUInt -> addResult,
       sub.asUInt -> subResult,
-      // and.asUInt -> andResult,
-      // or.asUInt -> orResult,
-      // xor.asUInt -> xorResult,
+      and.asUInt -> andResult,
+      or.asUInt -> orResult,
+      xor.asUInt -> xorResult,
     )
   )
 }
