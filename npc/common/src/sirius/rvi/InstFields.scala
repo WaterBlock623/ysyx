@@ -63,69 +63,12 @@ object InstFieldsRvI {
         case _                              => dc
       }
     },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "loadStoreLength"
-      def stage = "ls"
-      def chiselType = UInt(LoadStoreLengthEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.loadStoreLength match {
-        case e: LoadStoreLengthEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
-    // new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-    //   def name = "aluIn2Sel"
-    //   def stage = "ex"
-    //   def chiselType = UInt(AluInSelEnum.getWidth.W)
-    //   def genTable(i: InstPattern) = i.aluIn2Sel match {
-    //     case e: AluInSelEnum.Type => BitPat(e)
-    //     case _ => dc
-    //   }
-    // },
+    MakeEnumField("loadStoreLength", "ls", LoadStoreLengthEnum, _.loadStoreLength),
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "aluOp"
-      def stage = "ex"
-      def chiselType = UInt(AluOpEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.aluOp match {
-        case e: AluOpEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "exuOutSel"
-      def stage = "ex"
-      def chiselType = UInt(ExuOutSelEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.exuOutSel match {
-        case e: ExuOutSelEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "instType"
-      def stage = "id"
-      def chiselType = UInt(InstTypeEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.instType match {
-        case e: InstTypeEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "jumpTargetSel"
-      def stage = "wb"
-      def chiselType = UInt(JumpTargetSelEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.jumpTargetSel match {
-        case e: JumpTargetSelEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "writeBackSel"
-      def stage = "wb"
-      def chiselType = UInt(WriteBackSelEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.writeBackSel match {
-        case e: WriteBackSelEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    }
+    MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
+    MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
+    MakeEnumField("instType", "id", InstTypeEnum, _.instType),
+    MakeEnumField("jumpTargetSel", "wb", JumpTargetSelEnum, _.jumpTargetSel),
+    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
   )
 }
