@@ -44,27 +44,27 @@ class AluBase(
   //   )
   // )
   
-  // val addResult = io.src1 + io.src2
-  // val subResult = io.src1 - io.src2
+  val addResult = io.src1 + io.src2
+  val subResult = io.src1 - io.src2
   // val ltResult = io.src1 < io.src2
   // val andResult = io.src1 & io.src2
   // val orResult = io.src1 | io.src2
   // val xorResult = io.src1 ^ io.src2
-  val sllResult = io.src1 << io.src2
-  val srlResult = io.src1 >> io.src2
-  val sraResult = (io.src1.asSInt >> io.src2).asUInt
+  // val sllResult = io.src1 << io.src2
+  // val srlResult = io.src1 >> io.src2
+  // val sraResult = (io.src1.asSInt >> io.src2).asUInt
 
-  io.out := MuxLookup(io.aluOp, sraResult)(
+  io.out := MuxLookup(io.aluOp, addResult)(
     Seq(
-      // add.asUInt -> addResult,
-      // sub.asUInt -> subResult,
+      add.asUInt -> addResult,
+      sub.asUInt -> subResult,
       // lt.asUInt -> ltResult,
       // and.asUInt -> andResult,
       // or.asUInt -> orResult,
       // xor.asUInt -> xorResult,
       // sll.asUInt -> sllResult,
       // srl.asUInt -> srlResult,
-      sra.asUInt -> sraResult,
+      // sra.asUInt -> sraResult,
     )
   )
 }
