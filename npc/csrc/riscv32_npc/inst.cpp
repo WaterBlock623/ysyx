@@ -132,6 +132,7 @@ bool is_mmio(paddr_t addr);
 
 static void mmio_check(vaddr_t addr) {
   if (is_mmio(addr)) {
+    Log("Skip!\n");
     difftest_skip_ref();
   }
 }
