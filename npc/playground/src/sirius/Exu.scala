@@ -62,9 +62,9 @@ class AluBase(
       // and.asUInt -> andResult,
       // or.asUInt -> orResult,
       // xor.asUInt -> xorResult,
-      sll.asUInt -> sllResult,
+      // sll.asUInt -> sllResult,
       srl.asUInt -> srlResult,
-      sra.asUInt -> sraResult,
+      // sra.asUInt -> sraResult,
     )
   )
 }
