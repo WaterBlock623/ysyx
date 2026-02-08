@@ -6,19 +6,19 @@ import scala.collection.immutable.ListMap
 import chisel3.experimental.dataview._
 import sirius.ExuOutSelEnum.aluBase
 
-// class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
-//   val src1 = Output(UInt(cfg.xlen.W))
-//   val src2 = Output(UInt(cfg.xlen.W))
-//   val aluOp = Output(UInt(AluOpEnum.getWidth.W))
-//   val out = Input(UInt(cfg.xlen.W))
-// }
-
 class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val src1 = Output(UInt(4.W))
-  val src2 = Output(UInt(4.W))
+  val src1 = Output(UInt(cfg.xlen.W))
+  val src2 = Output(UInt(cfg.xlen.W))
   val aluOp = Output(UInt(AluOpEnum.getWidth.W))
-  val out = Input(UInt(4.W))
+  val out = Input(UInt(cfg.xlen.W))
 }
+
+// class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
+//   val src1 = Output(UInt(4.W))
+//   val src2 = Output(UInt(4.W))
+//   val aluOp = Output(UInt(AluOpEnum.getWidth.W))
+//   val out = Input(UInt(4.W))
+// }
 
 // Alu父类
 class AluParent(
