@@ -39,9 +39,9 @@ class AluBase(
   
   val addResult = io.src1 + io.src2
   val subResult = io.src1 - io.src2
-  // val andResult = io.src1 & io.src2
-  // val orResult = io.src1 | io.src2
-  // val xorResult = io.src1 ^ io.src2
+  val andResult = io.src1 & io.src2
+  val orResult = io.src1 | io.src2
+  val xorResult = io.src1 ^ io.src2
 
   io.out := MuxLookup(io.aluOp, addResult)(
     Seq(
