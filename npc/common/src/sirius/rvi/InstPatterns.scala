@@ -275,6 +275,17 @@ case class InstPatternRvI(
       jumpTargetSel = JumpTargetSelEnum.pcPlusImm
     ),
     InstPattern(
+      "bge",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.ge,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
       "ebreak",
       ExtTypeEnum.I,
       DontCare
