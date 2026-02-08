@@ -20,23 +20,23 @@ object InstFieldsRvI {
         case _                              => false
       }
     ),
-    new BoolDecodeField[InstPattern] with CanAutoGenSig {
-      def name = "isStore"
-      def stage = "ls"
-      def genTable(i: InstPattern) = i.loadStoreType match {
-        case LoadStoreTypeEnum.store => y
-        case _                       => n
+    MakeBoolField(
+      "isStore",
+      "ls",
+      _.loadStoreType match {
+        case LoadStoreTypeEnum.store => true
+        case _                       => false
       }
-    },
-    new BoolDecodeField[InstPattern] with CanAutoGenSig {
-      def name = "isUnsignedLoad"
-      def stage = "ls"
-      def genTable(i: InstPattern) = i.loadStoreType match {
-        case LoadStoreTypeEnum.unsignedLoad => y
-        case LoadStoreTypeEnum.signedLoad   => n
-        case _                              => dc
+    ),
+    MakeTriField(
+      "isUnsignedLoad",
+      "ls",
+      _.loadStoreType match {
+        case LoadStoreTypeEnum.unsignedLoad => TriState.True
+        case LoadStoreTypeEnum.signedLoad   => TriState.False
+        case _                              => TriState.DontCare
       }
-    },
+    ),
     MakeEnumField(
       "loadStoreLength",
       "ls",

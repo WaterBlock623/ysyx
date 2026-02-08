@@ -5,11 +5,18 @@ import chisel3.util.experimental.decode._
 import chisel3.util.BitPat
 import cpuutil.CanAutoGenSig
 
+sealed trait TriState
+object TriState {
+  case object True extends TriState
+  case object False extends TriState
+  case object DontCare extends TriState
+}
+
 object MakeEnumField {
   def apply[T <: ChiselEnum](
-    fieldName:  String,
-    fieldStage: String,
-    chiselEnum: T,
+    fieldName:    String,
+    fieldStage:   String,
+    chiselEnum:   T,
     patternField: (InstPattern) => Data
   ): DecodeField[InstPattern, UInt] with CanAutoGenSig = {
     new DecodeField[InstPattern, UInt] with CanAutoGenSig {
@@ -26,16 +33,34 @@ object MakeEnumField {
 
 object MakeBoolField {
   def apply[T <: ChiselEnum](
-    fieldName:  String,
-    fieldStage: String,
+    fieldName:    String,
+    fieldStage:   String,
     patternField: (InstPattern) => Boolean
   ): BoolDecodeField[InstPattern] with CanAutoGenSig = {
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = fieldName
       def stage = fieldStage
-      def genTable(i: InstPattern) = 
-        if (patternField(i)) {y}
-        else {n}
+      def genTable(i: InstPattern) =
+        if (patternField(i)) { y }
+        else { n }
+    }
+  }
+}
+
+object MakeTriField {
+  def apply[T <: ChiselEnum](
+    fieldName:    String,
+    fieldStage:   String,
+    patternField: (InstPattern) => TriState
+  ): BoolDecodeField[InstPattern] with CanAutoGenSig = {
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = fieldName
+      def stage = fieldStage
+      def genTable(i: InstPattern) = patternField(i) match {
+        case TriState.True     => y
+        case TriState.False    => n
+        case TriState.DontCare => dc
+      }
     }
   }
 }
