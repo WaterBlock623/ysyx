@@ -132,6 +132,17 @@ case class InstPatternRvI(
       loadStoreLength = LoadStoreLengthEnum.w
     ),
     InstPattern(
+      "sh",
+      ExtTypeEnum.I,
+      InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.store,
+      loadStoreLength = LoadStoreLengthEnum.h
+    ),
+    InstPattern(
       "sb",
       ExtTypeEnum.I,
       InstTypeEnum.S,
