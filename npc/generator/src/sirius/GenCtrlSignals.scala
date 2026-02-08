@@ -5,8 +5,8 @@ import cpuutil.BundleGenerator
 object GenCtrlSignals extends App {
   val rootStr = System.getProperty("project.root")
   val workspacePath = os.Path(rootStr)
-  val cfg =
-    CoreConfig(rvOpcodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes")
+  val rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes"
+  val cfg = CoreConfig(rvOpCodesPath = rvOpCodesPath)
   val collector = InstDecodeCollector()(cfg)
   val gen = new BundleGenerator("sirius", "CtrlSignals", collector.allFields)
   gen.generate(args(0) + "/CtrlSignals.scala")

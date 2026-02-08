@@ -20,10 +20,14 @@ else
 PACKAGE_NAME = $(call remove_quote,$(CONFIG_NPC_PACKAGE_NAME))
 $(info PACKAGE_NAME is $(PACKAGE_NAME))
 ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
-EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
-			  grep "new " | \
-			  sed -E 's/.*new +([^ (,]+).*/\1/' | \
-			  sed 's/.*\.//'
+# EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
+# 			  			grep "new " | \
+# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
+# 			  			sed 's/.*\.//'
+EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
+							tr -d '\n' | \
+			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
+			  			sed 's/.*\.//'
 TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
@@ -50,6 +54,7 @@ gdb: all
 	$(MAKE) -C $(NEMU_HOME) gdb $(NEMU_MAKE_FLAGS)
 
 runbatch: all
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(MAKE) -C $(NEMU_HOME) run $(NEMU_MAKE_FLAGS)
 
 clean:
