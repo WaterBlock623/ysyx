@@ -18,12 +18,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val aluOut = in.lsuPayload.exu.aluOut
 
   // pc
-  pcReg.target := MuxLookup(ctrl.jumpTargetSel, imm)(
-    Seq(
-      JumpTargetSelEnum.imm.asUInt -> imm,
-      JumpTargetSelEnum.alu.asUInt -> aluOut
-    )
-  )
+  pcReg.target := in.lsuPayload.exu.jumpTarget
   pcReg.isJump := ctrl.isJump || (ctrl.isBranch && aluOut(0))
 
   // gpr

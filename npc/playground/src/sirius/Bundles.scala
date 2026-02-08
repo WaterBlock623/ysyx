@@ -22,6 +22,7 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
 class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
+    val jumpTarget = UInt(cfg.xlen.W)
   }
 }
 

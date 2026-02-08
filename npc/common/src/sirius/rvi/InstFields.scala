@@ -47,8 +47,8 @@ object InstFieldsRvI {
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
     MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
+    MakeEnumField("jumpTargetSel", "ex", JumpTargetSelEnum, _.jumpTargetSel),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
-    MakeEnumField("jumpTargetSel", "wb", JumpTargetSelEnum, _.jumpTargetSel),
     MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel)
   )
 }

@@ -73,6 +73,22 @@ class AluBase(
   )
 }
 
+class JumpTargetGenerator(implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(new Bundle {
+    val jumpTargetSel = Input(UInt(JumpTargetSelEnum.getWidth.W))
+    val pc = Input(UInt(cfg.xlen.W))
+    val imm = Input(UInt(cfg.xlen.W))
+    val aluResult = Input(UInt(cfg.xlen.W))
+    val jumpTarget = Output(UInt(cfg.xlen.W))
+  })
+  
+  val pcPlusImm = io.pc + io.imm
+  io.jumpTarget := MuxLookup(io.jumpTargetSel, pcPlusImm)(Seq(
+    JumpTargetSelEnum.pcPlusImm.asUInt -> pcPlusImm,
+    JumpTargetSelEnum.alu.asUInt -> io.aluResult
+    ))
+}
+
 class Exu(implicit private val cfg: CoreConfig, 
   implicit private val ucfg: UnitConfig) extends Module {
   val in = IO(Flipped(new IduToExuIO))
@@ -124,4 +140,11 @@ class Exu(implicit private val cfg: CoreConfig,
   out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
     outTable
   )
+
+  // 计算跳转地址
+  val jumpTargetGenerator = Module(new JumpTargetGenerator)
+  jumpTargetGenerator.io.jumpTargetSel := in.ctrl.exuCtrl.jumpTargetSel
+  jumpTargetGenerator.io.pc := in.iduPayload.ifu.pc
+  jumpTargetGenerator.io.imm := imm
+  out.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 }
