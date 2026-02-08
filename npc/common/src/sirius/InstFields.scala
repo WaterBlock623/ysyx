@@ -24,6 +24,22 @@ object MakeEnumField {
   }
 }
 
+object MakeBoolField {
+  def apply[T <: ChiselEnum](
+    fieldName:  String,
+    fieldStage: String,
+    patternField: (InstPattern) => Boolean
+  ): BoolDecodeField[InstPattern] with CanAutoGenSig = {
+    new BoolDecodeField[InstPattern] with CanAutoGenSig {
+      def name = fieldName
+      def stage = fieldStage
+      def genTable(i: InstPattern) = 
+        if (patternField(i)) {y}
+        else {n}
+    }
+  }
+}
+
 object InstFields {
   val fieldRvI = InstFieldsRvI.fields
 }

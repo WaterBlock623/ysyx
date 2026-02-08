@@ -7,14 +7,7 @@ import cpuutil.CanAutoGenSig
 
 object InstFieldsRvI {
   val fields = Seq(
-    new BoolDecodeField[InstPattern] with CanAutoGenSig {
-      def name = "isEbreak"
-      def stage = "debug"
-      def genTable(i: InstPattern) = i.name match {
-        case "ebreak" => y
-        case _        => n
-      }
-    },
+    MakeBoolField("isEbreak", "debug", _.name == "ebreak"),
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isWriteBackReg"
       def stage = "wb"
