@@ -145,7 +145,7 @@ case class InstPatternRvI(
     InstPattern(
       "beq",
       ExtTypeEnum.I,
-      InstTypeEnum.U,
+      InstTypeEnum.B,
       aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.rs,
       aluOp = AluOpEnum.eql,
@@ -156,7 +156,7 @@ case class InstPatternRvI(
     InstPattern(
       "bne",
       ExtTypeEnum.I,
-      InstTypeEnum.U,
+      InstTypeEnum.B,
       aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.rs,
       aluOp = AluOpEnum.neq,
