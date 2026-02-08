@@ -48,10 +48,6 @@ void difftest_skip_ref() {
   skip_dut_nr_inst = 0;
 }
 
-void difftest_skip_next_ref(void) {
-  is_skip_next_ref = true;
-}
-
 // this is used to deal with instruction packing in QEMU.
 // Sometimes letting QEMU step once will execute multiple instructions.
 // We should skip checking until NEMU's pc catches up with QEMU's pc.
