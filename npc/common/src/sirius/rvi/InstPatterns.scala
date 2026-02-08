@@ -137,14 +137,10 @@ case class InstPatternRvI(
       "jal",
       ExtTypeEnum.I,
       InstTypeEnum.J,
-      aluIn1Sel = AluInSelEnum.pc,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.staticNextPc,
       isJump = true,
-      jumpTargetSel = JumpTargetSelEnum.alu
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
     ),
     InstPattern(
       "beq",
