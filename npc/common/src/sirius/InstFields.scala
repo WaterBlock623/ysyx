@@ -6,5 +6,5 @@ import chisel3.util.BitPat
 import cpuutil.CanAutoGenSig
 
 object InstFields {
-  val fieldBase = InstFieldRvI.fields
+  val fieldRvI = InstFieldsRvI.fields
 }

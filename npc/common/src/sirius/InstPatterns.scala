@@ -61,5 +61,5 @@ case class InstPatterns(
 )(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig) {
-  val patternBase = InstPatternRvI().pattern
+  val patternRvI = InstPatternRvI().pattern
 }
