@@ -46,6 +46,7 @@ class AluBase(
   
   val addResult = io.src1 + io.src2
   val subResult = io.src1 - io.src2
+  val ltResult = io.src1 < io.src2
   // val andResult = io.src1 & io.src2
   // val orResult = io.src1 | io.src2
   // val xorResult = io.src1 ^ io.src2
@@ -54,6 +55,7 @@ class AluBase(
     Seq(
       add.asUInt -> addResult,
       sub.asUInt -> subResult,
+      lt.asUInt -> ltResult,
       // and.asUInt -> andResult,
       // or.asUInt -> orResult,
       // xor.asUInt -> xorResult,
