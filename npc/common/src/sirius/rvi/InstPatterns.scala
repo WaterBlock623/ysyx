@@ -73,6 +73,17 @@ case class InstPatternRvI(
       writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
+      "xor",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.xor,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
       "sltu",
       ExtTypeEnum.I,
       InstTypeEnum.R,
