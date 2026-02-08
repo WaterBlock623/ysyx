@@ -137,14 +137,16 @@ class Exu(implicit private val cfg: CoreConfig,
     alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
       outSel.asUInt -> alu.io.out
     }.toSeq
-  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+  val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
     outTable
   )
+  out.exuPayload.exu.aluOut := aluOut
 
   // 计算跳转地址
   val jumpTargetGenerator = Module(new JumpTargetGenerator)
   jumpTargetGenerator.io.jumpTargetSel := in.ctrl.exuCtrl.jumpTargetSel
   jumpTargetGenerator.io.pc := in.iduPayload.ifu.pc
   jumpTargetGenerator.io.imm := imm
+  jumpTargetGenerator.io.aluResult := aluOut
   out.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 }
