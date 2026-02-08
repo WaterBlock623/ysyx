@@ -11,17 +11,6 @@ case class InstPatternRvI(
   implicit private val cfg:   CoreConfig) {
   val pattern = Seq(
     InstPattern(
-      "add",
-      ExtTypeEnum.I,
-      InstTypeEnum.R,
-      aluIn1Sel = AluInSelEnum.rs,
-      aluIn2Sel = AluInSelEnum.rs,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.alu
-    ),
-    InstPattern(
       "addi",
       ExtTypeEnum.I,
       InstTypeEnum.I,
@@ -38,6 +27,28 @@ case class InstPatternRvI(
       InstTypeEnum.U,
       isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.imm
+    ),
+    InstPattern(
+      "auipc",
+      ExtTypeEnum.I,
+      InstTypeEnum.U,
+      aluIn1Sel = AluInSelEnum.pc,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "add",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
       "lw",
@@ -101,15 +112,17 @@ case class InstPatternRvI(
       jumpTargetSel = JumpTargetSelEnum.alu
     ),
     InstPattern(
-      "auipc",
+      "jal",
       ExtTypeEnum.I,
-      InstTypeEnum.U,
+      InstTypeEnum.J,
       aluIn1Sel = AluInSelEnum.pc,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.alu
+      writeBackSel = WriteBackSelEnum.staticNextPc,
+      isJump = true,
+      jumpTargetSel = JumpTargetSelEnum.alu
     ),
     InstPattern(
       "ebreak",
