@@ -17,6 +17,7 @@ case class InstPatternRvI(
       aluIn2Sel = AluInSelEnum.rs2,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
@@ -26,12 +27,14 @@ case class InstPatternRvI(
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
       "lui",
       ExtTypeEnum.I,
       InstTypeEnum.U,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.imm
     ),
     InstPattern(
@@ -43,6 +46,7 @@ case class InstPatternRvI(
       exuOutSel = ExuOutSelEnum.aluBase,
       loadStoreType = LoadStoreTypeEnum.signedLoad,
       loadStoreLength = LoadStoreLengthEnum.w,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.lsu
     ),
     InstPattern(
@@ -54,6 +58,7 @@ case class InstPatternRvI(
       exuOutSel = ExuOutSelEnum.aluBase,
       loadStoreType = LoadStoreTypeEnum.unsignedLoad,
       loadStoreLength = LoadStoreLengthEnum.b,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.lsu
     ),
     InstPattern(
@@ -83,6 +88,7 @@ case class InstPatternRvI(
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.staticNextPc,
       isJump = true,
       jumpTargetSel = JumpTargetSelEnum.alu

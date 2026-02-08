@@ -20,7 +20,7 @@ case class InstPattern(
   loadStoreType:   Data = DontCare,
   loadStoreLength: Data = DontCare,
 
-  // isWriteBackReg:  Boolean = false,
+  isWriteBackReg:  Boolean = false,
   writeBackSel: Data = DontCare,
 
   isBranch:      Boolean = false,
