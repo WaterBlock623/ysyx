@@ -65,8 +65,8 @@ class AluBase(
   //     // sll.asUInt -> sllResult,
   //     // srl.asUInt -> srlResult,
   //     // sra.asUInt -> sraResult,
-    // )
-  )
+  //   )
+  // )
 }
 
 class Exu(implicit private val cfg: CoreConfig, 
