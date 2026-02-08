@@ -130,7 +130,7 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 
 bool is_mmio(paddr_t addr);
 
-static void mmio_check(vaddr_t addr) {
+void mmio_check(vaddr_t addr) {
   if (is_mmio(addr)) {
     Log("Skip!\n");
     difftest_skip_ref();
