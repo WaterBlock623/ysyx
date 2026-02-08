@@ -37,30 +37,31 @@ class AluBase(
   //   )
   // ))
   
-  // val addResult = io.src1 + io.src2
-  // val subResult = io.src1 - io.src2
-  // val eqlResult = io.src1 === io.src2
-  // val neqResult = io.src1 =/= io.src2
-  // val ltResult = io.src1 < io.src2
-  // val geResult = io.src1 >= io.src2
-  // val andResult = io.src1 & io.src2
-  // val orResult = io.src1 | io.src2
-  // val xorResult = io.src1 ^ io.src2
-  val sllResult = io.src1 << io.src2
-  val srlResult = io.src1 >> io.src2
-  val sraResult = (io.src1.asSInt >> io.src2).asUInt
+  val addResult = io.src1 + io.src2
+  val subResult = io.src1 - io.src2
+  val eqlResult = io.src1 === io.src2
+  val neqResult = io.src1 =/= io.src2
+  val ltResult = io.src1 < io.src2
+  val geResult = io.src1 >= io.src2
+  val andResult = io.src1 & io.src2
+  val orResult = io.src1 | io.src2
+  val xorResult = io.src1 ^ io.src2
+  val shiftNum = io.src2(log2Ceil(cfg.xlen), 0)
+  val sllResult = io.src1 << shiftNum
+  val srlResult = io.src1 >> shiftNum 
+  val sraResult = (io.src1.asSInt >> shiftNum).asUInt
 
-  io.out := MuxLookup(io.aluOp, sllResult)(
+  io.out := MuxLookup(io.aluOp, addResult)(
     Seq(
-      // add.asUInt -> addResult,
-      // sub.asUInt -> subResult,
-      // eql.asUInt -> eqlResult,
-      // neq.asUInt -> neqResult,
-      // lt.asUInt -> ltResult,
-      // ge.asUInt -> geResult,
-      // and.asUInt -> andResult,
-      // or.asUInt -> orResult,
-      // xor.asUInt -> xorResult,
+      add.asUInt -> addResult,
+      sub.asUInt -> subResult,
+      eql.asUInt -> eqlResult,
+      neq.asUInt -> neqResult,
+      lt.asUInt -> ltResult,
+      ge.asUInt -> geResult,
+      and.asUInt -> andResult,
+      or.asUInt -> orResult,
+      xor.asUInt -> xorResult,
       sll.asUInt -> sllResult,
       srl.asUInt -> srlResult,
       sra.asUInt -> sraResult,
