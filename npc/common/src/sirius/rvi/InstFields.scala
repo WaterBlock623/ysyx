@@ -11,11 +11,15 @@ object InstFieldsRvI {
     MakeBoolField("isWriteBackReg", "wb", _.isWriteBackReg),
     MakeBoolField("isBranch", "wb", _.isBranch),
     MakeBoolField("isJump", "wb", _.isJump),
-    MakeBoolField("isLoad", "ls", { 
-      case LoadStoreTypeEnum.signedLoad   => true
-      case LoadStoreTypeEnum.unsignedLoad => true
-      case _                              => false
-    }),
+    MakeBoolField(
+      "isLoad",
+      "ls",
+      _.loadStoreType match {
+        case LoadStoreTypeEnum.signedLoad   => true
+        case LoadStoreTypeEnum.unsignedLoad => true
+        case _                              => false
+      }
+    ),
     new BoolDecodeField[InstPattern] with CanAutoGenSig {
       def name = "isStore"
       def stage = "ls"
@@ -33,12 +37,17 @@ object InstFieldsRvI {
         case _                              => dc
       }
     },
-    MakeEnumField("loadStoreLength", "ls", LoadStoreLengthEnum, _.loadStoreLength),
+    MakeEnumField(
+      "loadStoreLength",
+      "ls",
+      LoadStoreLengthEnum,
+      _.loadStoreLength
+    ),
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
     MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("jumpTargetSel", "wb", JumpTargetSelEnum, _.jumpTargetSel),
-    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
+    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel)
   )
 }
