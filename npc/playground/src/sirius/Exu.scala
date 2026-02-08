@@ -37,12 +37,12 @@ class AluBase(
   val negSrc2 = ~io.src2 + 1.U
   val addSubResult = io.src1 + Mux(isSub, negSrc2, io.src2)
 
-  io.out := RegNext(MuxLookup(io.aluOp, addSubResult)(
+  io.out := MuxLookup(io.aluOp, addSubResult)(
     Seq(
       add.asUInt -> addSubResult,
       sub.asUInt -> addSubResult,
     )
-  ))
+  )
   
   // val addResult = io.src1 + io.src2
   // val subResult = io.src1 - io.src2
