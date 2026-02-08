@@ -54,7 +54,7 @@ class AluBase(
   val srlResult = io.src1 >> io.src2
   val sraResult = (io.src1.asSInt >> io.src2).asUInt
 
-  io.out := MuxLookup(io.aluOp, srlResult)(
+  io.out := MuxLookup(io.aluOp, sraResult)(
     Seq(
       // add.asUInt -> addResult,
       // sub.asUInt -> subResult,
@@ -63,8 +63,8 @@ class AluBase(
       // or.asUInt -> orResult,
       // xor.asUInt -> xorResult,
       // sll.asUInt -> sllResult,
-      srl.asUInt -> srlResult,
-      // sra.asUInt -> sraResult,
+      // srl.asUInt -> srlResult,
+      sra.asUInt -> sraResult,
     )
   )
 }
