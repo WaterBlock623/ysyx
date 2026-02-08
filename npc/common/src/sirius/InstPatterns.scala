@@ -13,6 +13,7 @@ case class InstPattern(
   custom: Boolean = false,
   bp:     Option[String] = None,
 
+  aluIn1Sel: Data = DontCare,
   aluIn2Sel: Data = DontCare,
   aluOp:     Data = DontCare,
   exuOutSel: Data = DontCare,

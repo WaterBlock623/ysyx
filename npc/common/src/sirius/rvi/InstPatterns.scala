@@ -14,7 +14,8 @@ case class InstPatternRvI(
       "add",
       ExtTypeEnum.I,
       InstTypeEnum.R,
-      aluIn2Sel = AluInSelEnum.rs2,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
@@ -24,6 +25,7 @@ case class InstPatternRvI(
       "addi",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -41,6 +43,7 @@ case class InstPatternRvI(
       "lw",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -53,6 +56,7 @@ case class InstPatternRvI(
       "lbu",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -65,6 +69,7 @@ case class InstPatternRvI(
       "sw",
       ExtTypeEnum.I,
       InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -75,6 +80,7 @@ case class InstPatternRvI(
       "sb",
       ExtTypeEnum.I,
       InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -85,6 +91,7 @@ case class InstPatternRvI(
       "jalr",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -94,9 +101,20 @@ case class InstPatternRvI(
       jumpTargetSel = JumpTargetSelEnum.alu
     ),
     InstPattern(
+      "auipc",
+      ExtTypeEnum.I,
+      InstTypeEnum.U,
+      aluIn1Sel = AluInSelEnum.pc,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
       "ebreak",
       ExtTypeEnum.I,
       DontCare
-    )
+    ),
   )
 }

@@ -11,11 +11,11 @@ object InstTypeEnum extends ChiselEnum {
 }
 
 object AluInSelEnum extends ChiselEnum {
-  val imm, rs2 = Value
+  val imm, rs, pc = Value
 }
 
 object AluOpEnum extends ChiselEnum {
-  val add, sub = Value
+  val add = Value
 }
 
 object ExuOutSelEnum extends ChiselEnum {

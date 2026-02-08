@@ -57,17 +57,23 @@ class Exu(implicit private val cfg: CoreConfig,
   }
 
   // 连接Alu输入
+  val src1 = MuxLookup(ctrl.aluIn2Sel, rs1Data)(
+    Seq(
+      // AluInSelEnum.imm.asUInt -> imm,
+      AluInSelEnum.rs.asUInt -> rs1Data,
+      AluInSelEnum.pc.asUInt -> in.iduPayload.ifu.pc,
+    )
+  )
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
     Seq(
       AluInSelEnum.imm.asUInt -> imm,
-      AluInSelEnum.rs2.asUInt -> rs2Data,
+      AluInSelEnum.rs.asUInt -> rs2Data,
     )
   )
-
   val aluIn = Wire(new AluIO)
   aluIn.out := DontCare
   aluIn.aluOp := ctrl.aluOp
-  aluIn.src1 := rs1Data
+  aluIn.src1 := src1
   aluIn.src2 := src2
   alus.foreach(alu => alu._2.io :<= aluIn)
 
