@@ -57,7 +57,7 @@ class Exu(implicit private val cfg: CoreConfig,
   }
 
   // 连接Alu输入
-  val src1 = MuxLookup(ctrl.aluIn2Sel, rs1Data)(
+  val src1 = MuxLookup(ctrl.aluIn1Sel, rs1Data)(
     Seq(
       // AluInSelEnum.imm.asUInt -> imm,
       AluInSelEnum.rs.asUInt -> rs1Data,
