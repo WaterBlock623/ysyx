@@ -72,15 +72,16 @@ object InstFieldsRvI {
         case _ => dc
       }
     },
-    new DecodeField[InstPattern, UInt] with CanAutoGenSig {
-      def name = "aluIn2Sel"
-      def stage = "ex"
-      def chiselType = UInt(AluInSelEnum.getWidth.W)
-      def genTable(i: InstPattern) = i.aluIn2Sel match {
-        case e: AluInSelEnum.Type => BitPat(e)
-        case _ => dc
-      }
-    },
+    // new DecodeField[InstPattern, UInt] with CanAutoGenSig {
+    //   def name = "aluIn2Sel"
+    //   def stage = "ex"
+    //   def chiselType = UInt(AluInSelEnum.getWidth.W)
+    //   def genTable(i: InstPattern) = i.aluIn2Sel match {
+    //     case e: AluInSelEnum.Type => BitPat(e)
+    //     case _ => dc
+    //   }
+    // },
+    MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     new DecodeField[InstPattern, UInt] with CanAutoGenSig {
       def name = "aluOp"
       def stage = "ex"

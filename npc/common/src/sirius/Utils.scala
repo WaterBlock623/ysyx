@@ -1,6 +1,10 @@
 package sirius
 
 import scala.collection.Factory
+import cpuutil.CanAutoGenSig
+import chisel3._
+import chisel3.util.BitPat
+import chisel3.util.experimental.decode._
 
 case class CfgMap[A, T <: Iterable[A]](
   map: Map[(Set[ExtTypeEnum.Type], Set[Int]), T]) {
@@ -16,3 +20,4 @@ case class CfgMap[A, T <: Iterable[A]](
     factory.fromSpecific(items)
   }
 }
+
