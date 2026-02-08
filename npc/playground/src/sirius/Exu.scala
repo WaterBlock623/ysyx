@@ -13,13 +13,6 @@ class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
   val out = Input(UInt(cfg.xlen.W))
 }
 
-// class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
-//   val src1 = Output(UInt(4.W))
-//   val src2 = Output(UInt(4.W))
-//   val aluOp = Output(UInt(AluOpEnum.getWidth.W))
-//   val out = Input(UInt(4.W))
-// }
-
 // Alu父类
 class AluParent(
   implicit private val cfg: CoreConfig)
@@ -44,30 +37,30 @@ class AluBase(
   //   )
   // ))
   
-  val addResult = io.src1 + io.src2
-  val subResult = io.src1 - io.src2
-  val eqlResult = io.src1 === io.src2
-  val neqResult = io.src1 =/= io.src2
-  val ltResult = io.src1 < io.src2
-  val geResult = io.src1 >= io.src2
-  val andResult = io.src1 & io.src2
-  val orResult = io.src1 | io.src2
-  val xorResult = io.src1 ^ io.src2
+  // val addResult = io.src1 + io.src2
+  // val subResult = io.src1 - io.src2
+  // val eqlResult = io.src1 === io.src2
+  // val neqResult = io.src1 =/= io.src2
+  // val ltResult = io.src1 < io.src2
+  // val geResult = io.src1 >= io.src2
+  // val andResult = io.src1 & io.src2
+  // val orResult = io.src1 | io.src2
+  // val xorResult = io.src1 ^ io.src2
   val sllResult = io.src1 << io.src2
   val srlResult = io.src1 >> io.src2
   val sraResult = (io.src1.asSInt >> io.src2).asUInt
 
-  io.out := MuxLookup(io.aluOp, addResult)(
+  io.out := MuxLookup(io.aluOp, sllResult)(
     Seq(
-      add.asUInt -> addResult,
-      sub.asUInt -> subResult,
-      eql.asUInt -> eqlResult,
-      neq.asUInt -> neqResult,
-      lt.asUInt -> ltResult,
-      ge.asUInt -> geResult,
-      and.asUInt -> andResult,
-      or.asUInt -> orResult,
-      xor.asUInt -> xorResult,
+      // add.asUInt -> addResult,
+      // sub.asUInt -> subResult,
+      // eql.asUInt -> eqlResult,
+      // neq.asUInt -> neqResult,
+      // lt.asUInt -> ltResult,
+      // ge.asUInt -> geResult,
+      // and.asUInt -> andResult,
+      // or.asUInt -> orResult,
+      // xor.asUInt -> xorResult,
       sll.asUInt -> sllResult,
       srl.asUInt -> srlResult,
       sra.asUInt -> sraResult,
