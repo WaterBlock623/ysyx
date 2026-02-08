@@ -24,12 +24,32 @@ class AluParent(
 class AluBase(
   implicit private val cfg: CoreConfig)
     extends AluParent {
-  val addResult = io.src1 + io.src2
-
   import AluOpEnum._
+
+  // val isSub = io.aluOp === sub.asUInt
+  // val negSrc2 = ~io.src2 + 1.U
+  // val addSubResult = io.src1 + Mux(isSub, negSrc2, io.src2)
+  //
+  // io.out := MuxLookup(io.aluOp, addSubResult)(
+  //   Seq(
+  //     add.asUInt -> addSubResult,
+  //     sub.asUInt -> addSubResult,
+  //   )
+  // )
+  
+  val addResult = io.src1 + io.src2
+  val subResult = io.src1 - io.src2
+  // val andResult = io.src1 & io.src2
+  // val orResult = io.src1 | io.src2
+  // val xorResult = io.src1 ^ io.src2
+
   io.out := MuxLookup(io.aluOp, addResult)(
     Seq(
-      add.asUInt -> addResult
+      add.asUInt -> addResult,
+      sub.asUInt -> subResult,
+      // and.asUInt -> andResult,
+      // or.asUInt -> orResult,
+      // xor.asUInt -> xorResult,
     )
   )
 }

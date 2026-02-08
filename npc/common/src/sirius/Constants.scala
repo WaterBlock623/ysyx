@@ -15,7 +15,7 @@ object AluInSelEnum extends ChiselEnum {
 }
 
 object AluOpEnum extends ChiselEnum {
-  val add = Value
+  val add, sub, and, or, xor = Value
 }
 
 object ExuOutSelEnum extends ChiselEnum {
