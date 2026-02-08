@@ -40,9 +40,11 @@ class AluBase(
   val addResult = io.src1 + io.src2
   val subResult = io.src1 - io.src2
   val eqlResult = io.src1 === io.src2
-  val neqResult = io.src1 =/= io.src2
-  val ltResult = io.src1 < io.src2
-  val geResult = io.src1 >= io.src2
+  val neqResult = !eqlResult
+  val ltResult = io.src1.asSInt < io.src2.asSInt
+  val ltuResult = io.src1 < io.src2
+  val geResult = !ltResult
+  val geuResult = !ltuResult
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
@@ -58,7 +60,9 @@ class AluBase(
       eql.asUInt -> eqlResult,
       neq.asUInt -> neqResult,
       lt.asUInt -> ltResult,
+      ltu.asUInt -> ltuResult,
       ge.asUInt -> geResult,
+      geu.asUInt -> geuResult,
       and.asUInt -> andResult,
       or.asUInt -> orResult,
       xor.asUInt -> xorResult,
