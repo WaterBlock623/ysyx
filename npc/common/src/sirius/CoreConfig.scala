@@ -34,7 +34,7 @@ case class CoreConfig(
   ] =
     CfgMap(
       ListMap(
-        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldsBase
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldBase
       )
     )
 

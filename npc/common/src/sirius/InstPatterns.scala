@@ -27,8 +27,8 @@ case class InstPattern(
   isJump:        Boolean = false,
   jumpTargetSel: Data = DontCare
 )(
-  implicit private val insts: Iterable[rvdecoderdb.Instruction], 
-  implicit private val cfg: CoreConfig)
+  implicit private val insts: Iterable[rvdecoderdb.Instruction],
+  implicit private val cfg:   CoreConfig)
     extends DecodePattern {
   val inst: Option[rvdecoderdb.Instruction] = {
     if (custom) {
@@ -46,7 +46,9 @@ case class InstPattern(
     }
   }
   def bitPat: BitPat = {
-    BitPat("b" + bp.getOrElse(("?" * (cfg.xlen - 32)) + inst.get.encoding.toString()))
+    BitPat(
+      "b" + bp.getOrElse(("?" * (cfg.xlen - 32)) + inst.get.encoding.toString())
+    )
   }
 
   def inArgs(field: String): Boolean = {
@@ -54,93 +56,10 @@ case class InstPattern(
   }
 }
 
+
 case class InstPatterns(
 )(
-  implicit private val insts: Iterable[rvdecoderdb.Instruction], 
-  implicit private val cfg: CoreConfig) {
-  val patternBase = Seq(
-    InstPattern(
-      "add",
-      ExtTypeEnum.I,
-      InstTypeEnum.R,
-      aluIn2Sel = AluInSelEnum.rs2,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      writeBackSel = WriteBackSelEnum.alu
-    ),
-    InstPattern(
-      "addi",
-      ExtTypeEnum.I,
-      InstTypeEnum.I,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      writeBackSel = WriteBackSelEnum.alu
-    ),
-    InstPattern(
-      "lui",
-      ExtTypeEnum.I,
-      InstTypeEnum.U,
-      writeBackSel = WriteBackSelEnum.imm
-    ),
-    InstPattern(
-      "lw",
-      ExtTypeEnum.I,
-      InstTypeEnum.I,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      loadStoreType = LoadStoreTypeEnum.signedLoad,
-      loadStoreLength = LoadStoreLengthEnum.w,
-      writeBackSel = WriteBackSelEnum.lsu
-    ),
-    InstPattern(
-      "lbu",
-      ExtTypeEnum.I,
-      InstTypeEnum.I,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      loadStoreType = LoadStoreTypeEnum.unsignedLoad,
-      loadStoreLength = LoadStoreLengthEnum.b,
-      writeBackSel = WriteBackSelEnum.lsu
-    ),
-    InstPattern(
-      "sw",
-      ExtTypeEnum.I,
-      InstTypeEnum.S,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      loadStoreType = LoadStoreTypeEnum.store,
-      loadStoreLength = LoadStoreLengthEnum.w
-    ),
-    InstPattern(
-      "sb",
-      ExtTypeEnum.I,
-      InstTypeEnum.S,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      loadStoreType = LoadStoreTypeEnum.store,
-      loadStoreLength = LoadStoreLengthEnum.b
-    ),
-    InstPattern(
-      "jalr",
-      ExtTypeEnum.I,
-      InstTypeEnum.I,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      writeBackSel = WriteBackSelEnum.staticNextPc,
-      isJump = true,
-      jumpTargetSel = JumpTargetSelEnum.alu
-    ),
-    InstPattern(
-      "ebreak",
-      ExtTypeEnum.I,
-      DontCare
-    )
-  )
-
+  implicit private val insts: Iterable[rvdecoderdb.Instruction],
+  implicit private val cfg:   CoreConfig) {
+  val patternBase = InstPatternRvI().pattern
 }

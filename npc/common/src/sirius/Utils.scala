@@ -16,14 +16,3 @@ case class CfgMap[A, T <: Iterable[A]](
     factory.fromSpecific(items)
   }
 }
-
-// case class CfgMap[T <: Iterable[Any]](map: Map[(Set[ExtTypeEnum.Type], Set[Int]), T]) {
-//   def flatten(implicit cfg: CoreConfig): T = {
-//     map
-//       .filter(m =>
-//         m._1._1.forall(t => cfg.extensions().contains(t)) && m._1._2
-//           .contains(cfg.xlen)
-//       )
-//       .flatMap(m => m._2)
-//   }
-// }
