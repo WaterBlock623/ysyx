@@ -50,7 +50,7 @@ class AluBase(
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
-  val shiftNum = io.src2(log2Ceil(cfg.xlen), 0)
+  val shiftNum = io.src2(log2Ceil(cfg.xlen) - 1, 0)
   val sllResult = io.src1 << shiftNum
   val srlResult = io.src1 >> shiftNum
   val sraResult = (io.src1.asSInt >> shiftNum).asUInt
