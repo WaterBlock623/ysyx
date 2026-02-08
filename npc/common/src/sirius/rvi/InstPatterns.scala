@@ -209,6 +209,32 @@ case class InstPatternRvI(
       writeBackSel = WriteBackSelEnum.lsu
     ),
     InstPattern(
+      "lhu",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.unsignedLoad,
+      loadStoreLength = LoadStoreLengthEnum.h,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.lsu
+    ),
+    InstPattern(
+      "lb",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.signedLoad,
+      loadStoreLength = LoadStoreLengthEnum.b,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.lsu
+    ),
+    InstPattern(
       "lbu",
       ExtTypeEnum.I,
       InstTypeEnum.I,
