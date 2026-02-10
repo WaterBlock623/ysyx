@@ -36,14 +36,24 @@ static debug_module_config_t difftest_dm_config = {
   .support_impebreak = true
 };
 
+#define DUT_NR_CSR 4
+#define DUT_CSR_MSTATUS 0
+#define DUT_CSR_MTVEC 1
+#define DUT_CSR_MEPC 2
+#define DUT_CSR_MCAUSE 3
+
 struct diff_context_t {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   word_t pc;
+  word_t csr[DUT_NR_CSR];
 };
 
 static sim_t* s = NULL;
 static processor_t *p = NULL;
 static state_t *state = NULL;
+
+static csr_t_p ref_csrs[DUT_NR_CSR] = {state->mstatus, state->mtvec, 
+  state->mepc, state->mcause};
 
 void sim_t::diff_init(int port) {
   #ifdef CONFIG_RVE
@@ -60,8 +70,12 @@ void sim_t::diff_step(uint64_t n) {
 
 void sim_t::diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
-  for (int i = 0; i < NR_GPR; i++) {
+  int i;
+  for (i = 0; i < NR_GPR; i++) {
     ctx->gpr[i] = state->XPR[i];
+  }
+  for (i = 0; i < DUT_NR_CSR; i++) {
+    ctx->csr[i] = ref_csrs[i]->read();
   }
   ctx->pc = state->pc;
   // printf("PC: %lu  CTX PC: %u\n", state->pc, ctx->pc);
@@ -70,8 +84,12 @@ void sim_t::diff_get_regs(void* diff_context) {
 
 void sim_t::diff_set_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
-  for (int i = 0; i < NR_GPR; i++) {
+  int i;
+  for (i = 0; i < NR_GPR; i++) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
+  }
+  for (i = 0; i < DUT_NR_CSR; i++) {
+    ref_csrs[i]->write(ctx->csr[i]);
   }
   state->pc = ctx->pc;
 }
