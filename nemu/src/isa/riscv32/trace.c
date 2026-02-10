@@ -64,8 +64,8 @@ void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 
 #ifdef CONFIG_ETRACE
 void etrace(bool is_raise, word_t NO, word_t epc) {
-#define ETRACE_RAISE_MSG "ETrace raise:  NO: %d  @" FMT_WORD, NO, epc
-#define ETRACE_RAT_MSG "ETrace ret:  to " FMT_WORD, epc
+#define ETRACE_RAISE_MSG "ETrace raise:  NO: %d  @" FMT_WORD "\n", NO, epc
+#define ETRACE_RAT_MSG "ETrace ret:  to " FMT_WORD "\n", epc
 
 #ifdef CONFIG_ETRACE_COND
   if (ETRACE_COND) {
