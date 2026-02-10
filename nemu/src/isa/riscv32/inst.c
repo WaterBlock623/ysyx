@@ -165,6 +165,12 @@ static int decode_exec(Decode *s) {
       if (rs1) csr_set(csr, src1); \
       R(rd) = tmp);
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, \
+      word_t y = (cpu.csr[CSR_MSTATUS] & ~0x1800) >> 11; \
+      cpu.csr[CSR_MSTATUS] &= ~0x8; \
+      cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x80) >> 4; \
+      cpu.csr[CSR_MSTATUS] |= 0x80; \
+      cpu.csr[CSR_MSTATUS] &= ~0x1800; \
+      if (y != 0x3) cpu.csr[CSR_MSTATUS] &= ~0x20000; \
       s->dnpc = cpu.csr[CSR_MEPC]; \
       IFDEF(CONFIG_FTRACE, ftrace(0, 1, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
