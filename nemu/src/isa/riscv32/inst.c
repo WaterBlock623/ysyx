@@ -30,7 +30,7 @@
 #define Mw vaddr_write
 
 enum {
-  TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, 
+  TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, TYPE_ZICSRR, TYPE_ZICSRI, 
   TYPE_N, // none
 };
 
@@ -47,12 +47,14 @@ enum {
 								BITS(i, 7, 7) << 11 | \
 								BITS(i, 30, 25) << 5 | \
 								BITS(i, 11, 8) << 1, 13); } while(0)
+#define immZICSRI() do { *imm = BITS(i, 4, 0); } while(0)
+#define csrZICSR() do { *csr = BITS(i, 31, 20); } while(0)
 
-static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1, word_t *src2, word_t *imm, int type) {
+static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1, word_t *src2, word_t *imm, word_t *csr, int type) {
   uint32_t i = s->isa.inst;
   *rs1 = BITS(i, 19, 15);
   *rs2 = BITS(i, 24, 20);
-  *rd     = BITS(i, 11, 7);
+  *rd  = BITS(i, 11, 7);
   switch (type) {
     case TYPE_I: src1R();          immI(); break;
     case TYPE_U:                   immU(); break;
@@ -60,6 +62,8 @@ static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1,
 	  case TYPE_J:			             immJ(); break;
 	  case TYPE_B: src1R(); src2R(); immB(); break;
 	  case TYPE_R: src1R(); src2R();		     break;
+	  case TYPE_ZICSRR: src1R(); csrZICSR(); break;
+	  case TYPE_ZICSRI: immZICSRI(); csrZICSR(); break;
     case TYPE_N:                           break;
     default: panic("unsupported type = %d", type);
   }
@@ -133,8 +137,8 @@ static int decode_exec(Decode *s) {
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   int rd = 0, rs1 = 0, rs2 = 0; \
-  word_t src1 = 0, src2 = 0, imm = 0; \
-  decode_operand(s, &rd, &rs1, &rs2, &src1, &src2, &imm, concat(TYPE_, type)); \
+  word_t src1 = 0, src2 = 0, imm = 0, csr = 0; \
+  decode_operand(s, &rd, &rs1, &rs2, &src1, &src2, &imm, &csr, concat(TYPE_, type)); \
   __VA_ARGS__ ; \
 }
 #define SIGN(x) ({word_t _us = (x); sword_t _s; memcpy(&_s, &_us, sizeof(_s)); _s;})
@@ -147,9 +151,22 @@ static int decode_exec(Decode *s) {
 								
 
   INSTPAT_START();
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, \
+      NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, \
+      s->dnpc = isa_raise_intr(0xb, s->pc));
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , ZICSRR, \
+      word_t tmp = src1; \
+      if (rd) R(rd) = csr_read(csr); \
+      csr_write(csr, tmp, -1));
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , ZICSRR, \
+      word_t tmp = csr_read(csr); \
+      if (rs1) csr_set(csr, src1); \
+      R(rd) = tmp);
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, \
+      s->dnpc = cpu.csr[CSR_MEPC]);
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
   INSTPAT("??????? ????? ????? ??? ????? 01101 11", lui    , U, R(rd) = imm);
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I, R(rd) = imm + src1);
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori   , I, R(rd) = imm ^ src1);
   INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori    , I, R(rd) = imm | src1);
@@ -230,6 +247,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu   , R, \
 		  R(rd) = MUX_DIV_ZERO(src2, src1%src2, src1));
   INSTPAT("??????? ????? ????? 000 ????? 00011 11", fence  , N, );
+  
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 

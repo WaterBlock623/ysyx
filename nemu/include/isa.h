@@ -50,6 +50,10 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type);
 
 // interrupt/exception
 vaddr_t isa_raise_intr(word_t NO, vaddr_t epc);
+word_t csr_read(word_t csr_addr);
+void csr_write(word_t csr_addr, word_t wdata, word_t wmask);
+void csr_set(word_t csr_addr, word_t wmask);
+void csr_clear(word_t csr_addr, word_t wmask);
 #define INTR_EMPTY ((word_t)-1)
 word_t isa_query_intr();
 

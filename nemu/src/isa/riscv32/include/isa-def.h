@@ -18,9 +18,16 @@
 
 #include <common.h>
 
+#define NR_CSR 4
+#define CSR_MSTATUS 0
+#define CSR_MTVEC 1
+#define CSR_MEPC 2
+#define CSR_MCAUSE 3
+
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   vaddr_t pc;
+  word_t csr[NR_CSR];
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 // decode
