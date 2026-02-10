@@ -27,6 +27,8 @@ const char *regs[] = {"$0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
                       "a6", "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
                       "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
+static const char *csrs_name[NR_CSR] = {"mstatus", "mtvec", "mepc", "mcause"};
+
 void isa_reg_display() {
   int i;
   for (i = 0; i < LENGTH(cpu.gpr); i++) {
@@ -37,12 +39,20 @@ void isa_reg_display() {
              gpr(i));
   }
   printf("\n");
+  printf("pc: " FMT_WORD "\n", cpu.pc);
+  printf("\n");
+  for (i = 0; i < NR_CSR; i++) {
+    printf("%s: " FMT_WORD "\n", csrs_name[i], cpu.csr[i]);
+  }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  // pc
   if (strcmp(s, "$pc") == 0) {
     return cpu.pc;
   }
+
+  // gpr(abi)
   int gpr_max = LENGTH(cpu.gpr);
   int i;
   for (i = 0; i < gpr_max; i++) {
@@ -51,6 +61,16 @@ word_t isa_reg_str2val(const char *s, bool *success) {
       return cpu.gpr[i];
     }
   }
+
+  // csr
+  for (i = 0; i < NR_CSR; i++) {
+    if (strcmp(s + 1, csrs_name[i]) == 0) {
+      Log("read from name(%s): CSR %d", s, i);
+      return cpu.csr[i];
+    }
+  }
+
+  // gpr(idx)
   char *endptr = NULL;
   errno = 0;
   word_t val = strtol(s + 1, &endptr, 10);
