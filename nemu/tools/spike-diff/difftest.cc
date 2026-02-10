@@ -52,8 +52,7 @@ static sim_t* s = NULL;
 static processor_t *p = NULL;
 static state_t *state = NULL;
 
-static csr_t_p ref_csrs[DUT_NR_CSR] = {state->mstatus, state->mtvec, 
-  state->mepc, state->mcause};
+static csr_t_p ref_csrs[DUT_NR_CSR] = {};
 
 void sim_t::diff_init(int port) {
   #ifdef CONFIG_RVE
@@ -61,6 +60,11 @@ void sim_t::diff_init(int port) {
   #endif // CONFIG_RVE
   p = get_core("0");
   state = p->get_state();
+
+  ref_csrs[0] = state->mstatus;
+  ref_csrs[1] = state->mtvec;
+  ref_csrs[2] = state->mepc;
+  ref_csrs[3] = state->mcause;
 }
 
 void sim_t::diff_step(uint64_t n) {
