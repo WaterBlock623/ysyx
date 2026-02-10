@@ -154,7 +154,8 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, \
       NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, \
-      s->dnpc = isa_raise_intr(0xb, s->pc));
+      s->dnpc = isa_raise_intr(0xb, s->pc); \
+      IFDEF(CONFIG_FTRACE, ftrace(1, 0, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , ZICSRR, \
       word_t tmp = src1; \
       if (rd) R(rd) = csr_read(csr); \
@@ -164,7 +165,8 @@ static int decode_exec(Decode *s) {
       if (rs1) csr_set(csr, src1); \
       R(rd) = tmp);
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, \
-      s->dnpc = cpu.csr[CSR_MEPC]);
+      s->dnpc = cpu.csr[CSR_MEPC]; \
+      IFDEF(CONFIG_FTRACE, ftrace(0, 1, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc  , U, R(rd) = s->pc + imm);
   INSTPAT("??????? ????? ????? ??? ????? 01101 11", lui    , U, R(rd) = imm);
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I, R(rd) = imm + src1);
