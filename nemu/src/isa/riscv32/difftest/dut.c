@@ -43,7 +43,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   for (i = 0; i < NR_CSR; i++) {
     if (cpu.csr[i] != ref_r->csr[i]) {
       printf("Difftest csr %s fail: nemu: " FMT_WORD "  ref: " FMT_WORD "\n", csrs_name[i],
-             gpr(i), ref_r->csr[i]);
+             cpu.csr[i], ref_r->csr[i]);
       is_pass = false;
     }
   }
