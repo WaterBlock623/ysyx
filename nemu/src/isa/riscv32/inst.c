@@ -165,6 +165,7 @@ static int decode_exec(Decode *s) {
       if (rs1) csr_set(csr, src1); \
       R(rd) = tmp);
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, \
+      cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x80) >> 4; \
       cpu.csr[CSR_MSTATUS] |= 0x80; \
       s->dnpc = cpu.csr[CSR_MEPC]; \
       IFDEF(CONFIG_FTRACE, ftrace(0, 1, s->pc, s->dnpc)));
