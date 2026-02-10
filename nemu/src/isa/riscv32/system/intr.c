@@ -33,7 +33,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
 }
 
 word_t isa_ret_intr(void) {
-  IFDEF(CONFIG_ETRACE, etrace(true, 0, cpu.csr[CSR_MEPC]));
+  IFDEF(CONFIG_ETRACE, etrace(false, 0, cpu.csr[CSR_MEPC]));
 
   // word_t y = (cpu.csr[CSR_MSTATUS] & ~0x1800) >> 11;
   // cpu.csr[CSR_MSTATUS] &= ~0x8;
