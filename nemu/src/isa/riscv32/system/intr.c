@@ -24,7 +24,21 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   cpu.csr[CSR_MSTATUS] &= ~0x8;
   cpu.csr[CSR_MEPC] = epc;
   cpu.csr[CSR_MCAUSE] = NO;
+
+  IFDEF(CONFIG_ETRACE, etrace());
+
   return cpu.csr[CSR_MTVEC];
+}
+
+word_t isa_ret_intr(void) {
+      // word_t y = (cpu.csr[CSR_MSTATUS] & ~0x1800) >> 11;
+      // cpu.csr[CSR_MSTATUS] &= ~0x8;
+      cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x80) >> 4;
+      cpu.csr[CSR_MSTATUS] |= 0x80;
+      // cpu.csr[CSR_MSTATUS] &= ~0x1800;
+      // if (y != 0x3) cpu.csr[CSR_MSTATUS] &= ~0x20000;
+
+  return cpu.csr[CSR_MEPC];
 }
 
 static word_t csr_addrs[NR_CSR] = {
