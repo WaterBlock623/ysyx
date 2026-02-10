@@ -127,8 +127,7 @@ void init_elf(const char *elf_file) {
 const char *get_function_name(paddr_t addr) {
   int i;
   for (i = 0; i < nr_sym; i++) {
-    if ((ELF_ST_TYPE(sym[i].st_info) == STT_FUNC || 
-          ELF_ST_TYPE(sym[i].st_info) == STT_NOTYPE) && 
+    if (ELF_ST_TYPE(sym[i].st_info) == STT_FUNC &&
         sym[i].st_size > 0 &&
         addr >= sym[i].st_value && 
         addr < (sym[i].st_value + sym[i].st_size)) {
