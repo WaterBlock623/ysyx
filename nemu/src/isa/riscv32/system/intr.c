@@ -15,28 +15,32 @@
 
 #include <isa.h>
 
+void etrace(bool is_raise, word_t NO, word_t epc);
+
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+  IFDEF(CONFIG_ETRACE, etrace(true, NO, epc));
+
   cpu.csr[CSR_MSTATUS] &= ~0x80;
   cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x8) << 4;
   cpu.csr[CSR_MSTATUS] &= ~0x8;
   cpu.csr[CSR_MEPC] = epc;
   cpu.csr[CSR_MCAUSE] = NO;
 
-  IFDEF(CONFIG_ETRACE, etrace());
-
   return cpu.csr[CSR_MTVEC];
 }
 
 word_t isa_ret_intr(void) {
-      // word_t y = (cpu.csr[CSR_MSTATUS] & ~0x1800) >> 11;
-      // cpu.csr[CSR_MSTATUS] &= ~0x8;
-      cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x80) >> 4;
-      cpu.csr[CSR_MSTATUS] |= 0x80;
-      // cpu.csr[CSR_MSTATUS] &= ~0x1800;
-      // if (y != 0x3) cpu.csr[CSR_MSTATUS] &= ~0x20000;
+  IFDEF(CONFIG_ETRACE, etrace(true, 0, cpu.csr[CSR_MEPC]));
+
+  // word_t y = (cpu.csr[CSR_MSTATUS] & ~0x1800) >> 11;
+  // cpu.csr[CSR_MSTATUS] &= ~0x8;
+  cpu.csr[CSR_MSTATUS] |= (cpu.csr[CSR_MSTATUS] & 0x80) >> 4;
+  cpu.csr[CSR_MSTATUS] |= 0x80;
+  // cpu.csr[CSR_MSTATUS] &= ~0x1800;
+  // if (y != 0x3) cpu.csr[CSR_MSTATUS] &= ~0x20000;
 
   return cpu.csr[CSR_MEPC];
 }
