@@ -42,21 +42,15 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
-  // int i;
-  // for (i = 0; i < n; i++) {
-  //   int result = (int)*s1 - (int)*s2;
-  //   if (result != 0 || *s1 == '\0' || *s2 == '\0')
-  //     return result;
-  //   s1++;
-  //   s2++;
-  // }
-  // return 0;
-  if (!n) return 0;
-  while (--n && *s1 && (*s1 == *s2)) {
+  int i;
+  for (i = 0; i < n; i++) {
+    int result = (int)*s1 - (int)*s2;
+    if (result != 0 || *s1 == '\0' || *s2 == '\0')
+      return result;
     s1++;
     s2++;
   }
-  return *s1 - *s2;
+  return 0;
 }
 
 void *memset(void *s, int c, size_t n) {
