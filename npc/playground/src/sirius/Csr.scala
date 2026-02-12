@@ -38,8 +38,8 @@ class CsrMcycle32(implicit private val cfg: CoreConfig)
 
 class Csr(implicit private val cfg: CoreConfig, 
   implicit private val ucfg: UnitConfig) extends Module {
-  val idu = IO(Flipped(new IduToCsrIO))
-  val wbu = IO(Flipped(new WbuToCsrIO))
+  val iduIn = IO(Flipped(new IduToCsrIO))
+  val wbuIn = IO(Flipped(new WbuToCsrIO))
 
   // // 实例化
   // val csrs = ucfg.csrMap
@@ -80,7 +80,7 @@ class Csr(implicit private val cfg: CoreConfig,
     Seq(hi.U -> mod.csrIOHi.rData, lo.U -> mod.csrIOLo.rData)
   }.toSeq
 
-  idu.rData := MuxLookup(idu.rAddr, 0.U)(readMap)
+  iduIn.rData := MuxLookup(iduIn.rAddr, 0.U)(readMap)
 
   // WriteRaw Set Clear
   // val wData = MuxLookup(io.wOpCode, io.wOperand)(Seq(
@@ -91,15 +91,15 @@ class Csr(implicit private val cfg: CoreConfig,
 
   // 写使能 写数据
   csrs.foreach { case (addr, mod) => 
-    mod.csrIO.wEn   := wbu.wEn && (wbu.wAddr === addr.U)
-    mod.csrIO.wData := wbu.wData
+    mod.csrIO.wEn   := wbuIn.wEn && (wbuIn.wAddr === addr.U)
+    mod.csrIO.wData := wbuIn.wData
   }
   
   csrs32.foreach { case ((hi, lo), mod) =>
-    mod.csrIOHi.wEn   := wbu.wEn && (wbu.wAddr === hi.U)
-    mod.csrIOHi.wData := wbu.wData
+    mod.csrIOHi.wEn   := wbuIn.wEn && (wbuIn.wAddr === hi.U)
+    mod.csrIOHi.wData := wbuIn.wData
     
-    mod.csrIOLo.wEn   := wbu.wEn && (wbu.wAddr === lo.U)
-    mod.csrIOLo.wData := wbu.wData
+    mod.csrIOLo.wEn   := wbuIn.wEn && (wbuIn.wAddr === lo.U)
+    mod.csrIOLo.wData := wbuIn.wData
   }
 }

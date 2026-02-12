@@ -122,6 +122,7 @@ class Top(
 
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
+  val csr = Module(new Csr)
   val ifu = Module(new Ifu)
   val idu = Module(new Idu)
   val exu = Module(new Exu)
@@ -154,6 +155,8 @@ class Top(
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
+  csr.iduIn :<>= idu.exte.csr
+  csr.wbuIn :<>= wbu.exte.csr
   idu.in :<>= ifuOut
   exu.in :<>= iduOut
   lsu.in :<>= exuOut
