@@ -137,25 +137,25 @@ static const uint32_t img[] = {
     // 0x00100073, // ebreak (used as nemu_trap)
     // 0xdeadbeef, // some data
 
-    // 0x800000b7, // lui x1, 0x80000
-    // 0x00a00113, // addi x2, x0, 10
-    // 0x800011b7, // lui x3, 0x80001
-    // 0x0021a023, // sw x2, 0(x3)
-    // 0x0001a203, // lw x4, 0(x3)
-    // 0x0ff00293, // addi x5, x0, 255
-    // 0x00518223, // sb x5, 4(x3)
-    // 0x0041c303, // lbu x6, 4(x3)
-    // 0x006203b3, // add x7, x4, x6
-    // 0x03008413, // addi x8, x1, 48
-    // 0x000400e7, // jalr x1, 0(x8)
-    // 0x00100073, // ebreak
-    // 0x007383b3, // add x7, x7, x7
-    // 0x00008067, // jalr x0, 0(x1)
+    0x800000b7, // lui x1, 0x80000
+    0x00a00113, // addi x2, x0, 10
+    0x800011b7, // lui x3, 0x80001
+    0x0021a023, // sw x2, 0(x3)
+    0x0001a203, // lw x4, 0(x3)
+    0x0ff00293, // addi x5, x0, 255
+    0x00518223, // sb x5, 4(x3)
+    0x0041c303, // lbu x6, 4(x3)
+    0x006203b3, // add x7, x4, x6
+    0x03008413, // addi x8, x1, 48
+    0x000400e7, // jalr x1, 0(x8)
+    0x00100073, // ebreak
+    0x007383b3, // add x7, x7, x7
+    0x00008067, // jalr x0, 0(x1)
 
-    0xb0002573,
-    0xb00025f3,
-    0xb0002673,
-    0xb00026f3
+    // 0xb0002573,
+    // 0xb00025f3,
+    // 0xb0002673,
+    // 0xb00026f3
 };
 
 void sync_npc_gpr(void) {
