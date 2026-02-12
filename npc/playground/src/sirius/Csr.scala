@@ -34,6 +34,8 @@ class CsrMcycle32(implicit private val cfg: CoreConfig)
     cycleCntReg := 
       (cycleCntReg.asUInt + 1.U).asTypeOf(chiselTypeOf(cycleCntReg))
   }
+  csrIOHi.rData := cycleCntReg.hi
+  csrIOLo.rData := cycleCntReg.lo
 }
 
 class Csr(implicit private val cfg: CoreConfig, 
