@@ -3,7 +3,7 @@ package sirius
 import chisel3._
 
 object ExtTypeEnum extends ChiselEnum {
-  val I, M = Value
+  val I, Zicsr, M = Value
 }
 
 object InstTypeEnum extends ChiselEnum {
@@ -15,7 +15,11 @@ object AluInSelEnum extends ChiselEnum {
 }
 
 object AluOpEnum extends ChiselEnum {
-  val add, sub, and, or, xor, eql, neq, lt, ltu, ge, geu, sll, srl, sra = Value
+  val add, sub, 
+    and, or, xor,
+    eql, neq, lt, ltu, ge, geu, 
+    sll, srl, sra,
+    clear = Value
 }
 
 object ExuOutSelEnum extends ChiselEnum {
@@ -36,4 +40,12 @@ object LoadStoreTypeEnum extends ChiselEnum {
 
 object LoadStoreLengthEnum extends ChiselEnum {
   val b, h, w = Value
+}
+
+object CsrEnum extends ChiselEnum {
+  val mcycle, mcycleh, mvendorid, marchid = Value
+}
+
+object CsrWOpCode extends ChiselEnum {
+  val write, set, clear = Value
 }

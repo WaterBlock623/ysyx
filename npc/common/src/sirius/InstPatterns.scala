@@ -26,7 +26,9 @@ case class InstPattern(
 
   isBranch:      Boolean = false,
   isJump:        Boolean = false,
-  jumpTargetSel: Data = DontCare
+  jumpTargetSel: Data = DontCare,
+
+  isWriteBackCsr: Boolean = false,
 )(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig)

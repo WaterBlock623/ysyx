@@ -14,7 +14,15 @@ case class UnitConfig(
           ExuOutSelEnum.aluBase -> (() => new AluBase)
         )
       )
-    ))
+    ),
+  val csr32Map: ListMap[(Int, Int), () => CsrParent32] = ListMap(
+    (0xB80, 0xB00) -> (() => new CsrMcycle32)
+  ),
+  val csrMap: ListMap[Int, () => CsrParent] = ListMap(
+    // "0xB00" -> (() => new CsrMcycle),
+    // "0xB80" -> (() => new CsrMcycleh)
+  ),
+)
 object UnitConfig {
   implicit val default: UnitConfig = UnitConfig()
 }

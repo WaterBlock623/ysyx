@@ -19,11 +19,15 @@ case class CoreConfig(
 
   // 基础配置
   val xlen:              Int = 32,
-  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(ExtTypeEnum.I),
+  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(
+    ExtTypeEnum.I,
+    ExtTypeEnum.Zicsr
+  ),
   val registerAddrWidth: Int = 4,
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32) {
   require(xlen == 32 || xlen == 64)
+  val mxlen: Int = xlen
   val registerNum: Int = 1 << registerAddrWidth
   require(memoryAddrWidth <= 32)
 

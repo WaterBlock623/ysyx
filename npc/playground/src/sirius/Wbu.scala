@@ -8,6 +8,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val pcReg = new WbuToPcRegIO
     val regFlie = new WbuToRegFileIO
+    val csr = new WbuToCsrIO
   })
   val in = IO(Flipped(new LsuToWbuIO))
 
@@ -34,4 +35,9 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
       WriteBackSelEnum.lsu.asUInt -> loadData,
     )
   )
+
+  // csr
+  exte.csr.wEn := in.ctrl.wbuCtrl.isWriteBackCsr
+  exte.csr.wAddr := in.lsuPayload.idu.csrAddr
+  exte.csr.wData := in.lsuPayload.exu.aluOut
 }

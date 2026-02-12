@@ -16,6 +16,8 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val rs2Data = UInt(cfg.xlen.W)
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
+    val csrAddr = UInt(12.W)
+    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
@@ -71,14 +73,19 @@ class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
 }
 
+class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(UInt(cfg.xlen.W))
+  val rData = Input(UInt(cfg.xlen.W))
+}
+
 class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
   val rData = Input(Vec(2, UInt(cfg.xlen.W)))
 }
 
-class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val rAddr = Output(UInt(cfg.xlen.W))
-  val rData = Input(UInt(cfg.xlen.W))
+class IduToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(UInt(12.W)) 
+  val rData = Input(UInt(cfg.mxlen.W))
 }
 
 class LsuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
@@ -102,3 +109,8 @@ class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val target = Output(UInt(cfg.xlen.W))
 }
 
+class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val wEn = Output(Bool())
+  val wAddr = Output(UInt(12.W)) 
+  val wData = Output(UInt(cfg.mxlen.W))
+}

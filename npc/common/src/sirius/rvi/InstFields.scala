@@ -49,6 +49,7 @@ object InstFieldsRvI {
     MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
     MakeEnumField("jumpTargetSel", "ex", JumpTargetSelEnum, _.jumpTargetSel),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
-    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel)
+    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
+    MakeBoolField("isWriteBackCsr", "wb", _.isWriteBackCsr),
   )
 }
