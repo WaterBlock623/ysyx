@@ -39,7 +39,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   )
 
   // csr
-  exte.csr.wEn := in.ctrl.wbuCtrl.isWriteBackCsr
+  exte.csr.wEn := in.ctrl.wbuCtrl.isWriteBackCsr && !imm
   exte.csr.wAddr := in.lsuPayload.idu.csrAddr
   exte.csr.wData := in.lsuPayload.exu.aluOut
 }

@@ -7,7 +7,7 @@ object ExtTypeEnum extends ChiselEnum {
 }
 
 object InstTypeEnum extends ChiselEnum {
-  val R, I, S, B, U, J = Value
+  val R, I, S, B, U, J, Zicsr = Value
 }
 
 object AluInSelEnum extends ChiselEnum {

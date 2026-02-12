@@ -13,7 +13,7 @@ case class InstPatternRvZicsr(
     InstPattern(
       "csrrs",
       ExtTypeEnum.Zicsr,
-      InstTypeEnum.I,
+      InstTypeEnum.Zicsr,
       aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.csr,
       aluOp = AluOpEnum.or,
