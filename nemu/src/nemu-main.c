@@ -47,6 +47,8 @@ void test_expr(void) {
   Log("PASS");
 }
 
+IFDEF(CONFIG_NPC, void sim_close(void));
+
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
