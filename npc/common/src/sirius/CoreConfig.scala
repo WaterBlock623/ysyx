@@ -38,7 +38,8 @@ case class CoreConfig(
   ] =
     CfgMap(
       ListMap(
-        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldRvI
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldRvI,
+        (Set(ExtTypeEnum.Zicsr), Set(32)) -> InstFields.fieldRvZicsr,
       )
     )
 
@@ -47,7 +48,8 @@ case class CoreConfig(
     : CfgMap[InstPattern, Seq[InstPattern]] =
     CfgMap(
       ListMap(
-        (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI,
+        (Set(ExtTypeEnum.Zicsr), Set(32)) -> instPatterns.patternRvZicsr,
       )
     )
 }

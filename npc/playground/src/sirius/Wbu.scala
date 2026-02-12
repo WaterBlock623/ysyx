@@ -17,6 +17,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val regFile = exte.regFlie
   val imm = in.lsuPayload.idu.imm
   val aluOut = in.lsuPayload.exu.aluOut
+  val csrData = in.lsuPayload.idu.csrData
 
   // pc
   pcReg.target := in.lsuPayload.exu.jumpTarget
@@ -33,6 +34,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
       WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.staticNextPc.asUInt -> (pc + 4.U),
       WriteBackSelEnum.lsu.asUInt -> loadData,
+      WriteBackSelEnum.csr.asUInt -> csrData,
     )
   )
 

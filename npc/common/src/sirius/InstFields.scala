@@ -67,4 +67,5 @@ object MakeTriField {
 
 object InstFields {
   val fieldRvI = InstFieldsRvI.fields
+  val fieldRvZicsr = InstFieldsRvZicsr.fields
 }

@@ -111,6 +111,7 @@ class Exu(
   val imm = in.iduPayload.idu.imm
   val rs1Data = in.iduPayload.idu.rs1Data
   val rs2Data = in.iduPayload.idu.rs2Data
+  val csrData = in.iduPayload.idu.csrData
 
   // 根据扩展实例化Alu
   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
@@ -133,7 +134,8 @@ class Exu(
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
     Seq(
       AluInSelEnum.imm.asUInt -> imm,
-      AluInSelEnum.rs.asUInt -> rs2Data
+      AluInSelEnum.rs.asUInt -> rs2Data,
+      AluInSelEnum.csr.asUInt -> csrData,
     )
   )
   val aluIn = Wire(new AluIO)

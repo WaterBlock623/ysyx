@@ -11,7 +11,7 @@ object InstTypeEnum extends ChiselEnum {
 }
 
 object AluInSelEnum extends ChiselEnum {
-  val imm, rs, pc = Value
+  val imm, rs, pc, csr = Value
 }
 
 object AluOpEnum extends ChiselEnum {
@@ -31,7 +31,7 @@ object JumpTargetSelEnum extends ChiselEnum {
 }
 
 object WriteBackSelEnum extends ChiselEnum {
-  val alu, imm, staticNextPc, lsu = Value
+  val alu, imm, staticNextPc, lsu, csr = Value
 }
 
 object LoadStoreTypeEnum extends ChiselEnum {
