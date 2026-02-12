@@ -10,8 +10,6 @@ class DebugInfoDpiC(
   val pc = IO(Input(UInt(cfg.xlen.W)))
   val dnpc = IO(Input(UInt(cfg.xlen.W)))
   val inst = IO(Input(UInt(cfg.xlen.W)))
-  val mcycle = IO(Input(UInt(cfg.mxlen.W)))
-  val mcycleh = IO(Input(UInt(cfg.mxlen.W)))
   setInline(
     "DebugInfoDpiC.sv",
     s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
