@@ -126,6 +126,8 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     return;
   }
 
+  ref_difftest_exec(1);
+
   if (is_skip_ref) {
     // to skip the checking of an instruction, just copy the reg state to
     // reference design
@@ -142,7 +144,6 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     is_skip_next_ref = false;
   }
 
-  ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
 
   checkregs(&ref_r, npc);
