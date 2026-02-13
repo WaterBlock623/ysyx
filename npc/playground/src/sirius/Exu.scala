@@ -54,6 +54,7 @@ class AluBase(
   val sllResult = io.src1 << shiftNum
   val srlResult = io.src1 >> shiftNum
   val sraResult = (io.src1.asSInt >> shiftNum).asUInt
+  val direct1Result = io.src1
   val clearResult = io.src1 & ~io.src2
 
   io.out := MuxLookup(io.aluOp, addResult)(
@@ -72,6 +73,7 @@ class AluBase(
       sll.asUInt -> sllResult,
       srl.asUInt -> srlResult,
       sra.asUInt -> sraResult,
+      direct1.asUInt -> direct1Result,
       clear.asUInt -> clearResult,
     )
   )

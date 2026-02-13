@@ -19,7 +19,7 @@ object AluOpEnum extends ChiselEnum {
     and, or, xor,
     eql, neq, lt, ltu, ge, geu, 
     sll, srl, sra,
-    clear = Value
+    direct1, clear = Value
 }
 
 object ExuOutSelEnum extends ChiselEnum {

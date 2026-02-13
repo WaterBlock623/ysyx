@@ -11,6 +11,17 @@ case class InstPatternRvZicsr(
   implicit private val cfg:   CoreConfig) {
   val pattern = Seq(
     InstPattern(
+      "csrrw",
+      ExtTypeEnum.Zicsr,
+      InstTypeEnum.Zicsr,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.direct1,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.csr,
+      isWriteBackCsr = true,
+    ),
+    InstPattern(
       "csrrs",
       ExtTypeEnum.Zicsr,
       InstTypeEnum.Zicsr,
