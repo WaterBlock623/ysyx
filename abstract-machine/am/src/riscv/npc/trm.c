@@ -2,7 +2,7 @@
 #include <klib-macros.h>
 #include <klib.h>
 #include <riscv/riscv.h>
-#include "ioe.h"
+#include "npc.h"
 
 extern char _heap_start;
 int main(const char *args);
