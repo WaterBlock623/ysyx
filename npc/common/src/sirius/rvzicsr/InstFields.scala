@@ -8,5 +8,6 @@ import cpuutil.CanAutoGenSig
 object InstFieldsRvZicsr {
   val fields = Seq(
     MakeBoolField("isWriteBackCsr", "wb", _.isWriteBackCsr),
+    MakeBoolField("isCsrWriteCheck", "wb", _.isCsrWriteCheck),
   )
 }

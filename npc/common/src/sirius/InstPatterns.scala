@@ -30,6 +30,7 @@ case class InstPattern(
   jumpTargetSel: Data = DontCare,
 
   isWriteBackCsr: Boolean = false,
+  isCsrWriteCheck: Boolean = false,
 )(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig)

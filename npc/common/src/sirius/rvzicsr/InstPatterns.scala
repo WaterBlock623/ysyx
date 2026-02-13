@@ -20,6 +20,7 @@ case class InstPatternRvZicsr(
       isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.csr,
       isWriteBackCsr = true,
+      isCsrWriteCheck = false,
     ),
     InstPattern(
       "csrrs",
@@ -32,6 +33,7 @@ case class InstPatternRvZicsr(
       isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.csr,
       isWriteBackCsr = true,
+      isCsrWriteCheck = true,
     ),
   )
 }
