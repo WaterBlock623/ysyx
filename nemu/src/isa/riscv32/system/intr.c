@@ -70,7 +70,9 @@ word_t csr_read(word_t csr_addr) {
 #ifndef CONFIG_TARGET_SHARE
   panic("Unsupported csr_addr read: " FMT_WORD, csr_addr);
 #else
-  g_difftest_skip_ref();
+  if (g_difftest_skip_ref) {
+    g_difftest_skip_ref();
+  }
 #endif
   }
   return cpu.csr[idx];
@@ -82,7 +84,9 @@ void csr_write(word_t csr_addr, word_t wdata, word_t wmask) {
 #ifndef CONFIG_TARGET_SHARE
   panic("Unsupported csr_addr write: " FMT_WORD, csr_addr);
 #else
-  g_difftest_skip_ref();
+  if (g_difftest_skip_ref) {
+    g_difftest_skip_ref();
+  }
 #endif
   }
   cpu.csr[idx] &= ~wmask;
