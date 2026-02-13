@@ -47,7 +47,7 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
 CFLAGS_BUILD += -fprofile-generate -fprofile-use -fprofile-correction \
 								-fprofile-dir=$(BUILD_DIR)/../profile/ \
-								-Wno-error=coverage-mismatch
+								-Wno-error=coverage-mismatch -Wno-error=missing-profile
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
 CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
