@@ -48,7 +48,7 @@ class CsrMarchid(implicit private val cfg: CoreConfig) extends CsrParent {
 
 class Csr(implicit private val cfg: CoreConfig, 
   implicit private val ucfg: UnitConfig) extends Module {
-  val iduIn = IO(Flipped(new ExuToCsrIO))
+  val exuIn = IO(Flipped(new ExuToCsrIO))
   val wbuIn = IO(Flipped(new WbuToCsrIO))
 
   // // 实例化
@@ -90,7 +90,7 @@ class Csr(implicit private val cfg: CoreConfig,
     Seq(hi.U -> mod.csrIOHi.rData, lo.U -> mod.csrIOLo.rData)
   }.toSeq
 
-  iduIn.rData := MuxLookup(iduIn.rAddr, 0.U)(readMap)
+  exuIn.rData := MuxLookup(exuIn.rAddr, 0.U)(readMap)
 
   // WriteRaw Set Clear
   // val wData = MuxLookup(io.wOpCode, io.wOperand)(Seq(

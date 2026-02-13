@@ -157,7 +157,7 @@ class Top(
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
-  csr.iduIn :<>= idu.exte.csr
+  csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
   idu.in :<>= ifuOut
   exu.in :<>= iduOut
