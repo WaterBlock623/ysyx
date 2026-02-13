@@ -7,10 +7,17 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
+VLT_FILE = $(BUILD_DIR)/../profile/profile.vlt
+ifneq ($(wildcard $(VLT_FILE)),)
+VLT_ARGS = $(VLT_FILE)
+$(info Found profile.vlt, enabling PGO)
+else
+$(info profile.vlt not found, skipping PGO)
+endif
+
 VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 1 \
-				--prof-pgo $(BUILD_DIR)/../profile/profile.vlt
-
+				--prof-pgo $(VLT_ARGS)
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
