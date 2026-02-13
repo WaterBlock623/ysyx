@@ -48,7 +48,7 @@ class CsrMarchid(implicit private val cfg: CoreConfig) extends CsrParent {
 
 class Csr(implicit private val cfg: CoreConfig, 
   implicit private val ucfg: UnitConfig) extends Module {
-  val iduIn = IO(Flipped(new IduToCsrIO))
+  val iduIn = IO(Flipped(new ExuToCsrIO))
   val wbuIn = IO(Flipped(new WbuToCsrIO))
 
   // // 实例化
