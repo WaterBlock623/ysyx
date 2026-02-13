@@ -1,5 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <klib.h>
 #include <riscv/riscv.h>
 #include "ioe.h"
 
@@ -22,7 +23,15 @@ void halt(int code) {
   while (1);
 }
 
+static inline void put_csrid(void) {
+  unsigned long long mvendorid = 0, marchid = 0; 
+  asm volatile("csrr %0, mvendorid" : "=r"(mvendorid));
+  asm volatile("csrr %0, marchid" : "=r"(marchid));
+  printf("[TRM] mvendorid: %llx  marchid: %llu\n", mvendorid, marchid);
+}
+
 void _trm_init() {
+  put_csrid();
   int ret = main(mainargs);
   halt(ret);
 }
