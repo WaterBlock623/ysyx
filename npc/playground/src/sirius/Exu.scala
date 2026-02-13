@@ -118,6 +118,7 @@ class Exu(
   // csr
   exte.csr.rAddr := in.iduPayload.idu.csrAddr
   val csrData = exte.csr.rData
+  out.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {

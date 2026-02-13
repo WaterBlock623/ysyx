@@ -17,7 +17,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val regFile = exte.regFlie
   val imm = in.lsuPayload.idu.imm
   val aluOut = in.lsuPayload.exu.aluOut
-  val csrData = in.lsuPayload.idu.csrData
+  val csrData = in.lsuPayload.exu.csrData
 
   // pc
   pcReg.target := in.lsuPayload.exu.jumpTarget
