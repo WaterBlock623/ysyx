@@ -28,10 +28,10 @@ void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
-#ifdef CONFIG_DIFFTEST
+#ifndef CONFIG_DIFFTEST
 
 static bool is_skip_ref = false;
-static bool is_skip_next_ref = false;
+// static bool is_skip_next_ref = false;
 static int skip_dut_nr_inst = 0;
 
 // this is used to let ref skip instructions which
@@ -126,22 +126,18 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     return;
   }
 
-  ref_difftest_exec(1);
-
   if (is_skip_ref) {
     // to skip the checking of an instruction, just copy the reg state to
     // reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
     is_skip_ref = false;
-    if (is_skip_next_ref) {
-      difftest_skip_ref();
-      is_skip_next_ref = false;
-    }
     return;
   }
-  if (is_skip_next_ref) {
-    difftest_skip_ref();
-    is_skip_next_ref = false;
+  ref_difftest_exec(1);
+  if (is_skip_ref) {
+    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+    is_skip_ref = false;
+    return;
   }
 
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
