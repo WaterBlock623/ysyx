@@ -159,10 +159,15 @@ class Csr(implicit private val cfg: CoreConfig,
     mod.csrIOLo.wData := wbuIn.wData
   }
 
+  csrs.get(CsrAddr.mtvec).foreach { mod => 
+    val mtvecMod = mod.asInstanceOf[CsrMtvec]
+    wbuIn.mtvec := mtvecMod.csrIO.rData
+  } 
   csrs.get(CsrAddr.mepc).foreach { mod => 
     val mepcMod = mod.asInstanceOf[CsrMepc]
     mepcMod.pc := wbuIn.pc
     mepcMod.isTrap := wbuIn.isTrap
+    wbuIn.mepc := mepcMod.csrIO.rData
   } 
   csrs.get(CsrAddr.mcause).foreach { mod => 
     val mcauseMod = mod.asInstanceOf[CsrMcause]
