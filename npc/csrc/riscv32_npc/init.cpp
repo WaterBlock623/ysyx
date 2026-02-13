@@ -88,6 +88,11 @@ extern "C" void set_gpr_ptr(int idx, uint32_t val) {
 
 static void sim_init(void) {
   contextp = new VerilatedContext;
+  const char* verilator_argv[] = {
+        "riscv32_npc-nemu-interpreter", 
+        "profile.vlt"
+    };
+  contextp->commandArgs(2, (const char **)verilator_argv);
   top = new __TOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
