@@ -8,7 +8,7 @@ $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
 VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
-				-O3 --x-assign fast --x-initial fast --noassert -threads 4
+				-O3 --x-assign fast --x-initial fast --noassert -threads 2
 
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
