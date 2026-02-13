@@ -432,7 +432,7 @@ case class InstPatternRvI(
       "ecall",
       ExtTypeEnum.I,
       DontCare,
-      isTrap = true,
+      isFromCsr = true,
       jumpTargetSel = JumpTargetSelEnum.mtvec
     ),
   )
