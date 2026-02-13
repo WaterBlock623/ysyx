@@ -27,7 +27,7 @@ object ExuOutSelEnum extends ChiselEnum {
 }
 
 object JumpTargetSelEnum extends ChiselEnum {
-  val alu, pcPlusImm = Value
+  val alu, pcPlusImm, mtvec, mepc = Value
 }
 
 object WriteBackSelEnum extends ChiselEnum {

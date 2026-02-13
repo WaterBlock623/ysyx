@@ -2,6 +2,7 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import sirius.JumpTargetSelEnum.mepc
 
 class CsrIO(implicit private val cfg: CoreConfig) extends Bundle {
   val wEn = Bool()
@@ -44,6 +45,51 @@ class CsrMvendorid(implicit private val cfg: CoreConfig) extends CsrParent {
 
 class CsrMarchid(implicit private val cfg: CoreConfig) extends CsrParent {
   csrIO.rData := cfg.marchid.U
+}
+
+class CsrMtvec(implicit private val cfg: CoreConfig) extends CsrParent {
+  val mtvecReg = Reg(UInt(cfg.mxlen.W))
+  when (csrIO.wEn) {
+    mtvecReg := csrIO.wData
+  }
+  csrIO.rData := mtvecReg
+}
+
+class CsrMepc(implicit private val cfg: CoreConfig) extends CsrParent {
+  val pc = IO(Input(UInt(cfg.xlen.W)))
+  val isTrap = IO(Input(Bool()))
+
+  val mepcReg = Reg(MixedVec(UInt(1.W), UInt((cfg.mxlen - 1).W)))
+  when (csrIO.wEn) {
+    mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
+  }
+  when (isTrap) {
+    mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
+  }
+  csrIO.rData := mepcReg.asUInt
+  mepcReg(0) := 0.U
+}
+
+class CsrMcause(implicit private val cfg: CoreConfig) extends CsrParent {
+  val causeNum = IO(Input(UInt(cfg.mxlen.W)))
+  val isTrap = IO(Input(Bool()))
+
+  val mcauseReg = Reg(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W)))
+  when (csrIO.wEn) {
+    mcauseReg := csrIO.wData.asTypeOf(chiselTypeOf(mcauseReg))
+  }
+  when (isTrap) {
+    mcauseReg := causeNum.asTypeOf(chiselTypeOf(mcauseReg))
+  }
+  csrIO.rData := mcauseReg.asUInt
+}
+
+class CsrMstatus(implicit private val cfg: CoreConfig) extends CsrParent {
+  val mstatusReg = RegInit(0x1800.U(cfg.mxlen.W))
+  when (csrIO.wEn) {
+    mstatusReg := csrIO.wData
+  }
+  csrIO.rData := mstatusReg
 }
 
 class Csr(implicit private val cfg: CoreConfig, 
@@ -112,4 +158,15 @@ class Csr(implicit private val cfg: CoreConfig,
     mod.csrIOLo.wEn   := wbuIn.wEn && (wbuIn.wAddr === lo.U)
     mod.csrIOLo.wData := wbuIn.wData
   }
+
+  csrs.get(CsrAddr.mepc).foreach { mod => 
+    val mepcMod = mod.asInstanceOf[CsrMepc]
+    mepcMod.pc := wbuIn.pc
+    mepcMod.isTrap := wbuIn.isTrap
+  } 
+  csrs.get(CsrAddr.mcause).foreach { mod => 
+    val mcauseMod = mod.asInstanceOf[CsrMcause]
+    mcauseMod.causeNum := wbuIn.causeNum
+    mcauseMod.isTrap := wbuIn.isTrap
+  } 
 }

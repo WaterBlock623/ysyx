@@ -8,6 +8,10 @@ object CsrAddr {
   val mcycleh = 0xB80
   val mvendorid = 0xF11
   val marchid = 0xF12
+  val mtvec = 0x305
+  val mepc = 0x341
+  val mcause = 0x342
+  val mstatus = 0x300
 }
 
 case class UnitConfig(
@@ -28,6 +32,10 @@ case class UnitConfig(
   val csrMap: ListMap[Int, () => CsrParent] = ListMap(
     CsrAddr.mvendorid -> (() => new CsrMvendorid),
     CsrAddr.marchid -> (() => new CsrMarchid),
+    CsrAddr.mtvec -> (() => new CsrMtvec),
+    CsrAddr.mepc -> (() => new CsrMepc),
+    CsrAddr.mcause -> (() => new CsrMcause),
+    CsrAddr.mstatus -> (() => new CsrMstatus),
   ))
 object UnitConfig {
   implicit val default: UnitConfig = UnitConfig()

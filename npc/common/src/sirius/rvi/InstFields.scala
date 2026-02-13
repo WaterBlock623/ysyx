@@ -8,9 +8,6 @@ import cpuutil.CanAutoGenSig
 object InstFieldsRvI {
   val fields = Seq(
     MakeBoolField("isEbreak", "debug", _.name == "ebreak"),
-    MakeBoolField("isWriteBackReg", "wb", _.isWriteBackReg),
-    MakeBoolField("isBranch", "wb", _.isBranch),
-    MakeBoolField("isJump", "wb", _.isJump),
     MakeBoolField(
       "isLoad",
       "ls",
@@ -47,9 +44,13 @@ object InstFieldsRvI {
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
     MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
-    MakeEnumField("jumpTargetSel", "ex", JumpTargetSelEnum, _.jumpTargetSel),
+    MakeEnumField("jumpTargetSel", "wb", JumpTargetSelEnum, _.jumpTargetSel),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
+    MakeBoolField("isWriteBackReg", "wb", _.isWriteBackReg),
     MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
+    MakeBoolField("isBranch", "wb", _.isBranch),
+    MakeBoolField("isJump", "wb", _.isJump),
+    MakeBoolField("isTrap", "wb", _.isTrap),
     MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
 }

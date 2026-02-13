@@ -164,7 +164,7 @@ class Exu(
 
   // 计算跳转地址
   val jumpTargetGenerator = Module(new JumpTargetGenerator)
-  jumpTargetGenerator.io.jumpTargetSel := in.ctrl.exuCtrl.jumpTargetSel
+  jumpTargetGenerator.io.jumpTargetSel := in.ctrl.wbuCtrl.jumpTargetSel
   jumpTargetGenerator.io.pc := in.iduPayload.ifu.pc
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
