@@ -17,7 +17,6 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
     val csrAddr = UInt(12.W)
-    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
@@ -25,6 +24,7 @@ class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
     val jumpTarget = UInt(cfg.xlen.W)
+    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
@@ -83,7 +83,7 @@ class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rData = Input(Vec(2, UInt(cfg.xlen.W)))
 }
 
-class IduToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+class ExuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rAddr = Output(UInt(12.W)) 
   val rData = Input(UInt(cfg.mxlen.W))
 }

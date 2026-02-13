@@ -50,5 +50,6 @@ object InstFieldsRvI {
     MakeEnumField("jumpTargetSel", "ex", JumpTargetSelEnum, _.jumpTargetSel),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
+    MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
 }

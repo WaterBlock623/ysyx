@@ -428,5 +428,12 @@ case class InstPatternRvI(
       ExtTypeEnum.I,
       DontCare
     ),
+    // InstPattern(
+    //   "ecall",
+    //   ExtTypeEnum.I,
+    //   DontCare,
+    //   isJump = true,
+    //   jumpTargetSel = JumpTargetSelEnum.
+    // ),
   )
 }

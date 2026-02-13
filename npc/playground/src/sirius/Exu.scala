@@ -101,6 +101,9 @@ class Exu(
   implicit private val cfg:  CoreConfig,
   implicit private val ucfg: UnitConfig)
     extends Module {
+  val exte = IO(new Bundle {
+    val csr = new ExuToCsrIO
+  })
   val in = IO(Flipped(new IduToExuIO))
   val out = IO(new ExuToLsuIO)
 
@@ -111,7 +114,10 @@ class Exu(
   val imm = in.iduPayload.idu.imm
   val rs1Data = in.iduPayload.idu.rs1Data
   val rs2Data = in.iduPayload.idu.rs2Data
-  val csrData = in.iduPayload.idu.csrData
+
+  // csr
+  exte.csr.rAddr := in.iduPayload.idu.csrAddr
+  val csrData = exte.csr.rData
 
   // 根据扩展实例化Alu
   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {

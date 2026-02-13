@@ -66,7 +66,6 @@ class InstDecoder(
 class Idu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val regFile = new IduToRegFileIO
-    val csr = new IduToCsrIO
   })
   val in = IO(Flipped(new IfuToIduIO))
   val out = IO(new IduToExuIO)
@@ -101,8 +100,5 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   out.iduPayload.idu.imm := immParser.io.imm
 
   // csr
-  val csrAddr = inst(31, 20)
-  exte.csr.rAddr := csrAddr
-  out.iduPayload.idu.csrAddr := csrAddr
-  out.iduPayload.idu.csrData := exte.csr.rData
+  out.iduPayload.idu.csrAddr := inst(31, 20)
 }
