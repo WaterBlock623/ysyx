@@ -64,13 +64,25 @@ static int find_csr(word_t csr_addr) {
 
 word_t csr_read(word_t csr_addr) {
   int idx = find_csr(csr_addr);
-  Assert(idx >= 0, "Unsupported csr_addr: " FMT_WORD, csr_addr);
+  if (idx < 0) {
+#ifndef CONFIG_TARGET_SHARE
+  panic("Unsupported csr_addr read: " FMT_WORD, csr_addr);
+#else
+  Log("SHARE: Unsupported csr_addr read: " FMT_WORD, csr_addr);
+#endif
+  }
   return cpu.csr[idx];
 }
 
 void csr_write(word_t csr_addr, word_t wdata, word_t wmask) {
   int idx = find_csr(csr_addr);
-  Assert(idx >= 0, "Unsupported csr_addr: " FMT_WORD, csr_addr);
+  if (idx < 0) {
+#ifndef CONFIG_TARGET_SHARE
+  panic("Unsupported csr_addr write: " FMT_WORD, csr_addr);
+#else
+  Log("SHARE: Unsupported csr_addr write: " FMT_WORD, csr_addr);
+#endif
+  }
   cpu.csr[idx] &= ~wmask;
   cpu.csr[idx] |= wdata & wmask;
 }
