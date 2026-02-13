@@ -25,7 +25,12 @@ case class CoreConfig(
   ),
   val registerAddrWidth: Int = 4,
   val registerReadPortNum: Int = 2,
-  val memoryAddrWidth:     Int = 32) {
+  val memoryAddrWidth:     Int = 32,
+
+  // CsrID
+  val mvendorid: Int = 0x79737978,
+  val marchid: Int = 26010008,
+) {
   require(xlen == 32 || xlen == 64)
   val mxlen: Int = xlen
   val registerNum: Int = 1 << registerAddrWidth

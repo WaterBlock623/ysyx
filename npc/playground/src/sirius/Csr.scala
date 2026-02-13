@@ -38,6 +38,14 @@ class CsrMcycle32(implicit private val cfg: CoreConfig)
   csrIOLo.rData := cycleCntReg.lo
 }
 
+class CsrMvendorid(implicit private val cfg: CoreConfig) extends CsrParent {
+  csrIO.rData := cfg.mvendorid.U
+}
+
+class CsrMarchid(implicit private val cfg: CoreConfig) extends CsrParent {
+  csrIO.rData := cfg.marchid.U
+}
+
 class Csr(implicit private val cfg: CoreConfig, 
   implicit private val ucfg: UnitConfig) extends Module {
   val iduIn = IO(Flipped(new IduToCsrIO))
