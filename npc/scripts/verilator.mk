@@ -47,16 +47,16 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
-CFLAGS_BUILD += -fprofile-dir=$(BUILD_DIR)/../profile/ \
-								-Wno-error=coverage-mismatch -Wno-error=missing-profile
-PROFILE_DATA = $(wildcard *.gcda)
-ifeq ($(PROFILE_DATA),)
-    CFLAGS_BUILD += -fprofile-generate
-    $(info Profiling generation enabled)
-else
-    CFLAGS_BUILD += -fprofile-use -fprofile-correction
-    $(info Optimization with Profile-use enabled)
-endif
+# CFLAGS_BUILD += -fprofile-dir=$(BUILD_DIR)/../profile/ \
+# 								-Wno-error=coverage-mismatch -Wno-error=missing-profile
+# PROFILE_DATA = $(wildcard *.gcda)
+# ifeq ($(PROFILE_DATA),)
+#     CFLAGS_BUILD += -fprofile-generate
+#     $(info Profiling generation enabled)
+# else
+#     CFLAGS_BUILD += -fprofile-use -fprofile-correction
+#     $(info Optimization with Profile-use enabled)
+# endif
 
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
