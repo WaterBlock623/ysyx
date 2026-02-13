@@ -26,7 +26,7 @@ case class InstPattern(
 
   isBranch:      Boolean = false,
   isJump:        Boolean = false,
-  isTrap:        Boolean = false,
+  isFromCsr:        Boolean = false,
   jumpTargetSel: Data = DontCare,
 
   isWriteBackCsr: Boolean = false,

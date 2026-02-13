@@ -19,8 +19,8 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val aluOut = in.lsuPayload.exu.aluOut
   val csrData = in.lsuPayload.exu.csrData
 
-  // trap跳转地址
-  val trapJumpTarget = MuxLookup(in.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
+  // csr作为跳转地址
+  val csrJumpTarget = MuxLookup(in.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
     Seq(
       JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
       JumpTargetSelEnum.mepc.asUInt -> exte.csr.mepc
@@ -29,8 +29,8 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
 
   // pc
   val normalJumpTarget = in.lsuPayload.exu.jumpTarget
-  pcReg.target := Mux(ctrl.isTrap, trapJumpTarget, normalJumpTarget)
-  pcReg.isJump := ctrl.isJump || ctrl.isTrap || (ctrl.isBranch && aluOut(0))
+  pcReg.target := Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
+  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0))
 
   // gpr
   regFile.wAddr := in.lsuPayload.idu.wAddr
@@ -54,7 +54,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   csr.wData := in.lsuPayload.exu.aluOut
 
   csr.pc := pc
-  csr.isTrap := in.ctrl.wbuCtrl.isTrap
+  csr.isTrap := in.ctrl.wbuCtrl.isEcall
   csr.causeNum := 11.U
 
 }
