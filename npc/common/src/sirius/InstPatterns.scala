@@ -13,6 +13,7 @@ case class InstPattern(
   custom: Boolean = false,
   bp:     Option[String] = None,
 
+  aluIn1Sel: Data = DontCare,
   aluIn2Sel: Data = DontCare,
   aluOp:     Data = DontCare,
   exuOutSel: Data = DontCare,
@@ -25,7 +26,11 @@ case class InstPattern(
 
   isBranch:      Boolean = false,
   isJump:        Boolean = false,
-  jumpTargetSel: Data = DontCare
+  isFromCsr:        Boolean = false,
+  jumpTargetSel: Data = DontCare,
+
+  isWriteBackCsr: Boolean = false,
+  isCsrWriteCheck: Boolean = false,
 )(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig)
@@ -62,4 +67,5 @@ case class InstPatterns(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig) {
   val patternRvI = InstPatternRvI().pattern
+  val patternRvZicsr = InstPatternRvZicsr().pattern
 }

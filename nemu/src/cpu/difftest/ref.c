@@ -19,6 +19,8 @@
 #include <memory/paddr.h>
 #include <string.h>
 
+void (*g_difftest_skip_ref)(void) = NULL;
+
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
   if (direction == DIFFTEST_TO_DUT) {
     memcpy(buf, guest_to_host(addr), n);
@@ -51,7 +53,8 @@ __EXPORT void difftest_raise_intr(word_t NO) {
   assert(0);
 }
 
-__EXPORT void difftest_init(int port) {
+__EXPORT void difftest_init(int port, void (*difftest_skip_ref)(void)) {
+  g_difftest_skip_ref = difftest_skip_ref;
   void init_mem();
   init_mem();
   /* Perform ISA dependent initialization. */

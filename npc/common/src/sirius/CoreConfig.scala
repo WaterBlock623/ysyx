@@ -19,11 +19,20 @@ case class CoreConfig(
 
   // 基础配置
   val xlen:              Int = 32,
-  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(ExtTypeEnum.I),
+  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(
+    ExtTypeEnum.I,
+    ExtTypeEnum.Zicsr
+  ),
   val registerAddrWidth: Int = 4,
   val registerReadPortNum: Int = 2,
-  val memoryAddrWidth:     Int = 32) {
+  val memoryAddrWidth:     Int = 32,
+
+  // CsrID
+  val mvendorid: Int = 0x79737978,
+  val marchid: Int = 26010008,
+) {
   require(xlen == 32 || xlen == 64)
+  val mxlen: Int = xlen
   val registerNum: Int = 1 << registerAddrWidth
   require(memoryAddrWidth <= 32)
 
@@ -34,7 +43,8 @@ case class CoreConfig(
   ] =
     CfgMap(
       ListMap(
-        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldRvI
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldRvI,
+        (Set(ExtTypeEnum.Zicsr), Set(32)) -> InstFields.fieldRvZicsr,
       )
     )
 
@@ -43,7 +53,8 @@ case class CoreConfig(
     : CfgMap[InstPattern, Seq[InstPattern]] =
     CfgMap(
       ListMap(
-        (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI
+        (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI,
+        (Set(ExtTypeEnum.Zicsr), Set(32)) -> instPatterns.patternRvZicsr,
       )
     )
 }

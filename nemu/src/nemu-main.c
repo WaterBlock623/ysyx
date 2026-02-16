@@ -47,6 +47,8 @@ void test_expr(void) {
   Log("PASS");
 }
 
+IFDEF(CONFIG_NPC, void sim_close(void));
+
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
@@ -59,6 +61,8 @@ int main(int argc, char *argv[]) {
 
   /* Start engine. */
   engine_start();
+
+  IFDEF(CONFIG_NPC, sim_close());
 
   return is_exit_status_bad();
 }

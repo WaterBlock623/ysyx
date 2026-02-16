@@ -13,7 +13,7 @@ typedef MUXDEF(CONFIG_ISA64, Elf64_Sym, Elf32_Sym) elf_sym_t;
 #define ELF_ST_TYPE MUXDEF(CONFIG_ISA64, ELF64_ST_TYPE, ELF32_ST_TYPE)
 #define SH_MAX 64
 #define SH_NAME_MAX 128
-#define SYM_MAX 8192
+#define SYM_MAX 524288
 #define SYM_NAME_MAX 128
 
 static elf_ehdr_t eh;
@@ -127,8 +127,10 @@ void init_elf(const char *elf_file) {
 const char *get_function_name(paddr_t addr) {
   int i;
   for (i = 0; i < nr_sym; i++) {
-    if (ELF_ST_TYPE(sym[i].st_info) == STT_FUNC && sym[i].st_size > 0 &&
-        addr >= sym[i].st_value && addr < (sym[i].st_value + sym[i].st_size)) {
+    if (ELF_ST_TYPE(sym[i].st_info) == STT_FUNC &&
+        sym[i].st_size > 0 &&
+        addr >= sym[i].st_value && 
+        addr < (sym[i].st_value + sym[i].st_size)) {
       return sym_name[i];
     }
   }

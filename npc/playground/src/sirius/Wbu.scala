@@ -8,6 +8,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val pcReg = new WbuToPcRegIO
     val regFlie = new WbuToRegFileIO
+    val csr = new WbuToCsrIO
   })
   val in = IO(Flipped(new LsuToWbuIO))
 
@@ -16,15 +17,20 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val regFile = exte.regFlie
   val imm = in.lsuPayload.idu.imm
   val aluOut = in.lsuPayload.exu.aluOut
+  val csrData = in.lsuPayload.exu.csrData
 
-  // pc
-  pcReg.target := MuxLookup(ctrl.jumpTargetSel, imm)(
+  // csr作为跳转地址
+  val csrJumpTarget = MuxLookup(in.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
     Seq(
-      JumpTargetSelEnum.imm.asUInt -> imm,
-      JumpTargetSelEnum.alu.asUInt -> aluOut
+      JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
+      JumpTargetSelEnum.mepc.asUInt -> exte.csr.mepc
     )
   )
-  pcReg.isJump := ctrl.isJump || (ctrl.isBranch && aluOut(0))
+
+  // pc
+  val normalJumpTarget = in.lsuPayload.exu.jumpTarget
+  pcReg.target := Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
+  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0))
 
   // gpr
   regFile.wAddr := in.lsuPayload.idu.wAddr
@@ -37,6 +43,18 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
       WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.staticNextPc.asUInt -> (pc + 4.U),
       WriteBackSelEnum.lsu.asUInt -> loadData,
+      WriteBackSelEnum.csr.asUInt -> csrData,
     )
   )
+
+  // csr
+  val csr = exte.csr
+  csr.wEn := in.ctrl.wbuCtrl.isWriteBackCsr && (imm.orR || !in.ctrl.wbuCtrl.isCsrWriteCheck)
+  csr.wAddr := in.lsuPayload.idu.csrAddr
+  csr.wData := in.lsuPayload.exu.aluOut
+
+  csr.pc := pc
+  csr.isTrap := in.ctrl.wbuCtrl.isEcall
+  csr.causeNum := 11.U
+
 }

@@ -229,6 +229,19 @@ static int print_arg(putchcmd_t put, char **save_ptr, const char **fmt, va_list_
       break;
     }
 
+    case 'u': {
+      unsigned long long uval = 0;
+      if (long_mod == 0)
+        uval = (unsigned int)va_arg(apw->ap, int);
+      else if (long_mod == 1)
+        uval = (unsigned long)va_arg(apw->ap, long);
+      else
+        uval = (unsigned long long)va_arg(apw->ap, long long);
+      
+      cnt += print_num(put, save_ptr, uval, 10, width, flags, 0);
+      break;
+    }
+
     case 'p': {
       uintptr_t uval = (uintptr_t)va_arg(apw->ap, void *);
       flags |= F_ALT; 

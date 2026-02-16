@@ -88,6 +88,11 @@ extern "C" void set_gpr_ptr(int idx, uint32_t val) {
 
 static void sim_init(void) {
   contextp = new VerilatedContext;
+  // const char* verilator_argv[] = {
+  //       "riscv32_npc-nemu-interpreter", 
+  //       "profile.vlt"
+  //   };
+  // contextp->commandArgs(2, (const char **)verilator_argv);
   top = new __TOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
@@ -136,6 +141,7 @@ static const uint32_t img[] = {
     // 0x0102c503, // lbu a0,16(t0)
     // 0x00100073, // ebreak (used as nemu_trap)
     // 0xdeadbeef, // some data
+
     0x800000b7, // lui x1, 0x80000
     0x00a00113, // addi x2, x0, 10
     0x800011b7, // lui x3, 0x80001
@@ -150,6 +156,11 @@ static const uint32_t img[] = {
     0x00100073, // ebreak
     0x007383b3, // add x7, x7, x7
     0x00008067, // jalr x0, 0(x1)
+
+    // 0xb0002573,
+    // 0xb00025f3,
+    // 0xb0002673,
+    // 0xb00026f3
 };
 
 void sync_npc_gpr(void) {

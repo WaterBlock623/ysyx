@@ -18,13 +18,18 @@
 #include <cpu/difftest.h>
 #include <isa.h>
 
+extern const char *csrs_name[NR_CSR];
+
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool is_pass = true;
+  // pc
   if (pc != ref_r->pc) {
     printf("Difftest dnpc fail:  nemu: " FMT_WORD "  ref: " FMT_WORD "\n", pc,
            ref_r->pc);
     is_pass = false;
   }
+
+  // gpr
   int i;
   for (i = 0; i < LENGTH(cpu.gpr); i++) {
     if (gpr(i) != ref_r->gpr[i]) {
@@ -33,6 +38,16 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
       is_pass = false;
     }
   }
+
+  // csr
+  for (i = 0; i < NR_CSR; i++) {
+    if (cpu.csr[i] != ref_r->csr[i]) {
+      printf("Difftest csr %s fail: nemu: " FMT_WORD "  ref: " FMT_WORD "\n", csrs_name[i],
+             cpu.csr[i], ref_r->csr[i]);
+      is_pass = false;
+    }
+  }
+  
   return is_pass;
 }
 

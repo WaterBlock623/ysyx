@@ -31,7 +31,7 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 #ifdef CONFIG_DIFFTEST
 
 static bool is_skip_ref = false;
-static bool is_skip_next_ref = false;
+// static bool is_skip_next_ref = false;
 static int skip_dut_nr_inst = 0;
 
 // this is used to let ref skip instructions which
@@ -46,10 +46,6 @@ void difftest_skip_ref() {
   // will load that memory, we will encounter false negative. But such
   // situation is infrequent.
   skip_dut_nr_inst = 0;
-}
-
-void difftest_skip_next_ref(void) {
-  is_skip_next_ref = true;
 }
 
 // this is used to deal with instruction packing in QEMU.
@@ -85,7 +81,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   ref_difftest_raise_intr = dlsym(handle, "difftest_raise_intr");
   assert(ref_difftest_raise_intr);
 
-  void (*ref_difftest_init)(int) = dlsym(handle, "difftest_init");
+  void (*ref_difftest_init)(int, void (*)(void)) = dlsym(handle, "difftest_init");
   assert(ref_difftest_init);
 
   Log("Differential testing: %s", ANSI_FMT("ON", ANSI_FG_GREEN));
@@ -95,7 +91,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
       "If it is not necessary, you can turn it off in menuconfig.",
       ref_so_file);
 
-  ref_difftest_init(port);
+  ref_difftest_init(port, difftest_skip_ref);
   ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size,
                       DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
@@ -135,18 +131,15 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     // reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
     is_skip_ref = false;
-    if (is_skip_next_ref) {
-      difftest_skip_ref();
-      is_skip_next_ref = false;
-    }
     return;
   }
-  if (is_skip_next_ref) {
-    difftest_skip_ref();
-    is_skip_next_ref = false;
+  ref_difftest_exec(1);
+  if (is_skip_ref) {
+    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+    is_skip_ref = false;
+    return;
   }
 
-  ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
 
   checkregs(&ref_r, npc);

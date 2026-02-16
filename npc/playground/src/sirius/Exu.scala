@@ -6,7 +6,9 @@ import scala.collection.immutable.ListMap
 import chisel3.experimental.dataview._
 import sirius.ExuOutSelEnum.aluBase
 
-class AluIO(implicit private val cfg: CoreConfig) extends Bundle {
+class AluIO(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val src1 = Output(UInt(cfg.xlen.W))
   val src2 = Output(UInt(cfg.xlen.W))
   val aluOp = Output(UInt(AluOpEnum.getWidth.W))
@@ -24,18 +26,86 @@ class AluParent(
 class AluBase(
   implicit private val cfg: CoreConfig)
     extends AluParent {
-  val addResult = io.src1 + io.src2
-
   import AluOpEnum._
+
+  // val isSub = io.aluOp === sub.asUInt
+  // val negSrc2 = ~io.src2 + 1.U
+  // val addSubResult = io.src1 + Mux(isSub, negSrc2, io.src2)
+  //
+  // io.out := RegNext(MuxLookup(io.aluOp, addSubResult)(
+  //   Seq(
+  //     add.asUInt -> addSubResult,
+  //     sub.asUInt -> addSubResult,
+  //   )
+  // ))
+
+  val addResult = io.src1 + io.src2
+  val subResult = io.src1 - io.src2
+  val eqlResult = io.src1 === io.src2
+  val neqResult = !eqlResult
+  val ltResult = io.src1.asSInt < io.src2.asSInt
+  val ltuResult = io.src1 < io.src2
+  val geResult = !ltResult
+  val geuResult = !ltuResult
+  val andResult = io.src1 & io.src2
+  val orResult = io.src1 | io.src2
+  val xorResult = io.src1 ^ io.src2
+  val shiftNum = io.src2(log2Ceil(cfg.xlen) - 1, 0)
+  val sllResult = io.src1 << shiftNum
+  val srlResult = io.src1 >> shiftNum
+  val sraResult = (io.src1.asSInt >> shiftNum).asUInt
+  val direct1Result = io.src1
+  val clearResult = io.src1 & ~io.src2
+
   io.out := MuxLookup(io.aluOp, addResult)(
     Seq(
-      add.asUInt -> addResult
+      add.asUInt -> addResult,
+      sub.asUInt -> subResult,
+      eql.asUInt -> eqlResult,
+      neq.asUInt -> neqResult,
+      lt.asUInt -> ltResult,
+      ltu.asUInt -> ltuResult,
+      ge.asUInt -> geResult,
+      geu.asUInt -> geuResult,
+      and.asUInt -> andResult,
+      or.asUInt -> orResult,
+      xor.asUInt -> xorResult,
+      sll.asUInt -> sllResult,
+      srl.asUInt -> srlResult,
+      sra.asUInt -> sraResult,
+      direct1.asUInt -> direct1Result,
+      clear.asUInt -> clearResult,
     )
   )
 }
 
-class Exu(implicit private val cfg: CoreConfig, 
-  implicit private val ucfg: UnitConfig) extends Module {
+class JumpTargetGenerator(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  val io = IO(new Bundle {
+    val jumpTargetSel = Input(UInt(JumpTargetSelEnum.getWidth.W))
+    val pc = Input(UInt(cfg.xlen.W))
+    val imm = Input(UInt(cfg.xlen.W))
+    val aluResult = Input(UInt(cfg.xlen.W))
+    val jumpTarget = Output(UInt(cfg.xlen.W))
+  })
+
+  val pcPlusImm = io.pc + io.imm
+  io.jumpTarget := MuxLookup(io.jumpTargetSel, pcPlusImm)(
+    Seq(
+      JumpTargetSelEnum.pcPlusImm.asUInt -> pcPlusImm,
+      JumpTargetSelEnum.alu.asUInt -> io.aluResult
+    )
+  )
+}
+
+class Exu(
+  implicit private val cfg:  CoreConfig,
+  implicit private val ucfg: UnitConfig)
+    extends Module {
+  val exte = IO(new Bundle {
+    val csr = new ExuToCsrIO
+  })
   val in = IO(Flipped(new IduToExuIO))
   val out = IO(new ExuToLsuIO)
 
@@ -47,27 +117,40 @@ class Exu(implicit private val cfg: CoreConfig,
   val rs1Data = in.iduPayload.idu.rs1Data
   val rs2Data = in.iduPayload.idu.rs2Data
 
+  // csr
+  exte.csr.rAddr := in.iduPayload.idu.csrAddr
+  val csrData = exte.csr.rData
+  out.exuPayload.exu.csrData := csrData
+
   // 根据扩展实例化Alu
   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
   //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
   //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
   // }.to(ListMap)
   val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
-    case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) => (outSel -> Module(alu()))
+    case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) =>
+      (outSel -> Module(alu()))
   }
 
   // 连接Alu输入
+  val src1 = MuxLookup(ctrl.aluIn1Sel, rs1Data)(
+    Seq(
+      // AluInSelEnum.imm.asUInt -> imm,
+      AluInSelEnum.rs.asUInt -> rs1Data,
+      AluInSelEnum.pc.asUInt -> in.iduPayload.ifu.pc
+    )
+  )
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
     Seq(
       AluInSelEnum.imm.asUInt -> imm,
-      AluInSelEnum.rs2.asUInt -> rs2Data,
+      AluInSelEnum.rs.asUInt -> rs2Data,
+      AluInSelEnum.csr.asUInt -> csrData,
     )
   )
-
   val aluIn = Wire(new AluIO)
   aluIn.out := DontCare
   aluIn.aluOp := ctrl.aluOp
-  aluIn.src1 := rs1Data
+  aluIn.src1 := src1
   aluIn.src2 := src2
   alus.foreach(alu => alu._2.io :<= aluIn)
 
@@ -76,7 +159,16 @@ class Exu(implicit private val cfg: CoreConfig,
     alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
       outSel.asUInt -> alu.io.out
     }.toSeq
-  out.exuPayload.exu.aluOut := MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+  val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
     outTable
   )
+  out.exuPayload.exu.aluOut := aluOut
+
+  // 计算跳转地址
+  val jumpTargetGenerator = Module(new JumpTargetGenerator)
+  jumpTargetGenerator.io.jumpTargetSel := in.ctrl.wbuCtrl.jumpTargetSel
+  jumpTargetGenerator.io.pc := in.iduPayload.ifu.pc
+  jumpTargetGenerator.io.imm := imm
+  jumpTargetGenerator.io.aluResult := aluOut
+  out.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 }

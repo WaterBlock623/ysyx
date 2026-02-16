@@ -2,7 +2,7 @@ package sirius
 
 import chisel3._
 
-// 数据载荷(递增)
+// 数据载荷
 class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
   val ifu = new Bundle {
     val pc = UInt(cfg.xlen.W)
@@ -16,12 +16,15 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val rs2Data = UInt(cfg.xlen.W)
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
+    val csrAddr = UInt(12.W)
   }
 }
 
 class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
+    val jumpTarget = UInt(cfg.xlen.W)
+    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
@@ -31,7 +34,7 @@ class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   }
 }
 
-// 控制信号(递减/反向递增)
+// 控制信号
 class WbuCtrl(implicit private val cfg: CoreConfig) extends Bundle {
   val wbuCtrl = new CtrlSignals().wb
 }
@@ -70,14 +73,19 @@ class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
 }
 
+class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(UInt(cfg.xlen.W))
+  val rData = Input(UInt(cfg.xlen.W))
+}
+
 class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
   val rData = Input(Vec(2, UInt(cfg.xlen.W)))
 }
 
-class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val rAddr = Output(UInt(cfg.xlen.W))
-  val rData = Input(UInt(cfg.xlen.W))
+class ExuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(UInt(12.W)) 
+  val rData = Input(UInt(cfg.mxlen.W))
 }
 
 class LsuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
@@ -101,3 +109,13 @@ class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val target = Output(UInt(cfg.xlen.W))
 }
 
+class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val wEn = Output(Bool())
+  val wAddr = Output(UInt(12.W)) 
+  val wData = Output(UInt(cfg.mxlen.W))
+  val pc = Output(UInt(cfg.xlen.W))
+  val isTrap = Output(Bool())
+  val causeNum = Output(UInt(cfg.mxlen.W))
+  val mtvec = Input(UInt(cfg.mxlen.W))
+  val mepc = Input(UInt(cfg.mxlen.W))
+}

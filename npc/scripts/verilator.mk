@@ -7,9 +7,17 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
-VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
-				-O3 --x-assign fast --x-initial fast --noassert
+VLT_FILE = $(BUILD_DIR)/../profile/profile.vlt
+ifneq ($(wildcard $(VLT_FILE)),)
+VLT_ARGS = $(VLT_FILE)
+$(info Found profile.vlt, enabling PGO)
+else
+$(info profile.vlt not found, skipping PGO)
+endif
 
+VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
+				-O3 --x-assign fast --x-initial fast --noassert --threads 1 \
+				--prof-pgo $(VLT_ARGS)
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
@@ -30,12 +38,26 @@ NAME = $(GUEST_ISA)-nemu-$(ENGINE)
 ifneq ($(CONFIG_CC),)
 CC = $(call remove_quote,$(CONFIG_CC))
 endif
+
+
 CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3,)
+# CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-g,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
+# CFLAGS_BUILD += -fprofile-dir=$(BUILD_DIR)/../profile/ \
+# 								-Wno-error=coverage-mismatch -Wno-error=missing-profile
+# PROFILE_DATA = $(wildcard *.gcda)
+# ifeq ($(PROFILE_DATA),)
+#     CFLAGS_BUILD += -fprofile-generate
+#     $(info Profiling generation enabled)
+# else
+#     CFLAGS_BUILD += -fprofile-use -fprofile-correction
+#     $(info Optimization with Profile-use enabled)
+# endif
+
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
 CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)

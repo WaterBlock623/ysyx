@@ -11,26 +11,6 @@ case class InstPatternRvI(
   implicit private val cfg:   CoreConfig) {
   val pattern = Seq(
     InstPattern(
-      "add",
-      ExtTypeEnum.I,
-      InstTypeEnum.R,
-      aluIn2Sel = AluInSelEnum.rs2,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.alu
-    ),
-    InstPattern(
-      "addi",
-      ExtTypeEnum.I,
-      InstTypeEnum.I,
-      aluIn2Sel = AluInSelEnum.imm,
-      aluOp = AluOpEnum.add,
-      exuOutSel = ExuOutSelEnum.aluBase,
-      isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.alu
-    ),
-    InstPattern(
       "lui",
       ExtTypeEnum.I,
       InstTypeEnum.U,
@@ -38,9 +18,135 @@ case class InstPatternRvI(
       writeBackSel = WriteBackSelEnum.imm
     ),
     InstPattern(
+      "auipc",
+      ExtTypeEnum.I,
+      InstTypeEnum.U,
+      aluIn1Sel = AluInSelEnum.pc,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "jal",
+      ExtTypeEnum.I,
+      InstTypeEnum.J,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.staticNextPc,
+      isJump = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "jalr",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.staticNextPc,
+      isJump = true,
+      jumpTargetSel = JumpTargetSelEnum.alu
+    ),
+    InstPattern(
+      "beq",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.eql,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "bne",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.neq,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "blt",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.lt,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "bge",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.ge,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "bltu",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.ltu,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "bgeu",
+      ExtTypeEnum.I,
+      InstTypeEnum.B,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.geu,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isBranch = true,
+      jumpTargetSel = JumpTargetSelEnum.pcPlusImm
+    ),
+    InstPattern(
+      "lb",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.signedLoad,
+      loadStoreLength = LoadStoreLengthEnum.b,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.lsu
+    ),
+    InstPattern(
+      "lh",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.signedLoad,
+      loadStoreLength = LoadStoreLengthEnum.h,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.lsu
+    ),
+    InstPattern(
       "lw",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -53,6 +159,7 @@ case class InstPatternRvI(
       "lbu",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -62,19 +169,23 @@ case class InstPatternRvI(
       writeBackSel = WriteBackSelEnum.lsu
     ),
     InstPattern(
-      "sw",
+      "lhu",
       ExtTypeEnum.I,
-      InstTypeEnum.S,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
-      loadStoreType = LoadStoreTypeEnum.store,
-      loadStoreLength = LoadStoreLengthEnum.w
+      loadStoreType = LoadStoreTypeEnum.unsignedLoad,
+      loadStoreLength = LoadStoreLengthEnum.h,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.lsu
     ),
     InstPattern(
       "sb",
       ExtTypeEnum.I,
       InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
@@ -82,21 +193,254 @@ case class InstPatternRvI(
       loadStoreLength = LoadStoreLengthEnum.b
     ),
     InstPattern(
-      "jalr",
+      "sh",
+      ExtTypeEnum.I,
+      InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.store,
+      loadStoreLength = LoadStoreLengthEnum.h
+    ),
+    InstPattern(
+      "sw",
+      ExtTypeEnum.I,
+      InstTypeEnum.S,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      loadStoreType = LoadStoreTypeEnum.store,
+      loadStoreLength = LoadStoreLengthEnum.w
+    ),
+    InstPattern(
+      "addi",
       ExtTypeEnum.I,
       InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
       aluIn2Sel = AluInSelEnum.imm,
       aluOp = AluOpEnum.add,
       exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.staticNextPc,
-      isJump = true,
-      jumpTargetSel = JumpTargetSelEnum.alu
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "slti",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.lt,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "sltiu",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.ltu,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "xori",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.xor,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "ori",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.or,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "andi",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.and,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "slli",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.sll,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "srli",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.srl,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "srai",
+      ExtTypeEnum.I,
+      InstTypeEnum.I,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.sra,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "add",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.add,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "sub",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.sub,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "sll",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.sll,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "srl",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.srl,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "sra",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.sra,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "slt",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.lt,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "sltu",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.ltu,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "xor",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.xor,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "or",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.or,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
+    ),
+    InstPattern(
+      "and",
+      ExtTypeEnum.I,
+      InstTypeEnum.R,
+      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
+      aluOp = AluOpEnum.and,
+      exuOutSel = ExuOutSelEnum.aluBase,
+      isWriteBackReg = true,
+      writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
       "ebreak",
       ExtTypeEnum.I,
       DontCare
-    )
+    ),
+    InstPattern(
+      "ecall",
+      ExtTypeEnum.I,
+      DontCare,
+      isFromCsr = true,
+      jumpTargetSel = JumpTargetSelEnum.mtvec
+    ),
+    InstPattern(
+      "mret",
+      ExtTypeEnum.I,
+      DontCare,
+      isFromCsr = true,
+      jumpTargetSel = JumpTargetSelEnum.mepc
+    ),
   )
 }

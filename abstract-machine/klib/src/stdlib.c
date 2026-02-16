@@ -21,6 +21,7 @@ int abs(int x) {
 }
 
 long strtol(const char *nptr, char **endptr, int base) {
+  panic("strtol !!!");
   assert(base == 10);
   long x = 0;
   while (*nptr == ' ') { nptr++; }

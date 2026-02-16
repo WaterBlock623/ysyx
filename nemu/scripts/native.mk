@@ -32,15 +32,18 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 
 # Command to execute NEMU
 IMG ?=
-NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
+NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
+	-mkdir -p $(BUILD_DIR)/../profile/
 	$(call git_commit, "run NEMU")
 	$(NEMU_EXEC)
+	-mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/../profile/profile.vlt
 
 gdb: run-env
+	-mkdir -p $(BUILD_DIR)/../profile/
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(NEMU_EXEC)
 

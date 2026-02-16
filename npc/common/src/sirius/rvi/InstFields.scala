@@ -8,9 +8,11 @@ import cpuutil.CanAutoGenSig
 object InstFieldsRvI {
   val fields = Seq(
     MakeBoolField("isEbreak", "debug", _.name == "ebreak"),
-    MakeBoolField("isWriteBackReg", "wb", _.isWriteBackReg),
-    MakeBoolField("isBranch", "wb", _.isBranch),
-    MakeBoolField("isJump", "wb", _.isJump),
+    MakeEnumField("instType", "id", InstTypeEnum, _.instType),
+    MakeEnumField("aluIn1Sel", "ex", AluInSelEnum, _.aluIn1Sel),
+    MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
+    MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
+    MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
     MakeBoolField(
       "isLoad",
       "ls",
@@ -43,11 +45,12 @@ object InstFieldsRvI {
       LoadStoreLengthEnum,
       _.loadStoreLength
     ),
-    MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
-    MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
-    MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
-    MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("jumpTargetSel", "wb", JumpTargetSelEnum, _.jumpTargetSel),
-    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel)
+    MakeBoolField("isWriteBackReg", "wb", _.isWriteBackReg),
+    MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
+    MakeBoolField("isBranch", "wb", _.isBranch),
+    MakeBoolField("isJump", "wb", _.isJump),
+    MakeBoolField("isFromCsr", "wb", _.isFromCsr),
+    MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
 }
