@@ -31,7 +31,7 @@ static inline void put_csrid(void) {
 }
 
 void _trm_init() {
-  put_csrid();
+  // put_csrid();
   int ret = main(mainargs);
   halt(ret);
 }
