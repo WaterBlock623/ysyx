@@ -54,7 +54,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
-$(info $(ARCHIVES))
+$(info NEMU archivers $(ARCHIVES))
 
 $(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
 	@echo + LD $@
