@@ -41,7 +41,14 @@ extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
     return 0;
   }
   raddr &= ~3u;
-  return paddr_read(raddr, 4);
+
+  static uint32_t last_raddr = 0;
+  static uint32_t rdata = 0;
+  if (raddr != last_raddr) {
+    last_raddr = raddr;
+    rdata = paddr_read(raddr, 4);
+  }
+  return rdata;
 }
 
 extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
