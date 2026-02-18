@@ -26,11 +26,11 @@ static VerilatedContext *contextp = NULL;
 static __TOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
-int npc_stop_flag = 0;
-// CPU_state npc_state = {};
 static uint32_t* npc_gpr_ptr = NULL;
-ISADecodeInfo npc_inst = {};
 static paddr_t npc_pc;
+// CPU_state npc_state = {};
+int npc_stop_flag = 0;
+ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
 
 // DIP-C
@@ -89,9 +89,9 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
 // 	ret_val = a0;
 // }
 
-extern "C" void set_gpr_ptr(uint32_t *ptr) {
-  npc_gpr_ptr = ptr;
-}
+// extern "C" void set_gpr_ptr(uint32_t *ptr) {
+//   npc_gpr_ptr = ptr;
+// }
 
 static void sim_init(void) {
   contextp = new VerilatedContext;
