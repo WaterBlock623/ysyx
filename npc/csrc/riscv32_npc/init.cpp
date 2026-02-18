@@ -107,6 +107,8 @@ static void sim_init(void) {
   top->trace(tfp, 99);
   tfp->open(str(__WAVE__));
 #endif
+
+  npc_gpr_ptr = (uint32_t *)top->Top->getGprDpiC->temp_regs.data();
 }
 
 extern "C" void sim_close(void) {
