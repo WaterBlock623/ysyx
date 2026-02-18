@@ -60,12 +60,12 @@ class CsrMepc(implicit private val cfg: CoreConfig) extends CsrParent {
   val isTrap = IO(Input(Bool()))
 
   val mepcReg = Reg(MixedVec(UInt(1.W), UInt((cfg.mxlen - 1).W)))
-  when (csrIO.wEn) {
-    mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
+  when (csrIO.wEn || isTrap) {
+    mepcReg := Mux(isTrap,
+      pc.asTypeOf(chiselTypeOf(mepcReg)), 
+      csrIO.wData.asTypeOf(chiselTypeOf(mepcReg)))
   }
-  when (isTrap) {
-    mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
-  }
+
   csrIO.rData := mepcReg.asUInt
   mepcReg(0) := 0.U
 }
@@ -75,11 +75,10 @@ class CsrMcause(implicit private val cfg: CoreConfig) extends CsrParent {
   val isTrap = IO(Input(Bool()))
 
   val mcauseReg = Reg(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W)))
-  when (csrIO.wEn) {
-    mcauseReg := csrIO.wData.asTypeOf(chiselTypeOf(mcauseReg))
-  }
-  when (isTrap) {
-    mcauseReg := causeNum.asTypeOf(chiselTypeOf(mcauseReg))
+  when (csrIO.wEn || isTrap) {
+    mcauseReg := Mux(isTrap, 
+      causeNum.asTypeOf(chiselTypeOf(mcauseReg)), 
+      csrIO.wData.asTypeOf(chiselTypeOf(mcauseReg)))
   }
   csrIO.rData := mcauseReg.asUInt
 }
