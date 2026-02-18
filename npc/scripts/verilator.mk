@@ -20,7 +20,7 @@ endif
 # 				--prof-pgo $(VLT_ARGS)
 VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
-				--prof-pgo --prof-exec –threads-dpi all $(VLT_ARGS)
+				--threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
