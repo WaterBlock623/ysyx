@@ -15,12 +15,11 @@ else
 $(info profile.vlt not found, skipping PGO)
 endif
 
+VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
+				-O3 --x-assign fast --x-initial fast --noassert --threads 1 \
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
-# 				--prof-pgo $(VLT_ARGS)
-VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
-				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
-				--threads-max-mtasks 8 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
+# 				--threads-max-mtasks 128 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
 VERILATOR_CFLAGS += --trace-fst
