@@ -22,13 +22,15 @@
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
 
-VerilatedContext *contextp = NULL;
-__TOP_NAME__ *top = NULL;
-VerilatedFstC *tfp = NULL;
+static VerilatedContext *contextp = NULL;
+static __TOP_NAME__ *top = NULL;
+static VerilatedFstC *tfp = NULL;
 
 int npc_stop_flag = 0;
-CPU_state npc_state = {};
+// CPU_state npc_state = {};
+static uint32_t* npc_gpr_ptr = NULL;
 ISADecodeInfo npc_inst = {};
+static paddr_t npc_pc;
 paddr_t npc_dnpc;
 
 // DIP-C
@@ -77,7 +79,7 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
 extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
                                uint32_t inst) {
   npc_stop_flag = is_ebreak;
-  npc_state.pc = pc;
+  npc_pc = pc;
   npc_dnpc = dnpc;
   npc_inst.inst = inst;
   // Log("%u %u %u", is_ebreak, pc, inst);
@@ -87,10 +89,8 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
 // 	ret_val = a0;
 // }
 
-extern "C" void set_gpr_ptr(int idx, uint32_t val) {
-  if (idx >= 0 && idx < LENGTH(npc_state.gpr)) {
-    npc_state.gpr[idx] = val;
-  }
+extern "C" void set_gpr_ptr(uint32_t *ptr) {
+  npc_gpr_ptr = ptr;
 }
 
 static void sim_init(void) {
@@ -173,13 +173,13 @@ static const uint32_t img[] = {
 void sync_npc_gpr(void) {
   int i;
   for (i = 0; i < LENGTH(cpu.gpr); i++) {
-    gpr(i) = npc_state.gpr[i];
+    gpr(i) = npc_gpr_ptr[i];
   }
 }
 
 extern "C" void restart() {
   reset(20);
-  cpu.pc = npc_state.pc;
+  cpu.pc = npc_pc;
   sync_npc_gpr();
 }
 
