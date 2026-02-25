@@ -10,16 +10,18 @@ class DebugInfoDpiC(
   val pc = IO(Input(UInt(cfg.xlen.W)))
   val dnpc = IO(Input(UInt(cfg.xlen.W)))
   val inst = IO(Input(UInt(cfg.xlen.W)))
+  val wbuValid = IO(Input(Bool()))
   setInline(
     "DebugInfoDpiC.sv",
     s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
-        |  input int pc, input int dnpc, input int inst,
+        |  input int pc, input int dnpc, input int inst, input int wbu_valid
         |  );
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
-        |  input [${cfg.xlen - 1}:0] dnpc, input [${cfg.xlen - 1}:0] inst
+        |  input [${cfg.xlen - 1}:0] dnpc, input [${cfg.xlen - 1}:0] inst,
+        |  input wbuValid
         |  );
         |always @(*) begin
-        | set_debug_info({31'b0, isEbreak}, pc, dnpc, inst);
+        | set_debug_info({31'b0, isEbreak}, pc, dnpc, inst, {31'b0, wbuValid});
         |end
         |endmodule
     """.stripMargin

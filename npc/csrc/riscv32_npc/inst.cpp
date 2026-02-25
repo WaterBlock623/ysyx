@@ -188,6 +188,7 @@ extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
 extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
+extern int npc_wbu_valid;
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
@@ -199,6 +200,10 @@ int isa_exec_once(Decode *s) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
     // sim_close();
     return 0;
+  }
+  if (npc_wbu_valid == 0) {
+    difftest_skip_ref();
+    Log("Skip!");
   }
   single_cycle(); 
   sync_npc_gpr();

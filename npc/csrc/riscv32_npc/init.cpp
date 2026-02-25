@@ -33,6 +33,7 @@ static paddr_t npc_pc;
 int npc_stop_flag = 0;
 ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
+int npc_wbu_valid = 0;
 
 // DIP-C
 #define MEM_READ_SKIP 5
@@ -78,11 +79,12 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
 }
 
 extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
-                               uint32_t inst) {
+                               uint32_t inst, int wbu_valid) {
   npc_stop_flag = is_ebreak;
   npc_pc = pc;
   npc_dnpc = dnpc;
   npc_inst.inst = inst;
+  npc_wbu_valid = wbu_valid;
   // Log("%u %u %u", is_ebreak, pc, inst);
 }
 
