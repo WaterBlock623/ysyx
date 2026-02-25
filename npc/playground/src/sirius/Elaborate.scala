@@ -16,7 +16,7 @@ object Elaborate extends App {
   val cfg =
     CoreConfig(
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
-      // isDebug = false,
+      isDebug = false,
     )
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
