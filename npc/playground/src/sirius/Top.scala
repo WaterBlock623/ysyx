@@ -171,6 +171,7 @@ class Top(
     debugInfoDpiC.pc := pcReg.debug.get.pc
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
+    debugInfoDpiC.wbuValid := wbu.out.valid
     memDpiC.inst :<>= ifu.exte.mem
     memDpiC.ls :<>= lsu.exte.mem
     memDpiC.clock := clock
