@@ -175,12 +175,18 @@ class Top(
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
   } else {
-    val memRegFile = Module(new MemRegFile)
-    memRegFile.inst :<>= ifu.exte.mem
-    memRegFile.ls :<>= lsu.exte.mem
+    // val memRegFile = Module(new MemRegFile)
+    // memRegFile.inst :<>= ifu.exte.mem
+    // memRegFile.ls :<>= lsu.exte.mem
 
-    val out = IO(Output(UInt(32.W)))
-    out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
+    // val out = IO(Output(UInt(32.W)))
+    // out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
+    val io = IO(new Bundle {
+      val inst = IO(new IfuToMemIO)
+      val ls = IO(new LsuToMemIO)
+    })
+    io.inst :<>= ifu.exte.mem
+    io.ls :<>= lsu.exte.mem
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
