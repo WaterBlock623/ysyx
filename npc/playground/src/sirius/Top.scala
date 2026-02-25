@@ -165,7 +165,7 @@ class Top(
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
 
-    debugInfoDpiC.isEbreak := idu.out.ctrl.debugCtrl.get.isEbreak
+    debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
