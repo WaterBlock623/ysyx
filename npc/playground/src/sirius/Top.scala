@@ -178,6 +178,9 @@ class Top(
     val memRegFile = Module(new MemRegFile)
     memRegFile.inst :<>= ifu.exte.mem
     memRegFile.ls :<>= lsu.exte.mem
+
+    val out = IO(Output(UInt(cfg.xlen.W)))
+    out := registerFile.iduIn.rData
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
