@@ -5,6 +5,7 @@ import chisel3.util.experimental.decode._
 import chisel3.util.MuxLookup
 import chisel3.util.Fill
 import chisel3.experimental.dataview._
+import chisel3.util.Decoupled
 
 // 解析imm
 class ImmParser(
@@ -67,38 +68,45 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val regFile = new IduToRegFileIO
   })
-  val in = IO(Flipped(new IfuToIduIO))
-  val out = IO(new IduToExuIO)
+  val in = IO(Flipped(Decoupled(new IfuToIduIO)))
+  val out = IO(Decoupled(new IduToExuIO))
 
-  out.iduPayload.viewAsSupertype(new IfuPayload) := in.ifuPayload
+  // DecoupledIO
+  DecoupledMasterSlaveFsm(out, in)
+  in.ready := true.B
+  out.valid := true.B
+  val inBits = in.bits
+  val outBits = out.bits
 
-  val inst = in.ifuPayload.ifu.inst
+  outBits.iduPayload.viewAsSupertype(new IfuPayload) := inBits.ifuPayload
+
+  val inst = inBits.ifuPayload.ifu.inst
   // rs1
   exte.regFile.rAddr(0) := inst(19, 15)
-  out.iduPayload.idu.rs1Data := exte.regFile.rData(0)
+  outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
   // rs2
   exte.regFile.rAddr(1) := inst(24, 20)
-  out.iduPayload.idu.rs2Data := exte.regFile.rData(1)
+  outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
   // rd
-  out.iduPayload.idu.wAddr := inst(11, 7)
+  outBits.iduPayload.idu.wAddr := inst(11, 7)
 
   // ctrl
   val instDecoder = Module(new InstDecoder())
   instDecoder.io.inst := inst
   val ctrl = instDecoder.io.ctrlSignals
   if (cfg.isDebug) {
-    out.ctrl.debugCtrl.get := ctrl.debug
+    outBits.ctrl.debugCtrl.get := ctrl.debug
   }
-  out.ctrl.exuCtrl := ctrl.ex
-  out.ctrl.lsuCtrl := ctrl.ls
-  out.ctrl.wbuCtrl := ctrl.wb
+  outBits.ctrl.exuCtrl := ctrl.ex
+  outBits.ctrl.lsuCtrl := ctrl.ls
+  outBits.ctrl.wbuCtrl := ctrl.wb
 
   // imm
   val immParser = Module(new ImmParser())
   immParser.io.inst := inst
   immParser.io.instType := ctrl.id.instType
-  out.iduPayload.idu.imm := immParser.io.imm
+  outBits.iduPayload.idu.imm := immParser.io.imm
 
   // csr
-  out.iduPayload.idu.csrAddr := inst(31, 20)
+  outBits.iduPayload.idu.csrAddr := inst(31, 20)
 }

@@ -4,25 +4,33 @@ import chisel3._
 import chisel3.util.Fill
 import chisel3.util.MuxLookup
 import chisel3.experimental.dataview._
+import chisel3.util.Decoupled
 
 class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val mem = new LsuToMemIO
   })
-  val in = IO(Flipped(new ExuToLsuIO))
-  val out = IO(new LsuToWbuIO)
+  val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
+  val out = IO(Decoupled(new LsuToWbuIO))
 
-  out.lsuPayload.viewAsSupertype(new ExuPayload) := in.exuPayload
-  out.ctrl := in.ctrl.viewAsSupertype(new WbuCtrl)
+  // DecoupledIO
+  DecoupledMasterSlaveFsm(out, in)
+  in.ready := true.B
+  out.valid := true.B
+  val inBits = in.bits
+  val outBits = out.bits
+
+  outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
+  outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
   if (cfg.xlen != 32) {
     throw new IllegalArgumentException("Unsupported xlen")
   }
 
-  val ctrl = in.ctrl.lsuCtrl
+  val ctrl = inBits.ctrl.lsuCtrl
   exte.mem.valid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool
   exte.mem.wEn := ctrl.isStore
-  val addr = in.exuPayload.exu.aluOut
+  val addr = inBits.exuPayload.exu.aluOut
   exte.mem.rAddr := addr
   exte.mem.wAddr := addr
 
@@ -37,14 +45,14 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val lhData = Mux(ctrl.isUnsignedLoad, 0.U((cfg.xlen - 16).W), 
     Fill(cfg.xlen - 16, lhu(15))) ## lhu
   val lwData = rData(31, 0)
-  out.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(Seq(
+  outBits.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(Seq(
     LoadStoreLengthEnum.w.asUInt -> lwData,
     LoadStoreLengthEnum.h.asUInt -> lhData,
     LoadStoreLengthEnum.b.asUInt -> lbData,
     ))
 
   // store
-  val regData = in.exuPayload.idu.rs2Data
+  val regData = inBits.exuPayload.idu.rs2Data
   val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
   val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)

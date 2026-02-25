@@ -106,21 +106,28 @@ class Exu(
   val exte = IO(new Bundle {
     val csr = new ExuToCsrIO
   })
-  val in = IO(Flipped(new IduToExuIO))
-  val out = IO(new ExuToLsuIO)
+  val in = IO(Flipped(Decoupled(new IduToExuIO)))
+  val out = IO(Decoupled(new ExuToLsuIO))
 
-  out.exuPayload.viewAsSupertype(new IduPayload) := in.iduPayload
-  out.ctrl := in.ctrl.viewAsSupertype(new LsuCtrl)
+  // DecoupledIO
+  DecoupledMasterSlaveFsm(out, in)
+  in.ready := true.B
+  out.valid := true.B
+  val inBits = in.bits
+  val outBits = out.bits
 
-  val ctrl = in.ctrl.exuCtrl
-  val imm = in.iduPayload.idu.imm
-  val rs1Data = in.iduPayload.idu.rs1Data
-  val rs2Data = in.iduPayload.idu.rs2Data
+  outBits.exuPayload.viewAsSupertype(new IduPayload) := inBits.iduPayload
+  outBits.ctrl := inBits.ctrl.viewAsSupertype(new LsuCtrl)
+
+  val ctrl = inBits.ctrl.exuCtrl
+  val imm = inBits.iduPayload.idu.imm
+  val rs1Data = inBits.iduPayload.idu.rs1Data
+  val rs2Data = inBits.iduPayload.idu.rs2Data
 
   // csr
-  exte.csr.rAddr := in.iduPayload.idu.csrAddr
+  exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
   val csrData = exte.csr.rData
-  out.exuPayload.exu.csrData := csrData
+  outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
   // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
@@ -137,7 +144,7 @@ class Exu(
     Seq(
       // AluInSelEnum.imm.asUInt -> imm,
       AluInSelEnum.rs.asUInt -> rs1Data,
-      AluInSelEnum.pc.asUInt -> in.iduPayload.ifu.pc
+      AluInSelEnum.pc.asUInt -> inBits.iduPayload.ifu.pc
     )
   )
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
@@ -162,13 +169,13 @@ class Exu(
   val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
     outTable
   )
-  out.exuPayload.exu.aluOut := aluOut
+  outBits.exuPayload.exu.aluOut := aluOut
 
   // 计算跳转地址
   val jumpTargetGenerator = Module(new JumpTargetGenerator)
-  jumpTargetGenerator.io.jumpTargetSel := in.ctrl.wbuCtrl.jumpTargetSel
-  jumpTargetGenerator.io.pc := in.iduPayload.ifu.pc
+  jumpTargetGenerator.io.jumpTargetSel := inBits.ctrl.wbuCtrl.jumpTargetSel
+  jumpTargetGenerator.io.pc := inBits.iduPayload.ifu.pc
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
-  out.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
+  outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 }

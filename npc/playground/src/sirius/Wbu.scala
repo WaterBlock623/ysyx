@@ -2,6 +2,7 @@ package sirius
 
 import chisel3._
 import chisel3.util.MuxLookup
+import chisel3.util.Decoupled
 
 // 控制pc跳转和gpr读写
 class Wbu(implicit private val cfg: CoreConfig) extends Module {
@@ -10,17 +11,22 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
     val regFlie = new WbuToRegFileIO
     val csr = new WbuToCsrIO
   })
-  val in = IO(Flipped(new LsuToWbuIO))
+  val in = IO(Flipped(Decoupled(new LsuToWbuIO)))
 
-  val ctrl = in.ctrl.wbuCtrl
+  // DecoupledIO
+  DecoupledFsm(false, in)
+  in.ready := true.B
+  val inBits = in.bits
+
+  val ctrl = inBits.ctrl.wbuCtrl
   val pcReg = exte.pcReg
   val regFile = exte.regFlie
-  val imm = in.lsuPayload.idu.imm
-  val aluOut = in.lsuPayload.exu.aluOut
-  val csrData = in.lsuPayload.exu.csrData
+  val imm = inBits.lsuPayload.idu.imm
+  val aluOut = inBits.lsuPayload.exu.aluOut
+  val csrData = inBits.lsuPayload.exu.csrData
 
   // csr作为跳转地址
-  val csrJumpTarget = MuxLookup(in.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
+  val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
     Seq(
       JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
       JumpTargetSelEnum.mepc.asUInt -> exte.csr.mepc
@@ -28,14 +34,14 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   )
 
   // pc
-  val normalJumpTarget = in.lsuPayload.exu.jumpTarget
+  val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
   pcReg.target := Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
   pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0))
 
   // gpr
-  regFile.wAddr := in.lsuPayload.idu.wAddr
-  val pc = in.lsuPayload.ifu.pc
-  val loadData = in.lsuPayload.lsu.loadData
+  regFile.wAddr := inBits.lsuPayload.idu.wAddr
+  val pc = inBits.lsuPayload.ifu.pc
+  val loadData = inBits.lsuPayload.lsu.loadData
   regFile.wEn := ctrl.isWriteBackReg
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
@@ -49,12 +55,13 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
 
   // csr
   val csr = exte.csr
-  csr.wEn := in.ctrl.wbuCtrl.isWriteBackCsr && (imm.orR || !in.ctrl.wbuCtrl.isCsrWriteCheck)
-  csr.wAddr := in.lsuPayload.idu.csrAddr
-  csr.wData := in.lsuPayload.exu.aluOut
+  csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr && 
+    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck)
+  csr.wAddr := inBits.lsuPayload.idu.csrAddr
+  csr.wData := inBits.lsuPayload.exu.aluOut
 
   csr.pc := pc
-  csr.isTrap := in.ctrl.wbuCtrl.isEcall
+  csr.isTrap := inBits.ctrl.wbuCtrl.isEcall
   csr.causeNum := 11.U
 
 }
