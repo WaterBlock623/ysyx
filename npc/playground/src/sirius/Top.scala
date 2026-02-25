@@ -180,7 +180,7 @@ class Top(
     memRegFile.ls :<>= lsu.exte.mem
 
     val out = IO(Output(UInt(32.W)))
-    out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData ^ memRegFile.inst.rData ^ memRegFile.ls.rData
+    out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
