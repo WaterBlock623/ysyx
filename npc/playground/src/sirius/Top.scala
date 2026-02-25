@@ -179,8 +179,7 @@ class Top(
     memRegFile.inst :<>= ifu.exte.mem
     memRegFile.ls :<>= lsu.exte.mem
 
-    val out = IO(Output(UInt(32.W)))
-    out := exuOut.exuPayload.exu.aluOut ^ pcReg.ifuIn.pc ^ registerFile.iduIn.rData(0)
+    // val out = IO(Output(UInt(32.W)))
 
   }
 
