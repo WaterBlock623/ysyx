@@ -66,7 +66,7 @@ class MemDpiC(
         |  end
         |end
         |
-        |always @(*) begin
+        |always @(posedge clock) begin
         |  inst_rData = dpic_pmem_read(inst_rAddr);
         |end
         |endmodule
