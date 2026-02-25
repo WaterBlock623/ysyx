@@ -179,8 +179,8 @@ class Top(
     memRegFile.inst :<>= ifu.exte.mem
     memRegFile.ls :<>= lsu.exte.mem
 
-    dontTouch(registerFile.iduIn)
-    dontTouch(registerFile.wbuIn)
+    val out = IO(Output(UInt(cfg.xlen.W)))
+    out := registerFile.iduIn.rData
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
