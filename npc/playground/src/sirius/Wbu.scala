@@ -15,10 +15,11 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val out = IO(Decoupled())
 
   // DecoupledIO
-  // DecoupledFsm(false, in)
-  DecoupledMasterSlaveFsm(out, in)
+  DecoupledFsm(false, in)
   in.ready := true.B
   out.valid := in.valid
+  out.ready := DontCare
+  dontTouch(out)
   val inBits = in.bits
 
   val ctrl = inBits.ctrl.wbuCtrl
