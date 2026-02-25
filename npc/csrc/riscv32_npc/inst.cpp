@@ -195,6 +195,7 @@ int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   if (npc_wbu_valid == 0) {
+    s->dnpc = s->pc;
     difftest_skip_ref();
     Log("Skip!");
   } else {
