@@ -12,10 +12,13 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
     val csr = new WbuToCsrIO
   })
   val in = IO(Flipped(Decoupled(new LsuToWbuIO)))
+  val out = IO(Decoupled())
 
   // DecoupledIO
-  DecoupledFsm(false, in)
+  // DecoupledFsm(false, in)
+  DecoupledMasterSlaveFsm(out, in)
   in.ready := true.B
+  out.valid := in.valid
   val inBits = in.bits
 
   val ctrl = inBits.ctrl.wbuCtrl
