@@ -186,13 +186,14 @@ void print_disassemble(Decode *);
 // void restart(void);
 extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
+extern paddr_t npc_pc;
 extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
-  s->snpc = s->pc + 4;
+  s->snpc = npc_pc;
   s->dnpc = npc_dnpc;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   decode_inst(s);

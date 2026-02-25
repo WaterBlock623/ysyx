@@ -28,7 +28,7 @@ static __TOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
 static uint32_t* npc_gpr_ptr = NULL;
-static paddr_t npc_pc;
+paddr_t npc_pc;
 // CPU_state npc_state = {};
 int npc_stop_flag = 0;
 ISADecodeInfo npc_inst = {};
