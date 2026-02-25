@@ -182,8 +182,8 @@ class Top(
     // val out = IO(Output(UInt(32.W)))
     // out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
     val io = IO(new Bundle {
-      val inst = IO(new IfuToMemIO)
-      val ls = IO(new LsuToMemIO)
+      val inst = new IfuToMemIO
+      val ls = new LsuToMemIO
     })
     io.inst :<>= ifu.exte.mem
     io.ls :<>= lsu.exte.mem
