@@ -76,7 +76,7 @@ class MemDpiC(
 
 class MemRegFile(
   implicit private val cfg: CoreConfig)
-    extends ExtModule {
+    extends Module {
   val inst = IO(Flipped(new IfuToMemIO))
   val ls = IO(Flipped(new LsuToMemIO))
 
