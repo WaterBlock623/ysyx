@@ -37,12 +37,13 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
   pcReg.target := Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
   pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0))
+  pcReg.wEn := in.valid
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
   val pc = inBits.lsuPayload.ifu.pc
   val loadData = inBits.lsuPayload.lsu.loadData
-  regFile.wEn := ctrl.isWriteBackReg
+  regFile.wEn := ctrl.isWriteBackReg && in.valid
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
@@ -56,12 +57,12 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   // csr
   val csr = exte.csr
   csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr && 
-    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck)
+    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
   csr.wData := inBits.lsuPayload.exu.aluOut
 
   csr.pc := pc
-  csr.isTrap := inBits.ctrl.wbuCtrl.isEcall
+  csr.isTrap := inBits.ctrl.wbuCtrl.isEcall && in.valid
   csr.causeNum := 11.U
 
 }

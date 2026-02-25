@@ -16,7 +16,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   // DecoupledIO
   DecoupledMasterSlaveFsm(out, in)
   in.ready := true.B
-  out.valid := true.B
+  out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
 
@@ -29,7 +29,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
 
   val ctrl = inBits.ctrl.lsuCtrl
   exte.mem.valid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool
-  exte.mem.wEn := ctrl.isStore
+  exte.mem.wEn := ctrl.isStore && in.valid
   val addr = inBits.exuPayload.exu.aluOut
   exte.mem.rAddr := addr
   exte.mem.wAddr := addr

@@ -16,6 +16,15 @@ class Ifu(implicit private val cfg: CoreConfig) extends Module {
   out.valid := true.B
   val outBits = out.bits
 
+  // FSM
+  val sBusy :: sWait :: Nil = Enum(2)
+  val state = RegInit(sBusy)
+  state := MuxLookup(state, sBusy)(Seq(
+    sBusy -> sWait,
+    sWait -> sBusy
+    ))
+  out.valid := state === sWait
+
   val pc = exte.pcReg.pc
   exte.mem.rAddr := pc 
   val inst = exte.mem.rData

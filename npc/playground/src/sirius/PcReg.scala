@@ -14,7 +14,9 @@ class PcReg(
 
   val pcReg = RegInit("h80000000".U(cfg.xlen.W))
   val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
-  pcReg := pcNext
+  when (wbuIn.wEn) {
+    pcReg := pcNext
+  }
   ifuIn.pc := pcReg
 
   if (cfg.isDebug) {

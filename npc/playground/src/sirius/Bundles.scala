@@ -107,6 +107,7 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
 class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isJump = Output(Bool())
   val target = Output(UInt(cfg.xlen.W))
+  val wEn = Output(Bool())
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
