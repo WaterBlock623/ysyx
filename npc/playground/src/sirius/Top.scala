@@ -74,6 +74,32 @@ class MemDpiC(
   )
 }
 
+class MemRegFile(
+  implicit private val cfg: CoreConfig)
+    extends ExtModule {
+  val inst = IO(Flipped(new IfuToMemIO))
+  val ls = IO(Flipped(new LsuToMemIO))
+
+  val iMem = Mem(256, UInt(32.W))
+  inst.rData := iMem.read(inst.rAddr)
+
+  val lsMem = Mem(256, Vec(4, UInt(8.W)))
+  val lsMask = ls.wMask
+        .asTypeOf(Vec(4, Bool()))
+        .toSeq
+        // .map(Fill(8, _))
+        // .reduce(_ ## _)
+        // .asTypeOf(Vec(32, Bool()))
+  ls.rData := DontCare
+  when (ls.valid) {
+    when (ls.wEn) {
+      lsMem.write(ls.wAddr, ls.wData.asTypeOf(Vec(4, UInt(8.W))), lsMask)
+    } .otherwise {
+      ls.rData := lsMem.read(ls.rAddr).asUInt
+    }
+  }
+}
+
 // class GetRetDpiC extends ExtModule {
 //   val a0 = IO(Input(UInt(32.W)))
 //   setInline(
@@ -148,6 +174,10 @@ class Top(
     memDpiC.clock := clock
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
+  } else {
+    val memRegFile = Module(new MemRegFile)
+    memRegFile.inst :<>= ifu.exte.mem
+    memRegFile.ls :<>= lsu.exte.mem
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
