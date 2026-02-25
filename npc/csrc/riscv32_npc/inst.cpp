@@ -193,18 +193,19 @@ extern int npc_wbu_valid;
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
-  s->snpc = npc_pc;
-  s->dnpc = npc_dnpc;
+  s->snpc = s->pc + 4;
+  if (npc_wbu_valid == 0) {
+    difftest_skip_ref();
+    Log("Skip!");
+  } else {
+    s->dnpc = npc_dnpc;
+  }
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   decode_inst(s);
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
     // sim_close();
     return 0;
-  }
-  if (npc_wbu_valid == 0) {
-    difftest_skip_ref();
-    Log("Skip!");
   }
   single_cycle(); 
   sync_npc_gpr();
