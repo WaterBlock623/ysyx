@@ -33,8 +33,8 @@ class Ifu(
   //
   import chisel3.util.random.LFSR
 
-  val lfsr = LFSR(8)
-  val delayReg = RegInit(0.U(8.W))
+  val lfsr = LFSR(4)
+  val delayReg = RegInit(0.U(4.W))
   val isNewReq = state === sWait && !RegNext(state === sWait)
 
   when(isNewReq) {
