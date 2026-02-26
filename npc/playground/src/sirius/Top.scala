@@ -46,26 +46,18 @@ class MemDpiC(
         |  input clock,
         |  input [$memAddrMsb:0] inst_rAddr, 
         |  output reg [31:0] inst_rData, 
-        |  input [$memAddrMsb:0] ls_rAddr, 
+        |  input [$memAddrMsb:0] ls_addr, 
         |  output reg [31:0] ls_rData, 
-        |  input [$memAddrMsb:0] ls_wAddr,
         |  input [31:0]  ls_wData,
         |  input [$maskMsb:0] ls_wMask,
-        |  input ls_valid, 
+        |  input ls_reqValid, 
         |  input ls_wEn);
         |
         |always @(posedge clock) begin
-        |  if (ls_valid & ls_wEn) begin
-        |    dpic_pmem_write(ls_wAddr, ls_wData, {$maskZero'b0, ls_wMask});
-        |  end
-        |end
-        |
-        |always @(*) begin
-        |  if (ls_valid) begin
-        |    ls_rData = dpic_pmem_read(ls_rAddr);
-        |  end else begin
-        |    ls_rData = 0;
-        |  end
+        | lsu_rdata <= (ls_req_valid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+        | if (ls_reqValid && ls_wEn) begin
+        |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+        | end
         |end
         |
         |always @(posedge clock) begin

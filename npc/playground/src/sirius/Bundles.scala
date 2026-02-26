@@ -89,10 +89,9 @@ class ExuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class LsuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val valid = Output(Bool())
-  val rAddr = Output(UInt(cfg.xlen.W))
+  val reqValid = Output(Bool())
+  val addr = Output(UInt(cfg.xlen.W))
   val rData = Input(UInt(cfg.xlen.W))
-  val wAddr = Output(UInt(cfg.xlen.W))
   val wData = Output(UInt(cfg.xlen.W))
   val wMask = Output(UInt((cfg.xlen >> 3).W))
   val wEn   = Output(Bool())

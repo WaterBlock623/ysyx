@@ -111,7 +111,7 @@ class Exu(
 
   // DecoupledIO
   DecoupledMasterSlaveFsm(out, in)
-  in.ready := true.B
+  in.ready := out.ready
   out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits

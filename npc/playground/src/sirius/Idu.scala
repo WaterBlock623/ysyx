@@ -73,7 +73,7 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
 
   // DecoupledIO
   val (masterState, slaveState) = DecoupledMasterSlaveFsm(out, in)
-  in.ready := true.B
+  in.ready := out.ready
   out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits

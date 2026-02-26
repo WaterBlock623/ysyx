@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 
 object DecoupledState {
-  val sBusy :: sWait :: Nil = Enum(2)
+  val sIdle :: sBusy :: sWait :: Nil = Enum(3)
 }
 
 object DecoupledFsm {

@@ -14,11 +14,21 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val out = IO(Decoupled(new LsuToWbuIO))
 
   // DecoupledIO
-  DecoupledMasterSlaveFsm(out, in)
-  in.ready := true.B
-  out.valid := in.valid
+  // DecoupledMasterSlaveFsm(out, in)
+  // in.ready := true.B
+  // out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
+
+  import DecoupledState._
+  val state = RegInit(sIdle)
+  state := MuxLookup(state, sIdle)(Seq(
+    sIdle -> Mux(in.valid, sBusy, sIdle),
+    sBusy -> sWait,
+    sWait -> sBusy
+    ))
+  in.ready := state === sWait || state === sIdle
+  out.valid := state === sWait
 
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
@@ -28,11 +38,11 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   }
 
   val ctrl = inBits.ctrl.lsuCtrl
-  exte.mem.valid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool && in.valid
-  exte.mem.wEn := ctrl.isStore && in.valid
+
+  exte.mem.reqValid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool && state === sBusy
+  exte.mem.addr := addr
+  exte.mem.wEn := ctrl.isStore && state === sBusy
   val addr = inBits.exuPayload.exu.aluOut
-  exte.mem.rAddr := addr
-  exte.mem.wAddr := addr
 
   val rem = addr(1, 0)
   // load

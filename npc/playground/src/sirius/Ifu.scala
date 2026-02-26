@@ -21,7 +21,7 @@ class Ifu(implicit private val cfg: CoreConfig) extends Module {
   val state = RegInit(sBusy)
   state := MuxLookup(state, sBusy)(Seq(
     sBusy -> sWait,
-    sWait -> sBusy
+    sWait -> Mux(out.ready, sBusy, sWait)
     ))
   out.valid := state === sWait
 
