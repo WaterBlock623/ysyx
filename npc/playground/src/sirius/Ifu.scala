@@ -29,7 +29,7 @@ class Ifu(
     )
   )
   out.valid := state === sWait
-  exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
+  exte.mem.reqValid := (state === sIdle || (state === sWait && out.ready))
 
   //
   // import chisel3.util.random.LFSR
