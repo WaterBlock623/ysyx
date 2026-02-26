@@ -13,7 +13,7 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
-  val outBits = dontTouch(Wire(chiselTypeOf(out.bits)))
+  val outBits = Wire(chiselTypeOf(out.bits))
 
   // FSM
   import DecoupledState._
