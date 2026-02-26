@@ -192,6 +192,11 @@ extern int npc_stop_flag;
 extern int npc_wbu_valid;
 
 int isa_exec_once(Decode *s) {
+  if (npc_wbu_valid == 0) {
+    difftest_skip_ref();
+    Log("Skip!");
+  }
+
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
@@ -207,8 +212,6 @@ int isa_exec_once(Decode *s) {
 
   if (npc_wbu_valid == 0) {
     s->dnpc = s->pc;
-    difftest_skip_ref();
-    Log("Skip!");
   } else {
     s->dnpc = npc_dnpc;
   }
