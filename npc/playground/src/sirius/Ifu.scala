@@ -37,7 +37,7 @@ class Ifu(
   val delayReg = RegInit(0.U(8.W))
   val isDelaying = delayReg > 0.U
 
-  when(state === sWait && !isDelaying && out.ready) {
+  when(state === sWait && !RegNext(state === sWait)) {
     delayReg := lfsr
   }.elsewhen(isDelaying) {
     delayReg := delayReg - 1.U
