@@ -7,43 +7,51 @@ import chisel3.experimental.dataview._
 import chisel3.util.Decoupled
 
 class Lsu(implicit private val cfg: CoreConfig) extends Module {
+  if (cfg.xlen != 32) {
+    throw new IllegalArgumentException("Unsupported xlen")
+  }
+
   val exte = IO(new Bundle {
     val mem = new LsuToMemIO
   })
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
 
-
-  // DecoupledIO
-  // DecoupledMasterSlaveFsm(out, in)
-  // in.ready := true.B
-  // out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
-
   val ctrl = inBits.ctrl.lsuCtrl
+  val addr = inBits.exuPayload.exu.aluOut
 
-  import DecoupledState._
-  val state = RegInit(sIdle)
-  val isMemAcc = ctrl.isLoad || ctrl.isStore
-  state := MuxLookup(state, sIdle)(Seq(
-    sIdle -> Mux(in.valid && isMemAcc, sBusy, sIdle),
-    sBusy -> Mux(exte.mem.respValid, sIdle, sBusy),
-    // sWait -> sIdle
-    ))
-  val isRespValid = state === sBusy && exte.mem.respValid
-  in.ready := (state === sIdle && !isMemAcc) || isRespValid
-  out.valid := (state === sIdle && !isMemAcc && in.valid) || isRespValid
-
+  // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
-  if (cfg.xlen != 32) {
-    throw new IllegalArgumentException("Unsupported xlen")
-  }
+  // FSM
+  import DecoupledState._
+  val state = RegInit(sIdle)
+  val isMemAcc = ctrl.isLoad || ctrl.isStore
 
+  state := MuxLookup(state, sIdle)(Seq(
+    sIdle -> Mux(in.valid && isMemAcc, sBusy, sIdle),
+    sBusy -> Mux(exte.mem.respValid, sIdle, sBusy),
+    ))
 
-  val addr = inBits.exuPayload.exu.aluOut
+  val isBypass    = state === sIdle && !isMemAcc
+  val isCompleted = state === sBusy && exte.mem.respValid
+
+  in.ready := isBypass || isCompleted
+  out.valid := in.valid && isBypass || isCompleted
+
+  val canSendReq = (state === sIdle) && in.valid && isMemAcc
+
+  exte.mem.reqValid := !reset.asBool && canSendReq
+  exte.mem.addr     := addr
+  exte.mem.wEn      := ctrl.isStore
+
+  // val isRespValid = state === sBusy && exte.mem.respValid
+  // in.ready := (state === sIdle && !isMemAcc) || isRespValid
+  // out.valid := (state === sIdle && !isMemAcc && in.valid) || isRespValid
+
   exte.mem.reqValid := !reset.asBool && state === sIdle && isMemAcc && in.valid
   exte.mem.addr := addr
   exte.mem.wEn := ctrl.isStore
