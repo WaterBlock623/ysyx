@@ -92,7 +92,7 @@ class MemDpiC(
 //       ls.rData := lsMem.read(ls.rAddr).asUInt
 //     }
 //   }
-}
+// }
 
 // class GetRetDpiC extends ExtModule {
 //   val a0 = IO(Input(UInt(32.W)))
