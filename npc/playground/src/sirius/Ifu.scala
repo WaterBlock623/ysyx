@@ -20,16 +20,17 @@ class Ifu(
   val state = RegInit(sBusy)
   state := MuxLookup(state, sBusy)(
     Seq(
-      sBusy -> Mux(!exte.mem.respValid || (exte.mem.respValid && out.ready), sBusy, sWait),
+      sBusy -> Mux(exte.mem.respValid, sWait, sBusy),
       sWait -> Mux(out.ready, sBusy, sWait)
     )
   )
-  out.bits := Mux(
-    exte.mem.respValid,
-    outBits,
-    RegEnable(outBits, state === sBusy && exte.mem.respValid)
-  )
-  out.valid := (state === sBusy && exte.mem.respValid) || state === sWait
+  // out.bits := Mux(
+  //   exte.mem.respValid,
+  //   outBits,
+  //   RegEnable(outBits, state === sBusy && exte.mem.respValid)
+  // )
+  out.bits := RegEnable(outBits, state === sBusy && exte.mem.respValid)
+  out.valid := state === sWait
   // exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
   // val isSBusy = state === sBusy
   // exte.mem.reqValid := isSBusy && !RegNext(isSBusy)
