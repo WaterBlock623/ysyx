@@ -32,8 +32,8 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
     // sWait -> sIdle
     ))
   val isRespValid = state === sBusy && exte.mem.respValid
-  in.ready := isRespValid
-  out.valid := Mux(state === sIdle && !isMemAcc, in.valid, isRespValid)
+  in.ready := (state === sIdle && !isMemAcc) || isRespValid
+  out.valid := (state === sIdle && !isMemAcc && in.valid) || isRespValid
 
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
