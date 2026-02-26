@@ -194,7 +194,7 @@ extern int npc_wbu_valid;
 int isa_exec_once(Decode *s) {
   if (npc_wbu_valid == 0) {
     difftest_skip_ref();
-    Log("Skip!");
+    // Log("Skip!");
   }
   if (npc_wbu_valid == 0) {
     s->dnpc = s->pc;
