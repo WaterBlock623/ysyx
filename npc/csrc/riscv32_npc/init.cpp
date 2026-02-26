@@ -36,7 +36,7 @@ paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
 
 // DIP-C
-#define MEM_READ_SKIP 5
+#define MEM_READ_SKIP 0
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
   static int skip_cnt = 0;
   if (skip_cnt < MEM_READ_SKIP) {
