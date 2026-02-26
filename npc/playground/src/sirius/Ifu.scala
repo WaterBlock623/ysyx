@@ -21,13 +21,13 @@ class Ifu(
   // FSM
   import DecoupledState._
   val state = RegInit(sBusy)
-  state := MuxLookup(state, sBusy)(
-    Seq(
-      // sIdle -> Mux(out.ready, sBusy, sIdle),
-      sBusy -> sWait,
-      sWait -> Mux(out.ready, sBusy, sWait)
-    )
-  )
+  // state := MuxLookup(state, sBusy)(
+  //   Seq(
+  //     // sIdle -> Mux(out.ready, sBusy, sIdle),
+  //     sBusy -> sWait,
+  //     sWait -> Mux(out.ready, sBusy, sWait)
+  //   )
+  // )
   // out.valid := state === sWait
 
   //
@@ -42,6 +42,15 @@ class Ifu(
   }.elsewhen(delayReg > 0.U) {
     delayReg := delayReg - 1.U
   }
+
+  state := MuxLookup(state, sBusy)(
+    Seq(
+      // sIdle -> Mux(out.ready, sBusy, sIdle),
+      sBusy -> sWait,
+      sWait -> Mux(out.ready && delayReg === 0.U && !isNewReq, sBusy, sWait)
+    )
+  )
+
   out.valid := state === sWait && delayReg === 0.U && !isNewReq
   //
 
