@@ -54,7 +54,7 @@ class MemDpiC(
         |  input ls_wEn);
         |
         |always @(posedge clock) begin
-        | lsu_rdata <= (ls_req_valid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+        | ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
         | if (ls_reqValid && ls_wEn) begin
         |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
         | end
