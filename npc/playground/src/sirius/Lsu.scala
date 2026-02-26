@@ -25,9 +25,9 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   state := MuxLookup(state, sIdle)(Seq(
     sIdle -> Mux(in.valid, sBusy, sIdle),
     sBusy -> sWait,
-    sWait -> sBusy
+    sWait -> sIdle
     ))
-  in.ready := state === sWait || state === sIdle
+  in.ready := state === sWait // || state === sIdle
   out.valid := state === sWait
 
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -40,9 +40,9 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val ctrl = inBits.ctrl.lsuCtrl
 
   val addr = inBits.exuPayload.exu.aluOut
-  exte.mem.reqValid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool && state === sBusy
+  exte.mem.reqValid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool && state === sIdle && in.valid
   exte.mem.addr := addr
-  exte.mem.wEn := ctrl.isStore && state === sBusy
+  exte.mem.wEn := ctrl.isStore && state === sIdle && in.valid
 
   val rem = addr(1, 0)
   // load
