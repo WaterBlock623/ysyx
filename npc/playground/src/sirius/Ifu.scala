@@ -60,6 +60,6 @@ class Ifu(
   outBits.ifuPayload.ifu.inst := inst
 
   if (cfg.isDebug) {
-    debug.get := inst
+    debug.get := outBits.ifuPayload.ifu.inst
   }
 }
