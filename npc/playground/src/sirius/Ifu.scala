@@ -27,7 +27,7 @@ class Ifu(
   )
   out.bits := RegEnable(outBits, state === sBusy && exte.mem.respValid)
   out.valid := state === sWait
-  exte.mem.reqValid := (state === sIdle || (state === sWait && out.ready))
+  exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
 
   //
   // import chisel3.util.random.LFSR
