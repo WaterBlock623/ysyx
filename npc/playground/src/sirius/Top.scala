@@ -98,9 +98,16 @@ class MemDpiC(
         |  output ls_respValid, 
         |  input ls_wEn);
         |
-        |parameter DLY_CYCLES = 10; 
+        |reg [7:0] lfsr_delay_cycles;
+        |always @(posedge clock) begin
+        | if (reset)
+        |   lfsr_delay_cycles <= 8'h2B;
+        | else
+        |   lfsr_delay_cycles <= {lfsr_delay_cycles[6:0], lfsr_delay_cycles[7] ^ lfsr_delay_cycles[5] ^ lfsr_delay_cycles[4] ^ lfsr_delay_cycles[3]};
+        |end
         |
         |reg [7:0] delay_cnt;
+        |reg [7:0] delay_cycles;
         |reg is_busy;
         |reg [31:0] pending_rdata;
         |
@@ -110,13 +117,14 @@ class MemDpiC(
         |        is_busy <= 0;
         |        ls_respValid <= 0;
         |    end else if (ls_reqValid && !is_busy) begin
+        |        delay_cycles <= lfsr_delay_cycles;
         |        is_busy <= 1;
         |        delay_cnt <= 1;
         |        ls_respValid <= 0;
         |        if (!ls_wEn) pending_rdata <= dpic_pmem_read(ls_addr);
         |        if (ls_wEn) dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
         |    end else if (is_busy) begin
-        |        if (delay_cnt == DLY_CYCLES) begin
+        |        if (delay_cnt >= delay_cycles) begin
         |            ls_respValid <= 1;
         |            ls_rData <= pending_rdata;
         |            is_busy <= 0;
