@@ -17,19 +17,23 @@ class Ifu(
 
   // FSM
   import DecoupledState._
-  val state = RegInit(sIdle)
-  state := MuxLookup(state, sIdle)(
+  val state = RegInit(sBusy)
+  state := MuxLookup(state, sBusy)(
     Seq(
-      sIdle -> sBusy,
       sBusy -> Mux(exte.mem.respValid, sWait, sBusy),
       sWait -> Mux(out.ready, sBusy, sWait)
     )
   )
-  out.bits := RegEnable(outBits, state === sBusy && exte.mem.respValid)
-  out.valid := state === sWait
+  out.bits := Mux(
+    exte.mem.reqValid,
+    outBits,
+    RegEnable(outBits, state === sBusy && exte.mem.respValid)
+  )
+  out.valid := (state === sBusy && exte.mem.respValid) || state === sWait
   // exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
-  val isSBusy = state === sBusy
-  exte.mem.reqValid := isSBusy && !RegNext(isSBusy)
+  // val isSBusy = state === sBusy
+  // exte.mem.reqValid := isSBusy && !RegNext(isSBusy)
+  exte.mem.reqValid := (state === sBusy && !exte.mem.respValid) || (state === sWait && out.ready)
 
   //
   // import chisel3.util.random.LFSR
