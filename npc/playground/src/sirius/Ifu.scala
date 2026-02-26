@@ -13,8 +13,7 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
-  val outBits = Reg(chiselTypeOf(out.bits))
-  out.bits := outBits
+  val outBits = Wire(chiselTypeOf(out.bits))
 
   // FSM
   import DecoupledState._
@@ -26,6 +25,7 @@ class Ifu(
       sWait -> Mux(out.ready, sBusy, sWait)
     )
   )
+  out.bits := RegEnable(outBits, state === sBusy && exte.mem.reqValid)
   out.valid := state === sWait
   exte.mem.reqValid := (state === sIdle || (state === sWait && out.ready))
 
