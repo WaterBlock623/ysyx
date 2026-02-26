@@ -51,6 +51,7 @@ class MemDpiC(
         |  input [31:0]  ls_wData,
         |  input [$maskMsb:0] ls_wMask,
         |  input ls_reqValid, 
+        |  output ls_respValid, 
         |  input ls_wEn);
         |
         |always @(posedge clock) begin
