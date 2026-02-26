@@ -47,7 +47,7 @@ class Ifu(
     Seq(
       // sIdle -> Mux(out.ready, sBusy, sIdle),
       sBusy -> sWait,
-      sWait -> Mux(out.ready && delayReg === 0.U && !isNewReq, sBusy, sWait)
+      sWait -> Mux(out.fire, sBusy, sWait)
     )
   )
 
