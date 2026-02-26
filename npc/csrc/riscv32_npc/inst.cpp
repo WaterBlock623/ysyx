@@ -194,13 +194,6 @@ extern int npc_wbu_valid;
 int isa_exec_once(Decode *s) {
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
-  if (npc_wbu_valid == 0) {
-    s->dnpc = s->pc;
-    difftest_skip_ref();
-    // Log("Skip!");
-  } else {
-    s->dnpc = npc_dnpc;
-  }
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   decode_inst(s);
   if (npc_stop_flag != 0) {
@@ -208,8 +201,17 @@ int isa_exec_once(Decode *s) {
     // sim_close();
     return 0;
   }
+
   single_cycle(); 
   sync_npc_gpr();
+
+  if (npc_wbu_valid == 0) {
+    s->dnpc = s->pc;
+    difftest_skip_ref();
+    // Log("Skip!");
+  } else {
+    s->dnpc = npc_dnpc;
+  }
   return 0;
 }
 
