@@ -58,6 +58,7 @@ class MemDpiC(
         | if (ls_reqValid && ls_wEn) begin
         |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
         | end
+        | ls_respValid <= ls_reqValid;
         |end
         |
         |always @(posedge clock) begin
