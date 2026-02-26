@@ -1,10 +1,8 @@
 package sirius
 
 import chisel3._
-import chisel3.util.Fill
-import chisel3.util.MuxLookup
+import chisel3.util._
 import chisel3.experimental.dataview._
-import chisel3.util.Decoupled
 
 class Lsu(
   implicit private val cfg: CoreConfig)
