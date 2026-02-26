@@ -39,10 +39,10 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
 
   val ctrl = inBits.ctrl.lsuCtrl
 
+  val addr = inBits.exuPayload.exu.aluOut
   exte.mem.reqValid := (ctrl.isLoad || ctrl.isStore) && !reset.asBool && state === sBusy
   exte.mem.addr := addr
   exte.mem.wEn := ctrl.isStore && state === sBusy
-  val addr = inBits.exuPayload.exu.aluOut
 
   val rem = addr(1, 0)
   // load
