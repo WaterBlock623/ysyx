@@ -28,7 +28,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
     sWait -> sIdle
     ))
   in.ready := state === sWait // || state === sIdle
-  out.valid := state === sWait
+  out.valid := state === sBusy
 
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
