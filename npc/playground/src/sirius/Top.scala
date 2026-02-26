@@ -32,6 +32,7 @@ class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
   val clock = IO(Input(Clock()))
+  val reset = IO(Input(Reset()))
   val inst = IO(Flipped(new IfuToMemIO))
   val ls = IO(Flipped(new LsuToMemIO))
   private val memAddrMsb = cfg.memoryAddrWidth - 1
