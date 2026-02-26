@@ -17,11 +17,12 @@ class Ifu(implicit private val cfg: CoreConfig) extends Module {
   val outBits = out.bits
 
   // FSM
-  val sBusy :: sWait :: Nil = Enum(2)
+  import DecoupledState._
   val state = RegInit(sBusy)
   state := MuxLookup(state, sBusy)(Seq(
+    sIdle -> Mux(out.ready, sBusy, sIdle),
     sBusy -> sWait,
-    sWait -> Mux(out.ready, sBusy, sWait)
+    sWait -> Mux(out.ready, sBusy, sIdle)
     ))
   out.valid := state === sWait
 
