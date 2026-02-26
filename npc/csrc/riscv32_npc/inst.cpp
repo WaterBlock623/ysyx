@@ -196,6 +196,11 @@ int isa_exec_once(Decode *s) {
     difftest_skip_ref();
     Log("Skip!");
   }
+  if (npc_wbu_valid == 0) {
+    s->dnpc = s->pc;
+  } else {
+    s->dnpc = npc_dnpc;
+  }
 
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
@@ -210,11 +215,6 @@ int isa_exec_once(Decode *s) {
   single_cycle(); 
   sync_npc_gpr();
 
-  if (npc_wbu_valid == 0) {
-    s->dnpc = s->pc;
-  } else {
-    s->dnpc = npc_dnpc;
-  }
   return 0;
 }
 
