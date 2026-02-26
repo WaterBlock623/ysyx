@@ -35,14 +35,14 @@ class Ifu(
 
   val lfsr = LFSR(8)
   val delayReg = RegInit(0.U(8.W))
-  val isDelaying = delayReg > 0.U
+  val isNewReq = state === sWait && !RegNext(state === sWait)
 
-  when(state === sWait && !RegNext(state === sWait)) {
+  when(isNewReq) {
     delayReg := lfsr
-  }.elsewhen(isDelaying) {
+  }.elsewhen(delayReg > 0.U) {
     delayReg := delayReg - 1.U
   }
-  out.valid := state === sWait && !isDelaying
+  out.valid := state === sWait && delayReg === 0.U && !isNewReq
   //
 
   val pc = exte.pcReg.pc
