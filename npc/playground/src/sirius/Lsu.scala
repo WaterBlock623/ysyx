@@ -13,7 +13,6 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
 
-  val ctrl = inBits.ctrl.lsuCtrl
 
   // DecoupledIO
   // DecoupledMasterSlaveFsm(out, in)
@@ -21,6 +20,8 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   // out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
+
+  val ctrl = inBits.ctrl.lsuCtrl
 
   import DecoupledState._
   val state = RegInit(sIdle)
