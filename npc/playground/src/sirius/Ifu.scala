@@ -20,9 +20,9 @@ class Ifu(implicit private val cfg: CoreConfig) extends Module {
   import DecoupledState._
   val state = RegInit(sBusy)
   state := MuxLookup(state, sBusy)(Seq(
-    sIdle -> Mux(out.ready, sBusy, sIdle),
+    // sIdle -> Mux(out.ready, sBusy, sIdle),
     sBusy -> sWait,
-    sWait -> Mux(out.ready, sBusy, sIdle)
+    sWait -> Mux(out.ready, sBusy, sWait)
     ))
   out.valid := state === sWait
 
