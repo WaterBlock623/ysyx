@@ -20,38 +20,39 @@ class Ifu(
 
   // FSM
   import DecoupledState._
-  val state = RegInit(sBusy)
+  val state = RegInit(sIdle)
+  state := MuxLookup(state, sIdle)(
+    Seq(
+      sIdle -> sBusy,
+      sBusy -> Mux(exte.mem.respValid, sWait, sBusy),
+      sWait -> Mux(out.ready, sBusy, sWait)
+    )
+  )
+  out.valid := state === sWait
+  exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
+
+  //
+  // import chisel3.util.random.LFSR
+  //
+  // val lfsr = LFSR(4)
+  // val delayReg = RegInit(0.U(4.W))
+  // val isNewReq = state === sWait && !RegNext(state === sWait)
+  //
+  // when(isNewReq) {
+  //   delayReg := lfsr
+  // }.elsewhen(delayReg > 0.U) {
+  //   delayReg := delayReg - 1.U
+  // }
+  //
   // state := MuxLookup(state, sBusy)(
   //   Seq(
   //     // sIdle -> Mux(out.ready, sBusy, sIdle),
   //     sBusy -> sWait,
-  //     sWait -> Mux(out.ready, sBusy, sWait)
+  //     sWait -> Mux(out.fire, sBusy, sWait)
   //   )
   // )
-  // out.valid := state === sWait
-
   //
-  import chisel3.util.random.LFSR
-
-  val lfsr = LFSR(4)
-  val delayReg = RegInit(0.U(4.W))
-  val isNewReq = state === sWait && !RegNext(state === sWait)
-
-  when(isNewReq) {
-    delayReg := lfsr
-  }.elsewhen(delayReg > 0.U) {
-    delayReg := delayReg - 1.U
-  }
-
-  state := MuxLookup(state, sBusy)(
-    Seq(
-      // sIdle -> Mux(out.ready, sBusy, sIdle),
-      sBusy -> sWait,
-      sWait -> Mux(out.fire, sBusy, sWait)
-    )
-  )
-
-  out.valid := state === sWait && delayReg === 0.U && !isNewReq
+  // out.valid := state === sWait && delayReg === 0.U && !isNewReq
   //
 
   val pc = exte.pcReg.pc
