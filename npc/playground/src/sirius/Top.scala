@@ -28,6 +28,48 @@ class DebugInfoDpiC(
   )
 }
 
+// class MemDpiC(
+//   implicit private val cfg: CoreConfig)
+//     extends ExtModule {
+//   val clock = IO(Input(Clock()))
+//   val inst = IO(Flipped(new IfuToMemIO))
+//   val ls = IO(Flipped(new LsuToMemIO))
+//   private val memAddrMsb = cfg.memoryAddrWidth - 1
+//   private val maskMsb = (cfg.xlen >> 3) - 1
+//   private val maskZero = 32 - (cfg.xlen >> 3)
+//   setInline(
+//     "MemDpiC.sv",
+//     s"""|import "DPI-C" function int dpic_pmem_read(input int raddr);
+//         |import "DPI-C" function void dpic_pmem_write(
+//         |  input int waddr, input int wdata, input int wmask);
+//         |module MemDpiC(
+//         |  input clock,
+//         |  input [$memAddrMsb:0] inst_rAddr,
+//         |  output reg [31:0] inst_rData,
+//         |  input [$memAddrMsb:0] ls_addr,
+//         |  output reg [31:0] ls_rData,
+//         |  input [31:0]  ls_wData,
+//         |  input [$maskMsb:0] ls_wMask,
+//         |  input ls_reqValid,
+//         |  output ls_respValid,
+//         |  input ls_wEn);
+//         |
+//         |always @(posedge clock) begin
+//         | ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+//         | if (ls_reqValid && ls_wEn) begin
+//         |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+//         | end
+//         | ls_respValid <= ls_reqValid;
+//         |end
+//         |
+//         |always @(posedge clock) begin
+//         |  inst_rData = dpic_pmem_read(inst_rAddr);
+//         |end
+//         |endmodule
+//         |""".stripMargin
+//   )
+// }
+
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
@@ -54,12 +96,36 @@ class MemDpiC(
         |  output ls_respValid, 
         |  input ls_wEn);
         |
+        |parameter DLY_CYCLES = 10; 
+        |
+        |reg [7:0] delay_cnt;
+        |reg is_busy;
+        |reg [31:0] pending_rdata;
+        |
         |always @(posedge clock) begin
-        | ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
-        | if (ls_reqValid && ls_wEn) begin
-        |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
-        | end
-        | ls_respValid <= ls_reqValid;
+        |    if (reset) begin
+        |        delay_cnt <= 0;
+        |        is_busy <= 0;
+        |        ls_respValid <= 0;
+        |    end else if (ls_reqValid && !is_busy) begin
+        |        is_busy <= 1;
+        |        delay_cnt <= 1;
+        |        ls_respValid <= 0;
+        |        if (!ls_wEn) pending_rdata <= dpic_pmem_read(ls_addr);
+        |        if (ls_wEn) dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+        |    end else if (is_busy) begin
+        |        if (delay_cnt == DLY_CYCLES) begin
+        |            ls_respValid <= 1;
+        |            ls_rData <= pending_rdata;
+        |            is_busy <= 0;
+        |            delay_cnt <= 0;
+        |        end else begin
+        |            delay_cnt <= delay_cnt + 1;
+        |            ls_respValid <= 0;
+        |        end
+        |    end else begin
+        |        ls_respValid <= 0;
+        |    end
         |end
         |
         |always @(posedge clock) begin
@@ -137,7 +203,7 @@ class GetGprDpiC(
 }
 
 class Top(
-  implicit private val cfg: CoreConfig,
+  implicit private val cfg:  CoreConfig,
   implicit private val ucfg: UnitConfig)
     extends Module {
 
