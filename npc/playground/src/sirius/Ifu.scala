@@ -25,7 +25,7 @@ class Ifu(
     )
   )
   out.bits := Mux(
-    exte.mem.reqValid,
+    exte.mem.respValid,
     outBits,
     RegEnable(outBits, state === sBusy && exte.mem.respValid)
   )
