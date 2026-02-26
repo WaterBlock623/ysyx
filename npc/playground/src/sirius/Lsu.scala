@@ -13,6 +13,8 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
 
+  val ctrl = inBits.ctrl.lsuCtrl
+
   // DecoupledIO
   // DecoupledMasterSlaveFsm(out, in)
   // in.ready := true.B
@@ -39,7 +41,6 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
     throw new IllegalArgumentException("Unsupported xlen")
   }
 
-  val ctrl = inBits.ctrl.lsuCtrl
 
   val addr = inBits.exuPayload.exu.aluOut
   exte.mem.reqValid := !reset.asBool && state === sIdle && isMemAcc
