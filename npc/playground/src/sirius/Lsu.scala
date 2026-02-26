@@ -25,15 +25,15 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
 
   import DecoupledState._
   val state = RegInit(sIdle)
-  val isMemAcc = in.valid && (ctrl.isLoad || ctrl.isStore)
+  val isMemAcc = ctrl.isLoad || ctrl.isStore
   state := MuxLookup(state, sIdle)(Seq(
-    sIdle -> Mux(isMemAcc, sBusy, sIdle),
+    sIdle -> Mux(in.valid && isMemAcc, sBusy, sIdle),
     sBusy -> Mux(exte.mem.respValid, sIdle, sBusy),
     // sWait -> sIdle
     ))
   val isRespValid = state === sBusy && exte.mem.respValid
   in.ready := isRespValid
-  out.valid := isRespValid
+  out.valid := Mux(state === sIdle && !isMemAcc, in.valid, isRespValid)
 
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
@@ -44,7 +44,7 @@ class Lsu(implicit private val cfg: CoreConfig) extends Module {
 
 
   val addr = inBits.exuPayload.exu.aluOut
-  exte.mem.reqValid := !reset.asBool && state === sIdle && isMemAcc
+  exte.mem.reqValid := !reset.asBool && state === sIdle && isMemAcc && in.valid
   exte.mem.addr := addr
   exte.mem.wEn := ctrl.isStore
 
