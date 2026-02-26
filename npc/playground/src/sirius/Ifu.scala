@@ -34,7 +34,7 @@ class Ifu(
   // exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
   // val isSBusy = state === sBusy
   // exte.mem.reqValid := isSBusy && !RegNext(isSBusy)
-  exte.mem.reqValid := !RegNext(reset.asBool) && ((state === sBusy && !exte.mem.respValid) || (state === sWait && out.ready))
+  exte.mem.reqValid := !RegNext(reset.asBool) && (state === sBusy && !exte.mem.respValid)
 
   //
   // import chisel3.util.random.LFSR
