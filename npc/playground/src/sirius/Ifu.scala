@@ -15,34 +15,28 @@ class Ifu(
 
   val outBits = out.bits
 
-  // FSM
-  import DecoupledState._
-  val state = RegInit(sBusy)
-  state := MuxLookup(state, sBusy)(
+  val sIdle :: sWaitResp :: Nil = Enum(2)
+  val state = RegInit(sIdle)
+
+  exte.mem.reqValid := state === sIdle
+
+  state := MuxLookup(state, sIdle)(
     Seq(
-      sBusy -> Mux(exte.mem.reqReady, sWait, sBusy),
-      sWait -> Mux(out.fire, sBusy, sWait)
+      sIdle -> Mux(exte.mem.reqReady, sWaitResp, sIdle),
+      sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
     )
   )
 
-  exte.mem.reqValid := state === sBusy
-
-  val queue = Module(new Queue(UInt(cfg.xlen.W), 1, flow = true))
-  // enq
-  queue.io.enq.valid := exte.mem.respValid
-  queue.io.enq.bits := exte.mem.rData
-  exte.mem.respReady := queue.io.enq.ready
-  // deq
-  out.valid := queue.io.deq.valid
-  outBits.ifuPayload.ifu.inst := queue.io.deq.bits
-  queue.io.deq.ready := out.ready
+  out.valid := state === sWaitResp && exte.mem.respValid
+  outBits.ifuPayload.ifu.inst := exte.mem.rData
   
-  // pc
   val pc = exte.pcReg.pc
   exte.mem.rAddr := pc
-  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
+  outBits.ifuPayload.ifu.pc := pc
+
+  exte.mem.respReady := state === sWaitResp && out.ready
 
   if (cfg.isDebug) {
-    debug.get := out.bits.ifuPayload.ifu.inst
+    debug.get := outBits.ifuPayload.ifu.inst
   }
 }
