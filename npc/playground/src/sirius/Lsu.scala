@@ -33,7 +33,7 @@ class Lsu(
 
   state := MuxLookup(state, sIdle)(
     Seq(
-      sIdle -> Mux(in.fire, 
+      sIdle -> Mux(in.valid, 
         MuxCase(sIdle, Seq(
           ctrl.isLoad -> sWaitReadDone,
           ctrl.isStore -> sWaitWriteDone
