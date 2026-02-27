@@ -106,8 +106,8 @@ assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b
 assign tmp_inst_reqReady = inst_reqValid;
 assign tmp_inst_respValid = inst_state == WAIT_READ;
 
-assign inst_reqReady = tmp_inst_reqReady;
-assign inst_respValid = tmp_inst_respValid;
+// assign inst_reqReady = tmp_inst_reqReady;
+// assign inst_respValid = tmp_inst_respValid;
 assign inst_rData = tmp_inst_rData;
 
 gated_delay #(
