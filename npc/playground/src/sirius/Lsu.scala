@@ -44,7 +44,7 @@ class Lsu(
   val isMemDone = state === sWaitResp && exte.mem.respValid
 
   out.valid := isBypass || isMemDone
-  
+
   in.ready := out.fire
 
   exte.mem.respReady := state === sWaitResp && out.ready
@@ -62,14 +62,14 @@ class Lsu(
     0.U((cfg.xlen - 8).W),
     Fill(cfg.xlen - 8, lbu(7))
   ) ## lbu
-  
+
   val lhu = Mux(rem(1), rData(31, 16), rData(15, 0))
   val lhData = Mux(
     ctrl.isUnsignedLoad,
     0.U((cfg.xlen - 16).W),
     Fill(cfg.xlen - 16, lhu(15))
   ) ## lhu
-  
+
   val lwData = rData
 
   outBits.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(
@@ -84,7 +84,7 @@ class Lsu(
   val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
   val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)
-  
+
   exte.mem.wData := MuxLookup(ctrl.loadStoreLength, sw)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> sw,
@@ -92,11 +92,11 @@ class Lsu(
       LoadStoreLengthEnum.b.asUInt -> sb
     )
   )
-  
+
   val sbMask = (1.U << rem).pad(cfg.xlen)
   val shMask = (3.U << (rem & 2.U)).pad(cfg.xlen)
   val swMask = 15.U(cfg.xlen.W)
-  
+
   exte.mem.wMask := MuxLookup(ctrl.loadStoreLength, swMask)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> swMask,

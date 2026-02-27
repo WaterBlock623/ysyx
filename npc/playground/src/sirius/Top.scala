@@ -290,8 +290,6 @@ class MemDpiC(
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
   
-  // 利用 Verilator 的支持使用 $urandom_range 产生概率随机延迟
-  // 模拟真实情况下的 Cache Hit (0延时) 与 Cache Miss (数周期延时)
   setInline(
     "MemDpiC.sv",
     s"""
@@ -338,7 +336,7 @@ always @(posedge clock) begin
         ls_delay_cnt <= ls_delay_cnt - 1;
       end else if (ls_reqValid && ls_reqReady) begin
         ls_state <= 1;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < 80) ? 0 : $$urandom_range(1, 10);
+        ls_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
         
         if (ls_wEn) begin
           dpic_pmem_write(ls_addr, ls_wData, {${maskZero}'b0, ls_wMask});
@@ -351,7 +349,7 @@ always @(posedge clock) begin
         ls_delay_cnt <= ls_delay_cnt - 1;
       end else if (ls_respValid && ls_respReady) begin
         ls_state <= 0;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < 90) ? 0 : $$urandom_range(1, 3);
+        ls_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
       end
     end
   end
@@ -375,7 +373,7 @@ always @(posedge clock) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
       end else if (inst_reqValid && inst_reqReady) begin
         inst_state <= 1;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < 90) ? 0 : $$urandom_range(1, 5);
+        inst_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
         internal_inst_rData <= dpic_pmem_read(inst_rAddr);
       end
     end else begin
@@ -383,7 +381,7 @@ always @(posedge clock) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
       end else if (inst_respValid && inst_respReady) begin
         inst_state <= 0;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < 95) ? 0 : $$urandom_range(1, 2);
+        inst_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
       end
     end
   end
