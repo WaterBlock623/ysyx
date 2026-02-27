@@ -28,6 +28,257 @@ class DebugInfoDpiC(
   )
 }
 
+// class MemDpiC(
+//   implicit private val cfg: CoreConfig)
+//     extends ExtModule {
+//   val clock = IO(Input(Clock()))
+//   val reset = IO(Input(Reset()))
+//   val inst = IO(Flipped(new IfuToMemIO))
+//   val ls = IO(Flipped(new LsuToMemIO))
+//   private val memAddrMsb = cfg.memoryAddrWidth - 1
+//   private val maskMsb = (cfg.xlen >> 3) - 1
+//   private val maskZero = 32 - (cfg.xlen >> 3)
+//   setInline(
+//     "MemDpiC.sv",
+//     s"""
+// import "DPI-C" function int dpic_pmem_read(input int raddr);
+// import "DPI-C" function void dpic_pmem_write(
+//   input int waddr, input int wdata, input int wmask);
+// module MemDpiC(
+//   input clock,
+//   input reset,
+//
+//   input [$memAddrMsb:0] inst_rAddr,
+//   output reg [31:0] inst_rData,
+//   input inst_reqValid,
+//   output reg inst_reqReady,
+//   output reg inst_respValid,
+//   input inst_respReady,
+//
+//   input [$memAddrMsb:0] ls_addr,
+//   output reg [31:0] ls_rData,
+//   input [31:0]  ls_wData,
+//   input [$maskMsb:0] ls_wMask,
+//   input ls_reqValid,
+//   output ls_reqReady,
+//   output reg ls_respValid,
+//   input reg ls_respReady,
+//   input ls_wEn);
+//
+// parameter WAIT_REQ = 1'b0, WAIT_READ = 1'b1;
+//
+// // always @(posedge clock) begin
+// //  ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+// //  if (ls_reqValid && ls_wEn) begin
+// //    dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+// //  end
+// //  ls_respValid <= ls_reqValid;
+// // end
+// reg [$memAddrMsb:0] internal_ls_rData;
+// reg [$memAddrMsb:0] tmp_ls_rData;
+// reg tmp_ls_reqReady;
+// reg tmp_ls_respValid;
+// reg ls_state;
+// reg ls_next_state;
+//
+// always @(*) begin
+//   ls_next_state = WAIT_REQ;
+//   case (ls_state)
+//     WAIT_REQ: ls_next_state = ls_reqValid ? WAIT_READ : WAIT_REQ;
+//     WAIT_READ: ls_next_state = ls_respReady ? WAIT_REQ : WAIT_READ;
+//   endcase
+// end
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     ls_state <= WAIT_REQ;
+//   end else begin
+//     ls_state <= ls_next_state;
+//   end
+// end
+//
+// always @(posedge clock) begin
+//   if (ls_state == WAIT_REQ && ls_next_state == WAIT_READ) begin
+//     if (ls_wEn) begin
+//       dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+//     end else begin
+//       internal_ls_rData <= dpic_pmem_read(ls_addr);
+//     end
+//   end
+// end
+//
+// assign tmp_ls_rData = tmp_ls_respValid ? internal_ls_rData : ${cfg.xlen}'b0;
+// assign tmp_ls_reqReady = ls_reqValid;
+// assign tmp_ls_respValid = ls_state == WAIT_READ;
+//
+// assign ls_reqReady = tmp_ls_reqReady;
+// assign ls_respValid = tmp_ls_respValid;
+// assign ls_rData = tmp_ls_rData;
+//
+//
+// reg [$memAddrMsb:0] internal_inst_rData;
+// reg [$memAddrMsb:0] tmp_inst_rData;
+// reg tmp_inst_reqReady;
+// reg tmp_inst_respValid;
+// reg inst_state;
+// reg inst_next_state;
+//
+// always @(*) begin
+//   inst_next_state = WAIT_REQ;
+//   case (inst_state)
+//     WAIT_REQ: inst_next_state = inst_reqValid ? WAIT_READ : WAIT_REQ;
+//     WAIT_READ: inst_next_state = inst_respReady ? WAIT_REQ : WAIT_READ;
+//   endcase
+// end
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     inst_state <= WAIT_REQ;
+//   end else begin
+//     inst_state <= inst_next_state;
+//   end
+// end
+//
+// always @(posedge clock) begin
+//   if (inst_state == WAIT_REQ && inst_next_state == WAIT_READ) begin
+//     internal_inst_rData <= dpic_pmem_read(inst_rAddr);
+//   end
+// end
+//
+// assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b0;
+// assign tmp_inst_reqReady = inst_reqValid;
+// assign tmp_inst_respValid = inst_state == WAIT_READ;
+//
+// assign inst_reqReady = tmp_inst_reqReady;
+// assign inst_respValid = tmp_inst_respValid;
+// assign inst_rData = tmp_inst_rData;
+//
+// // gated_delay #(
+// //  .WIDTH(1),
+// //  .DELAY(5)
+// // ) u_gdelay_inst_reqReady (
+// //  .clock(clock),
+// //  .reset(reset),
+// //  .in(tmp_inst_reqReady),
+// //  .trigger(tmp_inst_reqReady),
+// //  .out(inst_reqReady)
+// // );
+// // delay_module #(
+// //  .WIDTH(1),
+// //  .DELAY(5)
+// // ) u_gdelay_inst_respValid (
+// //  .clock(clock),
+// //  .reset(reset),
+// //  .in(tmp_inst_respValid),
+// //  .out(inst_respValid)
+// // );
+// /*
+// delay_module #(
+//  .WIDTH(32),
+//  .DELAY(5)
+// ) u_delay_inst_rData (
+//  .clock(clock),
+//  .reset(reset),
+//  .in(tmp_inst_rData),
+//  .out(inst_rData)
+// );
+// delay_module #(
+//  .WIDTH(1),
+//  .DELAY(5)
+// ) u_delay_inst_reqReady (
+//  .clock(clock),
+//  .reset(reset),
+//  .in(tmp_inst_reqReady),
+//  .out(inst_reqReady)
+// );
+// delay_module #(
+//  .WIDTH(1),
+//  .DELAY(5)
+// ) u_delay_inst_respValid (
+//  .clock(clock),
+//  .reset(reset),
+//  .in(tmp_inst_respValid),
+//  .out(inst_respValid)
+// );
+// */
+//
+// endmodule
+//
+// module gated_delay #(
+//   parameter WIDTH = 32,
+//   parameter DELAY = 5
+// )(
+//   input  wire                    clock,
+//   input  wire                    reset,
+//   input  wire                    trigger,
+//   input  wire [WIDTH-1:0]   in,
+//   output wire [WIDTH-1:0]   out
+// );
+//
+//   reg [7:0] count;
+//   reg is_active;
+//
+//   always @(posedge clock) begin
+//     if (reset) begin
+//       count <= 0;
+//       is_active <= 1'b0;
+//     end else if (trigger && !is_active) begin
+//       if (count < DELAY) begin
+//         count <= count + 1'b1;
+//         is_active <= 1'b0;
+//       end else begin
+//         is_active <= 1'b1;
+//       end
+//     end else if (!trigger) begin
+//       count <= 0;
+//       is_active <= 1'b0;
+//     end
+//   end
+//
+//   assign out = (is_active) ? in : {WIDTH{1'b0}};
+//
+// endmodule
+//
+// module delay_module #(
+//   parameter WIDTH = 32,
+//   parameter DELAY = 5
+// )(
+//   input  wire              clock,
+//   input  wire              reset,
+//   input  wire [WIDTH-1:0]  in,
+//   output wire [WIDTH-1:0]  out
+// );
+//
+//   if (DELAY <= 0) begin
+//       assign out = in;
+//   end 
+//   else begin
+//     reg [WIDTH-1:0] delay_pipeline [0:DELAY-1];
+//
+//     integer i;
+//     always @(posedge clock) begin
+//       if (reset) begin
+//         for (i = 0; i < DELAY; i = i + 1) begin
+//           delay_pipeline[i] <= {WIDTH{1'b0}};
+//         end
+//       end 
+//       else begin
+//         delay_pipeline[0] <= in;
+//
+//         for (i = 1; i < DELAY; i = i + 1) begin
+//           delay_pipeline[i] <= delay_pipeline[i-1];
+//         end
+//       end
+//     end
+//
+//     assign out = delay_pipeline[DELAY-1];
+//   end
+//
+// endmodule
+//         """
+//   )
+// }
+
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
@@ -38,244 +289,108 @@ class MemDpiC(
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
+  
+  // 利用 Verilator 的支持使用 $urandom_range 产生概率随机延迟
+  // 模拟真实情况下的 Cache Hit (0延时) 与 Cache Miss (数周期延时)
   setInline(
     "MemDpiC.sv",
     s"""
 import "DPI-C" function int dpic_pmem_read(input int raddr);
 import "DPI-C" function void dpic_pmem_write(
   input int waddr, input int wdata, input int wmask);
+
 module MemDpiC(
   input clock,
   input reset,
 
   input [$memAddrMsb:0] inst_rAddr,
-  output reg [31:0] inst_rData,
+  output[31:0] inst_rData,
   input inst_reqValid,
-  output reg inst_reqReady,
-  output reg inst_respValid,
+  output inst_reqReady,
+  output inst_respValid,
   input inst_respReady,
 
-  input [$memAddrMsb:0] ls_addr,
-  output reg [31:0] ls_rData,
-  input [31:0]  ls_wData,
+  input[$memAddrMsb:0] ls_addr,
+  output [31:0] ls_rData,
+  input[31:0]  ls_wData,
   input [$maskMsb:0] ls_wMask,
   input ls_reqValid,
   output ls_reqReady,
-  output reg ls_respValid,
-  input reg ls_respReady,
+  output ls_respValid,
+  input ls_respReady,
   input ls_wEn);
 
-parameter WAIT_REQ = 1'b0, WAIT_READ = 1'b1;
+reg [31:0] internal_ls_rData;
+reg ls_state; // 0: IDLE, 1: WAIT_RESP
+integer ls_delay_cnt;
 
-// always @(posedge clock) begin
-//  ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
-//  if (ls_reqValid && ls_wEn) begin
-//    dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
-//  end
-//  ls_respValid <= ls_reqValid;
-// end
-reg [$memAddrMsb:0] internal_ls_rData;
-reg [$memAddrMsb:0] tmp_ls_rData;
-reg tmp_ls_reqReady;
-reg tmp_ls_respValid;
-reg ls_state;
-reg ls_next_state;
-
-always @(*) begin
-  ls_next_state = WAIT_REQ;
-  case (ls_state)
-    WAIT_REQ: ls_next_state = ls_reqValid ? WAIT_READ : WAIT_REQ;
-    WAIT_READ: ls_next_state = ls_respReady ? WAIT_REQ : WAIT_READ;
-  endcase
-end
+assign ls_reqReady = (ls_state == 0) && (ls_delay_cnt == 0);
+assign ls_respValid = (ls_state == 1) && (ls_delay_cnt == 0);
+assign ls_rData = internal_ls_rData;
 
 always @(posedge clock) begin
   if (reset) begin
-    ls_state <= WAIT_REQ;
+    ls_state <= 0;
+    ls_delay_cnt <= 0;
   end else begin
-    ls_state <= ls_next_state;
-  end
-end
-
-always @(posedge clock) begin
-  if (ls_state == WAIT_REQ && ls_next_state == WAIT_READ) begin
-    if (ls_wEn) begin
-      dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
-    end else begin
-      internal_ls_rData <= dpic_pmem_read(ls_addr);
-    end
-  end
-end
-
-assign tmp_ls_rData = tmp_ls_respValid ? internal_ls_rData : ${cfg.xlen}'b0;
-assign tmp_ls_reqReady = ls_reqValid;
-assign tmp_ls_respValid = ls_state == WAIT_READ;
-
-assign ls_reqReady = tmp_ls_reqReady;
-assign ls_respValid = tmp_ls_respValid;
-assign ls_rData = tmp_ls_rData;
-
-
-reg [$memAddrMsb:0] internal_inst_rData;
-reg [$memAddrMsb:0] tmp_inst_rData;
-reg tmp_inst_reqReady;
-reg tmp_inst_respValid;
-reg inst_state;
-reg inst_next_state;
-
-always @(*) begin
-  inst_next_state = WAIT_REQ;
-  case (inst_state)
-    WAIT_REQ: inst_next_state = inst_reqValid ? WAIT_READ : WAIT_REQ;
-    WAIT_READ: inst_next_state = inst_respReady ? WAIT_REQ : WAIT_READ;
-  endcase
-end
-
-always @(posedge clock) begin
-  if (reset) begin
-    inst_state <= WAIT_REQ;
-  end else begin
-    inst_state <= inst_next_state;
-  end
-end
-
-always @(posedge clock) begin
-  if (inst_state == WAIT_REQ && inst_next_state == WAIT_READ) begin
-    internal_inst_rData <= dpic_pmem_read(inst_rAddr);
-  end
-end
-
-assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b0;
-assign tmp_inst_reqReady = inst_reqValid;
-assign tmp_inst_respValid = inst_state == WAIT_READ;
-
-assign inst_reqReady = tmp_inst_reqReady;
-assign inst_respValid = tmp_inst_respValid;
-assign inst_rData = tmp_inst_rData;
-
-// gated_delay #(
-//  .WIDTH(1),
-//  .DELAY(5)
-// ) u_gdelay_inst_reqReady (
-//  .clock(clock),
-//  .reset(reset),
-//  .in(tmp_inst_reqReady),
-//  .trigger(tmp_inst_reqReady),
-//  .out(inst_reqReady)
-// );
-// delay_module #(
-//  .WIDTH(1),
-//  .DELAY(5)
-// ) u_gdelay_inst_respValid (
-//  .clock(clock),
-//  .reset(reset),
-//  .in(tmp_inst_respValid),
-//  .out(inst_respValid)
-// );
-/*
-delay_module #(
- .WIDTH(32),
- .DELAY(5)
-) u_delay_inst_rData (
- .clock(clock),
- .reset(reset),
- .in(tmp_inst_rData),
- .out(inst_rData)
-);
-delay_module #(
- .WIDTH(1),
- .DELAY(5)
-) u_delay_inst_reqReady (
- .clock(clock),
- .reset(reset),
- .in(tmp_inst_reqReady),
- .out(inst_reqReady)
-);
-delay_module #(
- .WIDTH(1),
- .DELAY(5)
-) u_delay_inst_respValid (
- .clock(clock),
- .reset(reset),
- .in(tmp_inst_respValid),
- .out(inst_respValid)
-);
-*/
-
-endmodule
-
-module gated_delay #(
-  parameter WIDTH = 32,
-  parameter DELAY = 5
-)(
-  input  wire                    clock,
-  input  wire                    reset,
-  input  wire                    trigger,
-  input  wire [WIDTH-1:0]   in,
-  output wire [WIDTH-1:0]   out
-);
-
-  reg [7:0] count;
-  reg is_active;
-
-  always @(posedge clock) begin
-    if (reset) begin
-      count <= 0;
-      is_active <= 1'b0;
-    end else if (trigger && !is_active) begin
-      if (count < DELAY) begin
-        count <= count + 1'b1;
-        is_active <= 1'b0;
-      end else begin
-        is_active <= 1'b1;
-      end
-    end else if (!trigger) begin
-      count <= 0;
-      is_active <= 1'b0;
-    end
-  end
-
-  assign out = (is_active) ? in : {WIDTH{1'b0}};
-
-endmodule
-
-module delay_module #(
-  parameter WIDTH = 32,
-  parameter DELAY = 5
-)(
-  input  wire              clock,
-  input  wire              reset,
-  input  wire [WIDTH-1:0]  in,
-  output wire [WIDTH-1:0]  out
-);
-
-  if (DELAY <= 0) begin
-      assign out = in;
-  end 
-  else begin
-    reg [WIDTH-1:0] delay_pipeline [0:DELAY-1];
-
-    integer i;
-    always @(posedge clock) begin
-      if (reset) begin
-        for (i = 0; i < DELAY; i = i + 1) begin
-          delay_pipeline[i] <= {WIDTH{1'b0}};
-        end
-      end 
-      else begin
-        delay_pipeline[0] <= in;
+    if (ls_state == 0) begin
+      if (ls_delay_cnt > 0) begin
+        ls_delay_cnt <= ls_delay_cnt - 1;
+      end else if (ls_reqValid && ls_reqReady) begin
+        ls_state <= 1;
+        ls_delay_cnt <= ($$urandom_range(0, 100) < 80) ? 0 : $$urandom_range(1, 10);
         
-        for (i = 1; i < DELAY; i = i + 1) begin
-          delay_pipeline[i] <= delay_pipeline[i-1];
+        if (ls_wEn) begin
+          dpic_pmem_write(ls_addr, ls_wData, {${maskZero}'b0, ls_wMask});
+        end else begin
+          internal_ls_rData <= dpic_pmem_read(ls_addr);
         end
       end
+    end else begin
+      if (ls_delay_cnt > 0) begin
+        ls_delay_cnt <= ls_delay_cnt - 1;
+      end else if (ls_respValid && ls_respReady) begin
+        ls_state <= 0;
+        ls_delay_cnt <= ($$urandom_range(0, 100) < 90) ? 0 : $$urandom_range(1, 3);
+      end
     end
-
-    assign out = delay_pipeline[DELAY-1];
   end
+end
+
+reg [31:0] internal_inst_rData;
+reg inst_state;
+integer inst_delay_cnt;
+
+assign inst_reqReady = (inst_state == 0) && (inst_delay_cnt == 0);
+assign inst_respValid = (inst_state == 1) && (inst_delay_cnt == 0);
+assign inst_rData = internal_inst_rData;
+
+always @(posedge clock) begin
+  if (reset) begin
+    inst_state <= 0;
+    inst_delay_cnt <= 0;
+  end else begin
+    if (inst_state == 0) begin
+      if (inst_delay_cnt > 0) begin
+        inst_delay_cnt <= inst_delay_cnt - 1;
+      end else if (inst_reqValid && inst_reqReady) begin
+        inst_state <= 1;
+        inst_delay_cnt <= ($$urandom_range(0, 100) < 90) ? 0 : $$urandom_range(1, 5);
+        internal_inst_rData <= dpic_pmem_read(inst_rAddr);
+      end
+    end else begin
+      if (inst_delay_cnt > 0) begin
+        inst_delay_cnt <= inst_delay_cnt - 1;
+      end else if (inst_respValid && inst_respReady) begin
+        inst_state <= 0;
+        inst_delay_cnt <= ($$urandom_range(0, 100) < 95) ? 0 : $$urandom_range(1, 2);
+      end
+    end
+  end
+end
 
 endmodule
-        """
+"""
   )
 }
 
