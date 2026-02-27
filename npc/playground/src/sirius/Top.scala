@@ -120,14 +120,13 @@ gated_delay #(
  .trigger(tmp_inst_reqReady),
  .out(inst_reqReady)
 );
-gated_delay #(
+delay_module #(
  .WIDTH(1),
  .DELAY(5)
 ) u_gdelay_inst_respValid (
  .clock(clock),
  .reset(reset),
  .in(tmp_inst_respValid),
- .trigger(tmp_inst_respValid),
  .out(inst_respValid)
 );
 /*
