@@ -27,7 +27,7 @@ class Ifu(
 
 
   val queue = Module(new Queue(UInt(cfg.xlen.W), 1))
-  queue.io.enq.ready := exte.mem.respValid
+  queue.io.enq.valid := exte.mem.respValid
   queue.io.enq.bits := exte.mem.rData
   exte.mem.respReady := queue.io.enq.ready
   out.valid := queue.io.deq.valid
