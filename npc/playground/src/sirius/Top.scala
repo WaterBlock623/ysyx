@@ -94,13 +94,7 @@ class MemDpiC(
         |
         |endmodule
         |""".stripMargin
-  )
-}
-
-class DelayModule extends ExtModule {
-  setInline(
-    "DelayModule.sv",
-    s"""
+      + s"""
 module delay_module #(
   parameter WIDTH = 32,
   parameter DELAY = 5
@@ -140,6 +134,7 @@ endmodule
         """
   )
 }
+
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)
 //     extends ExtModule {
@@ -306,7 +301,6 @@ class Top(
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    // Module(new DelayModule)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
