@@ -96,7 +96,7 @@ class MemDpiC(
   )
 }
 
-class Delay extends ExtModule {
+class DelayModule extends ExtModule {
   setInline(
     "DelayModule.sv",
     s"""
@@ -305,6 +305,7 @@ class Top(
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
+    Module(new DelayModule)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
@@ -317,6 +318,7 @@ class Top(
     memDpiC.reset := reset
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
+
   } else {
     // val memRegFile = Module(new MemRegFile)
     // memRegFile.inst :<>= ifu.exte.mem
