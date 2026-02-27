@@ -27,32 +27,51 @@ class Lsu(
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
   // FSM
-  import DecoupledState._
+  val sIdle :: sWaitReadDone :: sWaitWriteDone :: Nil = Enum(3)
   val state = RegInit(sIdle)
   val isMemAcc = ctrl.isLoad || ctrl.isStore
 
   state := MuxLookup(state, sIdle)(
     Seq(
-      sIdle -> Mux(in.valid && isMemAcc, sBusy, sIdle),
-      sBusy -> Mux(exte.mem.respValid, sIdle, sBusy)
+      sIdle -> Mux(in.fire, 
+        MuxCase(sIdle, Array(
+          ctrl.isLoad -> sWaitReadDone,
+          ctrl.isStore -> sWaitWriteDone
+          )), 
+        sIdle),
+      sWaitReadDone -> Mux(out.fire, sIdle, sWaitReadDone),
+      sWaitWriteDone -> Mux(out.fire, sIdle, sWaitWriteDone),
     )
   )
 
+  val queue = Module(new Queue(UInt(cfg.xlen.W), 1, flow = true))
+  // enq
+  queue.io.enq.valid := exte.mem.respValid && state === sWaitReadDone
+  queue.io.enq.bits := exte.mem.rData
+  // deq
+  out.valid := queue.io.deq.valid
+  val rData = queue.io.deq.bits
+  queue.io.deq.ready := out.ready
+
+  exte.mem.respReady := MuxLookup(state, false.B)(Seq(
+    sWaitReadDone -> queue.io.enq.ready,
+    sWaitWriteDone -> true.B
+  ))
+
   val isBypass = state === sIdle && !isMemAcc
-  val isCompleted = state === sBusy && exte.mem.respValid
+  val isCompleted = (state === sWaitReadDone || state === sWaitWriteDone) && exte.mem.respReady
 
   in.ready := isBypass || isCompleted
-  out.valid := (in.valid && isBypass) || isCompleted
+  out.valid := (in.fire && isBypass) || isCompleted
 
-  val canSendReq = state === sIdle && in.valid && isMemAcc
+  val canSendReq = state === sIdle && in.fire && isMemAcc
 
-  exte.mem.reqValid := !reset.asBool && canSendReq
+  exte.mem.reqValid := canSendReq
   exte.mem.addr := addr
   exte.mem.wEn := ctrl.isStore
 
   val rem = addr(1, 0)
   // load
-  val rData = exte.mem.rData
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
   val lbu = byteData(rem)
   val lbData = Mux(

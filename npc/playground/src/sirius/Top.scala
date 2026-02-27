@@ -60,16 +60,60 @@ module MemDpiC(
   input [31:0]  ls_wData,
   input [$maskMsb:0] ls_wMask,
   input ls_reqValid,
+  output ls_reqReady,
   output reg ls_respValid,
+  input reg ls_respReady,
   input ls_wEn);
 
-always @(posedge clock) begin
- ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
- if (ls_reqValid && ls_wEn) begin
-   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
- end
- ls_respValid <= ls_reqValid;
+parameter WAIT_REQ = 1'b0, WAIT_READ = 1'b1;
+
+// always @(posedge clock) begin
+//  ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+//  if (ls_reqValid && ls_wEn) begin
+//    dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+//  end
+//  ls_respValid <= ls_reqValid;
+// end
+reg [$memAddrMsb:0] internal_ls_rData;
+reg [$memAddrMsb:0] tmp_ls_rData;
+reg tmp_ls_reqReady;
+reg tmp_ls_respValid;
+reg ls_state;
+reg ls_next_state;
+
+always @(*) begin
+  ls_next_state = WAIT_REQ;
+  case (ls_state)
+    WAIT_REQ: ls_next_state = ls_reqValid ? WAIT_READ : WAIT_REQ;
+    WAIT_READ: ls_next_state = ls_respReady ? WAIT_REQ : WAIT_READ;
+  endcase
 end
+
+always @(posedge clock) begin
+  if (reset) begin
+    ls_state <= WAIT_REQ;
+  end else begin
+    ls_state <= ls_next_state;
+  end
+end
+
+always @(posedge clock) begin
+  if (ls_state == WAIT_REQ && ls_next_state == WAIT_READ) begin
+    if (ls_wEn) begin
+      dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+    end else begin
+      internal_ls_rData <= dpic_pmem_read(ls_addr);
+    end
+  end
+end
+
+assign tmp_ls_rData = tmp_ls_respValid ? internal_ls_rData : ${cfg.xlen}'b0;
+assign tmp_ls_reqReady = ls_reqValid;
+assign tmp_ls_respValid = ls_state == WAIT_READ;
+
+assign ls_reqReady = tmp_ls_reqReady;
+assign ls_respValid = tmp_ls_respValid;
+assign ls_rData = tmp_ls_rData;
 
 
 reg [$memAddrMsb:0] internal_inst_rData;
@@ -78,7 +122,6 @@ reg tmp_inst_reqReady;
 reg tmp_inst_respValid;
 reg inst_state;
 reg inst_next_state;
-parameter WAIT_REQ = 1'b0, WAIT_READ = 1'b1;
 
 always @(*) begin
   inst_next_state = WAIT_REQ;

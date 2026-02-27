@@ -94,7 +94,9 @@ class ExuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
 
 class LsuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
   val reqValid = Output(Bool())
+  val reqReady = Input(Bool())
   val respValid = Input(Bool())
+  val respReady = Output(Bool())
   val addr = Output(UInt(cfg.xlen.W))
   val rData = Input(UInt(cfg.xlen.W))
   val wData = Output(UInt(cfg.xlen.W))
