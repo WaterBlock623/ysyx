@@ -306,7 +306,7 @@ class Top(
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    Module(new DelayModule)
+    // Module(new DelayModule)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
