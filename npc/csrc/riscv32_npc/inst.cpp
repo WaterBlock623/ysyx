@@ -192,19 +192,20 @@ extern int npc_stop_flag;
 extern int npc_wbu_valid;
 
 int isa_exec_once(Decode *s) {
+  s->isa.inst = npc_inst.inst;
+  s->snpc = s->pc + 4;
+
   if (npc_wbu_valid == 0) {
     difftest_skip_ref();
     // Log("Skip!");
-  }
-  if (npc_wbu_valid == 0) {
     s->dnpc = s->pc;
+    printf("Executing @ 0x" FMT_WORD "\n", s->pc);
+    log_write("Executing @ 0x" FMT_WORD "\n", s->pc);
   } else {
     s->dnpc = npc_dnpc;
+    IFDEF(CONFIG_ITRACE, print_disassemble(s));
   }
 
-  s->isa.inst = npc_inst.inst;
-  s->snpc = s->pc + 4;
-  IFDEF(CONFIG_ITRACE, print_disassemble(s));
   decode_inst(s);
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
