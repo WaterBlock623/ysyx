@@ -80,7 +80,7 @@ class MemDpiC(
         | .clock(clock),
         | .reset(reset),
         | .in(tmp_inst_rData),
-        | .out(inst_rAddr)
+        | .out(inst_rData)
         |);
         |delay_module #(
         | .WIDTH(1),
