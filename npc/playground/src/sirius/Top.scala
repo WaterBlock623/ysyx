@@ -72,6 +72,7 @@ always @(posedge clock) begin
 end
 
 
+reg [$memAddrMsb:0] internal_inst_rData;
 reg [$memAddrMsb:0] tmp_inst_rData;
 reg tmp_inst_reqReady;
 reg tmp_inst_respValid;
@@ -97,23 +98,18 @@ end
 
 always @(posedge clock) begin
   if (inst_state == WAIT_REQ && inst_next_state == WAIT_READ) begin
-    tmp_inst_rData <= dpic_pmem_read(inst_rAddr);
+    internal_inst_rData <= dpic_pmem_read(inst_rAddr);
   end
 end
+
+assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b0;
 assign tmp_inst_reqReady = inst_reqValid;
 assign tmp_inst_respValid = inst_state == WAIT_READ;
-assign inst_reqReady = tmp_inst_reqReady;
-assign inst_respValid = tmp_inst_respValid;
 
-/*
-always @(posedge clock) begin
-  tmp_inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
-  tmp_inst_respValid <= inst_reqValid;
-end
-*/
+// assign inst_reqReady = tmp_inst_reqReady;
+// assign inst_respValid = tmp_inst_respValid;
+// assign inst_rData = tmp_inst_rData;
 
-assign inst_rData = tmp_inst_respValid ? tmp_inst_rData : ${cfg.xlen}'b0;
-/*
 delay_module #(
  .WIDTH(32),
  .DELAY(5)
@@ -126,13 +122,21 @@ delay_module #(
 delay_module #(
  .WIDTH(1),
  .DELAY(5)
+) u_delay_inst_reqReady (
+ .clock(clock),
+ .reset(reset),
+ .in(tmp_inst_reqReady),
+ .out(inst_reqReady)
+);
+delay_module #(
+ .WIDTH(1),
+ .DELAY(5)
 ) u_delay_inst_respValid (
  .clock(clock),
  .reset(reset),
  .in(tmp_inst_respValid),
  .out(inst_respValid)
 );
-*/
 
 endmodule
 """
