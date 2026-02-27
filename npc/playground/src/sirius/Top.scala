@@ -66,15 +66,79 @@ class MemDpiC(
         | ls_respValid <= ls_reqValid;
         |end
         |
+        |
+        |reg [$memAddrMsb:0] tmp_inst_rData;
+        |reg tmp_inst_respValid;
         |always @(posedge clock) begin
-        |  inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
-        |  inst_respValid <= inst_reqValid;
+        |  tmp_inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
+        |  tmp_inst_respValid <= inst_reqValid;
         |end
         |endmodule
+        |delay #(
+        | .WIDTH(32),
+        | .DELAY(5)
+        |) u_delay_inst_rData (
+        | .clock(clock),
+        | .reset(reset),
+        | .in(tmp_inst_rData),
+        | .out(inst_rAddr)
+        |);
+        |delay #(
+        | .WIDTH(1),
+        | .DELAY(5)
+        |) u_delay_inst_respValid (
+        | .clock(clock),
+        | .reset(reset),
+        | .in(tmp_inst_respValid),
+        | .out(inst_respValid)
+        |);
         |""".stripMargin
   )
 }
 
+class Delay extends ExtModule {
+  setInline(
+    "Delay.sv",
+    s"""
+module delay #(
+  parameter WIDTH = 32,
+  parameter DELAY = 5
+)(
+  input  wire              clock,
+  input  wire              reset,
+  input  wire [WIDTH-1:0]  in,
+  output wire [WIDTH-1:0]  out
+);
+
+  if (DELAY <= 0) begin
+      assign out = in;
+  end 
+  else begin
+    reg [WIDTH-1:0] delay_pipeline [0:DELAY-1];
+
+    integer i;
+    always @(posedge clock) begin
+      if (reset) begin
+        for (i = 0; i < DELAY; i = i + 1) begin
+          delay_pipeline[i] <= {WIDTH{1'b0}};
+        end
+      end 
+      else begin
+        delay_pipeline[0] <= in;
+        
+        for (i = 1; i < DELAY; i = i + 1) begin
+          delay_pipeline[i] <= delay_pipeline[i-1];
+        end
+      end
+    end
+
+    assign out = delay_pipeline[DELAY-1];
+  end
+
+endmodule
+        """
+  )
+}
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)
 //     extends ExtModule {
@@ -93,14 +157,14 @@ class MemDpiC(
 //         |module MemDpiC(
 //         |  input clock,
 //         |  input reset,
-//         |  input [$memAddrMsb:0] inst_rAddr, 
-//         |  output reg [31:0] inst_rData, 
-//         |  input [$memAddrMsb:0] ls_addr, 
-//         |  output reg [31:0] ls_rData, 
+//         |  input [$memAddrMsb:0] inst_rAddr,
+//         |  output reg [31:0] inst_rData,
+//         |  input [$memAddrMsb:0] ls_addr,
+//         |  output reg [31:0] ls_rData,
 //         |  input [31:0]  ls_wData,
 //         |  input [$maskMsb:0] ls_wMask,
-//         |  input ls_reqValid, 
-//         |  output ls_respValid, 
+//         |  input ls_reqValid,
+//         |  output ls_respValid,
 //         |  input ls_wEn);
 //         |
 //         |reg [7:0] lfsr_delay_cycles;
