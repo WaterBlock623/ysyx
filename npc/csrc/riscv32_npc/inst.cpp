@@ -199,7 +199,9 @@ int isa_exec_once(Decode *s) {
     difftest_skip_ref();
     // Log("Skip!");
     s->dnpc = s->pc;
-    printf("Executing @ 0x" FMT_WORD "\n", s->pc);
+    if (g_print_step) {
+      printf("Executing @ 0x" FMT_WORD "\n", s->pc);
+    }
     log_write("Executing @ 0x" FMT_WORD "\n", s->pc);
   } else {
     s->dnpc = npc_dnpc;
