@@ -75,7 +75,9 @@ class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
   val reqValid = Output(Bool())
+  val reqReady = Input(Bool())
   val respValid = Input(Bool())
+  val respReady = Output(Bool())
   val rAddr = Output(UInt(cfg.xlen.W))
   val rData = Input(UInt(cfg.xlen.W))
 }

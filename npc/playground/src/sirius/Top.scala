@@ -40,60 +40,100 @@ class MemDpiC(
   private val maskZero = 32 - (cfg.xlen >> 3)
   setInline(
     "MemDpiC.sv",
-    s"""|import "DPI-C" function int dpic_pmem_read(input int raddr);
-        |import "DPI-C" function void dpic_pmem_write(
-        |  input int waddr, input int wdata, input int wmask);
-        |module MemDpiC(
-        |  input clock,
-        |  input reset,
-        |  input [$memAddrMsb:0] inst_rAddr,
-        |  output reg [31:0] inst_rData,
-        |  input inst_reqValid,
-        |  output reg inst_respValid,
-        |  input [$memAddrMsb:0] ls_addr,
-        |  output reg [31:0] ls_rData,
-        |  input [31:0]  ls_wData,
-        |  input [$maskMsb:0] ls_wMask,
-        |  input ls_reqValid,
-        |  output reg ls_respValid,
-        |  input ls_wEn);
-        |
-        |always @(posedge clock) begin
-        | ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
-        | if (ls_reqValid && ls_wEn) begin
-        |   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
-        | end
-        | ls_respValid <= ls_reqValid;
-        |end
-        |
-        |
-        |reg [$memAddrMsb:0] tmp_inst_rData;
-        |reg tmp_inst_respValid;
-        |always @(posedge clock) begin
-        |  tmp_inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
-        |  tmp_inst_respValid <= inst_reqValid;
-        |end
-        |delay_module #(
-        | .WIDTH(32),
-        | .DELAY(5)
-        |) u_delay_inst_rData (
-        | .clock(clock),
-        | .reset(reset),
-        | .in(tmp_inst_rData),
-        | .out(inst_rData)
-        |);
-        |delay_module #(
-        | .WIDTH(1),
-        | .DELAY(5)
-        |) u_delay_inst_respValid (
-        | .clock(clock),
-        | .reset(reset),
-        | .in(tmp_inst_respValid),
-        | .out(inst_respValid)
-        |);
-        |
-        |endmodule
-        |""".stripMargin
+    s"""
+import "DPI-C" function int dpic_pmem_read(input int raddr);
+import "DPI-C" function void dpic_pmem_write(
+  input int waddr, input int wdata, input int wmask);
+module MemDpiC(
+  input clock,
+  input reset,
+
+  input [$memAddrMsb:0] inst_rAddr,
+  output reg [31:0] inst_rData,
+  input inst_reqValid,
+  output reg inst_reqReady,
+  output reg inst_respValid,
+  input inst_respReady,
+
+  input [$memAddrMsb:0] ls_addr,
+  output reg [31:0] ls_rData,
+  input [31:0]  ls_wData,
+  input [$maskMsb:0] ls_wMask,
+  input ls_reqValid,
+  output reg ls_respValid,
+  input ls_wEn);
+
+always @(posedge clock) begin
+ ls_rData <= (ls_reqValid && !ls_wEn) ? dpic_pmem_read(ls_addr) : ${cfg.xlen}'b0;
+ if (ls_reqValid && ls_wEn) begin
+   dpic_pmem_write(ls_addr, ls_wData, {$maskZero'b0, ls_wMask});
+ end
+ ls_respValid <= ls_reqValid;
+end
+
+
+reg [$memAddrMsb:0] tmp_inst_rData;
+reg tmp_inst_reqReady;
+reg tmp_inst_respValid;
+reg inst_state;
+reg inst_next_state;
+parameter WAIT_REQ = 1'b0, WAIT_READ = 1'b1;
+
+always @(*) begin
+  inst_next_state = WAIT_REQ;
+  case (inst_state)
+    WAIT_REQ: inst_next_state = inst_reqValid ? WAIT_READ : WAIT_REQ;
+    WAIT_READ: inst_next_state = inst_reqReady ? WAIT_REQ : WAIT_READ;
+  endcase
+end
+
+always @(posedge clock) begin
+  if (reset) begin
+    inst_state <= WAIT_REQ;
+  end else begin
+    inst_state <= inst_next_state;
+  end
+end
+
+always @(posedge clock) begin
+  if (inst_state == WAIT_REQ && inst_next_state == WAIT_READ) begin
+    tmp_inst_rData <= dpic_pmem_read(inst_rAddr);
+  end
+end
+assign tmp_inst_reqReady = inst_reqValid;
+assign tmp_inst_respValid = inst_state == WAIT_READ;
+
+/*
+always @(posedge clock) begin
+  tmp_inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
+  tmp_inst_respValid <= inst_reqValid;
+end
+*/
+
+assign inst_rData = tmp_inst_respValid ? tmp_inst_rData : ${cfg.xlen}'b0;
+/*
+delay_module #(
+ .WIDTH(32),
+ .DELAY(5)
+) u_delay_inst_rData (
+ .clock(clock),
+ .reset(reset),
+ .in(tmp_inst_rData),
+ .out(inst_rData)
+);
+delay_module #(
+ .WIDTH(1),
+ .DELAY(5)
+) u_delay_inst_respValid (
+ .clock(clock),
+ .reset(reset),
+ .in(tmp_inst_respValid),
+ .out(inst_respValid)
+);
+*/
+
+endmodule
+"""
       + s"""
 module delay_module #(
   parameter WIDTH = 32,

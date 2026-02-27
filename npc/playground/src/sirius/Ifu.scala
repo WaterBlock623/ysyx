@@ -20,21 +20,35 @@ class Ifu(
   val state = RegInit(sBusy)
   state := MuxLookup(state, sBusy)(
     Seq(
-      sBusy -> Mux(exte.mem.respValid, sWait, sBusy),
+      sBusy -> Mux(exte.mem.reqValid, sWait, sBusy),
       sWait -> Mux(out.ready, sBusy, sWait)
     )
   )
+
+
+  val queue = Module(new Queue(UInt(cfg.xlen.W), 1))
+  queue.io.enq.ready := exte.mem.respValid
+  queue.io.enq.bits := exte.mem.rData
+  exte.mem.respReady := queue.io.enq.ready
+  out.valid := queue.io.deq.valid
+  outBits.ifuPayload.ifu.inst := queue.io.deq.bits
+  queue.io.deq.ready := out.ready
+  
+  out.bits := outBits
+
+  exte.mem.reqValid := state === sBusy
+
   // out.bits := Mux(
   //   exte.mem.respValid,
   //   outBits,
   //   RegEnable(outBits, state === sBusy && exte.mem.respValid)
   // )
-  out.bits := RegEnable(outBits, state === sBusy && exte.mem.respValid)
-  out.valid := state === sWait
+  // out.bits := RegEnable(outBits, state === sBusy && exte.mem.respValid)
+  // out.valid := state === sWait
   // exte.mem.reqValid := !reset.asBool && (state === sIdle || (state === sWait && out.ready))
   // val isSBusy = state === sBusy
   // exte.mem.reqValid := isSBusy && !RegNext(isSBusy)
-  exte.mem.reqValid := !RegNext(reset.asBool) && (state === sBusy && !exte.mem.respValid)
+  // exte.mem.reqValid := !RegNext(reset.asBool) && (state === sBusy && !exte.mem.respValid)
 
   //
   // import chisel3.util.random.LFSR
@@ -64,7 +78,7 @@ class Ifu(
   exte.mem.rAddr := pc
   val inst = exte.mem.rData
   outBits.ifuPayload.ifu.pc := exte.pcReg.pc
-  outBits.ifuPayload.ifu.inst := inst
+  // outBits.ifuPayload.ifu.inst := inst
 
   if (cfg.isDebug) {
     debug.get := out.bits.ifuPayload.ifu.inst
