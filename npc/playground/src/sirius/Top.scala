@@ -83,7 +83,7 @@ always @(*) begin
   inst_next_state = WAIT_REQ;
   case (inst_state)
     WAIT_REQ: inst_next_state = inst_reqValid ? WAIT_READ : WAIT_REQ;
-    WAIT_READ: inst_next_state = inst_reqReady ? WAIT_REQ : WAIT_READ;
+    WAIT_READ: inst_next_state = inst_respReady ? WAIT_REQ : WAIT_READ;
   endcase
 end
 
