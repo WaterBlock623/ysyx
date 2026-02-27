@@ -36,7 +36,7 @@ class Ifu(
   
   out.bits := outBits
 
-  exte.mem.reqValid := state === sBusy
+  exte.mem.reqValid := !RegNext(reset.asBool) && state === sBusy
 
   // out.bits := Mux(
   //   exte.mem.respValid,
