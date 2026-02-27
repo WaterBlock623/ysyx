@@ -73,7 +73,6 @@ class MemDpiC(
         |  tmp_inst_rData <= inst_reqValid ? dpic_pmem_read(inst_rAddr) : ${cfg.xlen}'b0;
         |  tmp_inst_respValid <= inst_reqValid;
         |end
-        |endmodule
         |delay_module #(
         | .WIDTH(32),
         | .DELAY(5)
@@ -92,6 +91,8 @@ class MemDpiC(
         | .in(tmp_inst_respValid),
         | .out(inst_respValid)
         |);
+        |
+        |endmodule
         |""".stripMargin
   )
 }
