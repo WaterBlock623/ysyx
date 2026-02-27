@@ -193,7 +193,7 @@ module gated_delay #(
     end
   end
 
-  assign data_out = (is_active) ? data_in : {WIDTH{1'b0}};
+  assign out = (is_active) ? in : {WIDTH{1'b0}};
 
 endmodule
 
