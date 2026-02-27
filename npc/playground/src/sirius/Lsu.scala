@@ -64,7 +64,7 @@ class Lsu(
   in.ready := isBypass || isCompleted
   out.valid := (in.fire && isBypass) || isCompleted
 
-  val canSendReq = state === sIdle && in.fire && isMemAcc
+  val canSendReq = state === sIdle && in.valid && isMemAcc
 
   exte.mem.reqValid := canSendReq
   exte.mem.addr := addr
