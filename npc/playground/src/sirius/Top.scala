@@ -74,7 +74,7 @@ class MemDpiC(
         |  tmp_inst_respValid <= inst_reqValid;
         |end
         |endmodule
-        |delay #(
+        |delay_module #(
         | .WIDTH(32),
         | .DELAY(5)
         |) u_delay_inst_rData (
@@ -83,7 +83,7 @@ class MemDpiC(
         | .in(tmp_inst_rData),
         | .out(inst_rAddr)
         |);
-        |delay #(
+        |delay_module #(
         | .WIDTH(1),
         | .DELAY(5)
         |) u_delay_inst_respValid (
@@ -98,9 +98,9 @@ class MemDpiC(
 
 class Delay extends ExtModule {
   setInline(
-    "Delay.sv",
+    "DelayModule.sv",
     s"""
-module delay #(
+module delay_module #(
   parameter WIDTH = 32,
   parameter DELAY = 5
 )(
