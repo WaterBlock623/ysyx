@@ -36,15 +36,15 @@ class Ifu(
   
   out.bits := outBits
 
-  val delay_cyc = 10
-  val test_cnt = RegInit(delay_cyc.U(8.W))
-  when (test_cnt =/= 0.U) {
-    test_cnt := test_cnt - 1.U
-  }
-  when (state === sWait && out.fire) {
-    test_cnt := delay_cyc.U
-  }
-  exte.mem.reqValid := state === sBusy && test_cnt === 0.U
+  // val delay_cyc = 10
+  // val test_cnt = RegInit(delay_cyc.U(8.W))
+  // when (test_cnt =/= 0.U) {
+  //   test_cnt := test_cnt - 1.U
+  // }
+  // when (state === sWait && out.fire) {
+  //   test_cnt := delay_cyc.U
+  // }
+  exte.mem.reqValid := state === sBusy // && test_cnt === 0.U
 
   // out.bits := Mux(
   //   exte.mem.respValid,

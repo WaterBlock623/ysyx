@@ -106,29 +106,29 @@ assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b
 assign tmp_inst_reqReady = inst_reqValid;
 assign tmp_inst_respValid = inst_state == WAIT_READ;
 
-// assign inst_reqReady = tmp_inst_reqReady;
-// assign inst_respValid = tmp_inst_respValid;
+assign inst_reqReady = tmp_inst_reqReady;
+assign inst_respValid = tmp_inst_respValid;
 assign inst_rData = tmp_inst_rData;
 
-gated_delay #(
- .WIDTH(1),
- .DELAY(5)
-) u_gdelay_inst_reqReady (
- .clock(clock),
- .reset(reset),
- .in(tmp_inst_reqReady),
- .trigger(tmp_inst_reqReady),
- .out(inst_reqReady)
-);
-delay_module #(
- .WIDTH(1),
- .DELAY(5)
-) u_gdelay_inst_respValid (
- .clock(clock),
- .reset(reset),
- .in(tmp_inst_respValid),
- .out(inst_respValid)
-);
+// gated_delay #(
+//  .WIDTH(1),
+//  .DELAY(5)
+// ) u_gdelay_inst_reqReady (
+//  .clock(clock),
+//  .reset(reset),
+//  .in(tmp_inst_reqReady),
+//  .trigger(tmp_inst_reqReady),
+//  .out(inst_reqReady)
+// );
+// delay_module #(
+//  .WIDTH(1),
+//  .DELAY(5)
+// ) u_gdelay_inst_respValid (
+//  .clock(clock),
+//  .reset(reset),
+//  .in(tmp_inst_respValid),
+//  .out(inst_respValid)
+// );
 /*
 delay_module #(
  .WIDTH(32),
