@@ -110,6 +110,26 @@ assign inst_reqReady = tmp_inst_reqReady;
 assign inst_respValid = tmp_inst_respValid;
 assign inst_rData = tmp_inst_rData;
 
+gated_delay #(
+ .WIDTH(1),
+ .DELAY(5)
+) u_gdelay_inst_reqReady (
+ .clock(clock),
+ .reset(reset),
+ .in(tmp_inst_reqReady),
+ .trigger(tmp_inst_reqReady),
+ .out(inst_reqReady)
+);
+gated_delay #(
+ .WIDTH(1),
+ .DELAY(5)
+) u_gdelay_inst_respValid (
+ .clock(clock),
+ .reset(reset),
+ .in(tmp_inst_respValid),
+ .trigger(tmp_inst_respValid),
+ .out(inst_respValid)
+);
 /*
 delay_module #(
  .WIDTH(32),
@@ -141,8 +161,42 @@ delay_module #(
 */
 
 endmodule
-"""
-      + s"""
+
+module gated_delay #(
+  parameter WIDTH = 32,
+  parameter DELAY = 5
+)(
+  input  wire                    clock,
+  input  wire                    reset,
+  input  wire                    trigger,
+  input  wire [WIDTH-1:0]   in,
+  output wire [WIDTH-1:0]   out
+);
+
+  reg [7:0] count;
+  reg is_active;
+
+  always @(posedge clock) begin
+    if (reset) begin
+      count <= 0;
+      is_active <= 1'b0;
+    end else if (trigger && !is_active) begin
+      if (count < DELAY) begin
+        count <= count + 1'b1;
+        is_active <= 1'b0;
+      end else begin
+        is_active <= 1'b1;
+      end
+    end else if (!trigger) begin
+      count <= 0;
+      is_active <= 1'b0;
+    end
+  end
+
+  assign data_out = (is_active) ? data_in : {WIDTH{1'b0}};
+
+endmodule
+
 module delay_module #(
   parameter WIDTH = 32,
   parameter DELAY = 5
