@@ -21,7 +21,7 @@ class Ifu(
   state := MuxLookup(state, sBusy)(
     Seq(
       sBusy -> Mux(exte.mem.reqReady, sWait, sBusy),
-      sWait -> Mux(out.ready, sBusy, sWait)
+      sWait -> Mux(out.fire, sBusy, sWait)
     )
   )
 
