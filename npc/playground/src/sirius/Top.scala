@@ -102,6 +102,8 @@ always @(posedge clock) begin
 end
 assign tmp_inst_reqReady = inst_reqValid;
 assign tmp_inst_respValid = inst_state == WAIT_READ;
+assign inst_reqReady = tmp_inst_reqReady;
+assign inst_respValid = tmp_inst_respValid;
 
 /*
 always @(posedge clock) begin
