@@ -106,10 +106,11 @@ assign tmp_inst_rData = tmp_inst_respValid ? internal_inst_rData : ${cfg.xlen}'b
 assign tmp_inst_reqReady = inst_reqValid;
 assign tmp_inst_respValid = inst_state == WAIT_READ;
 
-// assign inst_reqReady = tmp_inst_reqReady;
-// assign inst_respValid = tmp_inst_respValid;
-// assign inst_rData = tmp_inst_rData;
+assign inst_reqReady = tmp_inst_reqReady;
+assign inst_respValid = tmp_inst_respValid;
+assign inst_rData = tmp_inst_rData;
 
+/*
 delay_module #(
  .WIDTH(32),
  .DELAY(5)
@@ -137,6 +138,7 @@ delay_module #(
  .in(tmp_inst_respValid),
  .out(inst_respValid)
 );
+*/
 
 endmodule
 """
