@@ -755,7 +755,7 @@ class Top(
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
     memDpiC.inst :<>= ifu.exte.mem.viewAs[VerilogAxi4LiteIO]
-    memDpiC.ls :<>= lsu.exte.mem
+    memDpiC.AXI :<>= lsu.exte.mem.viewAs[VerilogAxi4LiteIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
     // getRetDpiC.a0 := registerFile.debug.get(10)
