@@ -411,7 +411,7 @@ class MemDpiC(
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
 
-  private val delayProb = 50
+  private val delayProb = 0
   private val maxDelayCycle = 30
   
   setInline(
@@ -479,7 +479,7 @@ integer read_delay_cnt;
 
 assign AXI_ARREADY= (read_state == 0) && (read_delay_cnt == 0);
 assign AXI_RVALID = (read_state == 1) && (read_delay_cnt == 0);
-assign AXI_RDATA = internal_ls_rData;
+assign AXI_RDATA = AXI_RVALID ? internal_ls_rData : ${cfg.xlen}'b0;
 
 always @(posedge clock) begin
   if (reset) begin
@@ -555,7 +555,7 @@ integer inst_delay_cnt;
 
 assign inst_ARREADY = (inst_state == 0) && (inst_delay_cnt == 0);
 assign inst_RVALID = (inst_state == 1) && (inst_delay_cnt == 0);
-assign inst_RDATA = internal_inst_rData;
+assign inst_RDATA = inst_RVALID ? internal_inst_rData : ${cfg.xlen}'b0;
 
 always @(posedge clock) begin
   if (reset) begin
