@@ -2,6 +2,7 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import chisel3.experimental.dataview._
 
 class DebugInfoDpiC(
   implicit private val cfg: CoreConfig)
@@ -712,7 +713,7 @@ class Top(
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    memDpiC.inst :<>= ifu.exte.mem
+    memDpiC.inst :<>= ifu.exte.mem.viewAs[VerilogAxi4LiteIO]
     memDpiC.ls :<>= lsu.exte.mem
     memDpiC.clock := clock
     memDpiC.reset := reset
@@ -726,12 +727,12 @@ class Top(
 
     // val out = IO(Output(UInt(32.W)))
     // out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
-    val io = IO(new Bundle {
-      val inst = new IfuToMemIO
-      val ls = new LsuToMemIO
-    })
-    io.inst :<>= ifu.exte.mem
-    io.ls :<>= lsu.exte.mem
+    // val io = IO(new Bundle {
+    //   val inst = new IfuToMemIO
+    //   val ls = new LsuToMemIO
+    // })
+    // io.inst :<>= ifu.exte.mem
+    // io.ls :<>= lsu.exte.mem
   }
 
   pcReg.ifuIn :<>= ifu.exte.pcReg
