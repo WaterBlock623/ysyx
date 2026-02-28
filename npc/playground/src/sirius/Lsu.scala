@@ -26,7 +26,7 @@ class Lsu(
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
-  val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(2)
+  val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
   val isMemAcc = ctrl.isLoad || ctrl.isStore
 
