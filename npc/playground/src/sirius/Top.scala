@@ -411,7 +411,7 @@ class MemDpiC(
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
 
-  private val delayProb = 0
+  private val delayProb = 50
   private val maxDelayCycle = 30
   
   setInline(
