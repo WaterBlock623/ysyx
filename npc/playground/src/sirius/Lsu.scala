@@ -12,7 +12,7 @@ class Lsu(
   }
 
   val exte = IO(new Bundle {
-    val mem = new LsuToMemIO
+    val mem = new Axi4LiteIO
   })
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
@@ -26,33 +26,53 @@ class Lsu(
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
-  val sIdle :: sWaitResp :: Nil = Enum(2)
+  val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
   val isMemAcc = ctrl.isLoad || ctrl.isStore
 
-  val canSendReq = state === sIdle && in.valid && isMemAcc
-  exte.mem.reqValid := canSendReq
+  // val canSendReq = state === sIdle && in.valid && isMemAcc
 
   state := MuxLookup(state, sIdle)(
     Seq(
-      sIdle -> Mux(canSendReq && exte.mem.reqReady, sWaitResp, sIdle),
+      sIdle -> Mux(
+        in.valid && isMemAcc,
+        MuxCase(
+          sWaitResp,
+          Seq(
+            exte.mem.ar.ready -> sWaitResp,
+            (exte.mem.aw.ready && exte.mem.w.ready) -> sWaitResp,
+            exte.mem.aw.ready -> sWaitDataReady,
+            exte.mem.w.ready -> sWaitAddrReady
+          )
+        ),
+        sIdle
+      ),
+      sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
+      sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
       sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
     )
   )
 
   val isBypass = state === sIdle && in.valid && !isMemAcc
-  val isMemDone = state === sWaitResp && exte.mem.respValid
+  val isMemDone =
+    state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
 
   out.valid := isBypass || isMemDone
-
   in.ready := out.fire
 
-  exte.mem.respReady := state === sWaitResp && out.ready
+  val isRespReady = state === sWaitResp && out.ready
+  exte.mem.r.ready := isRespReady && ctrl.isLoad
+  exte.mem.b.ready := isRespReady && ctrl.isStore
 
-  exte.mem.addr := addr
-  exte.mem.wEn := ctrl.isStore
 
-  val rData = exte.mem.rData
+  exte.mem.ar.bits.addr := addr
+  exte.mem.aw.bits.addr := addr
+
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore
+
+  val rData = exte.mem.r.bits.data
   val rem = addr(1, 0)
 
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
@@ -85,7 +105,7 @@ class Lsu(
   val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)
 
-  exte.mem.wData := MuxLookup(ctrl.loadStoreLength, sw)(
+  exte.mem.w.bits.data := MuxLookup(ctrl.loadStoreLength, sw)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> sw,
       LoadStoreLengthEnum.h.asUInt -> sh,
@@ -97,7 +117,7 @@ class Lsu(
   val shMask = (3.U << (rem & 2.U)).pad(cfg.xlen)
   val swMask = 15.U(cfg.xlen.W)
 
-  exte.mem.wMask := MuxLookup(ctrl.loadStoreLength, swMask)(
+  exte.mem.w.bits.strb := MuxLookup(ctrl.loadStoreLength, swMask)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> swMask,
       LoadStoreLengthEnum.h.asUInt -> shMask,

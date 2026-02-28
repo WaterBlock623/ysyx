@@ -404,7 +404,8 @@ class MemDpiC(
   val clock = IO(Input(Clock()))
   val reset = IO(Input(Reset()))
   val inst = IO(Flipped(new VerilogAxi4LiteIO))
-  val ls = IO(Flipped(new LsuToMemIO))
+  // val ls = IO(Flipped(new LsuToMemIO))
+  val AXI = IO(Flipped(new VerilogAxi4LiteIO))
 
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
@@ -448,48 +449,88 @@ module MemDpiC(
   output reg [1:0] inst_RRESP,
 
 
-  input[$memAddrMsb:0] ls_addr,
-  output [31:0] ls_rData,
-  input[31:0]  ls_wData,
-  input [$maskMsb:0] ls_wMask,
-  input ls_reqValid,
-  output ls_reqReady,
-  output ls_respValid,
-  input ls_respReady,
-  input ls_wEn);
+  input AXI_AWVALID,
+  output reg AXI_AWREADY,
+  input [$memAddrMsb:0] AXI_AWADDR,
 
+  input AXI_WVALID,
+  output reg AXI_WREADY,
+  input [31:0] AXI_WDATA,
+  input [$maskMsb:0] AXI_WSTRB,
+
+  output reg AXI_BVALID,
+  input AXI_BREADY,
+  output reg [1:0] AXI_BRESP,
+
+  input AXI_ARVALID,
+  output reg AXI_ARREADY,
+  input [$memAddrMsb:0] AXI_ARADDR,
+
+  output reg AXI_RVALID,
+  input AXI_RREADY,
+  output reg [31:0] AXI_RDATA,
+  output reg [1:0] AXI_RRESP,
+);
+
+assign AXI_RRESP = 0;
 reg [31:0] internal_ls_rData;
-reg ls_state; // 0: IDLE, 1: WAIT_RESP
-integer ls_delay_cnt;
+reg read_state; // 0: IDLE, 1: WAIT_RESP
+integer read_delay_cnt;
 
-assign ls_reqReady = (ls_state == 0) && (ls_delay_cnt == 0);
-assign ls_respValid = (ls_state == 1) && (ls_delay_cnt == 0);
-assign ls_rData = internal_ls_rData;
+assign AXI_ARREADY= (read_state == 0) && (read_delay_cnt == 0);
+assign AXI_RVALID = (read_state == 1) && (read_delay_cnt == 0);
+assign AXI_RDATA = internal_ls_rData;
 
 always @(posedge clock) begin
   if (reset) begin
-    ls_state <= 0;
-    ls_delay_cnt <= 0;
+    read_state <= 0;
+    read_delay_cnt <= 0;
   end else begin
-    if (ls_state == 0) begin
-      if (ls_delay_cnt > 0) begin
-        ls_delay_cnt <= ls_delay_cnt - 1;
-      end else if (ls_reqValid && ls_reqReady) begin
-        ls_state <= 1;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        
-        if (ls_wEn) begin
-          dpic_pmem_write(ls_addr, ls_wData, {${maskZero}'b0, ls_wMask});
-        end else begin
-          internal_ls_rData <= dpic_pmem_read(ls_addr);
-        end
+    if (read_state == 0) begin
+      if (read_delay_cnt > 0) begin
+        read_delay_cnt <= read_delay_cnt - 1;
+      end else if (AXI_ARVALID && AXI_ARREADY) begin
+        read_state <= 1;
+        read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        internal_ls_rData <= dpic_pmem_read(AXI_ARADDR);
       end
     end else begin
-      if (ls_delay_cnt > 0) begin
-        ls_delay_cnt <= ls_delay_cnt - 1;
-      end else if (ls_respValid && ls_respReady) begin
-        ls_state <= 0;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+      if (read_delay_cnt > 0) begin
+        read_delay_cnt <= read_delay_cnt - 1;
+      end else if (AXI_RVALID && AXI_RREADY) begin
+        read_state <= 0;
+        read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+      end
+    end
+  end
+end
+
+assign AXI_BRESP = 0;
+reg write_state; // 0: IDLE, 1: WAIT_RESP
+integer write_delay_cnt;
+
+assign AXI_AWREADY= (write_state == 0) && (AXI_AWVALID && AXI_WVALID) && (write_delay_cnt == 0);
+assign AXI_WVALID = (write_state == 1) && (write_delay_cnt == 0);
+
+always @(posedge clock) begin
+  if (reset) begin
+    write_state <= 0;
+    write_delay_cnt <= 0;
+  end else begin
+    if (write_state == 0) begin
+      if (write_delay_cnt > 0) begin
+        write_delay_cnt <= write_delay_cnt - 1;
+      end else if (AXI_AWVALID && AXI_WVALID) begin
+        write_state <= 1;
+        write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        dpic_pmem_write(AXI_AWADDR, AXI_WDATA, {${maskZero}'b0, AXI_WSTRB});
+      end
+    end else begin
+      if (write_delay_cnt > 0) begin
+        write_delay_cnt <= write_delay_cnt - 1;
+      end else if (AXI_BVALID && AXI_BREADY) begin
+        write_state <= 0;
+        write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
   end
