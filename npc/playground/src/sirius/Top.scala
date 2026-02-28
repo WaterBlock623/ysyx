@@ -469,7 +469,7 @@ module MemDpiC(
   output reg AXI_RVALID,
   input AXI_RREADY,
   output reg [31:0] AXI_RDATA,
-  output reg [1:0] AXI_RRESP,
+  output reg [1:0] AXI_RRESP
 );
 
 assign AXI_RRESP = 0;
