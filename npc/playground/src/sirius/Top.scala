@@ -491,6 +491,7 @@ always @(posedge clock) begin
         read_delay_cnt <= read_delay_cnt - 1;
       end else if (AXI_ARVALID && AXI_ARREADY) begin
         read_state <= 1;
+        /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         internal_ls_rData <= dpic_pmem_read(AXI_ARADDR);
       end
@@ -499,6 +500,7 @@ always @(posedge clock) begin
         read_delay_cnt <= read_delay_cnt - 1;
       end else if (AXI_RVALID && AXI_RREADY) begin
         read_state <= 0;
+        /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
@@ -523,6 +525,7 @@ always @(posedge clock) begin
         write_delay_cnt <= write_delay_cnt - 1;
       end else if (AXI_AWVALID && AXI_WVALID) begin
         write_state <= 1;
+        /* verilator lint_off UNSIGNED */
         write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         dpic_pmem_write(AXI_AWADDR, AXI_WDATA, {${maskZero}'b0, AXI_WSTRB});
       end
@@ -531,6 +534,7 @@ always @(posedge clock) begin
         write_delay_cnt <= write_delay_cnt - 1;
       end else if (AXI_BVALID && AXI_BREADY) begin
         write_state <= 0;
+        /* verilator lint_off UNSIGNED */
         write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
