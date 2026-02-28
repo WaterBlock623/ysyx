@@ -130,7 +130,7 @@ object Axi4LiteIO {
   implicit val view: DataView[VerilogAxi4LiteIO, Axi4LiteIO] = DataView(
     verilogAxi4LiteIO => new Axi4LiteIO(verilogAxi4LiteIO.busWidth),
     _.AWVALID -> _.aw.valid,
-    _.AWREADY -> _.aw.valid,
+    _.AWREADY -> _.aw.ready,
     _.AWADDR -> _.aw.bits.addr,
     // _.AWPROT -> aw.bits.port,
 
