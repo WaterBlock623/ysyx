@@ -17,7 +17,7 @@ class Ifu(
 
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
-  val canValid = RegNext(RegNext(reset.asBool))
+  val canValid = RegNext(RegNext(!reset.asBool))
 
   exte.mem :<= 0.U.asTypeOf(new Axi4LiteIO)
 

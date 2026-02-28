@@ -29,7 +29,7 @@ class Lsu(
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
   val isMemAcc = ctrl.isLoad || ctrl.isStore
-  val canValid = RegNext(RegNext(reset.asBool))
+  val canValid = RegNext(RegNext(!reset.asBool))
 
   // val canSendReq = state === sIdle && in.valid && isMemAcc
 
