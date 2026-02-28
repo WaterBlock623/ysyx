@@ -286,9 +286,13 @@ class MemDpiC(
   val reset = IO(Input(Reset()))
   val inst = IO(Flipped(new IfuToMemIO))
   val ls = IO(Flipped(new LsuToMemIO))
+
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
+
+  private val delayProb = 50
+  private val maxDelayCycle = 30
   
   setInline(
     "MemDpiC.sv",
@@ -336,7 +340,7 @@ always @(posedge clock) begin
         ls_delay_cnt <= ls_delay_cnt - 1;
       end else if (ls_reqValid && ls_reqReady) begin
         ls_state <= 1;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
+        ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         
         if (ls_wEn) begin
           dpic_pmem_write(ls_addr, ls_wData, {${maskZero}'b0, ls_wMask});
@@ -349,7 +353,7 @@ always @(posedge clock) begin
         ls_delay_cnt <= ls_delay_cnt - 1;
       end else if (ls_respValid && ls_respReady) begin
         ls_state <= 0;
-        ls_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
+        ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
   end
@@ -373,7 +377,7 @@ always @(posedge clock) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
       end else if (inst_reqValid && inst_reqReady) begin
         inst_state <= 1;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
+        inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         internal_inst_rData <= dpic_pmem_read(inst_rAddr);
       end
     end else begin
@@ -381,7 +385,7 @@ always @(posedge clock) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
       end else if (inst_respValid && inst_respReady) begin
         inst_state <= 0;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < 50) ? 0 : $$urandom_range(1, 30);
+        inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
   end
