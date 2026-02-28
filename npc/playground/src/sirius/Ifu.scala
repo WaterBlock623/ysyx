@@ -17,10 +17,11 @@ class Ifu(
 
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
+  val canValid = RegNext(RegNext(reset.asBool))
 
   exte.mem :<= 0.U.asTypeOf(new Axi4LiteIO)
 
-  exte.mem.ar.valid := state === sIdle
+  exte.mem.ar.valid := state === sIdle && canValid
 
   state := MuxLookup(state, sIdle)(
     Seq(

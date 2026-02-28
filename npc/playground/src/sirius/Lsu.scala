@@ -29,6 +29,7 @@ class Lsu(
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
   val isMemAcc = ctrl.isLoad || ctrl.isStore
+  val canValid = RegNext(RegNext(reset.asBool))
 
   // val canSendReq = state === sIdle && in.valid && isMemAcc
 
@@ -68,9 +69,9 @@ class Lsu(
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid
 
   val rData = exte.mem.r.bits.data
   val rem = addr(1, 0)
