@@ -109,7 +109,7 @@ class Axi4LiteIO(val busWidth: Int = 32) extends Bundle {
 
   val w = Decoupled(new Bundle {
     val data = Output(UInt(busWidth.W))
-    val strb = Output(UInt((busWidth >> 8).W))
+    val strb = Output(UInt((busWidth >> 3).W))
   })
 
   val b = Flipped(Decoupled(Flipped(new Bundle {
