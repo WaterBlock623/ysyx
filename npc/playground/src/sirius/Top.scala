@@ -279,12 +279,130 @@ class DebugInfoDpiC(
 //   )
 // }
 
+// class MemDpiC(
+//   implicit private val cfg: CoreConfig)
+//     extends ExtModule {
+//   val clock = IO(Input(Clock()))
+//   val reset = IO(Input(Reset()))
+//   val inst = IO(Flipped(new VerilogAxi4LiteIO))
+//   val ls = IO(Flipped(new LsuToMemIO))
+//
+//   private val memAddrMsb = cfg.memoryAddrWidth - 1
+//   private val maskMsb = (cfg.xlen >> 3) - 1
+//   private val maskZero = 32 - (cfg.xlen >> 3)
+//
+//   private val delayProb = 0
+//   private val maxDelayCycle = 30
+//
+//   setInline(
+//     "MemDpiC.sv",
+//     s"""
+// import "DPI-C" function int dpic_pmem_read(input int raddr);
+// import "DPI-C" function void dpic_pmem_write(
+//   input int waddr, input int wdata, input int wmask);
+//
+// module MemDpiC(
+//   input clock,
+//   input reset,
+//
+//   input [$memAddrMsb:0] inst_rAddr,
+//   output[31:0] inst_rData,
+//   input inst_reqValid,
+//   output inst_reqReady,
+//   output inst_respValid,
+//   input inst_respReady,
+//
+//   input[$memAddrMsb:0] ls_addr,
+//   output [31:0] ls_rData,
+//   input[31:0]  ls_wData,
+//   input [$maskMsb:0] ls_wMask,
+//   input ls_reqValid,
+//   output ls_reqReady,
+//   output ls_respValid,
+//   input ls_respReady,
+//   input ls_wEn);
+//
+// reg [31:0] internal_ls_rData;
+// reg ls_state; // 0: IDLE, 1: WAIT_RESP
+// integer ls_delay_cnt;
+//
+// assign ls_reqReady = (ls_state == 0) && (ls_delay_cnt == 0);
+// assign ls_respValid = (ls_state == 1) && (ls_delay_cnt == 0);
+// assign ls_rData = internal_ls_rData;
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     ls_state <= 0;
+//     ls_delay_cnt <= 0;
+//   end else begin
+//     if (ls_state == 0) begin
+//       if (ls_delay_cnt > 0) begin
+//         ls_delay_cnt <= ls_delay_cnt - 1;
+//       end else if (ls_reqValid && ls_reqReady) begin
+//         ls_state <= 1;
+//         ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//
+//         if (ls_wEn) begin
+//           dpic_pmem_write(ls_addr, ls_wData, {${maskZero}'b0, ls_wMask});
+//         end else begin
+//           internal_ls_rData <= dpic_pmem_read(ls_addr);
+//         end
+//       end
+//     end else begin
+//       if (ls_delay_cnt > 0) begin
+//         ls_delay_cnt <= ls_delay_cnt - 1;
+//       end else if (ls_respValid && ls_respReady) begin
+//         ls_state <= 0;
+//         ls_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//       end
+//     end
+//   end
+// end
+//
+// reg [31:0] internal_inst_rData;
+// reg inst_state;
+// integer inst_delay_cnt;
+//
+// assign inst_reqReady = (inst_state == 0) && (inst_delay_cnt == 0);
+// assign inst_respValid = (inst_state == 1) && (inst_delay_cnt == 0);
+// assign inst_rData = internal_inst_rData;
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     inst_state <= 0;
+//     inst_delay_cnt <= 0;
+//   end else begin
+//     if (inst_state == 0) begin
+//       if (inst_delay_cnt > 0) begin
+//         inst_delay_cnt <= inst_delay_cnt - 1;
+//       end else if (inst_reqValid && inst_reqReady) begin
+//         inst_state <= 1;
+//         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//         internal_inst_rData <= dpic_pmem_read(inst_rAddr);
+//       end
+//     end else begin
+//       if (inst_delay_cnt > 0) begin
+//         inst_delay_cnt <= inst_delay_cnt - 1;
+//       end else if (inst_respValid && inst_respReady) begin
+//         inst_state <= 0;
+//         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//       end
+//     end
+//   end
+// end
+//
+// endmodule
+// """
+//   )
+// }
+
+
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
   val clock = IO(Input(Clock()))
   val reset = IO(Input(Reset()))
-  val inst = IO(Flipped(new IfuToMemIO))
+  val inst = IO(Flipped(new VerilogAxi4LiteIO))
   val ls = IO(Flipped(new LsuToMemIO))
 
   private val memAddrMsb = cfg.memoryAddrWidth - 1
@@ -305,12 +423,29 @@ module MemDpiC(
   input clock,
   input reset,
 
-  input [$memAddrMsb:0] inst_rAddr,
-  output[31:0] inst_rData,
-  input inst_reqValid,
-  output inst_reqReady,
-  output inst_respValid,
-  input inst_respReady,
+
+  input inst_AWVALID,
+  output reg inst_AWREADY,
+  input [$memAddrMsb:0] inst_AWADDR,
+
+  input inst_WVALID,
+  output reg inst_WREADY,
+  input [31:0] inst_WDATA,
+  input [$maskMsb:0] inst_WSTRB,
+
+  output reg inst_BVALID,
+  input inst_BREADY,
+  output reg [1:0] inst_BRESP,
+
+  input inst_ARVALID,
+  output reg inst_ARREADY,
+  input [$memAddrMsb:0] inst_ARADDR,
+
+  output reg inst_RVALID,
+  input inst_RREADY,
+  output reg [31:0] inst_RDATA,
+  output reg [1:0] inst_RRESP,
+
 
   input[$memAddrMsb:0] ls_addr,
   output [31:0] ls_rData,
@@ -359,13 +494,21 @@ always @(posedge clock) begin
   end
 end
 
+
+assign inst_AWREADY = 0;
+assign inst_WREADY = 0;
+assign inst_BVALID = 0;
+assign inst_BRESP = 0;
+
+assign inst_RRESP = 0;
+
 reg [31:0] internal_inst_rData;
 reg inst_state;
 integer inst_delay_cnt;
 
-assign inst_reqReady = (inst_state == 0) && (inst_delay_cnt == 0);
-assign inst_respValid = (inst_state == 1) && (inst_delay_cnt == 0);
-assign inst_rData = internal_inst_rData;
+assign inst_ARREADY = (inst_state == 0) && (inst_delay_cnt == 0);
+assign inst_RVALID = (inst_state == 1) && (inst_delay_cnt == 0);
+assign inst_RDATA = internal_inst_rData;
 
 always @(posedge clock) begin
   if (reset) begin
@@ -375,7 +518,7 @@ always @(posedge clock) begin
     if (inst_state == 0) begin
       if (inst_delay_cnt > 0) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
-      end else if (inst_reqValid && inst_reqReady) begin
+      end else if (inst_ARVALID && inst_ARREADY) begin
         inst_state <= 1;
         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         internal_inst_rData <= dpic_pmem_read(inst_rAddr);
@@ -383,7 +526,7 @@ always @(posedge clock) begin
     end else begin
       if (inst_delay_cnt > 0) begin
         inst_delay_cnt <= inst_delay_cnt - 1;
-      end else if (inst_respValid && inst_respReady) begin
+      end else if (inst_RVALID && inst_RREADY) begin
         inst_state <= 0;
         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
@@ -395,6 +538,7 @@ endmodule
 """
   )
 }
+
 
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)

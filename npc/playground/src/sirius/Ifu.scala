@@ -8,7 +8,7 @@ class Ifu(
     extends Module {
   val exte = IO(new Bundle {
     val pcReg = new IfuToPcRegIO
-    val mem = new IfuToMemIO
+    val mem = new Axi4LiteIO
   })
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
@@ -18,23 +18,25 @@ class Ifu(
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
 
-  exte.mem.reqValid := state === sIdle
+  exte.mem :<= 0.U.asTypeOf(new Axi4LiteIO)
+
+  exte.mem.ar.valid := state === sIdle
 
   state := MuxLookup(state, sIdle)(
     Seq(
-      sIdle -> Mux(exte.mem.reqReady, sWaitResp, sIdle),
+      sIdle -> Mux(exte.mem.ar.ready, sWaitResp, sIdle),
       sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
     )
   )
 
-  out.valid := state === sWaitResp && exte.mem.respValid
-  outBits.ifuPayload.ifu.inst := exte.mem.rData
+  out.valid := state === sWaitResp && exte.mem.r.valid
+  outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
   
   val pc = exte.pcReg.pc
-  exte.mem.rAddr := pc
+  exte.mem.ar.bits.addr := pc
   outBits.ifuPayload.ifu.pc := pc
 
-  exte.mem.respReady := state === sWaitResp && out.ready
+  exte.mem.r.ready := state === sWaitResp && out.ready
 
   if (cfg.isDebug) {
     debug.get := outBits.ifuPayload.ifu.inst

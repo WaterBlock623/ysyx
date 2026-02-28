@@ -1,6 +1,8 @@
 package sirius
 
 import chisel3._
+import chisel3.util._
+import chisel3.experimental.dataview._
 
 // 数据载荷
 class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
@@ -69,6 +71,90 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 // 访问外部
+class VerilogAxi4LiteIO(val busWidth: Int = 32) extends Bundle {
+  val AWVALID = Output(Bool())
+  val AWREADY = Input(Bool())
+  val AWADDR = Output(UInt(busWidth.W))
+  // val AWPROT
+
+  val WVALID = Output(Bool())
+  val WREADY = Input(Bool())
+  val WDATA = Output(UInt(busWidth.W))
+  val WSTRB = Output(UInt((busWidth >> 3).W))
+
+  val BVALID = Input(Bool())
+  val BREADY = Output(Bool())
+  val BRESP = Input(UInt(2.W))
+
+  val ARVALID = Output(Bool())
+  val ARREADY = Input(Bool())
+  val ARADDR = Output(UInt(busWidth.W))
+  // val ARPROT
+
+  val RVALID = Input(Bool())
+  val RREADY = Output(Bool())
+  val RDATA = Input(UInt(busWidth.W))
+  val RRESP = Input(UInt(2.W))
+}
+object VerilogAxi4LiteIO {
+  implicit val view: DataView[Axi4LiteIO, VerilogAxi4LiteIO] = 
+    Axi4LiteIO.view.invert(axi4LiteIO => new VerilogAxi4LiteIO(axi4LiteIO.busWidth))
+}
+
+class Axi4LiteIO(val busWidth: Int = 32) extends Bundle {
+  val aw = Decoupled(new Bundle {
+    val addr = Output(UInt(busWidth.W))
+    // val prot
+  })
+
+  val w = Decoupled(new Bundle {
+    val data = Output(UInt(busWidth.W))
+    val strb = Output(UInt((busWidth >> 8).W))
+  })
+
+  val b = Flipped(Decoupled(Flipped(new Bundle {
+    val resp = Input(UInt(2.W))
+  })))
+
+  val ar = Decoupled(new Bundle {
+    val addr = Output(UInt(busWidth.W))
+    // val prot
+  })
+
+  val r = Flipped(Decoupled(Flipped(new Bundle {
+    val data = Input(UInt(busWidth.W))
+    val resp = Input(UInt(2.W))
+  })))
+}
+object Axi4LiteIO {
+  implicit val view: DataView[VerilogAxi4LiteIO, Axi4LiteIO] = DataView(
+    verilogAxi4LiteIO => new Axi4LiteIO(verilogAxi4LiteIO.busWidth),
+    _.AWVALID -> _.aw.valid,
+    _.AWREADY -> _.aw.valid,
+    _.AWADDR -> _.aw.bits.addr,
+    // _.AWPROT -> aw.bits.port,
+
+    _.WVALID -> _.w.valid,
+    _.WREADY -> _.w.ready,
+    _.WDATA -> _.w.bits.data,
+    _.WSTRB -> _.w.bits.strb,
+
+    _.BVALID -> _.b.valid,
+    _.BREADY -> _.b.ready,
+    _.BRESP -> _.b.bits.resp,
+
+    _.ARVALID -> _.ar.valid,
+    _.ARREADY -> _.ar.ready,
+    _.ARADDR -> _.ar.bits.addr,
+    // _.ARPROT -> _.ar.bits.prot,
+
+    _.RVALID -> _.r.valid,
+    _.RREADY -> _.r.ready,
+    _.RDATA -> _.r.bits.data,
+    _.RRESP -> _.r.bits.resp
+  )
+}
+
 class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
 }
