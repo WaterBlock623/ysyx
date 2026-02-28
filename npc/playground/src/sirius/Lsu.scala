@@ -37,7 +37,7 @@ class Lsu(
       sIdle -> Mux(
         in.valid && isMemAcc,
         MuxCase(
-          sWaitResp,
+          sIdle,
           Seq(
             exte.mem.ar.ready -> sWaitResp,
             (exte.mem.aw.ready && exte.mem.w.ready) -> sWaitResp,
