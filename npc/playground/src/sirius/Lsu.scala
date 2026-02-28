@@ -36,7 +36,7 @@ class Lsu(
   state := MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(
-        in.valid && isMemAcc,
+        in.valid && isMemAcc && canValid,
         MuxCase(
           sIdle,
           Seq(
