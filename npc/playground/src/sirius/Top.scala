@@ -522,7 +522,7 @@ always @(posedge clock) begin
       end else if (inst_ARVALID && inst_ARREADY) begin
         inst_state <= 1;
         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        internal_inst_rData <= dpic_pmem_read(inst_rAddr);
+        internal_inst_rData <= dpic_pmem_read(inst_ARADDR);
       end
     end else begin
       if (inst_delay_cnt > 0) begin
