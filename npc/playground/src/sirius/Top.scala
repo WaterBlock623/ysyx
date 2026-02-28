@@ -509,8 +509,9 @@ assign AXI_BRESP = 0;
 reg write_state; // 0: IDLE, 1: WAIT_RESP
 integer write_delay_cnt;
 
-assign AXI_AWREADY= (write_state == 0) && (AXI_AWVALID && AXI_WVALID) && (write_delay_cnt == 0);
-assign AXI_WVALID = (write_state == 1) && (write_delay_cnt == 0);
+assign AXI_AWREADY = (write_state == 0) && (AXI_AWVALID && AXI_WVALID) && (write_delay_cnt == 0);
+assign AXI_WREADY = AXI_AWREADY
+assign AXI_BVALID = (write_state == 1) && (write_delay_cnt == 0);
 
 always @(posedge clock) begin
   if (reset) begin
