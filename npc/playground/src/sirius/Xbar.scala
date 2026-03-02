@@ -62,9 +62,9 @@ class Xbar(
   val out = IO(Vec(2, new Axi4LiteIO))
 
   val mem = out(0)
-  def isMemAddr(addr: UInt): Bool = addr >= 0x80000000.U
+  def isMemAddr(addr: UInt): Bool = addr >= "h80000000".U
   val uart = out(1)
-  def isUartAddr(addr: UInt): Bool = addr === 0x10000000.U
+  def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
 
   val addrComb = Mux(in.ar.valid, in.ar.bits.addr, in.aw.bits.addr)
   val canUpdateAddr = in.ar.valid || (in.aw.valid && in.w.valid)
