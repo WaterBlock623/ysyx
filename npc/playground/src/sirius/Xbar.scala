@@ -91,9 +91,8 @@ class Xbar(
     uart.ar :<>= in.ar
     in.r :<>= uart.r
   } .otherwise {
-    0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
-    0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
-    in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
+    0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
+    in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
     in.r.bits.resp := "b11".U
   }
 
@@ -106,8 +105,9 @@ class Xbar(
     uart.w :<>= in.w
     in.b :<>= uart.b
   } .otherwise {
-    0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
-    in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+    0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
+    0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
+    in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
     in.b.bits.resp := "b11".U
   }
 }
