@@ -734,6 +734,7 @@ class Top(
   implicit private val ucfg: UnitConfig)
     extends Module {
 
+  val memBusArbiter = Module(new MemBusArbiter)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
@@ -759,8 +760,9 @@ class Top(
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    memDpiC.inst :<>= ifu.exte.mem.viewAs[VerilogAxi4LiteIO]
-    memDpiC.AXI :<>= lsu.exte.mem.viewAs[VerilogAxi4LiteIO]
+    memBusArbiter.in(0) :<>= ifu.exte.mem
+    memBusArbiter.in(1) :<>= lsu.exte.mem
+    memDpiC.AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
     // getRetDpiC.a0 := registerFile.debug.get(10)
