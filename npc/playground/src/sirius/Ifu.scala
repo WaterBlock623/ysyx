@@ -15,7 +15,7 @@ class Ifu(
 
   val outBits = out.bits
 
-  val sIdle :: sWaitResp :: Nil = Enum(2)
+  val sIdle :: sWaitResp :: sKeepData :: Nil = Enum(3)
   val state = RegInit(sIdle)
   val canValid = RegNext(RegNext(!reset.asBool))
 
@@ -26,18 +26,21 @@ class Ifu(
   state := MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(exte.mem.ar.ready && canValid, sWaitResp, sIdle),
-      sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
+      sWaitResp -> Mux(exte.mem.r.valid, Mux(out.fire, sIdle, sKeepData), sWaitResp),
+      sKeepData -> Mux(out.fire, sIdle, sKeepData)
+
     )
   )
 
-  out.valid := state === sWaitResp && exte.mem.r.valid
-  outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
+  out.valid := (state === sWaitResp && exte.mem.r.valid) || state === sKeepData
+  val dataReg = RegEnable(exte.mem.r.bits.data, state === sWaitResp && exte.mem.r.valid && !out.fire)
+  outBits.ifuPayload.ifu.inst := Mux(state === sKeepData, dataReg, exte.mem.r.bits.data)
   
   val pc = exte.pcReg.pc
   exte.mem.ar.bits.addr := pc
   outBits.ifuPayload.ifu.pc := pc
 
-  exte.mem.r.ready := state === sWaitResp && out.ready
+  exte.mem.r.ready := (state === sWaitResp || state === sKeepData) && out.ready
 
   if (cfg.isDebug) {
     debug.get := outBits.ifuPayload.ifu.inst
