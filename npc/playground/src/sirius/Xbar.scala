@@ -67,6 +67,7 @@ class Xbar(
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
+  0.U.asTypeOf(chiselTypeOf(in)) :>= in
 
   val rAddrComb = in.ar.bits.addr
   val canUpdateRAddr = in.ar.valid
@@ -85,8 +86,8 @@ class Xbar(
       uart.ar :<>= in.ar
       in.r :<>= uart.r
     } .otherwise {
-      0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
-      in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+      // 0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
+      // in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
       in.r.bits.resp := "b11".U
     }
   }
@@ -110,9 +111,9 @@ class Xbar(
       uart.w :<>= in.w
       in.b :<>= uart.b
     } .otherwise {
-      0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
-      0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
-      in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
+      // 0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
+      // 0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
+      // in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
       in.b.bits.resp := "b11".U
     }
   }
