@@ -74,6 +74,7 @@ class Xbar(
   )
   val addr = Mux(canUpdateAddr, addrComb, addrReg)
 
+  out :<= 0.U.asTypeOf(chiselTypeOf(out))
   when (isMemAddr(addr)) {
     mem :<>= in
   } .elsewhen (isUartAddr(addr)) {
