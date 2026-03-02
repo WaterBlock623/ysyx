@@ -75,21 +75,18 @@ class Xbar(
     rAddrComb,
     canUpdateRAddr
   )
-  // val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
-  val rAddr = rAddrReg
-  val rCanConnect = !canUpdateRAddr || rAddrReg === rAddrComb
-  when (rCanConnect) {
-    when (isMemAddr(rAddr)) {
-      mem.ar :<>= in.ar
-      in.r :<>= mem.r
-    } .elsewhen (isUartAddr(rAddr)) {
-      uart.ar :<>= in.ar
-      in.r :<>= uart.r
-    } .otherwise {
-      // 0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
-      // in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
-      in.r.bits.resp := "b11".U
-    }
+  val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
+  // val rAddr = rAddrReg
+  when (isMemAddr(rAddr)) {
+    mem.ar :<>= in.ar
+    in.r :<>= mem.r
+  } .elsewhen (isUartAddr(rAddr)) {
+    uart.ar :<>= in.ar
+    in.r :<>= uart.r
+  } .otherwise {
+    // 0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
+    // in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+    in.r.bits.resp := "b11".U
   }
 
   val wAddrComb = in.aw.bits.addr
@@ -98,24 +95,21 @@ class Xbar(
     wAddrComb,
     canUpdateWAddr
   )
-  // val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
-  val wAddr = wAddrReg
-  val wCanConnect = !canUpdateWAddr || wAddrReg === wAddrComb
-  when (wCanConnect) {
-    when (isMemAddr(wAddr)) {
-      mem.aw :<>= in.aw
-      mem.w :<>= in.w
-      in.b :<>= mem.b
-    } .elsewhen (isUartAddr(rAddr)) {
-      uart.aw :<>= in.aw
-      uart.w :<>= in.w
-      in.b :<>= uart.b
-    } .otherwise {
-      // 0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
-      // 0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
-      // in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
-      in.b.bits.resp := "b11".U
-    }
+  val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
+  // val wAddr = wAddrReg
+  when (isMemAddr(wAddr)) {
+    mem.aw :<>= in.aw
+    mem.w :<>= in.w
+    in.b :<>= mem.b
+  } .elsewhen (isUartAddr(rAddr)) {
+    uart.aw :<>= in.aw
+    uart.w :<>= in.w
+    in.b :<>= uart.b
+  } .otherwise {
+    // 0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
+    // 0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
+    // in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
+    in.b.bits.resp := "b11".U
   }
 }
 
