@@ -39,6 +39,13 @@ class MemBusArbiter(
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
 
   switch (state) {
+    is (sIdle) {
+      when (ifuValid) {
+        out :<>= ifu
+      } .elsewhen (lsuValid) {
+        out :<>= lsu
+      }
+    }
     is (sIfu) {
       out :<>= ifu
     }
