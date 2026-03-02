@@ -66,23 +66,48 @@ class Xbar(
   val uart = out(1)
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
 
-  // val addrComb = Mux(in.ar.valid, in.ar.bits.addr, in.aw.bits.addr)
-  val addrComb = Mux(false.B, in.ar.bits.addr, in.aw.bits.addr)
-  val canUpdateAddr = in.ar.valid || (in.aw.valid && in.w.valid)
-  val addrReg = RegEnable(
-    addrComb,
-    canUpdateAddr
+  val rAddrComb = in.ar.bits.addr
+  val canUpdateRAddr = in.ar.valid
+  val rAddrReg = RegEnable(
+    rAddrComb,
+    canUpdateRAddr
   )
-  val addr = Mux(canUpdateAddr, addrComb, addrReg)
+  val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
+
+  val wAddrComb = in.aw.bits.addr
+  val canUpdateWAddr = in.aw.valid && in.w.valid
+  val wAddrReg = RegEnable(
+    wAddrComb,
+    canUpdateWAddr
+  )
+  val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
-  when (isMemAddr(addr)) {
-    mem :<>= in
-  } .elsewhen (isUartAddr(addr)) {
-    uart :<>= in
+
+  when (isMemAddr(rAddr)) {
+    mem.ar :<>= in.ar
+    mem.r :<>= in.r
+  } .elsewhen (isUartAddr(rAddr)) {
+    uart.ar :<>= in.ar
+    uart.r :<>= in.r
   } .otherwise {
-    0.U.asTypeOf(chiselTypeOf(in)) :>= in
+    0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
+    0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
+    0.U.asTypeOf(chiselTypeOf(in.b)) :>= in.b
     in.r.bits.resp := "b11".U
+  }
+
+  when (isMemAddr(wAddr)) {
+    mem.aw :<>= in.aw
+    mem.w :<>= in.w
+    mem.b :<>= in.b
+  } .elsewhen (isUartAddr(rAddr)) {
+    uart.aw :<>= in.aw
+    uart.w :<>= in.w
+    uart.b :<>= in.b
+  } .otherwise {
+    0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
+    0.U.asTypeOf(chiselTypeOf(in.r)) :>= in.r
     in.b.bits.resp := "b11".U
   }
 }
