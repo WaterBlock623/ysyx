@@ -881,8 +881,6 @@ class Top(
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    memBusArbiter.in(0) :<>= ifu.exte.mem
-    memBusArbiter.in(1) :<>= lsu.exte.mem
     memDpiC.AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
@@ -890,20 +888,12 @@ class Top(
     getGprDpiC.gpr := registerFile.debug.get
 
   } else {
-    // val memRegFile = Module(new MemRegFile)
-    // memRegFile.inst :<>= ifu.exte.mem
-    // memRegFile.ls :<>= lsu.exte.mem
-
-    // val out = IO(Output(UInt(32.W)))
-    // out := pcReg.ifuIn.pc ^ registerFile.iduIn.rData.reduce(_ ^ _) ^ memRegFile.inst.rData ^ memRegFile.ls.rData
-    // val io = IO(new Bundle {
-    //   val inst = new IfuToMemIO
-    //   val ls = new LsuToMemIO
-    // })
-    // io.inst :<>= ifu.exte.mem
-    // io.ls :<>= lsu.exte.mem
+    val AXI = IO(new VerilogAxi4LiteIO)
+    AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]   
   }
 
+  memBusArbiter.in(0) :<>= ifu.exte.mem
+  memBusArbiter.in(1) :<>= lsu.exte.mem
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
