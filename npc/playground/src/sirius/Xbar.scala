@@ -66,24 +66,16 @@ class Xbar(
   val uart = out(1)
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
 
+  out :<= 0.U.asTypeOf(chiselTypeOf(out))
+
   val rAddrComb = in.ar.bits.addr
   val canUpdateRAddr = in.ar.valid
   val rAddrReg = RegEnable(
     rAddrComb,
     canUpdateRAddr
   )
-  val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
-
-  val wAddrComb = in.aw.bits.addr
-  val canUpdateWAddr = in.aw.valid && in.w.valid
-  val wAddrReg = RegEnable(
-    wAddrComb,
-    canUpdateWAddr
-  )
-  val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
-
-  out :<= 0.U.asTypeOf(chiselTypeOf(out))
-
+  // val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
+  val rAddr = rAddrReg
   when (isMemAddr(rAddr)) {
     mem.ar :<>= in.ar
     in.r :<>= mem.r
@@ -96,6 +88,14 @@ class Xbar(
     in.r.bits.resp := "b11".U
   }
 
+  val wAddrComb = in.aw.bits.addr
+  val canUpdateWAddr = in.aw.valid && in.w.valid
+  val wAddrReg = RegEnable(
+    wAddrComb,
+    canUpdateWAddr
+  )
+  // val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
+  val wAddr = wAddrReg
   when (isMemAddr(wAddr)) {
     mem.aw :<>= in.aw
     mem.w :<>= in.w
