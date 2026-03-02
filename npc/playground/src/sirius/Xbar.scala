@@ -86,10 +86,10 @@ class Xbar(
 
   when (isMemAddr(rAddr)) {
     mem.ar :<>= in.ar
-    mem.r :<>= in.r
+    in.r :<>= mem.r
   } .elsewhen (isUartAddr(rAddr)) {
     uart.ar :<>= in.ar
-    uart.r :<>= in.r
+    in.r :<>= uart.r
   } .otherwise {
     0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
     0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
@@ -100,11 +100,11 @@ class Xbar(
   when (isMemAddr(wAddr)) {
     mem.aw :<>= in.aw
     mem.w :<>= in.w
-    mem.b :<>= in.b
+    in.b :<>= mem.b
   } .elsewhen (isUartAddr(rAddr)) {
     uart.aw :<>= in.aw
     uart.w :<>= in.w
-    uart.b :<>= in.b
+    in.b :<>= uart.b
   } .otherwise {
     0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
     0.U.asTypeOf(chiselTypeOf(in.r)) :>= in.r
