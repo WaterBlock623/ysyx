@@ -18,7 +18,7 @@ class MemBusArbiter(
   val ifuValid = ifu.ar.valid
   val ifuReady = ifu.r.fire
   val lsuValid = lsu.ar.valid || lsu.aw.valid || lsu.w.valid
-  val lsuReady = lsu.b.fire
+  val lsuReady = lsu.r.fire || lsu.b.fire
 
   state := MuxLookup(state, sIdle)(
     Seq(
