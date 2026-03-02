@@ -89,7 +89,7 @@ class UartDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
 
   0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
-  0.U.asTypeOf(chiselTypeOf(in.r)) :>= in.r
+  in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
 
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
