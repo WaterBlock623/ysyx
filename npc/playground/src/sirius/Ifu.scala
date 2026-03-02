@@ -40,7 +40,7 @@ class Ifu(
   exte.mem.ar.bits.addr := pc
   outBits.ifuPayload.ifu.pc := pc
 
-  exte.mem.r.ready := (state === sWaitResp || state === sKeepData) && out.ready
+  exte.mem.r.ready := state === sWaitResp
 
   if (cfg.isDebug) {
     debug.get := outBits.ifuPayload.ifu.inst
