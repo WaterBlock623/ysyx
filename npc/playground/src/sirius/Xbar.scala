@@ -80,16 +80,16 @@ class Xbar(
     uart :<>= in
   } .otherwise {
     0.U.asTypeOf(chiselTypeOf(in)) :>= in
-    in.r.bits.resp := 0b11.U
-    in.b.bits.resp := 0b11.U
+    in.r.bits.resp := "b11".U
+    in.b.bits.resp := "b11".U
   }
 }
 
 class UartDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
 
-  in.ar :<= 0.U.asTypeOf(chiselTypeOf(in.ar))
-  in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+  0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
+  0.U.asTypeOf(chiselTypeOf(in.r)) :>= in.r
 
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
