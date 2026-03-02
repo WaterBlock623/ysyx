@@ -75,17 +75,18 @@ class Xbar(
     rAddrComb,
     canUpdateRAddr
   )
-  val rAddr = Mux(canUpdateRAddr, rAddrComb, rAddrReg)
-  // val rAddr = rAddrReg
-  when (isMemAddr(rAddr)) {
+
+  when (isMemAddr(rAddrComb)) {
     mem.ar :<>= in.ar
-    in.r :<>= mem.r
-  } .elsewhen (isUartAddr(rAddr)) {
+  } .elsewhen (isUartAddr(rAddrComb)) {
     uart.ar :<>= in.ar
+  }
+
+  when (isMemAddr(rAddrReg)) {
+    in.r :<>= mem.r
+  } .elsewhen (isUartAddr(rAddrReg)) {
     in.r :<>= uart.r
   } .otherwise {
-    // 0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
-    // in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
     in.r.bits.resp := "b11".U
   }
 
@@ -96,19 +97,20 @@ class Xbar(
     canUpdateWAddr
   )
   val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
-  // val wAddr = wAddrReg
+
   when (isMemAddr(wAddr)) {
     mem.aw :<>= in.aw
     mem.w :<>= in.w
-    in.b :<>= mem.b
-  } .elsewhen (isUartAddr(rAddr)) {
+  } .elsewhen (isUartAddr(wAddr)) {
     uart.aw :<>= in.aw
     uart.w :<>= in.w
+  }
+
+  when (isMemAddr(wAddrReg)) {
+    in.b :<>= mem.b
+  } .elsewhen (isUartAddr(wAddrReg)) {
     in.b :<>= uart.b
   } .otherwise {
-    // 0.U.asTypeOf(chiselTypeOf(in.aw)) :>= in.aw
-    // 0.U.asTypeOf(chiselTypeOf(in.w)) :>= in.w
-    // in.b :<= 0.U.asTypeOf(chiselTypeOf(in.b))
     in.b.bits.resp := "b11".U
   }
 }
