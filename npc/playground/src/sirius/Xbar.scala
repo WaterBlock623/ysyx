@@ -66,8 +66,9 @@ class Xbar(
   val uart = out(1)
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
 
-  val addrComb = Mux(in.ar.valid, in.ar.bits.addr, in.aw.bits.addr)
-  val canUpdateAddr = in.ar.valid || (in.w.valid)
+  // val addrComb = Mux(in.ar.valid, in.ar.bits.addr, in.aw.bits.addr)
+  val addrComb = Mux(true.B, in.ar.bits.addr, in.aw.bits.addr)
+  val canUpdateAddr = in.ar.valid || (in.aw.valid && in.w.valid)
   val addrReg = RegEnable(
     addrComb,
     canUpdateAddr
