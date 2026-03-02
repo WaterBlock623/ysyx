@@ -104,6 +104,8 @@ class UartDevice extends Module {
   in.aw.ready := inputValid
   in.w.ready := inputValid
   in.b.valid := state === sWaitResp
+  in.b.bits.resp := 0.U
+  in.b.bits.data := 0.U
   when(inputValid) {
     printf("[sim] %c\n", in.w.bits.data(7, 0))
   }
