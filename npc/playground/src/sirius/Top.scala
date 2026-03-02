@@ -397,14 +397,11 @@ class DebugInfoDpiC(
 //   )
 // }
 
-
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
   val clock = IO(Input(Clock()))
   val reset = IO(Input(Reset()))
-  val inst = IO(Flipped(new VerilogAxi4LiteIO))
-  // val ls = IO(Flipped(new LsuToMemIO))
   val AXI = IO(Flipped(new VerilogAxi4LiteIO))
 
   private val memAddrMsb = cfg.memoryAddrWidth - 1
@@ -424,30 +421,6 @@ import "DPI-C" function void dpic_pmem_write(
 module MemDpiC(
   input clock,
   input reset,
-
-
-  input inst_AWVALID,
-  output reg inst_AWREADY,
-  input [$memAddrMsb:0] inst_AWADDR,
-
-  input inst_WVALID,
-  output reg inst_WREADY,
-  input [31:0] inst_WDATA,
-  input [$maskMsb:0] inst_WSTRB,
-
-  output reg inst_BVALID,
-  input inst_BREADY,
-  output reg [1:0] inst_BRESP,
-
-  input inst_ARVALID,
-  output reg inst_ARREADY,
-  input [$memAddrMsb:0] inst_ARADDR,
-
-  output reg inst_RVALID,
-  input inst_RREADY,
-  output reg [31:0] inst_RDATA,
-  output reg [1:0] inst_RRESP,
-
 
   input AXI_AWVALID,
   output reg AXI_AWREADY,
@@ -541,50 +514,198 @@ always @(posedge clock) begin
   end
 end
 
-
-assign inst_AWREADY = 0;
-assign inst_WREADY = 0;
-assign inst_BVALID = 0;
-assign inst_BRESP = 0;
-
-assign inst_RRESP = 0;
-
-reg [31:0] internal_inst_rData;
-reg inst_state;
-integer inst_delay_cnt;
-
-assign inst_ARREADY = (inst_state == 0) && (inst_delay_cnt == 0);
-assign inst_RVALID = (inst_state == 1) && (inst_delay_cnt == 0);
-assign inst_RDATA = inst_RVALID ? internal_inst_rData : ${cfg.xlen}'b0;
-
-always @(posedge clock) begin
-  if (reset) begin
-    inst_state <= 0;
-    inst_delay_cnt <= 0;
-  end else begin
-    if (inst_state == 0) begin
-      if (inst_delay_cnt > 0) begin
-        inst_delay_cnt <= inst_delay_cnt - 1;
-      end else if (inst_ARVALID && inst_ARREADY) begin
-        inst_state <= 1;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        internal_inst_rData <= dpic_pmem_read(inst_ARADDR);
-      end
-    end else begin
-      if (inst_delay_cnt > 0) begin
-        inst_delay_cnt <= inst_delay_cnt - 1;
-      end else if (inst_RVALID && inst_RREADY) begin
-        inst_state <= 0;
-        inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-      end
-    end
-  end
-end
-
 endmodule
 """
   )
 }
+
+// class MemDpiC(
+//   implicit private val cfg: CoreConfig)
+//     extends ExtModule {
+//   val clock = IO(Input(Clock()))
+//   val reset = IO(Input(Reset()))
+//   val inst = IO(Flipped(new VerilogAxi4LiteIO))
+//   // val ls = IO(Flipped(new LsuToMemIO))
+//   val AXI = IO(Flipped(new VerilogAxi4LiteIO))
+//
+//   private val memAddrMsb = cfg.memoryAddrWidth - 1
+//   private val maskMsb = (cfg.xlen >> 3) - 1
+//   private val maskZero = 32 - (cfg.xlen >> 3)
+//
+//   private val delayProb = 50
+//   private val maxDelayCycle = 30
+//
+//   setInline(
+//     "MemDpiC.sv",
+//     s"""
+// import "DPI-C" function int dpic_pmem_read(input int raddr);
+// import "DPI-C" function void dpic_pmem_write(
+//   input int waddr, input int wdata, input int wmask);
+//
+// module MemDpiC(
+//   input clock,
+//   input reset,
+//
+//
+//   input inst_AWVALID,
+//   output reg inst_AWREADY,
+//   input [$memAddrMsb:0] inst_AWADDR,
+//
+//   input inst_WVALID,
+//   output reg inst_WREADY,
+//   input [31:0] inst_WDATA,
+//   input [$maskMsb:0] inst_WSTRB,
+//
+//   output reg inst_BVALID,
+//   input inst_BREADY,
+//   output reg [1:0] inst_BRESP,
+//
+//   input inst_ARVALID,
+//   output reg inst_ARREADY,
+//   input [$memAddrMsb:0] inst_ARADDR,
+//
+//   output reg inst_RVALID,
+//   input inst_RREADY,
+//   output reg [31:0] inst_RDATA,
+//   output reg [1:0] inst_RRESP,
+//
+//
+//   input AXI_AWVALID,
+//   output reg AXI_AWREADY,
+//   input [$memAddrMsb:0] AXI_AWADDR,
+//
+//   input AXI_WVALID,
+//   output reg AXI_WREADY,
+//   input [31:0] AXI_WDATA,
+//   input [$maskMsb:0] AXI_WSTRB,
+//
+//   output reg AXI_BVALID,
+//   input AXI_BREADY,
+//   output reg [1:0] AXI_BRESP,
+//
+//   input AXI_ARVALID,
+//   output reg AXI_ARREADY,
+//   input [$memAddrMsb:0] AXI_ARADDR,
+//
+//   output reg AXI_RVALID,
+//   input AXI_RREADY,
+//   output reg [31:0] AXI_RDATA,
+//   output reg [1:0] AXI_RRESP
+// );
+//
+// assign AXI_RRESP = 0;
+// reg [31:0] internal_ls_rData;
+// reg read_state; // 0: IDLE, 1: WAIT_RESP
+// integer read_delay_cnt;
+//
+// assign AXI_ARREADY= (read_state == 0) && (read_delay_cnt == 0);
+// assign AXI_RVALID = (read_state == 1) && (read_delay_cnt == 0);
+// assign AXI_RDATA = AXI_RVALID ? internal_ls_rData : ${cfg.xlen}'b0;
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     read_state <= 0;
+//     read_delay_cnt <= 0;
+//   end else begin
+//     if (read_state == 0) begin
+//       if (read_delay_cnt > 0) begin
+//         read_delay_cnt <= read_delay_cnt - 1;
+//       end else if (AXI_ARVALID && AXI_ARREADY) begin
+//         read_state <= 1;
+//         /* verilator lint_off UNSIGNED */
+//         read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//         internal_ls_rData <= dpic_pmem_read(AXI_ARADDR);
+//       end
+//     end else begin
+//       if (read_delay_cnt > 0) begin
+//         read_delay_cnt <= read_delay_cnt - 1;
+//       end else if (AXI_RVALID && AXI_RREADY) begin
+//         read_state <= 0;
+//         /* verilator lint_off UNSIGNED */
+//         read_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//       end
+//     end
+//   end
+// end
+//
+// assign AXI_BRESP = 0;
+// reg write_state; // 0: IDLE, 1: WAIT_RESP
+// integer write_delay_cnt;
+//
+// assign AXI_AWREADY = (write_state == 0) && (AXI_AWVALID && AXI_WVALID) && (write_delay_cnt == 0);
+// assign AXI_WREADY = AXI_AWREADY;
+// assign AXI_BVALID = (write_state == 1) && (write_delay_cnt == 0);
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     write_state <= 0;
+//     write_delay_cnt <= 0;
+//   end else begin
+//     if (write_state == 0) begin
+//       if (write_delay_cnt > 0) begin
+//         write_delay_cnt <= write_delay_cnt - 1;
+//       end else if (AXI_AWVALID && AXI_WVALID) begin
+//         write_state <= 1;
+//         /* verilator lint_off UNSIGNED */
+//         write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//         dpic_pmem_write(AXI_AWADDR, AXI_WDATA, {${maskZero}'b0, AXI_WSTRB});
+//       end
+//     end else begin
+//       if (write_delay_cnt > 0) begin
+//         write_delay_cnt <= write_delay_cnt - 1;
+//       end else if (AXI_BVALID && AXI_BREADY) begin
+//         write_state <= 0;
+//         /* verilator lint_off UNSIGNED */
+//         write_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//       end
+//     end
+//   end
+// end
+//
+//
+// assign inst_AWREADY = 0;
+// assign inst_WREADY = 0;
+// assign inst_BVALID = 0;
+// assign inst_BRESP = 0;
+//
+// assign inst_RRESP = 0;
+//
+// reg [31:0] internal_inst_rData;
+// reg inst_state;
+// integer inst_delay_cnt;
+//
+// assign inst_ARREADY = (inst_state == 0) && (inst_delay_cnt == 0);
+// assign inst_RVALID = (inst_state == 1) && (inst_delay_cnt == 0);
+// assign inst_RDATA = inst_RVALID ? internal_inst_rData : ${cfg.xlen}'b0;
+//
+// always @(posedge clock) begin
+//   if (reset) begin
+//     inst_state <= 0;
+//     inst_delay_cnt <= 0;
+//   end else begin
+//     if (inst_state == 0) begin
+//       if (inst_delay_cnt > 0) begin
+//         inst_delay_cnt <= inst_delay_cnt - 1;
+//       end else if (inst_ARVALID && inst_ARREADY) begin
+//         inst_state <= 1;
+//         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//         internal_inst_rData <= dpic_pmem_read(inst_ARADDR);
+//       end
+//     end else begin
+//       if (inst_delay_cnt > 0) begin
+//         inst_delay_cnt <= inst_delay_cnt - 1;
+//       end else if (inst_RVALID && inst_RREADY) begin
+//         inst_state <= 0;
+//         inst_delay_cnt <= ($$urandom_range(0, 100) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+//       end
+//     end
+//   end
+// end
+//
+// endmodule
+// """
+//   )
+// }
 
 
 // class MemDpiC(
