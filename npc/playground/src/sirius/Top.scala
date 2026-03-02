@@ -408,7 +408,7 @@ class MemDpiC(
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
 
-  private val delayProb = 50
+  private val delayProb = 0
   private val maxDelayCycle = 30
   
   setInline(
@@ -856,6 +856,7 @@ class Top(
     extends Module {
 
   val memBusArbiter = Module(new MemBusArbiter)
+  val xbar = Module(new Xbar)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
@@ -881,9 +882,11 @@ class Top(
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    memDpiC.AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]
+    memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
+    val uartDevice = Module(new UartDevice)
+    uartDevice.in :<>= xbar.out(1)
     // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
 
@@ -894,6 +897,7 @@ class Top(
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
   memBusArbiter.in(1) :<>= lsu.exte.mem
+  xbar.in :<>= memBusArbiter.out
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile

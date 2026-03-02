@@ -38,19 +38,72 @@ class MemBusArbiter(
   0.U.asTypeOf(chiselTypeOf(lsu)) :>= lsu
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
 
-  switch (state) {
-    is (sIdle) {
-      when (ifuValid) {
+  switch(state) {
+    is(sIdle) {
+      when(ifuValid) {
         out :<>= ifu
-      } .elsewhen (lsuValid) {
+      }.elsewhen(lsuValid) {
         out :<>= lsu
       }
     }
-    is (sIfu) {
+    is(sIfu) {
       out :<>= ifu
     }
-    is (sLsu) {
+    is(sLsu) {
       out :<>= lsu
     }
+  }
+}
+
+class Xbar(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  val in = IO(Flipped(new Axi4LiteIO))
+  val out = IO(Vec(2, new Axi4LiteIO))
+
+  val mem = out(0)
+  def isMemAddr(addr: UInt): Bool = addr >= 0x80000000.U
+  val uart = out(1)
+  def isUartAddr(addr: UInt): Bool = addr === 0x10000000.U
+
+  val addrComb = Mux(in.ar.valid, in.ar.bits.addr, in.aw.bits.addr)
+  val canUpdateAddr = in.ar.valid || (in.aw.valid && in.w.valid)
+  val addrReg = RegEnable(
+    addrComb,
+    canUpdateAddr
+  )
+  val addr = Mux(canUpdateAddr, addrComb, addrReg)
+
+  when (isMemAddr(addr)) {
+    mem :<>= in
+  } .elsewhen (isUartAddr(addr)) {
+    uart :<>= in
+  } .otherwise {
+    0.U.asTypeOf(chiselTypeOf(in)) :>= in
+    in.r.bits.resp := 0b11.U
+    in.b.bits.resp := 0b11.U
+  }
+}
+
+class UartDevice extends Module {
+  val in = IO(Flipped(new Axi4LiteIO))
+
+  in.ar :<= 0.U.asTypeOf(chiselTypeOf(in.ar))
+  in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+
+  val sIdle :: sWaitResp :: Nil = Enum(2)
+  val state = RegInit(sIdle)
+  state := MuxLookup(state, sIdle)(
+    Seq(
+      sIdle -> Mux(in.aw.valid && in.w.valid, sWaitResp, sIdle),
+      sWaitResp -> Mux(in.b.ready, sIdle, sWaitResp)
+    )
+  )
+  val inputValid = state === sIdle && in.aw.valid && in.w.valid
+  in.aw.ready := inputValid
+  in.w.ready := inputValid
+  in.b.valid := state === sWaitResp
+  when(inputValid) {
+    printf("[sim] %c\n", in.w.bits.data(7, 0))
   }
 }
