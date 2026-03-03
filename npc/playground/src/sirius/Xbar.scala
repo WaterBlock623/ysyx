@@ -85,6 +85,8 @@ class Xbar(
     uart.ar :<>= in.ar
   }.elsewhen(isClintAddr(rAddrComb)) {
     clint.ar :<>= in.ar
+  }.otherwise {
+    mem.ar :<>= in.ar // test
   }
 
   when(isMemAddr(rAddrReg)) {
@@ -94,7 +96,8 @@ class Xbar(
   }.elsewhen(isClintAddr(rAddrReg)) {
     in.r :<>= clint.r
   }.otherwise {
-    in.r.bits.resp := "b11".U
+    // in.r.bits.resp := "b11".U
+    in.r :<>= mem.r // test
   }
 
   val wAddrComb = in.aw.bits.addr
@@ -114,6 +117,10 @@ class Xbar(
   }.elsewhen(isClintAddr(wAddr)) {
     clint.aw :<>= in.aw
     clint.w :<>= in.w
+  }.otherwise {
+    // test
+    mem.aw :<>= in.aw
+    mem.w :<>= in.w
   }
 
   when(isMemAddr(wAddrReg)) {
@@ -123,7 +130,8 @@ class Xbar(
   }.elsewhen(isClintAddr(wAddrReg)) {
     in.b :<>= clint.b
   }.otherwise {
-    in.b.bits.resp := "b11".U
+    // in.b.bits.resp := "b11".U
+    in.b :<>= mem.b // test
   }
 }
 
