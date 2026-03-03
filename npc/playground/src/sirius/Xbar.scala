@@ -34,6 +34,7 @@ class MemBusArbiter(
       sLsu -> Mux(lsuReady, sIdle, sLsu)
     )
   )
+  assert(state === sIdle)
 
   0.U.asTypeOf(chiselTypeOf(ifu)) :>= ifu
   0.U.asTypeOf(chiselTypeOf(lsu)) :>= lsu
@@ -130,7 +131,6 @@ class UartDevice extends Module {
       sWaitResp -> Mux(in.b.ready, sIdle, sWaitResp)
     )
   )
-  assert(state === sIdle)
   val inputValid = state === sIdle && in.aw.valid && in.w.valid
   in.aw.ready := inputValid
   in.w.ready := inputValid
