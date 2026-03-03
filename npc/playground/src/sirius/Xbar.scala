@@ -118,7 +118,6 @@ class Xbar(
 
 class UartDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
-  assert(false)
 
   0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
   in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
@@ -131,6 +130,7 @@ class UartDevice extends Module {
       sWaitResp -> Mux(in.b.ready, sIdle, sWaitResp)
     )
   )
+  assert(state === sIdle)
   val inputValid = state === sIdle && in.aw.valid && in.w.valid
   in.aw.ready := inputValid
   in.w.ready := inputValid
