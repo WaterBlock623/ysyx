@@ -154,6 +154,8 @@ class UartDevice extends Module {
 
 class ClintDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
+
+  0.U.asTypeOf(chiselTypeOf(in)) :>= in
   assert(!in.aw.valid && !in.w.valid)
 
   val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(4)
