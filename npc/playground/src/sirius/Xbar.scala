@@ -2,6 +2,7 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import chisel3.SpecifiedDirection.Flip
 
 class MemBusArbiter(
   implicit private val cfg: CoreConfig)
@@ -117,6 +118,7 @@ class Xbar(
 
 class UartDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
+  assert(false)
 
   0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
   in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
@@ -138,3 +140,10 @@ class UartDevice extends Module {
     printf("[sim] %c\n", in.w.bits.data(7, 0))
   }
 }
+
+// class Clint extends Module {
+//   val in = IO(Flipped(new Axi4LiteIO))
+//
+//   val mtimeReg = RegInit(0.U(64.W))
+//   mtimeReg := mtimeReg + 1.U
+// }
