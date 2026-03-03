@@ -67,7 +67,7 @@ class Xbar(
   val uart = out(1)
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
   val clint = out(2)
-  def isClintAddr(addr: UInt): Bool = addr === "h10000600".U || addr === "10000604".U
+  def isClintAddr(addr: UInt): Bool = addr === "h10000600".U || addr === "h10000604".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
