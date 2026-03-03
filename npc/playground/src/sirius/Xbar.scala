@@ -155,8 +155,10 @@ class UartDevice extends Module {
   in.w.ready := inputValid
   in.b.valid := state === sWaitResp
   in.b.bits.resp := 0.U
+
+  import scala.io.AnsiColor._
   when(inputValid) {
-    printf("\033[34m%c\033[0m", in.w.bits.data(7, 0))
+    printf(s"${BLUE}%c${RESET}", in.w.bits.data(7, 0))
   }
 }
 
