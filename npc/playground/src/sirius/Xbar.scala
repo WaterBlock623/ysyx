@@ -186,6 +186,6 @@ class ClintDevice extends Module {
 
   in.r.bits.data := MuxLookup(state, 0.U)(Seq(
     sMtimeLo -> mtimeReg(31, 0),
-    sMtimeHi -> mtimeReg(63, 0)
+    sMtimeHi -> mtimeReg(63, 32)
     ))
 }
