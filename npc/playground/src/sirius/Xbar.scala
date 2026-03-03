@@ -156,7 +156,7 @@ class ClintDevice extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
   assert(!in.aw.valid && !in.w.valid)
 
-  val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(2)
+  val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(4)
   val state = RegInit(sIdle)
   val nextState = MuxLookup(state, sIdle)(
     Seq(
