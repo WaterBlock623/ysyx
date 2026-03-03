@@ -156,9 +156,8 @@ class UartDevice extends Module {
   in.b.valid := state === sWaitResp
   in.b.bits.resp := 0.U
 
-  val esc = 27.toChar
   when(inputValid) {
-    printf(s"${esc}[34m%c${esc}[0m", in.w.bits.data(7, 0))
+    printf("%c", in.w.bits.data(7, 0))
   }
 }
 
