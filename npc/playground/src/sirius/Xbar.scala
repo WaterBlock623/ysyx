@@ -158,7 +158,7 @@ class UartDevice extends Module {
 
   import scala.io.AnsiColor._
   when(inputValid) {
-    printf("\033[34m%c\033[0m", in.w.bits.data(7, 0))
+    printf(raw"\033[34m%c\033[0m", in.w.bits.data(7, 0))
   }
 }
 
