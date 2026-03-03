@@ -876,6 +876,8 @@ class Top(
     val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
+    val uartDevice = Module(new UartDevice)
+    val clintDevice = Module(new ClintDevice)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
@@ -885,14 +887,13 @@ class Top(
     memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
-    val uartDevice = Module(new UartDevice)
-    uartDevice.in :<>= xbar.out(1)
-    // getRetDpiC.a0 := registerFile.debug.get(10)
     getGprDpiC.gpr := registerFile.debug.get
-
+    // getRetDpiC.a0 := registerFile.debug.get(10)
+    uartDevice.in :<>= xbar.out(1)
+    clintDevice.in :<>= xbar.out(2)
   } else {
-    val AXI = IO(new VerilogAxi4LiteIO)
-    AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]   
+    // val AXI = IO(new VerilogAxi4LiteIO)
+    // AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]   
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem

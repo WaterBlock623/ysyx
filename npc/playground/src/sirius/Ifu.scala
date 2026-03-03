@@ -20,6 +20,8 @@ class Ifu(
   val canValid = RegNext(RegNext(!reset.asBool))
 
   exte.mem :<= 0.U.asTypeOf(new Axi4LiteIO)
+  
+  assert(!exte.mem.aw.valid && !exte.mem.w.valid && !exte.mem.b.valid)
 
   exte.mem.ar.valid := state === sIdle && canValid
 

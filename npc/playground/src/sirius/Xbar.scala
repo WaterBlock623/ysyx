@@ -34,7 +34,6 @@ class MemBusArbiter(
       sLsu -> Mux(lsuReady, sIdle, sLsu)
     )
   )
-  assert(state === sIdle)
 
   0.U.asTypeOf(chiselTypeOf(ifu)) :>= ifu
   0.U.asTypeOf(chiselTypeOf(lsu)) :>= lsu
@@ -61,12 +60,14 @@ class Xbar(
   implicit private val cfg: CoreConfig)
     extends Module {
   val in = IO(Flipped(new Axi4LiteIO))
-  val out = IO(Vec(2, new Axi4LiteIO))
+  val out = IO(Vec(3, new Axi4LiteIO))
 
   val mem = out(0)
   def isMemAddr(addr: UInt): Bool = addr >= "h80000000".U
   val uart = out(1)
   def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
+  val clint = out(2)
+  def isClintAddr(addr: UInt): Bool = addr === "h10000600".U || addr === "10000604".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
@@ -78,17 +79,21 @@ class Xbar(
     canUpdateRAddr
   )
 
-  when (isMemAddr(rAddrComb)) {
+  when(isMemAddr(rAddrComb)) {
     mem.ar :<>= in.ar
-  } .elsewhen (isUartAddr(rAddrComb)) {
+  }.elsewhen(isUartAddr(rAddrComb)) {
     uart.ar :<>= in.ar
+  }.elsewhen(isClintAddr(rAddrComb)) {
+    clint.ar :<>= in.ar
   }
 
-  when (isMemAddr(rAddrReg)) {
+  when(isMemAddr(rAddrReg)) {
     in.r :<>= mem.r
-  } .elsewhen (isUartAddr(rAddrReg)) {
+  }.elsewhen(isUartAddr(rAddrReg)) {
     in.r :<>= uart.r
-  } .otherwise {
+  }.elsewhen(isClintAddr(rAddrReg)) {
+    in.r :<>= clint.r
+  }.otherwise {
     in.r.bits.resp := "b11".U
   }
 
@@ -100,19 +105,24 @@ class Xbar(
   )
   val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
 
-  when (isMemAddr(wAddr)) {
+  when(isMemAddr(wAddr)) {
     mem.aw :<>= in.aw
     mem.w :<>= in.w
-  } .elsewhen (isUartAddr(wAddr)) {
+  }.elsewhen(isUartAddr(wAddr)) {
     uart.aw :<>= in.aw
     uart.w :<>= in.w
+  }.elsewhen(isClintAddr(wAddr)) {
+    clint.aw :<>= in.aw
+    clint.w :<>= in.w
   }
 
-  when (isMemAddr(wAddrReg)) {
+  when(isMemAddr(wAddrReg)) {
     in.b :<>= mem.b
-  } .elsewhen (isUartAddr(wAddrReg)) {
+  }.elsewhen(isUartAddr(wAddrReg)) {
     in.b :<>= uart.b
-  } .otherwise {
+  }.elsewhen(isClintAddr(wAddrReg)) {
+    in.b :<>= clint.b
+  }.otherwise {
     in.b.bits.resp := "b11".U
   }
 }
@@ -122,6 +132,7 @@ class UartDevice extends Module {
 
   0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
   in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
+  assert(!in.ar.valid && !in.r.valid)
 
   val sIdle :: sWaitResp :: Nil = Enum(2)
   val state = RegInit(sIdle)
@@ -141,9 +152,40 @@ class UartDevice extends Module {
   }
 }
 
-// class Clint extends Module {
-//   val in = IO(Flipped(new Axi4LiteIO))
-//
-//   val mtimeReg = RegInit(0.U(64.W))
-//   mtimeReg := mtimeReg + 1.U
-// }
+class ClintDevice extends Module {
+  val in = IO(Flipped(new Axi4LiteIO))
+  assert(!in.aw.valid && !in.w.valid)
+
+  val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(2)
+  val state = RegInit(sIdle)
+  val nextState = MuxLookup(state, sIdle)(
+    Seq(
+      sIdle -> Mux(
+        in.ar.fire,
+        MuxCase(
+          sError,
+          Seq(
+            (in.ar.bits.addr === "h10000600".U) -> sMtimeLo,
+            (in.ar.bits.addr === "h10000604".U) -> sMtimeHi
+          )
+        ),
+        sIdle
+      ),
+      sMtimeLo -> Mux(in.r.fire, sIdle, sMtimeLo),
+      sMtimeHi -> Mux(in.r.fire, sIdle, sMtimeHi)
+    )
+  )
+  state := nextState
+  assert(state =/= sError)
+
+  in.ar.ready := state === sIdle && in.ar.valid
+  in.r.valid := state =/= sIdle
+
+  val mtimeReg = RegInit(0.U(64.W))
+  mtimeReg := mtimeReg + 1.U
+
+  in.r.bits.data := MuxLookup(state, 0.U)(Seq(
+    sMtimeLo -> mtimeReg(31, 0),
+    sMtimeHi -> mtimeReg(63, 0)
+    ))
+}
