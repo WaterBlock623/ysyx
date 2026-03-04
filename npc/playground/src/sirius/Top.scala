@@ -898,7 +898,9 @@ class Top(
     val io = IO(new Bundle {
       val interrupt = Input(Bool())
       val master = new YsyxSocAxi4IO
+      val slave = Flipped(new YsyxSocAxi4IO)
     })
+    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
     io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
   }
 

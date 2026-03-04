@@ -21,7 +21,7 @@ endif
 
 VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 1
-VERILATOR_CFLAGS += $(addprefix -y, $(YSYXSOC_LIBDIR))
+VERILATOR_CFLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
