@@ -896,6 +896,7 @@ class Top(
     // clintDevice.in :<>= xbar.out(2)
   } else {
     val io = IO(new Bundle {
+      val interrupt = Input(Bool())
       val master = new YsyxSocAxi4IO
     })
     io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
