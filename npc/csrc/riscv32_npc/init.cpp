@@ -24,7 +24,7 @@
 #include <sys/cdefs.h>
 
 static VerilatedContext *contextp = NULL;
-static __TOP_NAME__ *top = NULL;
+static __VTOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
 static uint32_t* npc_gpr_ptr = NULL;
@@ -106,7 +106,7 @@ static void sim_init(void) {
   Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
   // contextp->commandArgs(2, (const char **)verilator_argv);
-  top = new __TOP_NAME__{contextp};
+  top = new __VTOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
   tfp = new VerilatedFstC;
@@ -114,7 +114,7 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  npc_gpr_ptr = (uint32_t *)top->__TOP_NAME__->getGprDpiC->temp_regs.data();
+  npc_gpr_ptr = (uint32_t *)top->getGprDpiC->temp_regs.data();
 }
 
 extern "C" void sim_close(void) {

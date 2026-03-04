@@ -842,7 +842,7 @@ class GetGprDpiC(
     s"""|
         |
         |module GetGprDpiC($portDecls);
-        |  reg [${xlen - 1}:0] temp_regs [$regNum] /* verilator public */;
+        |  reg [${xlen - 1}:0] temp_regs [$regNum] /* verilator public_flat */;
         |
         |  always @(*) begin
         |    $assignLogic
