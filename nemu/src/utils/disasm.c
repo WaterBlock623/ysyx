@@ -36,7 +36,7 @@ void init_disasm() {
   char lib_file[128] = {};
   if (nemu_home) {
     strcpy(lib_file, nemu_home);
-    strcat(lib_file, "tools/capstone/repo/libcapstone." CS_LIB_SUFFIX);
+    strcat(lib_file, "/tools/capstone/repo/libcapstone." CS_LIB_SUFFIX);
   } else {
     strcpy(lib_file, "tools/capstone/repo/libcapstone." CS_LIB_SUFFIX);
   }
