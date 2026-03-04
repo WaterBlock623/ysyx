@@ -7,6 +7,10 @@ WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
 $(shell mkdir -p $(WAVE_DIR))
 
+YSYXSOC_DIR = $(NPC_HOME)/../ysyxSoC
+YSYXSOC_LIBDIR = $(YSYXSOC_DIR)/perip/uart16550/rtl \
+								 $(YSYXSOC_DIR)/perip/spi/rtl
+
 VLT_FILE = $(BUILD_DIR)/../profile/profile.vlt
 ifneq ($(wildcard $(VLT_FILE)),)
 VLT_ARGS = $(VLT_FILE)
@@ -16,7 +20,9 @@ $(info profile.vlt not found, skipping PGO)
 endif
 
 VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
-				-O3 --x-assign fast --x-initial fast --noassert --threads 1 \
+				-O3 --x-assign fast --x-initial fast --noassert --threads 1
+VERILATOR_CFLAGS += $(addprefix -y, $(YSYXSOC_LIBDIR))
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
 # 				--threads-max-mtasks 128 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
@@ -26,6 +32,8 @@ VERILATOR_CFLAGS += --trace-fst
 endif
 
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
+VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
+VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 CSRCS = $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 

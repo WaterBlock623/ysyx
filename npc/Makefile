@@ -28,7 +28,8 @@ EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
 							tr -d '\n' | \
 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
 			  			sed 's/.*\.//'
-TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
+# TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
+TOPNAME = ysyxSoCFull
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
 else

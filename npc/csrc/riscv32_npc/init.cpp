@@ -36,6 +36,9 @@ paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
 
 // DIP-C
+extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
+
 #define MEM_READ_SKIP 0
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
   static int skip_cnt = 0;
@@ -97,11 +100,11 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
 // }
 
 static void sim_init(void) {
+  const char* verilator_argv[] = {
+        "riscv32_npc-nemu-interpreter", 
+    };
+  Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
-  // const char* verilator_argv[] = {
-  //       "riscv32_npc-nemu-interpreter", 
-  //       "profile.vlt"
-  //   };
   // contextp->commandArgs(2, (const char **)verilator_argv);
   top = new __TOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
