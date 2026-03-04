@@ -890,7 +890,7 @@ class Top(
     // memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
     // memDpiC.clock := clock
     // memDpiC.reset := reset
-    getGprDpiC.gpr := registerFile.debug.get
+    getGprDpiC.gpr := registerFile.debug
     // getRetDpiC.a0 := registerFile.debug.get(10)
     // uartDevice.in :<>= xbar.out(1)
     // clintDevice.in :<>= xbar.out(2)
