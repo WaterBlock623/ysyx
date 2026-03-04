@@ -111,11 +111,11 @@ void init_audio() {
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
-  add_mmio_map("audio", CONFIG_AUDIO_CTL_MMIO, audio_base, space_size, audio_io_handler);
+  add_mmio_map("audio", CONFIG_AUDIO_CTL_MMIO, audio_base, space_size, audio_io_handler, true);
 #endif
 
   audio_base[reg_sbuf_size] = CONFIG_SB_SIZE;
   sbuf_start = (uint8_t *)new_space(CONFIG_SB_SIZE);
   sbuf_end = sbuf_start + CONFIG_SB_SIZE;
-  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, NULL);
+  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf_start, CONFIG_SB_SIZE, NULL, true);
 }

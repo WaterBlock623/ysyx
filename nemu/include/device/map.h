@@ -29,6 +29,7 @@ typedef struct {
   paddr_t high;
   void *space;
   io_callback_t callback;
+  bool is_difftest_skip_ref;
 } IOMap;
 
 static inline bool map_inside(IOMap *map, paddr_t addr) {
@@ -46,7 +47,9 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
       //   difftest_skip_next_ref();
       // }
 #else
-      difftest_skip_ref();
+      if (maps[i].is_difftest_skip_ref) {
+        difftest_skip_ref();
+      }
 #endif
       return i;
     }
@@ -57,7 +60,7 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
 void add_pio_map(const char *name, ioaddr_t addr,
         void *space, uint32_t len, io_callback_t callback);
 void add_mmio_map(const char *name, paddr_t addr,
-        void *space, uint32_t len, io_callback_t callback);
+        void *space, uint32_t len, io_callback_t callback, bool is_difftest_skip_ref);
 
 word_t map_read(paddr_t addr, int len, IOMap *map);
 void map_write(paddr_t addr, int len, word_t data, IOMap *map);

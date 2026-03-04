@@ -97,6 +97,21 @@ config VGA_SIZE_800x600
 endchoice
 endif # HAS_VGA
 
+menuconfig HAS_MROM
+  bool "Enable MROM"
+  default n
+
+if HAS_MROM
+config MROM_SIZE
+  hex "Size of MROM"
+  default 0x1000
+
+config MROM_MMIO
+  hex "MMIO address of the MROM"
+  default 0x20000000
+endif # HAS_MROM
+
+
 if !TARGET_AM
 menuconfig HAS_AUDIO
   bool "Enable audio"
