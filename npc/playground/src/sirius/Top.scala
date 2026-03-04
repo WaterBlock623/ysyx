@@ -902,6 +902,9 @@ class Top(
     })
     0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
     io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
+
+    val getGprDpiC = Module(new GetGprDpiC)
+    getGprDpiC.gpr := registerFile.debug
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
