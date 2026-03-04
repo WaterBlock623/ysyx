@@ -32,8 +32,16 @@ static void (*cs_free_dl)(cs_insn *insn, size_t count);
 static csh handle;
 
 void init_disasm() {
+  const char* nemu_home = getenv("NEMU_HOME");
+  char lib_file[128] = {};
+  if (nemu_home) {
+    strcpy(lib_file, nemu_home);
+    strcat(lib_file, "tools/capstone/repo/libcapstone." CS_LIB_SUFFIX);
+  } else {
+    strcpy(lib_file, "tools/capstone/repo/libcapstone." CS_LIB_SUFFIX);
+  }
   void *dl_handle;
-  dl_handle = dlopen("tools/capstone/repo/libcapstone." CS_LIB_SUFFIX, RTLD_LAZY);
+  dl_handle = dlopen(lib_file, RTLD_LAZY);
   assert(dl_handle);
 
   cs_err (*cs_open_dl)(cs_arch arch, cs_mode mode, csh *handle) = NULL;
