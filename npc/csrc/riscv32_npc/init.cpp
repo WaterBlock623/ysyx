@@ -38,7 +38,9 @@ int npc_wbu_valid = 0;
 // DIP-C
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 
-extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) {
+  *data = 0x00100073;
+}
 
 #define MEM_READ_SKIP 0
 extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
