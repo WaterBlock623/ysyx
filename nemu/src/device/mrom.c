@@ -25,7 +25,7 @@ static void load_rom(void) {
   fclose(fp);
 }
 
-void init_serial() {
+void init_mrom() {
   mrom_base = new_space(CONFIG_MROM_SIZE);
   add_mmio_map("mrom", CONFIG_MROM_MMIO, mrom_base, CONFIG_MROM_SIZE, mrom_io_handler, false);
   load_rom();
