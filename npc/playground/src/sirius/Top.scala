@@ -892,8 +892,8 @@ class Top(
     uartDevice.in :<>= xbar.out(1)
     clintDevice.in :<>= xbar.out(2)
   } else {
-    // val AXI = IO(new VerilogAxi4LiteIO)
-    // AXI :<>= memBusArbiter.out.viewAs[VerilogAxi4LiteIO]   
+    val AXI = IO(chiselTypeOf(xbar.out))
+    AXI :<>= xbar.out
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
