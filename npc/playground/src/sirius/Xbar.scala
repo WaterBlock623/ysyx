@@ -63,7 +63,7 @@ class Xbar(
   val out = IO(Vec(2, new Axi4IO))
 
   val mem = out(0)
-  def isMemAddr(addr: UInt): Bool = addr >= "h80000000".U
+  def isMemAddr(addr: UInt): Bool = addr >= "h2000_0000".U && addr <= "h2000_0fff".U
   // val uart = out(1)
   // def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
   val clint = out(1)

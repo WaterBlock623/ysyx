@@ -12,7 +12,7 @@ class PcReg(
     val dnpc = Output(UInt(cfg.xlen.W))
   }))
 
-  val pcReg = RegInit("h80000000".U(cfg.xlen.W))
+  val pcReg = RegInit("h2000_0000".U(cfg.xlen.W))
   val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
   when (wbuIn.wEn) {
     pcReg := pcNext
