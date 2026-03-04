@@ -875,11 +875,19 @@ class Top(
   val lsuOut = lsu.out
 
   if (cfg.isDebug) {
+    val io = IO(new Bundle {
+      val interrupt = Input(Bool())
+      val master = new YsyxSocAxi4IO
+      val slave = Flipped(new YsyxSocAxi4IO)
+    })
+    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+    io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
+
     val debugInfoDpiC = Module(new DebugInfoDpiC)
     // val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    val uartDevice = Module(new UartDevice)
+    // val uartDevice = Module(new UartDevice)
     // val clintDevice = Module(new ClintDevice)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
@@ -890,21 +898,21 @@ class Top(
     // memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
     // memDpiC.clock := clock
     // memDpiC.reset := reset
-    getGprDpiC.gpr := registerFile.debug
+    getGprDpiC.gpr := registerFile.debug.get
     // getRetDpiC.a0 := registerFile.debug.get(10)
     // uartDevice.in :<>= xbar.out(1)
     // clintDevice.in :<>= xbar.out(2)
   } else {
-    val io = IO(new Bundle {
-      val interrupt = Input(Bool())
-      val master = new YsyxSocAxi4IO
-      val slave = Flipped(new YsyxSocAxi4IO)
-    })
-    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
-
-    val getGprDpiC = Module(new GetGprDpiC)
-    getGprDpiC.gpr := registerFile.debug
+    // val io = IO(new Bundle {
+    //   val interrupt = Input(Bool())
+    //   val master = new YsyxSocAxi4IO
+    //   val slave = Flipped(new YsyxSocAxi4IO)
+    // })
+    // 0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+    // io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
+    //
+    // val getGprDpiC = Module(new GetGprDpiC)
+    // getGprDpiC.gpr := registerFile.debug
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
