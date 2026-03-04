@@ -4,7 +4,9 @@
 extern char *rom_file;
 static uint8_t *mrom_base = NULL;
 
-static inline void mrom_io_handler(uint32_t offset, int len, bool is_write) {}
+static inline void mrom_io_handler(uint32_t offset, int len, bool is_write) {
+  Assert(!is_write, "MRON is read only");
+}
 
 static void load_rom(void) {
   Assert(rom_file, "--rom is not given");

@@ -6,6 +6,7 @@ $(shell mkdir -p $(BUILD_DIR))
 VSRC_TIMESTAMP = $(BUILD_DIR)/.vsrc_timestamp
 
 all: build_ar
+	$(MAKE) -C $(NEMU_HOME) $(NEMU_MAKE_FLAGS)
 
 # Menuconfig
 include $(NEMU_HOME)/scripts/config.mk
