@@ -397,6 +397,7 @@ class DebugInfoDpiC(
 //   )
 // }
 
+/*
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
@@ -518,6 +519,7 @@ endmodule
 """
   )
 }
+*/
 
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)
@@ -857,6 +859,7 @@ class Top(
 
   val memBusArbiter = Module(new MemBusArbiter)
   val xbar = Module(new Xbar)
+  val clintDevice = Module(new ClintDevice)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
@@ -873,32 +876,35 @@ class Top(
 
   if (cfg.isDebug) {
     val debugInfoDpiC = Module(new DebugInfoDpiC)
-    val memDpiC = Module(new MemDpiC)
+    // val memDpiC = Module(new MemDpiC)
     // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
     val uartDevice = Module(new UartDevice)
-    val clintDevice = Module(new ClintDevice)
+    // val clintDevice = Module(new ClintDevice)
 
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
-    memDpiC.clock := clock
-    memDpiC.reset := reset
+    // memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
+    // memDpiC.clock := clock
+    // memDpiC.reset := reset
     getGprDpiC.gpr := registerFile.debug.get
     // getRetDpiC.a0 := registerFile.debug.get(10)
-    uartDevice.in :<>= xbar.out(1)
-    clintDevice.in :<>= xbar.out(2)
+    // uartDevice.in :<>= xbar.out(1)
+    // clintDevice.in :<>= xbar.out(2)
   } else {
-    val AXI = IO(chiselTypeOf(xbar.out))
-    AXI :<>= xbar.out
+    val io = IO(new Bundle {
+      val master = new YsyxSocAxi4IO
+    })
+    io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
   memBusArbiter.in(1) :<>= lsu.exte.mem
   xbar.in :<>= memBusArbiter.out
+  clintDevice.in :<>= xbar.out(1)
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile

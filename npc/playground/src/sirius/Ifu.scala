@@ -8,7 +8,7 @@ class Ifu(
     extends Module {
   val exte = IO(new Bundle {
     val pcReg = new IfuToPcRegIO
-    val mem = new Axi4LiteIO
+    val mem = new Axi4IO
   })
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
@@ -19,7 +19,8 @@ class Ifu(
   val state = RegInit(sIdle)
   val canValid = RegNext(RegNext(!reset.asBool))
 
-  exte.mem :<= 0.U.asTypeOf(new Axi4LiteIO)
+  exte.mem :<= 0.U.asTypeOf(new Axi4IO)
+  exte.mem.ar.bits.size := "b010".U
   
   assert(!exte.mem.aw.valid && !exte.mem.w.valid && !exte.mem.b.valid)
 

@@ -7,8 +7,8 @@ import chisel3.SpecifiedDirection.Flip
 class MemBusArbiter(
   implicit private val cfg: CoreConfig)
     extends Module {
-  val in = IO(Vec(2, Flipped(new Axi4LiteIO)))
-  val out = IO(new Axi4LiteIO)
+  val in = IO(Vec(2, Flipped(new Axi4IO)))
+  val out = IO(new Axi4IO)
 
   val ifu = in(0)
   val lsu = in(1)
@@ -59,14 +59,14 @@ class MemBusArbiter(
 class Xbar(
   implicit private val cfg: CoreConfig)
     extends Module {
-  val in = IO(Flipped(new Axi4LiteIO))
-  val out = IO(Vec(3, new Axi4LiteIO))
+  val in = IO(Flipped(new Axi4IO))
+  val out = IO(Vec(2, new Axi4IO))
 
   val mem = out(0)
   def isMemAddr(addr: UInt): Bool = addr >= "h80000000".U
-  val uart = out(1)
-  def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
-  val clint = out(2)
+  // val uart = out(1)
+  // def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
+  val clint = out(1)
   def isClintAddr(addr: UInt): Bool = addr === "h10000600".U || addr === "h10000604".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
@@ -81,8 +81,8 @@ class Xbar(
 
   when(isMemAddr(rAddrComb)) {
     mem.ar :<>= in.ar
-  }.elsewhen(isUartAddr(rAddrComb)) {
-    uart.ar :<>= in.ar
+  // }.elsewhen(isUartAddr(rAddrComb)) {
+  //   uart.ar :<>= in.ar
   }.elsewhen(isClintAddr(rAddrComb)) {
     clint.ar :<>= in.ar
   }.otherwise {
@@ -91,8 +91,8 @@ class Xbar(
 
   when(isMemAddr(rAddrReg)) {
     in.r :<>= mem.r
-  }.elsewhen(isUartAddr(rAddrReg)) {
-    in.r :<>= uart.r
+  // }.elsewhen(isUartAddr(rAddrReg)) {
+  //   in.r :<>= uart.r
   }.elsewhen(isClintAddr(rAddrReg)) {
     in.r :<>= clint.r
   }.otherwise {
@@ -111,9 +111,9 @@ class Xbar(
   when(isMemAddr(wAddr)) {
     mem.aw :<>= in.aw
     mem.w :<>= in.w
-  }.elsewhen(isUartAddr(wAddr)) {
-    uart.aw :<>= in.aw
-    uart.w :<>= in.w
+  // }.elsewhen(isUartAddr(wAddr)) {
+  //   uart.aw :<>= in.aw
+  //   uart.w :<>= in.w
   }.elsewhen(isClintAddr(wAddr)) {
     clint.aw :<>= in.aw
     clint.w :<>= in.w
@@ -125,8 +125,8 @@ class Xbar(
 
   when(isMemAddr(wAddrReg)) {
     in.b :<>= mem.b
-  }.elsewhen(isUartAddr(wAddrReg)) {
-    in.b :<>= uart.b
+  // }.elsewhen(isUartAddr(wAddrReg)) {
+  //   in.b :<>= uart.b
   }.elsewhen(isClintAddr(wAddrReg)) {
     in.b :<>= clint.b
   }.otherwise {
@@ -136,7 +136,7 @@ class Xbar(
 }
 
 class UartDevice extends Module {
-  val in = IO(Flipped(new Axi4LiteIO))
+  val in = IO(Flipped(new Axi4IO))
 
   0.U.asTypeOf(chiselTypeOf(in.ar)) :>= in.ar
   in.r :<= 0.U.asTypeOf(chiselTypeOf(in.r))
@@ -162,7 +162,7 @@ class UartDevice extends Module {
 }
 
 class ClintDevice extends Module {
-  val in = IO(Flipped(new Axi4LiteIO))
+  val in = IO(Flipped(new Axi4IO))
 
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
   assert(!in.aw.valid && !in.w.valid)

@@ -12,7 +12,7 @@ class Lsu(
   }
 
   val exte = IO(new Bundle {
-    val mem = new Axi4LiteIO
+    val mem = new Axi4IO
   })
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
@@ -72,6 +72,16 @@ class Lsu(
   exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid
   exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid
   exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid
+
+  val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
+    Seq(
+      LoadStoreLengthEnum.w.asUInt -> "b010".U,
+      LoadStoreLengthEnum.h.asUInt -> "b001".U,
+      LoadStoreLengthEnum.b.asUInt -> "b000".U
+    )
+  )
+  exte.mem.ar.bits.size := axSize
+  exte.mem.aw.bits.size := axSize
 
   val rData = exte.mem.r.bits.data
   val rem = addr(1, 0)
