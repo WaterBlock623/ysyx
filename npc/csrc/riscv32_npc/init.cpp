@@ -114,7 +114,7 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  npc_gpr_ptr = (uint32_t *)top->getGprDpiC->temp_regs.data();
+  npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
 }
 
 extern "C" void sim_close(void) {
