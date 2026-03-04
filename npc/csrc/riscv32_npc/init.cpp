@@ -125,8 +125,14 @@ extern "C" void sim_close(void) {
 #ifdef CONFIG_NPC_WAVE
   tfp->close();
 #endif
-  delete top;
-  delete contextp;
+  if (top != NULL) {
+    delete top;
+    top = NULL;
+  }
+  if (contextp != NULL) {
+    delete contextp;
+    contextp = NULL;
+  }
 }
 
 void single_cycle(void) {
