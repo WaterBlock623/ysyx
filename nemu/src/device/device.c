@@ -108,7 +108,7 @@ void init_device(device_init_param_t *param) {
   IFDEF(CONFIG_HAS_DISK, init_disk());
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
   IFDEF(CONFIG_HAS_MROM, init_mrom(param));
-  IFDEF(CONFIG_HAS_MSRAM, init_sram(param));
+  IFDEF(CONFIG_HAS_SRAM, init_sram(param));
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
