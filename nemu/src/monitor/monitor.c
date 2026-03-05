@@ -22,7 +22,7 @@ void init_log(const char *log_file);
 void init_elf(const char *elf_file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
-void init_device(device_init_param_t param);
+void init_device(device_init_param_t *param);
 void init_sdb();
 void init_disasm();
 
@@ -128,7 +128,7 @@ void init_monitor(int argc, char *argv[]) {
   init_mem();
 
   /* Initialize devices. */
-  IFDEF(CONFIG_DEVICE, init_device(device_init_param));
+  IFDEF(CONFIG_DEVICE, init_device(&device_init_param));
 
   /* Perform ISA dependent initialization. */
   init_isa();
