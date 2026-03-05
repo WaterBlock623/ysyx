@@ -206,7 +206,7 @@ int isa_exec_once(Decode *s) {
   } else {
     s->dnpc = npc_dnpc;
     IFDEF(CONFIG_ITRACE, print_disassemble(s));
-    printf("%x\n", gpr(2));
+    // printf("%x\n", gpr(2));
   }
 
   decode_inst(s);
