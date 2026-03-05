@@ -18,6 +18,7 @@
 #include <difftest-def.h>
 #include <memory/paddr.h>
 #include <string.h>
+#include <device/device.h>
 
 void (*g_difftest_skip_ref)(void) = NULL;
 
@@ -53,10 +54,13 @@ __EXPORT void difftest_raise_intr(word_t NO) {
   assert(0);
 }
 
-__EXPORT void difftest_init(int port, void (*difftest_skip_ref)(void)) {
+__EXPORT void difftest_init(int port, void (*difftest_skip_ref)(void), device_init_param_t *dip) {
   g_difftest_skip_ref = difftest_skip_ref;
   void init_mem();
+  void init_device(device_init_param_t *param);
+
   init_mem();
+  IFDEF(CONFIG_DEVICE, init_device(dip));
   /* Perform ISA dependent initialization. */
   init_isa();
 }
