@@ -76,8 +76,8 @@ void sdl_clear_event_queue() {
 }
 
 void device_load_img(IOMap *map, const char *path) {
-  Assert(map, "map should not be NULL");
   Assert(path, "path should not be NULL");
+  Assert(map, "map should not be NULL");
 
   FILE *fp = fopen(path, "rb");
   Assert(fp, "Can not open '%s'", path);

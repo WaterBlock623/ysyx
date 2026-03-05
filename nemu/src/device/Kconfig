@@ -100,17 +100,26 @@ endif # HAS_VGA
 menuconfig HAS_MROM
   bool "Enable MROM"
   default n
-
 if HAS_MROM
 config MROM_SIZE
   hex "Size of MROM"
   default 0x1000
-
 config MROM_MMIO
   hex "MMIO address of the MROM"
   default 0x20000000
 endif # HAS_MROM
 
+menuconfig HAS_SRAM
+  bool "Enable SRAM"
+  default n
+if HAS_SRAM
+config SRAM_SIZE
+  hex "Size of SRAM"
+  default 0x2000
+config SRAM_MMIO
+  hex "MMIO address of the SRAM"
+  default 0x0f000000
+endif # HAS_SRAM
 
 if !TARGET_AM
 menuconfig HAS_AUDIO

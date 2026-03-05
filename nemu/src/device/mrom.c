@@ -1,7 +1,6 @@
 #include <utils.h>
 #include <device/map.h>
 
-extern char *rom_file;
 static uint8_t *mrom_base = NULL;
 
 static inline void mrom_io_handler(uint32_t offset, int len, bool is_write) {
@@ -12,5 +11,7 @@ static inline void mrom_io_handler(uint32_t offset, int len, bool is_write) {
 void init_mrom(device_init_param_t *param) {
   mrom_base = new_space(CONFIG_MROM_SIZE);
   IOMap *map = add_mmio_map("mrom", CONFIG_MROM_MMIO, mrom_base, CONFIG_MROM_SIZE, mrom_io_handler, false);
-  device_load_img(map, param->mrom_img);
+  if (param->mrom_img) {
+    device_load_img(map, param->mrom_img);
+  }
 }
