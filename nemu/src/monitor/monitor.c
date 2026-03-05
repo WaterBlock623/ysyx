@@ -15,13 +15,14 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <device/device.h>
 
 void init_rand();
 void init_log(const char *log_file);
 void init_elf(const char *elf_file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
-void init_device();
+void init_device(device_init_param_t param);
 void init_sdb();
 void init_disasm();
 
@@ -45,7 +46,7 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 static char *elf_file = NULL;
-char *rom_file = NULL;
+static device_init_param_t device_init_param = {};
 
 static long load_img() {
   if (img_file == NULL) {
@@ -88,7 +89,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
       case 'e': elf_file = optarg; break;
-      case 'r': rom_file = optarg; break;
+      case 'r': device_init_param.mrom_img = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -127,7 +128,7 @@ void init_monitor(int argc, char *argv[]) {
   init_mem();
 
   /* Initialize devices. */
-  IFDEF(CONFIG_DEVICE, init_device());
+  IFDEF(CONFIG_DEVICE, init_device(device_init_param));
 
   /* Perform ISA dependent initialization. */
   init_isa();

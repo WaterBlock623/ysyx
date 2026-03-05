@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include <utils.h>
+#include <device/map.h>
 #include <device/alarm.h>
 #ifndef CONFIG_TARGET_AM
 #include <SDL2/SDL.h>
@@ -74,7 +75,28 @@ void sdl_clear_event_queue() {
 #endif
 }
 
-void init_device() {
+void device_load_img(IOMap *map, const char *path) {
+  Assert(map, "map should not be NULL");
+  Assert(path, "path should not be NULL");
+
+  FILE *fp = fopen(path, "rb");
+  Assert(fp, "Can not open '%s'", path);
+
+  fseek(fp, 0, SEEK_END);
+  long img_size = ftell(fp);
+
+  Log("Load image to %s: %s, size = %ld", map->name, path, img_size);
+  uintptr_t map_size = (uintptr_t)map->high - (uintptr_t)map->low + 1;
+  Assert(img_size <= map_size, "size of map is not enough. At least %lu byte", img_size);
+
+  fseek(fp, 0, SEEK_SET);
+  int ret = fread(map->space, img_size, 1, fp);
+  assert(ret == 1);
+
+  fclose(fp);
+}
+
+void init_device(device_init_param_t *param) {
   IFDEF(CONFIG_TARGET_AM, ioe_init());
   init_map();
 
@@ -85,7 +107,7 @@ void init_device() {
   IFDEF(CONFIG_HAS_AUDIO, init_audio());
   IFDEF(CONFIG_HAS_DISK, init_disk());
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
-  IFDEF(CONFIG_HAS_MROM, init_mrom());
+  IFDEF(CONFIG_HAS_MROM, init_mrom(param));
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
