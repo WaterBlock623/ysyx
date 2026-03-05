@@ -20,7 +20,7 @@ class Lsu(
   val inBits = in.bits
   val outBits = out.bits
   val ctrl = inBits.ctrl.lsuCtrl
-  val addr = inBits.exuPayload.exu.aluOut
+  val addr = inBits.exuPayload.exu.aluOut & ~"b11".U(cfg.xlen.W)
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
