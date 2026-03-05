@@ -49,16 +49,16 @@ SECTIONS {
   } >REGION_V_BSS AT>REGION_L_BSS
   _bss_size = SIZEOF(.bss);
 
-  /* . = ALIGN(16); */
-  /* _heap_start = .; */
-  /* . = (ORIGIN(SRAM) + LENGTH(SRAM)) & ~(16 - 1); */
-  /* _stack_pointer = .; */
-  /* _heap_end = .; */
-
-  _stack_top = ALIGN(16);
-  . = _stack_top + 0x1000;
-  _stack_pointer = .;
-  _heap_start = ALIGN(16);
+  . = ALIGN(16);
+  _heap_start = .;
   . = (ORIGIN(SRAM) + LENGTH(SRAM)) & ~(16 - 1);
+  _stack_pointer = .;
   _heap_end = .;
+
+  /* _stack_top = ALIGN(16); */
+  /* . = _stack_top + 0x1000; */
+  /* _stack_pointer = .; */
+  /* _heap_start = ALIGN(16); */
+  /* . = (ORIGIN(SRAM) + LENGTH(SRAM)) & ~(16 - 1); */
+  /* _heap_end = .; */
 }
