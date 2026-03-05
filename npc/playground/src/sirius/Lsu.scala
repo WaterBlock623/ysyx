@@ -116,7 +116,7 @@ class Lsu(
   val regData = inBits.exuPayload.idu.rs2Data
   val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
   val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
-  val sw = regData(30, 0).pad(cfg.xlen)
+  val sw = regData(31, 0).pad(cfg.xlen)
 
   exte.mem.w.bits.data := MuxLookup(ctrl.loadStoreLength, sw)(
     Seq(
