@@ -49,7 +49,6 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
       // }
 #else
       if (maps[i].is_difftest_skip_ref) {
-        Log("SKIPPPPPP!");
         difftest_skip_ref();
       }
 #endif

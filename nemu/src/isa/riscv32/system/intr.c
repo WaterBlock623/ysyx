@@ -71,7 +71,6 @@ word_t csr_read(word_t csr_addr) {
   panic("Unsupported csr_addr read: " FMT_WORD, csr_addr);
 #else
   if (g_difftest_skip_ref) {
-    Log("skip CSR!");
     g_difftest_skip_ref();
   }
 #endif
