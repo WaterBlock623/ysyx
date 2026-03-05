@@ -21,6 +21,7 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include <utils.h>
+#include <device/device.h>
 
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n,
                             bool direction) = NULL;
@@ -62,7 +63,7 @@ void difftest_skip_dut(int nr_ref, int nr_dut) {
   }
 }
 
-void init_difftest(char *ref_so_file, long img_size, int port) {
+void init_difftest(char *ref_so_file, long img_size, int port, device_init_param_t *dip) {
   assert(ref_so_file != NULL);
 
   void *handle;
@@ -81,7 +82,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   ref_difftest_raise_intr = dlsym(handle, "difftest_raise_intr");
   assert(ref_difftest_raise_intr);
 
-  void (*ref_difftest_init)(int, void (*)(void)) = dlsym(handle, "difftest_init");
+  void (*ref_difftest_init)(int, void (*)(void), device_init_param_t *) = dlsym(handle, "difftest_init");
   assert(ref_difftest_init);
 
   Log("Differential testing: %s", ANSI_FMT("ON", ANSI_FG_GREEN));
@@ -91,7 +92,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
       "If it is not necessary, you can turn it off in menuconfig.",
       ref_so_file);
 
-  ref_difftest_init(port, difftest_skip_ref);
+  ref_difftest_init(port, difftest_skip_ref, dip);
   ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size,
                       DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
