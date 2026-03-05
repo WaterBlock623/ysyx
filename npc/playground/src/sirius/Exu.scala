@@ -90,7 +90,7 @@ class JumpTargetGenerator(
     val jumpTarget = Output(UInt(cfg.xlen.W))
   })
 
-  val pcPlusImm = io.pc + io.imm
+  val pcPlusImm = (io.pc + io.imm) & ~1.U
   io.jumpTarget := MuxLookup(io.jumpTargetSel, pcPlusImm)(
     Seq(
       JumpTargetSelEnum.pcPlusImm.asUInt -> pcPlusImm,
