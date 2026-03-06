@@ -35,7 +35,7 @@ SECTIONS {
 
   /* Load start */
   _data_load_start = LOADADDR(.data);
-  _data_start = .;
+  _data_start = ADDR(.data);
   .data : {
     *(.data*)
   } >REGION_V_DATA AT>REGION_L_DATA
@@ -50,7 +50,7 @@ SECTIONS {
   /* Load end */
 
   /* Clear start */
-	_bss_start = .;
+	_bss_start = ADDR(.sbss);
   .sbss : {
     *(.sbss*)
     *(.scommon)
