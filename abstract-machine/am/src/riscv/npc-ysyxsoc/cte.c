@@ -12,16 +12,22 @@ Context* __am_irq_handle(Context *c) {
   // printf("mstatus%d: 0x%08x\n", i, c->mstatus);
   // printf("mcause%d: 0x%08x\n", i, c->mcause);
   // printf("mepc%d: 0x%08x\n", i, c->mepc);
-  if (user_handler) {
-    Event ev = {0};
-    switch (c->mcause) {
-      case 0xb: 
-        ev.event = EVENT_YIELD; 
-        c->mepc += 4;
-        break;
-      default: ev.event = EVENT_ERROR; break;
-    }
+  Event ev = {0};
+  switch (c->mcause) {
+    case 4u: // Load address misaligned
+      assert(0);
+      return c;
+    case 6u: // Store/AMO address misaligned
+      assert(0);
+      return c;
+    case 11u: // Environment call from M-mode
+      ev.event = EVENT_YIELD; 
+      c->mepc += 4;
+      break;
+    default: ev.event = EVENT_ERROR; break;
+  }
 
+  if (user_handler) {
     c = user_handler(ev, c);
     assert(c != NULL);
   }

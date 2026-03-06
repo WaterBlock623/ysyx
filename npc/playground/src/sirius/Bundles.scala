@@ -4,8 +4,15 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.dataview._
 
+// Trap
+class TrapIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val isTrap = Output(Bool())
+  val cause = Output(UInt(cfg.mxlen.W))
+}
+
 // 数据载荷
 class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
+  val trap = new TrapIO
   val ifu = new Bundle {
     val pc = UInt(cfg.xlen.W)
     val inst = UInt(cfg.xlen.W)

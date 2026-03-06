@@ -56,11 +56,12 @@ class Lsu(
     )
   )
 
+  val isTrap = in.valid && outBits.lsuPayload.trap.isTrap
   val isBypass = state === sIdle && in.valid && !isMemAcc
   val isMemDone =
     state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
 
-  out.valid := isBypass || isMemDone
+  out.valid := isBypass || isMemDone || isTrap
   in.ready := out.fire
 
   val isRespReady = state === sWaitResp && out.ready
@@ -71,9 +72,9 @@ class Lsu(
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !outBits.lsuPayload.trap.isTrap
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
 
   val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
     Seq(
@@ -137,4 +138,12 @@ class Lsu(
       LoadStoreLengthEnum.b.asUInt -> sbMask
     )
   )
+
+
+  when (!inBits.exuPayload.trap.isTrap) {
+    outBits.lsuPayload.trap.isTrap := 
+      (ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U)
+    outBits.lsuPayload.trap.cause := Mux(ctrl.isLoad, 4.U(cfg.mxlen.W), 6.U(cfg.mxlen.W))
+  }
 }

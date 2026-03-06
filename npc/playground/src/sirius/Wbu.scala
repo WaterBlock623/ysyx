@@ -67,7 +67,6 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   csr.wData := inBits.lsuPayload.exu.aluOut
 
   csr.pc := pc
-  csr.isTrap := inBits.ctrl.wbuCtrl.isEcall && in.valid
-  csr.causeNum := 11.U
-
+  csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
+  csr.causeNum := inBits.lsuPayload.trap.cause
 }

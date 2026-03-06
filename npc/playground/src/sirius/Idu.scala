@@ -72,7 +72,6 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   val out = IO(Decoupled(new IduToExuIO))
 
   // DecoupledIO
-  val (masterState, slaveState) = DecoupledMasterSlaveFsm(out, in)
   in.ready := out.ready
   out.valid := in.valid
   val inBits = in.bits
@@ -100,6 +99,11 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   outBits.ctrl.exuCtrl := ctrl.ex
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
+
+  when (!inBits.ifuPayload.trap.isTrap) {
+    outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall
+    outBits.iduPayload.trap.cause := 11.U(cfg.mxlen.W)
+  }
 
   // imm
   val immParser = Module(new ImmParser())

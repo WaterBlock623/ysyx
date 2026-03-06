@@ -13,6 +13,8 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
+  out.bits.ifuPayload.trap := 0.U.asTypeOf(chiselTypeOf(out.bits.ifuPayload.trap))
+
   val outBits = out.bits
 
   val sIdle :: sWaitResp :: sKeepData :: Nil = Enum(3)
