@@ -18,7 +18,10 @@ void halt(int code) {
   while (1);
 }
 
+extern void __am_asm_trap(void);
+
 void _trm_init() {
+  asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   int ret = main(mainargs);
   halt(ret);
 }
