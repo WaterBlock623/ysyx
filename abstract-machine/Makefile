@@ -95,7 +95,7 @@ LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
 -include $(AM_HOME)/scripts/$(ARCH).mk
 
 ## 5. Compilation Rules
-
+$(info AM CFLAGS $(CFLAGS))
 ### Rule (compile): a single `.c` -> `.o` (gcc)
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<
