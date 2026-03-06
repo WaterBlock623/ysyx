@@ -27,7 +27,7 @@ static void misaligned_load_store(Context *c, bool is_load) {
     c->gpr[rd] = 0;
     memcpy(c->gpr + rd, mem, len);
     printf("x%u no sext: %x\n", rd, c->gpr[rd]);
-    if (!is_unsigned) {
+    if (!is_unsigned && !is_w) {
       printf("unsigned\n");
       c->gpr[rd] = SEXT_DYN(c->gpr[rd], len * 8);
     }
