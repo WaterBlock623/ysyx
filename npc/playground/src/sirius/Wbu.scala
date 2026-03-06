@@ -40,8 +40,8 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
 
   // pc
   val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
-  pcReg.target := Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
-  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0))
+  pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget))
+  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0)) || inBits.lsuPayload.trap.isTrap
   pcReg.wEn := in.valid
 
   // gpr
