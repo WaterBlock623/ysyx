@@ -38,7 +38,7 @@ class Lsu(
   state := MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(
-        in.valid && isMemAcc && canValid,
+        in.valid && isMemAcc && canValid && !outBits.lsuPayload.trap.isTrap,
         MuxCase(
           sIdle,
           Seq(
@@ -142,8 +142,9 @@ class Lsu(
 
   when (!inBits.exuPayload.trap.isTrap) {
     outBits.lsuPayload.trap.isTrap := 
-      (ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
-      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U)
+      isMemAcc &&
+      ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
     outBits.lsuPayload.trap.cause := Mux(ctrl.isLoad, 4.U(cfg.mxlen.W), 6.U(cfg.mxlen.W))
   }
 }
