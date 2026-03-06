@@ -30,11 +30,13 @@ SECTIONS {
 
   .rodata : {
     *(.rodata*)
+    *(.srodata*)
   } >REGION_V_RODATA AT>REGION_L_RODATA
 
   .data : {
     _data_start = .;
     *(.data*)
+    *(.sdata*)
     _data_end = .;
   } >REGION_V_DATA AT>REGION_L_DATA :data
   _data_size = SIZEOF(.data);
