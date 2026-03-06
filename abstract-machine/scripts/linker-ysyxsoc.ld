@@ -1,6 +1,6 @@
 ENTRY(_start)
 
-PHDRS { text PT_LOAD; data PT_LOAD; }
+/* PHDRS { text PT_LOAD; data PT_LOAD; } */
 
 MEMORY {
   MROM (RX) : ORIGIN = 0x20000000, LENGTH = 4K
@@ -20,36 +20,49 @@ REGION_ALIAS("REGION_V_DATA", RAM);
 REGION_ALIAS("REGION_L_DATA", ROM);
 
 REGION_ALIAS("REGION_V_BSS", RAM);
-REGION_ALIAS("REGION_L_BSS", ROM);
+/* REGION_ALIAS("REGION_L_BSS", ROM); */
 
 SECTIONS {
   .text : {
     *(entry)
     *(.text*)
-  } >REGION_V_TEXT AT>REGION_L_TEXT :text
+  } >REGION_V_TEXT AT>REGION_L_TEXT
 
   .rodata : {
     *(.rodata*)
     *(.srodata*)
   } >REGION_V_RODATA AT>REGION_L_RODATA
 
-  .data : {
-    _data_start = .;
-    *(.data*)
-    *(.sdata*)
-    _data_end = .;
-  } >REGION_V_DATA AT>REGION_L_DATA :data
-  _data_size = SIZEOF(.data);
+  /* Load start */
   _data_load_start = LOADADDR(.data);
+  _data_start = .;
+  .data : {
+    *(.data*)
+  } >REGION_V_DATA AT>REGION_L_DATA
 
-  .bss : {
-	  _bss_start = .;
-    *(.bss*)
+  .sdata : {
+    . = ALIGN(16);
+    __global_pointer$ = . + 0x800;
+    *(.sdata*)
+  } >REGION_V_DATA AT>REGION_L_DATA
+  _data_end = .;
+  _data_size = _data_end - _data_start;
+  /* Load end */
+
+  /* Clear start */
+	_bss_start = .;
+  .sbss : {
     *(.sbss*)
     *(.scommon)
-    _bss_end = .;
-  } >REGION_V_BSS AT>REGION_L_BSS
-  _bss_size = SIZEOF(.bss);
+  } >REGION_V_BSS
+
+  .bss : {
+    *(.bss*)
+    *(COMMON)
+  } >REGION_V_BSS
+  _bss_end = .;
+  _bss_size = _bss_end - _bss_start;
+  /* Clear end */
 
   . = ALIGN(16);
   _heap_start = .;
@@ -60,6 +73,7 @@ SECTIONS {
   /* _stack_top = ALIGN(16); */
   /* . = _stack_top + 0x1000; */
   /* _stack_pointer = .; */
+  /* Clear start */
   /* _heap_start = ALIGN(16); */
   /* . = (ORIGIN(SRAM) + LENGTH(SRAM)) & ~(16 - 1); */
   /* _heap_end = .; */
