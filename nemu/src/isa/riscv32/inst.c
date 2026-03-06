@@ -34,19 +34,19 @@
 #define MEM_READ_SEXT(len) do { \
         vaddr_t addr = src1 + imm; \
 		    if (IS_ALIGNED(addr, (len))) R(rd) = SEXT(Mr(src1 + imm, (len)), (len) * 8); \
-        else isa_raise_intr(4, s->pc); \
+        else s->dnpc = isa_raise_intr(4, s->pc); \
       } while(0)
 
 #define MEM_READ_ZEXT(len) do { \
         vaddr_t addr = src1 + imm; \
 		    if (IS_ALIGNED(addr, (len))) R(rd) = Mr(src1 + imm, (len)); \
-        else isa_raise_intr(4, s->pc); \
+        else s->dnpc = isa_raise_intr(4, s->pc); \
       } while(0)
 
 #define MEM_WRITE(len) do { \
         vaddr_t addr = src1 + imm; \
 		    if (IS_ALIGNED(addr, (len))) Mw(src1 + imm, (len), src2); \
-        else isa_raise_intr(6, s->pc); \
+        else s->dnpc = isa_raise_intr(6, s->pc); \
       } while(0)
 
 
