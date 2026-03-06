@@ -89,7 +89,7 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 lint:
-	-$(VERILATOR) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
+	-$(VERILATOR) $(VERILATOR_CFLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 build_ar: verilog
 	# Build archives
