@@ -52,10 +52,12 @@ Context* __am_irq_handle(Context *c) {
   switch (c->mcause) {
     case 4u: // Load address misaligned
       misaligned_load_store(c, true);
+      printf("load: a5=%x\n", c->gpr[15]);
       c->mepc += 4;
       return c;
     case 6u: // Store/AMO address misaligned
       misaligned_load_store(c, false);
+      printf("store: a5=%x\n", c->gpr[15]);
       c->mepc += 4;
       return c;
     case 11u: // Environment call from M-mode
