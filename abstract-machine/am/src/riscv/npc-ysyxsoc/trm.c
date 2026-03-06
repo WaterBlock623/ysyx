@@ -29,6 +29,7 @@ static inline void put_csrid(void) {
 extern char _data_load_start[], _data_start[], _data_end[], _data_size[];
 extern char _bss_start[], _bss_end[], _bss_size[];
 void _trm_init() {
+  asm volatile("mv t0, %0" : : "r"(heap.start));
   memcpy(_data_start, _data_load_start, (size_t)_data_size); 
   memset(_bss_start, 0, (size_t)_bss_size);
 
