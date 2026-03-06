@@ -26,7 +26,7 @@ static void misaligned_load_store(Context *c, bool is_load) {
     char *mem = (char *)(imm + src1);
     c->gpr[rd] = 0;
     memcpy(c->gpr + rd, mem, len);
-    if (!is_unsigned) {
+    if (!is_unsigned && !is_w) {
       c->gpr[rd] = SEXT_DYN(c->gpr[rd], len * 8);
     }
   } else {

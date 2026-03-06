@@ -26,9 +26,9 @@ static void misaligned_load_store(Context *c, bool is_load) {
     char *mem = (char *)(imm + src1);
     c->gpr[rd] = 0;
     memcpy(c->gpr + rd, mem, len);
-    printf("x%u no sext: %x\n", rd, c->gpr[rd]);
+    // printf("x%u no sext: %x\n", rd, c->gpr[rd]);
     if (!is_unsigned && !is_w) {
-      printf("unsigned\n");
+      // printf("unsigned\n");
       c->gpr[rd] = SEXT_DYN(c->gpr[rd], len * 8);
     }
   } else {
@@ -54,12 +54,12 @@ Context* __am_irq_handle(Context *c) {
   switch (c->mcause) {
     case 4u: // Load address misaligned
       misaligned_load_store(c, true);
-      printf("load: a5=%x\n", c->gpr[15]);
+      // printf("load: a5=%x\n", c->gpr[15]);
       c->mepc += 4;
       return c;
     case 6u: // Store/AMO address misaligned
       misaligned_load_store(c, false);
-      printf("store: a5=%x\n", c->gpr[15]);
+      // printf("store: a5=%x\n", c->gpr[15]);
       c->mepc += 4;
       return c;
     case 11u: // Environment call from M-mode
