@@ -48,7 +48,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
   val pc = inBits.lsuPayload.ifu.pc
   val loadData = inBits.lsuPayload.lsu.loadData
-  regFile.wEn := ctrl.isWriteBackReg && in.valid
+  regFile.wEn := ctrl.isWriteBackReg && in.valid && !inBits.lsuPayload.trap.isTrap
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
