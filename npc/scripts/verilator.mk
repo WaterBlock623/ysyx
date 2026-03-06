@@ -19,16 +19,16 @@ else
 $(info profile.vlt not found, skipping PGO)
 endif
 
-VERILATOR_CFLAGS += -MMD --cc --build -j 16 --autoflush \
+VERILATOR_BUILDFLAGS += -MMD --cc --build -j 16 --autoflush \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 1
-VERILATOR_CFLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
-VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing
+VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
+VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
 # 				--threads-max-mtasks 128 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
 ifeq ($(CONFIG_NPC_WAVE),y)
 $(info WAVE is enable)
-VERILATOR_CFLAGS += --trace-fst
+VERILATOR_BUILDFLAGS += --trace-fst
 endif
 
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
@@ -89,11 +89,11 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
 
 lint:
-	-$(VERILATOR) $(VERILATOR_CFLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
+	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 build_ar: verilog
 	# Build archives
-	$(VERILATOR) $(VERILATOR_CFLAGS) \
+	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		--Mdir $(OBJ_DIR)
