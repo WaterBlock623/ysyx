@@ -40,8 +40,9 @@ bool g_print_step = false;
 bool g_cpu_stop_flag = false;
 
 void device_update();
-bool have_change_and_print_wp(void);
 void iringbuf_display(void);
+bool have_change_and_print_wp(void);
+int find_bp(word_t addr);
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   // DIFFTEST
@@ -55,6 +56,10 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 	    printf("stop by watchpoint\n");
     }
 #endif
+    if (find_bp(cpu.pc) >= 0) {
+      g_cpu_stop_flag = true;
+    }
+
     if (g_cpu_stop_flag) {
 	    nemu_state.state = NEMU_STOP; 
       g_cpu_stop_flag = false;
