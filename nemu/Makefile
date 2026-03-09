@@ -19,6 +19,8 @@ ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
 endif
 
 WORK_DIR ?= $(shell pwd)
+BUILD_DIR ?= $(WORK_DIR)/build
+
 ARCHIVES += $(ADD_ARCHIVES)
 LIBS += $(ADD_LIBS)
 

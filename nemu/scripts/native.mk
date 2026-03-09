@@ -1,5 +1,3 @@
-#***************************************************************************************
-# Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 #
 # NEMU is licensed under Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -14,9 +12,13 @@
 #**************************************************************************************/
 
 -include $(NEMU_HOME)/../Makefile
-include $(NEMU_HOME)/scripts/build.mk
 
 include $(NEMU_HOME)/tools/difftest.mk
+include $(NEMU_HOME)/tools/lib.mk
+ARCHIVES += $(STATIC_LIBS)
+$(info NEMUU archives $(ARCHIVES))
+
+include $(NEMU_HOME)/scripts/build.mk
 
 compile_git:
 	$(call git_commit, "compile NEMU")

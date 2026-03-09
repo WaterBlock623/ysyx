@@ -7,9 +7,6 @@ CFLAGS  += -fPIC -fvisibility=hidden
 LDFLAGS += -shared -fPIC
 endif
 
-WORK_DIR  ?= $(shell pwd)
-BUILD_DIR ?= $(WORK_DIR)/build
-
 INC_PATH := $(ADD_INC_PATH) $(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
 # ifneq ($(CONFIG_NPC),)
 # INC_PATH := $(ADD_INC_PATH) $(INC_PATH)
@@ -54,8 +51,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
-$(info NEMU archivers $(ARCHIVES))
-
+$(info NEMU archives $(ARCHIVES))
 $(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
