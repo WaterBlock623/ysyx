@@ -47,7 +47,7 @@ int emu_write_reg(void *args, int regno, void *value) {
 #ifdef CONFIG_NPC
   return EFAULT;
 #else
-  if (regno == 32) {
+  if (regno == MUXDEF(CONFIG_RVE, 16, 32)) {
     memcpy(&cpu.pc, value, emu_get_reg_bytes(regno));
     return 0;
   }
@@ -113,7 +113,7 @@ void init_gdb(void) {
   Assert(gdbstub_init(&gdbstub, &emu_ops,
                       (arch_info_t){
                           .smp = 1,
-                          .reg_num = 33,
+                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33),
 #ifndef CONFIG_ISA64
                           .target_desc = TARGET_RV32,
 #else
