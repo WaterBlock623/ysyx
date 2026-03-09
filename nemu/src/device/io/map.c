@@ -42,6 +42,10 @@ static void check_bound(IOMap *map, paddr_t addr) {
   }
 }
 
+static bool in_mmio(IOMap *map, paddr_t addr) {
+  return map != NULL && addr <= map->high && addr >= map->low;
+}
+
 static void invoke_callback(io_callback_t c, paddr_t offset, int len, bool is_write) {
   if (c != NULL) { c(offset, len, is_write); }
 }
@@ -67,4 +71,24 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   paddr_t offset = addr - map->low;
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
+}
+
+bool try_map_read(paddr_t addr, int len, IOMap *map, word_t *dest) {
+  if (len < 1 || len > 8 || !in_mmio(map, addr)) {
+    return false;
+  }
+  paddr_t offset = addr - map->low;
+  invoke_callback(map->callback, offset, len, false); // prepare data to read
+  *dest = host_read(map->space + offset, len);
+  return true;
+}
+
+bool try_map_write(paddr_t addr, int len, word_t *data, IOMap *map) {
+  if (len < 1 || len > 8 || !in_mmio(map, addr)) {
+    return false;
+  }
+  paddr_t offset = addr - map->low;
+  host_write(map->space + offset, len, *data);
+  invoke_callback(map->callback, offset, len, true);
+  return true;
 }

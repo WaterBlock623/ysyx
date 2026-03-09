@@ -37,4 +37,8 @@ typedef struct {
 
 #define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
+static inline bool is_valid_reg_idx(int idx) {
+  return idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32);
+}
+
 #endif

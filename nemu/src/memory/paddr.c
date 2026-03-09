@@ -74,3 +74,21 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }
+
+bool try_paddr_read(paddr_t addr, int len, word_t *dest) {
+  if (in_pmem(addr)) {
+    *dest = pmem_read(addr, len);
+    return true;
+  }
+  IFDEF(CONFIG_DEVICE, return try_mmio_read(addr, len, dest));
+  return false;
+}
+
+bool try_paddr_write(paddr_t addr, int len, word_t* data) {
+  if (in_pmem(addr)) { 
+    pmem_write(addr, len, *data); 
+    return true; 
+  }
+  IFDEF(CONFIG_DEVICE, return try_mmio_write(addr, len, data));
+  return false;
+}
