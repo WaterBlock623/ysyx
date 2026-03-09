@@ -36,8 +36,8 @@ static inline bool in_pmem(paddr_t addr) {
 
 word_t paddr_read(paddr_t addr, int len);
 void paddr_write(paddr_t addr, int len, word_t data);
-bool try_paddr_read(paddr_t addr, int len, word_t *dest);
-bool try_paddr_write(paddr_t addr, int len, word_t* data);
+bool try_paddr_read(paddr_t addr, int len, void *dest);
+bool try_paddr_write(paddr_t addr, int len, void *data);
 
 __END_DECLS
 #endif
