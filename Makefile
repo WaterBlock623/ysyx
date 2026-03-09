@@ -22,11 +22,12 @@ endef
 define git_commit
 	trap "" INT; \
 		flock $(LOCK_DIR) $(MAKE) -C $(YSYX_HOME) .git_commit MSG='$(1)'; \
-		sync $(LOCK_DIR)
+		sync $(LOCK_DIR); \
+	trap - INT;
 endef
 
 .git_commit:
-	bash -c ' \
+	@bash -c ' \
 		trap "" INT; \
 		while (test -e .git/index.lock); do sleep 0.1; done; \
 		git branch $(TRACER_BRANCH) -q 2>/dev/null || true; \
