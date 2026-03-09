@@ -146,7 +146,7 @@ menu "Testing and Debugging"
 
 choice
   prompt "Choose the debuger"
-  default DEBUGER_GDB
+  default DEBUGER_SDB
 config DEBUGER_SDB
   bool "SDB"
 config DEBUGER_GDB

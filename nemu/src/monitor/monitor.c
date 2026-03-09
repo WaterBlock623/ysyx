@@ -24,6 +24,7 @@ void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port, device_init_param_t *dip);
 void init_device(device_init_param_t *param);
 void init_sdb();
+void init_gdb();
 void init_disasm();
 
 static void welcome() {
@@ -142,7 +143,7 @@ void init_monitor(int argc, char *argv[]) {
   init_difftest(diff_so_file, img_size, difftest_port, &device_init_param);
 
   /* Initialize the simple debugger. */
-  init_sdb();
+  MUXDEF(CONFIG_DEBUGER_GDB, init_gdb();, init_sdb());
 
   IFDEF(CONFIG_ITRACE, init_disasm());
 

@@ -16,6 +16,7 @@
 include $(NEMU_HOME)/tools/difftest.mk
 include $(NEMU_HOME)/tools/lib.mk
 ARCHIVES += $(STATIC_LIBS)
+INC_PATH += $(STATIC_INC)
 $(info NEMUU archives $(ARCHIVES))
 
 include $(NEMU_HOME)/scripts/build.mk
