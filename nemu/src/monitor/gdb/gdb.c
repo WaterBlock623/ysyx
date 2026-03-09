@@ -35,7 +35,8 @@ int emu_read_reg(void *args, int regno, void *value) {
     memcpy(value, &cpu.pc, emu_get_reg_bytes(regno));
     return 0;
   }
-  if (is_valid_reg_idx(regno)) {
+  // if (is_valid_reg_idx(regno)) {
+  if (1) {
     memcpy(value, cpu.gpr + regno, emu_get_reg_bytes(regno));
     return 0;
   } else {
@@ -51,7 +52,8 @@ int emu_write_reg(void *args, int regno, void *value) {
     memcpy(&cpu.pc, value, emu_get_reg_bytes(regno));
     return 0;
   }
-  if (is_valid_reg_idx(regno)) {
+  // if (is_valid_reg_idx(regno)) {
+  if (1) {
     memcpy(cpu.gpr + regno, value, emu_get_reg_bytes(regno));
     return 0;
   } else {
