@@ -53,8 +53,6 @@ app: $(BINARY)
 
 $(info NEMU archives $(ARCHIVES))
 $(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
-	@echo "目标: $@"
-	@echo "触发更新的文件是: $?"
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 
