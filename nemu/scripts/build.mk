@@ -56,7 +56,7 @@ compile_git:
 
 $(info NEMU archives $(ARCHIVES))
 $(BINARY): $(OBJS) $(ARCHIVES) $(BINARY_DEPS) | compile_git
-	@echo + LD $@
+	@echo + LD $@ BECAUSE OF $?
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 
 clean:
