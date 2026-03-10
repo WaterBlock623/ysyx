@@ -55,6 +55,7 @@ bool isa_try_find_reg(int regno, void **reg, size_t *len) {
 }
 
 bool isa_try_read_reg(int regno, void *dest) {
+  printf("all: %d, regno: %d\n", arch_info.reg_num, regno);
   if (!dest) {
     return false;
   }
@@ -68,16 +69,17 @@ bool isa_try_read_reg(int regno, void *dest) {
 }
 
 bool isa_try_write_reg(int regno, const void *src) {
-  if (!src) {
-    return false;
-  }
-  void *reg;
-  size_t len;
-  bool success = isa_try_find_reg(regno, &reg, &len);
-  if (success) {
-    memcpy(reg, src, len);
-  }
-  return success;
+  return false;
+  // if (!src) {
+  //   return false;
+  // }
+  // void *reg;
+  // size_t len;
+  // bool success = isa_try_find_reg(regno, &reg, &len);
+  // if (success) {
+  //   memcpy(reg, src, len);
+  // }
+  // return success;
 }
 
 void isa_reg_display() {
