@@ -6,7 +6,7 @@ STATIC_INC = $(TOOLS_DIR)/mini-gdbstub/include
 
 
 mini-gdbstub:
-	$(MAKE) -C $(TOOLS_DIR)/mini-gdbstub debug O=$(BUILD_DIR)/mini-gdbstub LIBGDBSTUB=$(BUILD_DIR)/libgdbstub.a
+	$(MAKE) -C $(TOOLS_DIR)/mini-gdbstub all O=$(BUILD_DIR)/mini-gdbstub LIBGDBSTUB=$(BUILD_DIR)/libgdbstub.a
 
 $(STATIC_LIBS): mini-gdbstub
 
