@@ -22,7 +22,7 @@ include $(NEMU_HOME)/scripts/build.mk
 
 compile_git:
 	$(call git_commit, "compile NEMU")
-$(BINARY):: | compile_git
+$(BINARY):: compile_git
 
 # Some convenient rules
 
