@@ -41,7 +41,8 @@ _NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 NEMU_EXEC := ($(_NEMU_EXEC) &) \
-						 && (if [[ "$(GDB_SOCKET)" != *:* ]] && [ ! -e "$(GDB_SOCKET)" ]; then echo "WAIT"; sleep 5; fi; \
+						 && (if echo "$(GDB_SOCKET)" | grep -q ":" && \
+						 [ ! -e "$(GDB_SOCKET)" ]; then echo "WAIT"; sleep 5; fi; \
 						 riscv64-unknown-linux-gnu-gdb -ex "target remote $(GDB_SOCKET)")
 else
 NEMU_EXEC := $(_NEMU_EXEC)
