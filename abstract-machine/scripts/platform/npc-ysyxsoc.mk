@@ -38,6 +38,7 @@ gdb: insert-arg
 	$(MAKE) -C $(NPC_HOME) gdb
 
 runbatch: ADD_ARGS += -b
+runbatch: export AM_GDB_FLAGS += --batch -ex "continue"
 runbatch: insert-arg
 	$(MAKE) -C $(NPC_HOME) runbatch 
 

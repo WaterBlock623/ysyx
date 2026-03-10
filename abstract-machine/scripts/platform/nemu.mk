@@ -33,6 +33,7 @@ run: insert-arg
 	$(MAKE) -C $(NEMU_HOME) ISA=$(ISA) run ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
 
 runbatch: NEMUFLAGS += -b
+runbatch: export AM_GDB_FLAGS += --batch -ex "continue"
 runbatch: insert-arg
 	$(MAKE) -C $(NEMU_HOME) ISA=$(ISA) run ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
 
