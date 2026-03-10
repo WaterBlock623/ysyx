@@ -32,7 +32,16 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
-arch_info_t arch_info = { .target_desc = MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32),
+#define GDB_TARGET_RV32E \
+  "<target version=\"1.0\">" \
+  "<architecture>riscv:rv32</architecture>" \
+  "<xi:include href=\"rv32e-xregs.xml\"/>" \
+  "</target>"
+
+#define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, \
+    MUXDEF(CONFIG_RVE, GDB_TARGET_RV32E, TARGET_RV32))
+
+arch_info_t arch_info = { .target_desc = GDB_TARGET,
                           .smp = 1,
                           .reg_num = MUXDEF(CONFIG_RVE, 17, 33)
                         };

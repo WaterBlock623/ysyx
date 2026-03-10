@@ -29,9 +29,18 @@ const char *regs[] = {"$0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
 
 const char *csrs_name[NR_CSR] = {"mstatus", "mtvec", "mepc", "mcause"};
 
+#define GDB_TARGET_RV32E \
+  "<target version=\"1.0\">" \
+  "<architecture>riscv:rv32</architecture>" \
+  "<xi:include href=\"rv32e-xregs.xml\"/>" \
+  "</target>"
+
+#define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, \
+    MUXDEF(CONFIG_RVE, GDB_TARGET_RV32E, TARGET_RV32))
+
 arch_info_t arch_info = { .smp = 1,
                           .reg_num = MUXDEF(CONFIG_RVE, 17, 33),
-                          .target_desc = MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32)
+                          .target_desc = GDB_TARGET
                         };
 
 #define safe_deref(ptr, ...) do { if (ptr) { *ptr = (__VA_ARGS__); } } while(0)
