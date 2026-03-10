@@ -58,9 +58,6 @@ NEMU_EXEC := $(_NEMU_EXEC) & \
         riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS); \
     ); \
     GDB_RET=$$?; \
-    if ps -p $$NEMU_PID > /dev/null; then \
-        kill $$NEMU_PID 2>/dev/null; \
-    fi; \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
     exit $$NEMU_RET
