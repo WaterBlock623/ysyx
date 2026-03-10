@@ -10,4 +10,4 @@ mini-gdbstub:
 
 $(STATIC_LIBS): mini-gdbstub
 
-.PHONY: mini-gdbstub $(STATIC_LIBS)
+.PHONY: mini-gdbstub
