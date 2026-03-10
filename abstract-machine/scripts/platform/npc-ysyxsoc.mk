@@ -21,6 +21,7 @@ CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINAR
 # export IMG = "$(IMAGE).bin"
 export ADD_ARGS += --elf "$(IMAGE).elf" --rom "$(IMAGE).bin"
 export BUILD_DIR = $(shell pwd)/build
+export GDB_ELF = $(IMAGE).elf
 
 insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) $(MAINARGS_PLACEHOLDER) "$(mainargs)"
@@ -37,6 +38,7 @@ gdb: insert-arg
 	$(MAKE) -C $(NPC_HOME) gdb
 
 runbatch: ADD_ARGS += -b
+runbatch: export AM_GDB_FLAGS += --batch -ex "continue"
 runbatch: insert-arg
 	$(MAKE) -C $(NPC_HOME) runbatch 
 

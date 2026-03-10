@@ -65,6 +65,8 @@ IOMap* add_mmio_map(const char *name, paddr_t addr,
 
 word_t map_read(paddr_t addr, int len, IOMap *map);
 void map_write(paddr_t addr, int len, word_t data, IOMap *map);
+bool try_map_read(paddr_t addr, int len, IOMap *map, word_t *dest);
+bool try_map_write(paddr_t addr, int len, word_t *data, IOMap *map);
 
 void device_load_img(IOMap *map, const char *path);
 

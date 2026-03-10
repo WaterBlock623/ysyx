@@ -144,6 +144,15 @@ endmenu
 menu "Testing and Debugging"
 
 
+choice
+  prompt "Choose the debuger"
+  default DEBUGER_SDB
+config DEBUGER_SDB
+  bool "SDB"
+config DEBUGER_GDB
+  bool "GDB"
+endchoice
+
 config TRACE
   bool "Enable tracer"
   default y
@@ -208,6 +217,9 @@ config ETRACE_COND
   string "Only trace exception when the condition is true"
   default "true"
 
+config WATCHPOINT
+  bool "Enable watchpoint"
+	default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
@@ -216,10 +228,6 @@ config DIFFTEST
   help
     Enable differential testing with a reference design.
     Note that this will significantly reduce the performance of NEMU.
-
-config WATCHPOINT
-  bool "Enable watchpoint"
-	default n
 
 choice
   prompt "Reference design"

@@ -81,3 +81,21 @@ void mmio_write(paddr_t addr, int len, word_t data) {
   map_write(addr, len, data, map);
   IFDEF(CONFIG_DTRACE, dtrace(map, true, addr, len, data));
 }
+
+bool try_mmio_read(paddr_t addr, int len, word_t *dest) {
+  IOMap *map = fetch_mmio_map(addr);
+  word_t data;
+  if (!try_map_read(addr, len, map, &data)) {
+    return false;
+  }
+  *dest = data;
+  return true;
+}
+
+bool try_mmio_write(paddr_t addr, int len, word_t *data) {
+  IOMap *map = fetch_mmio_map(addr);
+  if (!try_map_write(addr, len, data, map)) {
+    return false;
+  }
+  return true;
+}

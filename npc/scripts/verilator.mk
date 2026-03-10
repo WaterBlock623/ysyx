@@ -75,7 +75,9 @@ CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(C
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
 INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
-						$(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+						$(WORK_DIR)/include $(NEMU_HOME)/include \
+						$(NEMU_HOME)/tools/mini-gdbstub/include \
+						$(INC_PATH)
 export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) \

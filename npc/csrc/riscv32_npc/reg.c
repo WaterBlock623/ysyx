@@ -32,6 +32,50 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
+#define safe_deref(ptr, ...) do { if (ptr) { *ptr = (__VA_ARGS__); } } while(0)
+
+bool isa_try_find_reg(int regno, void **reg, size_t *len) {
+  if (regno >=0 && regno < LENGTH(cpu.gpr)) {
+    safe_deref(reg, cpu.gpr + regno);
+    safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
+    return true;
+  }
+  switch (regno) {
+    case LENGTH(cpu.gpr):
+      safe_deref(reg, &cpu.pc);
+      safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
+      return true;
+  }
+  return false;
+}
+
+bool isa_try_read_reg(int regno, void *dest) {
+  if (!dest) {
+    return false;
+  }
+  void *reg;
+  size_t len;
+  bool success = isa_try_find_reg(regno, &reg, &len);
+  if (success) {
+    memcpy(dest, reg, len);
+  }
+  return success;
+}
+
+bool isa_try_write_reg(int regno, const void *src) {
+  return false;
+  // if (!src) {
+  //   return false;
+  // }
+  // void *reg;
+  // size_t len;
+  // bool success = isa_try_find_reg(regno, &reg, &len);
+  // if (success) {
+  //   memcpy(reg, src, len);
+  // }
+  // return success;
+}
+
 void isa_reg_display() {
   int i;
   for (i = 0; i < sizeof(cpu.gpr) / sizeof(cpu.gpr[0]); i++) {

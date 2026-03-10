@@ -37,22 +37,34 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 bool g_print_step = false;
+bool g_cpu_stop_flag = false;
 
 void device_update();
-bool have_change_and_print_wp(void);
 void iringbuf_display(void);
+bool have_change_and_print_wp(void);
+int find_bp(word_t addr);
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   // DIFFTEST
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
   // WATCHPOINT
+  if (nemu_state.state == NEMU_RUNNING) {
 #ifdef CONFIG_WATCHPOINT
-  if (have_change_and_print_wp() && nemu_state.state == NEMU_RUNNING) {
-	 nemu_state.state = NEMU_STOP; 
-	 printf("stop by watchpoint\n");
-  }
+    if (have_change_and_print_wp()) {
+	    nemu_state.state = NEMU_STOP; 
+	    printf("stop by watchpoint\n");
+    }
 #endif
+    if (find_bp(cpu.pc) >= 0) {
+      g_cpu_stop_flag = true;
+    }
+
+    if (g_cpu_stop_flag) {
+	    nemu_state.state = NEMU_STOP; 
+      g_cpu_stop_flag = false;
+    }
+  }
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

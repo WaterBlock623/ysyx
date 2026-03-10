@@ -4,7 +4,7 @@ STUNAME = 严晨瑞
 # DO NOT modify the following code!!!
 
 TRACER = tracer-ysyx
-GITFLAGS = -q --author='$(TRACER) <tracer@ysyx.org>' --no-verify --allow-empty
+GITFLAGS = -q --author="$(TRACER) <tracer@ysyx.org>" --no-verify --allow-empty
 
 YSYX_HOME = $(NEMU_HOME)/..
 WORK_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
@@ -20,20 +20,24 @@ endef
 
 # prototype: git_commit(msg)
 define git_commit
-	-@flock $(LOCK_DIR) $(MAKE) -C $(YSYX_HOME) .git_commit MSG='$(1)'
-	-@sync $(LOCK_DIR)
+	trap "" INT; \
+		flock $(LOCK_DIR) $(MAKE) -C $(YSYX_HOME) .git_commit MSG='$(1)'; \
+		sync $(LOCK_DIR); \
+	trap - INT;
 endef
 
 .git_commit:
-	-@while (test -e .git/index.lock); do sleep 0.1; done;               `# wait for other git instances`
-	-@git branch $(TRACER_BRANCH) -q 2>/dev/null || true                 `# create tracer branch if not existent`
-	-@cp -a .git/index $(WORK_INDEX)                                     `# backup git index`
-	-@$(call git_soft_checkout, $(TRACER_BRANCH))                        `# switch to tracer branch`
-	-@git add . -A --ignore-errors                                       `# add files to commit`
-	-@(echo "> $(MSG)" && echo $(STUID) $(STUNAME) && uname -a && uptime `# generate commit msg`) \
-	                | git commit -F - $(GITFLAGS)                        `# commit changes in tracer branch`
-	-@$(call git_soft_checkout, $(WORK_BRANCH))                          `# switch to work branch`
-	-@mv $(WORK_INDEX) .git/index                                        `# restore git index`
+	@bash -c ' \
+		trap "" INT; \
+		while (test -e .git/index.lock); do sleep 0.1; done; \
+		git branch $(TRACER_BRANCH) -q 2>/dev/null || true; \
+		cp -a .git/index $(WORK_INDEX); \
+		$(call git_soft_checkout, $(TRACER_BRANCH)); \
+		git add . -A --ignore-errors; \
+		(echo "> $(MSG)" && echo "$(STUID)" "$(STUNAME)" && uname -a && uptime) | git commit -F - $(GITFLAGS); \
+		$(call git_soft_checkout, $(WORK_BRANCH)); \
+		mv $(WORK_INDEX) .git/index; \
+	'
 
 .clean_index:
 	rm -f $(WORK_INDEX)
