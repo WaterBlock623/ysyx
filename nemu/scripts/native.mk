@@ -45,10 +45,6 @@ GDB_FLAGS += -ex "file $(GDB_ELF)"
 endif
 GDB_FLAGS += -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
-# NEMU_EXEC := ($(_NEMU_EXEC) &) \
-# 						 && (if ! echo "$(GDB_SOCKET)" | grep -q ":" && \
-# 						 ! nc -zU $(GDB_SOCKET); then sleep 0.5; fi; \
-# 						 riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS))
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
     ( \
@@ -57,7 +53,6 @@ NEMU_EXEC := $(_NEMU_EXEC) & \
         fi; \
         riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS); \
     ); \
-    GDB_RET=$$?; \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
     exit $$NEMU_RET
