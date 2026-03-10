@@ -51,8 +51,11 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
+compile_git:
+	$(call git_commit, "compile NEMU")
+
 $(info NEMU archives $(ARCHIVES))
-$(BINARY):: $(OBJS) $(ARCHIVES) $(BINARY_DEPS)
+$(BINARY): $(OBJS) $(ARCHIVES) $(BINARY_DEPS) | compile_git
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 

@@ -20,10 +20,6 @@ INC_PATH += $(STATIC_INC)
 
 include $(NEMU_HOME)/scripts/build.mk
 
-compile_git:
-	$(call git_commit, "compile NEMU")
-$(BINARY):: | compile_git
-
 # Some convenient rules
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
