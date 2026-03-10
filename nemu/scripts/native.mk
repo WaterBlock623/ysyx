@@ -39,6 +39,7 @@ IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
 _NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
+$(info GDB_SOCKET $(GDB_SOCKET))
 NEMU_EXEC := ($(_NEMU_EXEC) &) && (riscv64-unknown-linux-gnu-gdb -ex "target remote $(GDB_SOCKET)")
 else
 NEMU_EXEC := $(_NEMU_EXEC)
