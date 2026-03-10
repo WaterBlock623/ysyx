@@ -61,7 +61,7 @@ run: run-env
 gdb: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "gdb NEMU")
-	gdb -s $(BINARY) --args $(NEMU_EXEC)
+	gdb -s $(BINARY) --args $(_NEMU_EXEC)
 	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt
 	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
 
