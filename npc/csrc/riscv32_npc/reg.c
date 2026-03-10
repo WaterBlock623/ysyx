@@ -24,7 +24,6 @@ __BEGIN_DECLS
 #include "debug.h"
 #include <string.h>
 #include <stdlib.h>
-#include <gdbstub.h>
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -33,9 +32,9 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
-arch_info_t arch_info = { .smp = 1,
-                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33),
-                          .target_desc = MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32)
+arch_info_t arch_info = { .target_desc = MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32),
+                          .smp = 1,
+                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33)
                         };
 
 #define safe_deref(ptr, ...) do { if (ptr) { *ptr = (__VA_ARGS__); } } while(0)

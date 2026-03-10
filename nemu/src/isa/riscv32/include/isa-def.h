@@ -40,10 +40,6 @@ typedef struct {
 
 #define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
-static inline bool is_valid_reg_idx(int idx) {
-  return idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32);
-}
-
 bool isa_try_find_reg(int regno, void **reg, size_t *len);
 bool isa_try_read_reg(int regno, void *dest);
 bool isa_try_write_reg(int regno, const void *src);

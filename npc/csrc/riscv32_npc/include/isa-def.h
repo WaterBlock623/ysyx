@@ -19,6 +19,9 @@
 __BEGIN_DECLS
 
 #include <common.h>
+#include <gdbstub.h>
+
+extern arch_info_t arch_info;
 
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
@@ -31,6 +34,10 @@ typedef struct {
 } MUXDEF(CONFIG_RV64, riscv64_npc_ISADecodeInfo, riscv32_npc_ISADecodeInfo);
 
 #define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+
+bool isa_try_find_reg(int regno, void **reg, size_t *len);
+bool isa_try_read_reg(int regno, void *dest);
+bool isa_try_write_reg(int regno, const void *src);
 
 __END_DECLS
 #endif
