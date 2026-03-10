@@ -36,23 +36,27 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 # Command to execute NEMU
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
+ifeq ($(CONFIG_DEBUGER_GDB),y)
+NEMU_EXEC := $(BINARY) $(ARGS) $(IMG) & && riscv64-unknown-linux-gnu-gcc
+else
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
+endif
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
-	-mkdir -p $(BUILD_DIR)/../profile/
+	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "run NEMU")
 	$(NEMU_EXEC)
-	-mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/../profile/profile.vlt
-	-mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile_exec.dat
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
 
 gdb: run-env
-	-mkdir -p $(BUILD_DIR)/../profile/
+	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(NEMU_EXEC)
-	-mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/../profile/profile.vlt
-	-mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile_exec.dat
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):
