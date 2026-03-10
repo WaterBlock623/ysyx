@@ -21,6 +21,7 @@ CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINAR
 # export IMG = "$(IMAGE).bin"
 export ADD_ARGS += --elf "$(IMAGE).elf" --rom "$(IMAGE).bin"
 export BUILD_DIR = $(shell pwd)/build
+export GDB_ELF = $(IMAGE).elf
 
 insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) $(MAINARGS_PLACEHOLDER) "$(mainargs)"
