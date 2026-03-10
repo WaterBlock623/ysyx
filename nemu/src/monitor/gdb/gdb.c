@@ -98,6 +98,7 @@ void init_gdb(char *gdb_socket) {
 
 int gdb_mainloop(void) {
   Assert(gdbstub_run(&gdbstub, NULL), "Fail to run in debug mode.");
+  Log("EXITEXITEXITEXIT!!!!!!!!!!!");
   gdbstub_close(&gdbstub);
   return 0;
 }
