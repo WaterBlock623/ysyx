@@ -28,38 +28,17 @@ gdb_action_t emu_stepi(void *args) {
   }
 }
 
-size_t emu_get_reg_bytes(int regno) { return REG_SIZE; }
+size_t emu_get_reg_bytes(int regno) {
+  size_t len;
+  return isa_try_find_reg(regno, NULL, &len) ? len : 0;
+}
 
 int emu_read_reg(void *args, int regno, void *value) {
-  if (regno == 32) {
-    memcpy(value, &cpu.pc, emu_get_reg_bytes(regno));
-    return 0;
-  }
-  // if (is_valid_reg_idx(regno)) {
-  if (1) {
-    memcpy(value, cpu.gpr + regno, emu_get_reg_bytes(regno));
-    return 0;
-  } else {
-    return EINVAL;
-  }
+  return isa_try_read_reg(regno, value) ? 0 : EINVAL;
 }
 
 int emu_write_reg(void *args, int regno, void *value) {
-#ifdef CONFIG_NPC
-  return EFAULT;
-#else
-  if (regno == MUXDEF(CONFIG_RVE, 16, 32)) {
-    memcpy(&cpu.pc, value, emu_get_reg_bytes(regno));
-    return 0;
-  }
-  // if (is_valid_reg_idx(regno)) {
-  if (1) {
-    memcpy(cpu.gpr + regno, value, emu_get_reg_bytes(regno));
-    return 0;
-  } else {
-    return EINVAL;
-  }
-#endif
+  return isa_try_write_reg(regno, value) ? 0 : EINVAL;
 }
 
 int emu_read_mem(void *args, size_t addr, size_t len, void *val) {
@@ -112,25 +91,12 @@ static gdbstub_t gdbstub;
 
 void init_gdb(void) {
   init_bp_pool();
-  Assert(gdbstub_init(&gdbstub, &emu_ops,
-                      (arch_info_t){
-                          .smp = 1,
-                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33),
-#ifndef CONFIG_ISA64
-                          .target_desc = TARGET_RV32,
-#else
-                          .target_desc = TARGET_RV64,
-#endif
-                      },
-                      "127.0.0.1:1234"),
-         "Fail to create socket.\n");
+  Assert(gdbstub_init(&gdbstub, &emu_ops, arch_info, "127.0.0.1:1234"),
+         "Fail to create socket.");
 }
 
 int gdb_mainloop(void) {
-  if (!gdbstub_run(&gdbstub, NULL)) {
-    fprintf(stderr, "Fail to run in debug mode.\n");
-    return -1;
-  }
+  Assert(gdbstub_run(&gdbstub, NULL), "Fail to run in debug mode.");
   gdbstub_close(&gdbstub);
   return 0;
 }

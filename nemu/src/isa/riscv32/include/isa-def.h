@@ -17,12 +17,15 @@
 #define __ISA_RISCV_H__
 
 #include <common.h>
+#include <gdbstub.h>
 
 #define NR_CSR 4
 #define CSR_MSTATUS 0
 #define CSR_MTVEC 1
 #define CSR_MEPC 2
 #define CSR_MCAUSE 3
+
+extern arch_info_t arch_info;
 
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
@@ -40,5 +43,9 @@ typedef struct {
 static inline bool is_valid_reg_idx(int idx) {
   return idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32);
 }
+
+bool isa_try_find_reg(int regno, void **reg, size_t *len);
+bool isa_try_read_reg(int regno, void *dest);
+bool isa_try_write_reg(int regno, const void *src);
 
 #endif
