@@ -50,7 +50,6 @@ bool isa_try_find_reg(int regno, void **reg, size_t *len) {
 }
 
 bool isa_try_read_reg(int regno, void *dest) {
-  printf("all: %d, regno: %d\n", arch_info.reg_num, regno);
   if (!dest) {
     return false;
   }
