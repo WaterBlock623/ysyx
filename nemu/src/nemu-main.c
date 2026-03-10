@@ -63,6 +63,6 @@ int main(int argc, char *argv[]) {
   engine_start();
 
   IFDEF(CONFIG_NPC, sim_close());
-  printf("NEMU EXIT!!!\n");
+
   return is_exit_status_bad();
 }
