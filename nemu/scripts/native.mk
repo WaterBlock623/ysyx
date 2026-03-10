@@ -37,7 +37,8 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
-NEMU_EXEC := ($(BINARY) $(ARGS) $(IMG) &) && riscv64-unknown-linux-gnu-gdb
+# NEMU_EXEC := ($(BINARY) $(ARGS) $(IMG) &) && riscv64-unknown-linux-gnu-gdb
+NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 else
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 endif
