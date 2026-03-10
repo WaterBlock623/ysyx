@@ -89,9 +89,10 @@ static struct target_ops emu_ops = {
 
 static gdbstub_t gdbstub;
 
-void init_gdb(void) {
+void init_gdb(char *gdb_socket) {
   init_bp_pool();
-  Assert(gdbstub_init(&gdbstub, &emu_ops, arch_info, "127.0.0.1:1234"),
+  Assert(gdbstub_init(&gdbstub, &emu_ops, arch_info, 
+        gdb_socket ? gdb_socket : "127.0.0.1:1234"),
          "Fail to create socket.");
 }
 

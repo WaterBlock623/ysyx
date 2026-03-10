@@ -24,7 +24,7 @@ void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port, device_init_param_t *dip);
 void init_device(device_init_param_t *param);
 void init_sdb();
-void init_gdb();
+void init_gdb(char *gdb_socket);
 void init_disasm();
 
 static void welcome() {
@@ -48,6 +48,7 @@ static char *img_file = NULL;
 static int difftest_port = 1234;
 static char *elf_file = NULL;
 static device_init_param_t device_init_param = {};
+static char *gdb_socket = NULL;
 
 static long load_img() {
   if (img_file == NULL) {
@@ -73,17 +74,18 @@ static long load_img() {
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
-    {"batch"    , no_argument      , NULL, 'b'},
-    {"log"      , required_argument, NULL, 'l'},
-    {"diff"     , required_argument, NULL, 'd'},
-    {"port"     , required_argument, NULL, 'p'},
-    {"elf"      , required_argument, NULL, 'e'},
-    {"rom"      , required_argument, NULL, 'r'},
-    {"help"     , no_argument      , NULL, 'h'},
-    {0          , 0                , NULL,  0 },
+    {"batch"     , no_argument      , NULL, 'b'},
+    {"log"       , required_argument, NULL, 'l'},
+    {"diff"      , required_argument, NULL, 'd'},
+    {"port"      , required_argument, NULL, 'p'},
+    {"elf"       , required_argument, NULL, 'e'},
+    {"rom"       , required_argument, NULL, 'r'},
+    {"gdb-socket", required_argument, NULL, 's'},
+    {"help"      , no_argument      , NULL, 'h'},
+    {0           , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:r:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:r:s:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
@@ -91,6 +93,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'd': diff_so_file = optarg; break;
       case 'e': elf_file = optarg; break;
       case 'r': device_init_param.mrom_img = optarg; break;
+      case 's': gdb_socket = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -143,7 +146,7 @@ void init_monitor(int argc, char *argv[]) {
   init_difftest(diff_so_file, img_size, difftest_port, &device_init_param);
 
   /* Initialize the simple debugger. */
-  MUXDEF(CONFIG_DEBUGER_GDB, init_gdb();, init_sdb());
+  MUXDEF(CONFIG_DEBUGER_GDB, init_gdb(gdb_socket);, init_sdb());
 
   IFDEF(CONFIG_ITRACE, init_disasm());
 

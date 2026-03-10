@@ -17,7 +17,6 @@ include $(NEMU_HOME)/tools/difftest.mk
 include $(NEMU_HOME)/tools/lib.mk
 ARCHIVES += $(STATIC_LIBS)
 INC_PATH += $(STATIC_INC)
-$(info NEMUU archives $(ARCHIVES))
 
 include $(NEMU_HOME)/scripts/build.mk
 
@@ -29,6 +28,8 @@ $(BINARY):: compile_git
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
 override ARGS += $(ARGS_DIFF)
+GDB_SOCKET = $(BUILD_DIR)/gdb-socket
+override ARGS += --gdb-socket=$(GDB_SOCKET)
 override ARGS += $(ADD_ARGS)
 
 $(info NEMU BUILD_DIR $(BUILD_DIR))
@@ -36,11 +37,11 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 # Command to execute NEMU
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
+_NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
-NEMU_EXEC := ($(BINARY) $(ARGS) $(IMG) &) && (riscv64-unknown-linux-gnu-gdb -ex "target remote 127.0.0.1:1234")
-# NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
+NEMU_EXEC := ($(_NEMU_EXEC) &) && (riscv64-unknown-linux-gnu-gdb -ex "target remote $(GDB_SOCKET)")
 else
-NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
+NEMU_EXEC := $(_NEMU_EXEC)
 endif
 
 run-env: $(BINARY) $(DIFF_REF_SO)
