@@ -32,6 +32,7 @@ void init_sdcard();
 void init_alarm();
 void init_mrom(device_init_param_t *);
 void init_sram(device_init_param_t *);
+void init_flash(device_init_param_t *);
 
 void send_key(uint8_t, bool);
 void vga_update_screen();
@@ -77,10 +78,7 @@ void sdl_clear_event_queue() {
 }
 
 void device_load_img(IOMap *map, const char *path) {
-  // Assert(path, "path should not be NULL");
-  if (!path) {
-    return;
-  }
+  Assert(path, "path should not be NULL");
   Assert(map, "map should not be NULL");
 
   FILE *fp = fopen(path, "rb");
@@ -113,6 +111,7 @@ void init_device(device_init_param_t *param) {
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
   IFDEF(CONFIG_HAS_MROM, init_mrom(param));
   IFDEF(CONFIG_HAS_SRAM, init_sram(param));
+  IFDEF(CONFIG_HAS_FLASH, init_flash(param));
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
