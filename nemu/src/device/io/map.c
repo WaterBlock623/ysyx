@@ -18,7 +18,7 @@
 #include <memory/vaddr.h>
 #include <device/map.h>
 
-#define IO_SPACE_MAX (256 * 1024 * 1024)
+#define IO_SPACE_MAX (1024 * 1024 * 1024)
 
 static uint8_t *io_space = NULL;
 static uint8_t *p_space = NULL;
@@ -28,7 +28,7 @@ uint8_t* new_space(int size) {
   // page aligned;
   size = (size + (PAGE_SIZE - 1)) & ~PAGE_MASK;
   p_space += size;
-  assert(p_space - io_space < IO_SPACE_MAX);
+  assert(p_space - io_space <= IO_SPACE_MAX);
   return p;
 }
 
