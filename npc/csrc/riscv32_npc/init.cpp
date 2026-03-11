@@ -37,13 +37,10 @@ int npc_wbu_valid = 0;
 
 // DIP-C
 extern "C" void flash_read(uint32_t addr, int32_t *data) { 
-  printf("MMIO %x\n", CONFIG_FLASH_MMIO);
-  printf("1%x\n", addr);
+#ifdef CONFIG_FLASH_MMIO
   addr += CONFIG_FLASH_MMIO;
-  IFDEF(CONFIG_FLASH_MMIO, addr += CONFIG_FLASH_MMIO);
-  printf("2%x\n", addr);
+#endif
   addr &= ~3u;
-  printf("3%x\n", addr);
   *data = paddr_read(addr, 4);
 }
 
