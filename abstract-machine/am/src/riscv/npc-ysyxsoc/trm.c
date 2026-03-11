@@ -11,6 +11,8 @@ Area heap = RANGE(_heap_start, _heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
 void putch(char ch) {
+#define SERIAL_LSR (SERIAL_PORT + 5u)
+  while (!((inb(SERIAL_LSR) >> 5) & 1u));
   outb(SERIAL_PORT, ch);
 }
 
@@ -29,13 +31,11 @@ static inline void put_csrid(void) {
 static void serial_init(void) {
 #define SERIAL_FREQ 50 * 1000000
 #define SERIAL_BAUD 115200
-// #define SERIAL_DL_VAL ((uint16_t)((SERIAL_FREQ) / (16 * (SERIAL_BAUD))))
-#define SERIAL_DL_VAL ((uint16_t)4u)
+#define SERIAL_DL_VAL ((uint16_t)((SERIAL_FREQ) / (16 * (SERIAL_BAUD))))
 
 #define SERIAL_DLLO (SERIAL_PORT)
 #define SERIAL_DLHI (SERIAL_PORT + 1u)
 #define SERIAL_LCR (SERIAL_PORT + 3u)
-#define SERIAL_LSR (SERIAL_PORT + 5u)
 
   setb(SERIAL_LCR, 1u << 7);
   outb(SERIAL_DLHI, (uint8_t)(SERIAL_DL_VAL >> 8));
