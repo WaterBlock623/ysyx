@@ -29,7 +29,8 @@ static inline void put_csrid(void) {
 static void serial_init(void) {
 #define SERIAL_FREQ 50 * 1000000
 #define SERIAL_BAUD 115200
-#define SERIAL_DL_VAL ((uint16_t)((SERIAL_FREQ) / (16 * (SERIAL_BAUD))))
+// #define SERIAL_DL_VAL ((uint16_t)((SERIAL_FREQ) / (16 * (SERIAL_BAUD))))
+#define SERIAL_DL_VAL ((uint16_t)4u)
 
 #define SERIAL_DLLO (SERIAL_PORT)
 #define SERIAL_DLHI (SERIAL_PORT + 1u)
