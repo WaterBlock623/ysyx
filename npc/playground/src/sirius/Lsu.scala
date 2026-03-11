@@ -21,6 +21,8 @@ class Lsu(
   val outBits = out.bits
   val ctrl = inBits.ctrl.lsuCtrl
   val addr = inBits.exuPayload.exu.aluOut
+  val isMemAcc = ctrl.isLoad || ctrl.isStore
+  val canValid = RegNext(RegNext(!reset.asBool))
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -52,8 +54,6 @@ class Lsu(
 
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
-  val isMemAcc = ctrl.isLoad || ctrl.isStore
-  val canValid = RegNext(RegNext(!reset.asBool))
 
   // val canSendReq = state === sIdle && in.valid && isMemAcc
 
