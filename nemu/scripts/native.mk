@@ -56,7 +56,7 @@ else
 NEMU_EXEC := $(_NEMU_EXEC)
 endif
 
-run-env: $(BINARY) $(DIFF_REF_SO)
+run-env:: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
