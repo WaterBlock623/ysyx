@@ -23,6 +23,8 @@ class Lsu(
   val addr = inBits.exuPayload.exu.aluOut
   val isMemAcc = ctrl.isLoad || ctrl.isStore
   val canValid = RegNext(RegNext(!reset.asBool))
+  val rData = exte.mem.r.bits.data
+  val rem = addr(1, 0)
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -108,8 +110,6 @@ class Lsu(
   exte.mem.ar.bits.size := axSize
   exte.mem.aw.bits.size := axSize
 
-  val rData = exte.mem.r.bits.data
-  val rem = addr(1, 0)
 
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
   val lbu = byteData(rem)
@@ -160,5 +160,4 @@ class Lsu(
       LoadStoreLengthEnum.b.asUInt -> sbMask
     )
   )
-
 }
