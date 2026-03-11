@@ -137,7 +137,19 @@ bool is_npc_skip(vaddr_t addr) {
   } while(0)
 #define NPC_SKIP(addr, name) IFDEF(CONFIG_NPC_SKIP_ ## name, NPC_SKIP_COMPARE(addr, name))
 
+  NPC_SKIP(addr, CLINT);
+  NPC_SKIP(addr, SRAM);
   NPC_SKIP(addr, UART);
+  NPC_SKIP(addr, SPI);
+  NPC_SKIP(addr, GPIO);
+  NPC_SKIP(addr, PS2);
+  NPC_SKIP(addr, MROM);
+  NPC_SKIP(addr, VGA);
+  NPC_SKIP(addr, FLASH);
+  NPC_SKIP(addr, CHIPLINK_MMIO);
+  NPC_SKIP(addr, PSRAM);
+  NPC_SKIP(addr, SDRAM);
+  NPC_SKIP(addr, CHIPLINK_MEM);
 }
 
 void mmio_check(vaddr_t addr) {
