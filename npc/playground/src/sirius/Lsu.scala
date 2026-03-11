@@ -139,12 +139,25 @@ class Lsu(
     )
   )
 
-
-  when (!inBits.exuPayload.trap.isTrap) {
-    outBits.lsuPayload.trap.isTrap := 
-      isMemAcc &&
+  val eLoadStoreAddressMisaligned = isMemAcc &&
       ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
       (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
-    outBits.lsuPayload.trap.cause := Mux(ctrl.isLoad, 4.U(cfg.mxlen.W), 6.U(cfg.mxlen.W))
+  val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
+  val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
+  val eLoadAccessFault = ctrl.isLoad && 
+    !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
+  val eStoreAccessFault = ctrl.isStore && 
+    !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+
+  val eCause = MuxCase(0.U, Seq(
+    eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
+    eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
+    eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
+    eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
+    ))
+
+  when (!inBits.exuPayload.trap.isTrap) {
+    outBits.lsuPayload.trap.isTrap := eLoadStoreAddressMisaligned || eLoadAccessFault || eStoreAccessFault
+    outBits.lsuPayload.trap.cause := eCause
   }
 }
