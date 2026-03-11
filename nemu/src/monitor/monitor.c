@@ -80,12 +80,13 @@ static int parse_args(int argc, char *argv[]) {
     {"port"      , required_argument, NULL, 'p'},
     {"elf"       , required_argument, NULL, 'e'},
     {"rom"       , required_argument, NULL, 'r'},
+    {"flash"     , required_argument, NULL, 'f'},
     {"gdb-socket", required_argument, NULL, 's'},
     {"help"      , no_argument      , NULL, 'h'},
     {0           , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:r:s:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:r:s:f:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
@@ -93,6 +94,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'd': diff_so_file = optarg; break;
       case 'e': elf_file = optarg; break;
       case 'r': device_init_param.mrom_img = optarg; break;
+      case 'f': device_init_param.flash_img = optarg; break;
       case 's': gdb_socket = optarg; break;
       case 1: img_file = optarg; return 0;
       default:

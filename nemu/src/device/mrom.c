@@ -4,7 +4,7 @@
 static uint8_t *mrom_base = NULL;
 
 static inline void mrom_io_handler(uint32_t offset, int len, bool is_write) {
-  Assert(!is_write, "MRON is read only");
+  Assert(!is_write, "MROM is read only");
 }
 
 

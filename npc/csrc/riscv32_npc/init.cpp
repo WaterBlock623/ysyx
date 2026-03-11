@@ -36,7 +36,10 @@ paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
 
 // DIP-C
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void flash_read(int32_t addr, int32_t *data) { 
+  addr &= ~3u;
+  *data = paddr_read(addr, 4);
+}
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~3u;
