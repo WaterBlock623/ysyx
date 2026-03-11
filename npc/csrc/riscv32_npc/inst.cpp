@@ -28,6 +28,7 @@ __BEGIN_DECLS
 #include <cpu/decode.h>
 #include "local-include/reg.h"
 #include <cpu/difftest.h>
+#include <device/mmio.h>
 
 #define R(idx) gpr(idx)
 
@@ -128,13 +129,23 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 }
 #endif
 
-bool is_mmio(paddr_t addr);
+bool is_npc_skip(vaddr_t addr) {
+#define NPC_SKIP_COMPARE(addr, name) do { \
+    if ((addr) >= (CONFIG_NPC_ ## name ## _START) && (addr) <= (CONFIG_NPC_ ## name ## _END)) { \
+      return true; \
+    } \
+  } while(0)
+#define NPC_SKIP(addr, name) IFDEF(CONFIG_NPC_SKIP_ ## name, NPC_SKIP_COMPARE(addr, name))
+
+  NPC_SKIP(addr, UART);
+}
 
 void mmio_check(vaddr_t addr) {
-  if (is_mmio(addr)) {
-    // Log("Skip!\n");
+  if (is_npc_skip(addr)) {
     difftest_skip_ref();
+    return;
   }
+  fetch_mmio_map(addr);
 }
 
 static int decode_inst(Decode *s) {
