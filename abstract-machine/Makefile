@@ -152,7 +152,7 @@ endif
 ### Build order control
 image: image-dep
 archive: $(ARCHIVE)
-image-dep: $(IMAGE).elf
+image-dep:: $(IMAGE).elf
 .PHONY: image image-dep archive run
 
 ### Force to rebuild a rule
