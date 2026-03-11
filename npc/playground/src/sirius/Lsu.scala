@@ -72,9 +72,9 @@ class Lsu(
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !outBits.lsuPayload.trap.isTrap
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !eLoadStoreAddressMisaligned
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
 
   val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
     Seq(
