@@ -43,7 +43,7 @@ extern "C" void flash_read(uint32_t addr, uint32_t *data) {
   // addr &= ~3u;
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
-  printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
+  // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
