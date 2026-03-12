@@ -40,7 +40,7 @@ extern "C" void flash_read(uint32_t addr, uint32_t *data) {
 #ifdef CONFIG_FLASH_MMIO
   addr += CONFIG_FLASH_MMIO;
 #endif
-  addr &= ~3u;
+  // addr &= ~3u;
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
   printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
