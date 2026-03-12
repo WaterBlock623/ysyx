@@ -42,6 +42,7 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
   for (i = 0; i < size; i ++) {
     if (map_inside(maps + i, addr)) {
       if (maps[i].is_difftest_skip_ref) {
+        Log("Skip mmio fetch. addr: %x", addr);
         difftest_skip_ref();
       }
       return i;
