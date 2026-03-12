@@ -41,6 +41,7 @@ extern "C" void flash_read(uint32_t addr, int32_t *data) {
   addr += CONFIG_FLASH_MMIO;
 #endif
   addr &= ~3u;
+  printf("%x\n", addr);
   *data = paddr_read(addr, 4);
 }
 
