@@ -150,6 +150,8 @@ bool is_npc_skip(vaddr_t addr) {
   NPC_SKIP(addr, PSRAM);
   NPC_SKIP(addr, SDRAM);
   NPC_SKIP(addr, CHIPLINK_MEM);
+
+  return false;
 }
 
 void mmio_check(vaddr_t addr) {
