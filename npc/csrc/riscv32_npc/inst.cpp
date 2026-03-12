@@ -156,7 +156,7 @@ bool is_npc_skip(vaddr_t addr) {
 
 void mmio_check(vaddr_t addr) {
   if (is_npc_skip(addr)) {
-    Log("Skip by menuconfig. addr: %x", addr);
+    // Log("Skip by menuconfig. addr: %x", addr);
     difftest_skip_ref();
     return;
   }
