@@ -32,6 +32,8 @@ __BEGIN_DECLS
 
 #define R(idx) gpr(idx)
 
+extern bool g_print_step;
+
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, 
   TYPE_N, // none
@@ -70,7 +72,6 @@ static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1,
 
 #ifdef CONFIG_FTRACE
 const char *get_function_name(paddr_t addr);
-extern bool g_print_step;
 
 static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 #define FUNC_NAME_MAX 128
