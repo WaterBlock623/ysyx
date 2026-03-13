@@ -19,7 +19,7 @@ MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
 CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINARGS_PLACEHOLDER)
 
 # export IMG = "$(IMAGE).bin"
-export ADD_ARGS += --elf "$(IMAGE).elf" --rom "$(IMAGE).bin"
+export ADD_ARGS += --elf "$(IMAGE).elf" --flash "$(IMAGE).bin"
 export BUILD_DIR = $(shell pwd)/build
 export GDB_ELF = $(IMAGE).elf
 
