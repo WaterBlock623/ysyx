@@ -22,10 +22,10 @@ void halt(int code) {
 }
 
 static void put_csrid(void) {
-  unsigned long long mvendorid = 0, marchid = 0; 
+  unsigned long mvendorid = 0, marchid = 0; 
   asm volatile("csrr %0, mvendorid" : "=r"(mvendorid));
   asm volatile("csrr %0, marchid" : "=r"(marchid));
-  printf("[TRM] mvendorid: 0x%llx  marchid: %llu\n", mvendorid, marchid);
+  printf("[TRM] mvendorid: 0x%lx  marchid: %lu\n", mvendorid, marchid);
 }
 
 static void serial_init(void) {
