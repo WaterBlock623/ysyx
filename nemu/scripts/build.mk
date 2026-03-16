@@ -36,12 +36,14 @@ $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c -o $@ $(abspath $<)
 	$(call call_fixdep, $(@:.o=.d), $@)
+	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
 
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $(abspath $<)
 	$(call call_fixdep, $(@:.o=.d), $@)
+	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
 
 # Depencies
 -include $(OBJS:.o=.d)
