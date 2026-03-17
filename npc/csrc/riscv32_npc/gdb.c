@@ -22,7 +22,7 @@ REG(a2, 32, int, 12) \
 REG(a3, 32, int, 13) \
 REG(a4, 32, int, 14) \
 REG(a5, 32, int, 15) \
-REG(pc, 32, code_ptr, 32) \
+REG(pc, 32, code_ptr, 16) \
 "</feature>" \
 "</target>"
 
