@@ -6,6 +6,6 @@
 _start:
   la gp, __global_pointer$
   la sp, _stack_pointer
-  call _bootloader
+  call _fsbl
 
 .size _start, . - _start
