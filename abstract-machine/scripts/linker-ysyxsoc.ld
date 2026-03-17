@@ -27,6 +27,7 @@ REGION_ALIAS("REGION_V_BSS", RAM);
 SECTIONS {
   .text : {
     *(entry)
+    *(.bootloader)
     /* *(.text*) */
   } >REGION_V_TEXT AT>REGION_L_TEXT
 

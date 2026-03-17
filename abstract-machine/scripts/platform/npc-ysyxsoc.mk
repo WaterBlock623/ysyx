@@ -1,5 +1,6 @@
 AM_SRCS := riscv/npc-ysyxsoc/start.S \
            riscv/npc-ysyxsoc/trm.c \
+           riscv/npc-ysyxsoc/bootloader.c \
            riscv/npc-ysyxsoc/ioe.c \
            riscv/npc-ysyxsoc/gpu.c \
            riscv/npc-ysyxsoc/timer.c \

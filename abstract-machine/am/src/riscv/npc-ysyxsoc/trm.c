@@ -45,15 +45,9 @@ static void serial_init(void) {
 }
 
 extern void __am_asm_trap(void);
-extern char _data_load_start[], _data_start[], _data_end[], _data_size[];
-extern char _bss_start[], _bss_end[], _bss_size[];
 void _trm_init() {
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
-  memcpy(_data_start, _data_load_start, (size_t)_data_size); 
-  memset(_bss_start, 0, (size_t)_bss_size);
-
   serial_init();
-
   // put_csrid();
   int ret = main(mainargs);
   halt(ret);
