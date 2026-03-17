@@ -35,5 +35,5 @@ REG(pc, 32, code_ptr, 32) \
 
 arch_info_t arch_info = { .target_desc = GDB_TARGET,
                           .smp = 1,
-                          .reg_num = MUXDEF(CONFIG_RVE, 33, 33)
+                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33)
                         };
