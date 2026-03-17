@@ -12,6 +12,7 @@ AM_SRCS := riscv/npc-ysyxsoc/start.S \
 
 CFLAGS    += -fdata-sections -ffunction-sections -mrelax
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
+LDSCRIPTS_MEM += $(AM_HOME)/scripts/linker-ysyxsoc-mem.ld
 # LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start -Map=$(IMAGE).map -mrelax
 

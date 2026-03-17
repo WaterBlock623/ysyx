@@ -94,7 +94,7 @@ CFLAGS += -save-temps
 CFLAGS += -ggdb3
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 ASFLAGS  += -MMD $(INCFLAGS)
-LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
+LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS_MEM)) $(addprefix -T, $(LDSCRIPTS))
 ifeq ($(ENA_LTO),y)
 CFLAGS += -flto
 endif
@@ -145,6 +145,7 @@ endif
 
 ### Rule (link): objects (`*.o`) and libraries (`*.a`) -> `IMAGE.elf`, the final ELF binary to be packed into image (ld)
 $(IMAGE).elf: $(LINKAGE) $(LDSCRIPTS)
+	$(info AM LDFLAGS $(LDFLAGS))
 	@echo \# Creating image [$(ARCH)]
 	@echo + LD "->" $(IMAGE_REL).elf
 ifneq ($(filter $(ARCH),native),)
