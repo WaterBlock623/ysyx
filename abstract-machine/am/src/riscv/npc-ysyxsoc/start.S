@@ -6,7 +6,6 @@
 _start:
   la gp, __global_pointer$
   la sp, _stack_pointer
-  ; call _trm_init
   call _bootloader
 
 .size _start, . - _start
