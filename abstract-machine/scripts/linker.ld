@@ -1,6 +1,14 @@
 ENTRY(_start)
 PHDRS { text PT_LOAD; data PT_LOAD; }
 
+MEMORY {
+  PMEM : ORIGIN = _pmem_start, LENGTH = 512M
+}
+
+REGION_ALIAS("ROM", PMEM);
+REGION_ALIAS("RAM", PMEM);
+REGION_ALIAS("FASTRAM", PMEM);
+
 SECTIONS {
   /* _pmem_start and _entry_offset are defined in LDFLAGS */
   . = _pmem_start + _entry_offset;
