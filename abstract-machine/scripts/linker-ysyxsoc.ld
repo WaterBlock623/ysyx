@@ -27,7 +27,7 @@ REGION_ALIAS("REGION_V_BSS", RAM);
 SECTIONS {
   .text : {
     *(entry)
-    *(.text*)
+    /* *(.text*) */
   } >REGION_V_TEXT AT>REGION_L_TEXT
 
   .rodata : {
@@ -40,6 +40,7 @@ SECTIONS {
   _data_start = ADDR(.data);
   .data : {
     *(.data*)
+    *(.text*)
   } >REGION_V_DATA AT>REGION_L_DATA
 
   .sdata : {
