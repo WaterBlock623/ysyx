@@ -34,7 +34,8 @@ size_t emu_get_reg_bytes(int regno) {
 }
 
 int emu_read_reg(void *args, int regno, void *value) {
-  return isa_try_read_reg(regno, value) ? 0 : EINVAL;
+  // return isa_try_read_reg(regno, value) ? 0 : EINVAL;
+  return isa_try_read_reg(regno, value) ? 0 : 0;
 }
 
 int emu_write_reg(void *args, int regno, void *value) {
