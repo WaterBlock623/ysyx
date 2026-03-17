@@ -74,7 +74,7 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
 }
 
 bool try_map_read(paddr_t addr, int len, IOMap *map, word_t *dest) {
-  if (len < 1 || len > 8 || !in_mmio(map, addr)) {
+  if (len < 1 || len > 4 || !in_mmio(map, addr)) {
     return false;
   }
   paddr_t offset = addr - map->low;
@@ -84,7 +84,7 @@ bool try_map_read(paddr_t addr, int len, IOMap *map, word_t *dest) {
 }
 
 bool try_map_write(paddr_t addr, int len, word_t *data, IOMap *map) {
-  if (len < 1 || len > 8 || !in_mmio(map, addr)) {
+  if (len < 1 || len > 4 || !in_mmio(map, addr)) {
     return false;
   }
   paddr_t offset = addr - map->low;
