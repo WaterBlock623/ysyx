@@ -39,6 +39,8 @@ $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
 GDB_FLAGS += -ex "file $(GDB_ELF)"
 endif
+# CROSS_GDB = riscv64-unknown-linux-gnu-gdb
+CROSS_GDB = riscv64-unknown-elf-gdb
 GDB_FLAGS += -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
@@ -47,7 +49,7 @@ NEMU_EXEC := $(_NEMU_EXEC) & \
         if ! echo "$(GDB_SOCKET)" | grep -q ":" && ! nc -zU $(GDB_SOCKET); then \
             sleep 2; \
         fi; \
-        riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS); \
+        $(CROSS_GDB) $(GDB_FLAGS); \
     ); \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
