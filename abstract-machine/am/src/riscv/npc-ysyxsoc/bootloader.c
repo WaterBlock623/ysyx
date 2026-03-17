@@ -5,8 +5,14 @@
 
 static __attribute__((always_inline)) inline
 void *_memset(void *s, int c, size_t n) {
+  uint32_t c32 = ((unsigned char)c << 24) | ((unsigned char)c << 16) | 
+    ((unsigned char)c << 8) | (unsigned char)c;
   int i;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i + 4 <= n; i += 4) {
+    *(uint32_t *)((unsigned char *)s + i) = c32; 
+  }  
+
+  for (; i < n; i++) {
     ((unsigned char *)s)[i] = (unsigned char)c; 
   }  
   return s;
@@ -15,7 +21,11 @@ void *_memset(void *s, int c, size_t n) {
 static __attribute__((always_inline)) inline
 void *_mempcpy(void *out, const void *in, size_t n) {
   int i;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i + 4 <= n; i += 4) {
+    *(uint32_t *)((unsigned char *)out + i) = *(uint32_t *)((unsigned char *)in + i);
+  } 
+
+  for (; i < n; i++) {
     ((unsigned char *)out)[i] = ((unsigned char *)in)[i];
   }
   return (unsigned char *)out + n;
