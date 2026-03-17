@@ -68,7 +68,7 @@ SECTIONS {
 
   . = ALIGN(16);
   _heap_start = .;
-  . = (ORIGIN(SRAM) + LENGTH(SRAM)) & ~(16 - 1);
+  . = (ORIGIN(RAM) + LENGTH(RAM)) & ~(16 - 1);
   _stack_pointer = .;
   _heap_end = .;
 
