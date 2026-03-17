@@ -85,7 +85,7 @@ CFLAGS   += -O3 -MMD -Wall -Werror $(INCFLAGS) \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 # CFLAGS += -O0
-CFLAGS += -Os
+# CFLAGS += -Os
 CFLAGS += -save-temps
 CFLAGS += -ggdb3
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
