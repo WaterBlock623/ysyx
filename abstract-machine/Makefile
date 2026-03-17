@@ -86,11 +86,13 @@ CFLAGS   += -O3 -MMD -Wall -Werror $(INCFLAGS) \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 # CFLAGS += -O0
 # CFLAGS += -Os
+CFLAGS += -flto
 CFLAGS += -save-temps
 CFLAGS += -ggdb3
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
+LDFLAGS += -flto
 
 ## 4. Arch-Specific Configurations
 
