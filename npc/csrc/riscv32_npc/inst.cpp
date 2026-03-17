@@ -228,7 +228,7 @@ int isa_exec_once(Decode *s) {
     if (g_print_step) {
       printf("Executing @ " FMT_WORD "\n", s->pc);
     }
-    log_write("Executing @ " FMT_WORD "\n", s->pc);
+    IFDEF(CONFIG_ITRACE, log_write("Executing @ " FMT_WORD "\n", s->pc));
     difftest_skip_ref();
   } else {
     s->dnpc = npc_dnpc;
