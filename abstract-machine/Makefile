@@ -92,12 +92,12 @@ CFLAGS   += -O3 -MMD -Wall -Werror -nostdlib -nostartfiles $(INCFLAGS) \
 # CFLAGS += -Os
 CFLAGS += -save-temps
 CFLAGS += -ggdb3
-CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
-ASFLAGS  += -MMD $(INCFLAGS)
-LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS_MEM)) $(addprefix -T, $(LDSCRIPTS))
 ifeq ($(ENA_LTO),y)
 CFLAGS += -flto
 endif
+CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
+ASFLAGS  += -MMD $(INCFLAGS)
+LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS_MEM)) $(addprefix -T, $(LDSCRIPTS))
 
 ## 4. Arch-Specific Configurations
 
