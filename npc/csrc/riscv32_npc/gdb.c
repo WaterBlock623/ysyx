@@ -22,6 +22,7 @@ REG(a2, 32, int, 12) \
 REG(a3, 32, int, 13) \
 REG(a4, 32, int, 14) \
 REG(a5, 32, int, 15) \
+REG(a7, 32, int, 17) \
 REG(pc, 32, code_ptr, 16) \
 "</feature>" \
 "</target>"
@@ -31,5 +32,5 @@ REG(pc, 32, code_ptr, 16) \
 
 arch_info_t arch_info = { .target_desc = GDB_TARGET,
                           .smp = 1,
-                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33)
+                          .reg_num = MUXDEF(CONFIG_RVE, 18, 33)
                         };
