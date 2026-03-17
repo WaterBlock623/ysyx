@@ -33,7 +33,6 @@ extern char _bss_start[], _bss_end[], _bss_size[];
 void _trm_init(void);
 
 __attribute__((section(".bootloader")))
-__attribute__((flatten))
 void  _bootloader(void) {
   _memcpy(_data_start, _data_load_start, (size_t)_data_size); 
   _memset(_bss_start, 0, (size_t)_bss_size);
