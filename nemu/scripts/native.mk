@@ -44,9 +44,9 @@ GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
     ( \
-        while ! echo "$(GDB_SOCKET)" | grep -q ":" && ! nc -zU $(GDB_SOCKET); do \
-            sleep 0.1; \
-        done; \
+        if ! echo "$(GDB_SOCKET)" | grep -q ":" && ! nc -zU $(GDB_SOCKET); then \
+            sleep 2; \
+        fi; \
         riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS); \
     ); \
     wait $$NEMU_PID; \
