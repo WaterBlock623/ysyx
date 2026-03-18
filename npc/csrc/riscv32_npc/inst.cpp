@@ -221,19 +221,20 @@ extern bool g_cpu_stop_flag;
 
 int isa_exec_once(Decode *s) {
   int inst_cyc_cnt = 0;
-  s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
   s->dnpc = s->pc;
 
   while (npc_wbu_valid == 0) {
     if (g_cpu_stop_flag) {
+      g_cpu_stop_flag = false;
       difftest_skip_ref();
-      break;
+      return 0;
     }
     single_cycle(); 
     sync_npc_gpr();
     inst_cyc_cnt++;
   }
+  s->isa.inst = npc_inst.inst;
   s->dnpc = npc_dnpc;
 #ifdef CONFIG_ITRACE
   if (g_print_step) {
@@ -250,7 +251,6 @@ int isa_exec_once(Decode *s) {
 
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
-    return 0;
   }
 
   /*
