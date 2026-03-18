@@ -36,7 +36,7 @@ SECTIONS {
 
   .sdata : ALIGN_WITH_INPUT {
     . = ALIGN(16);
-    __global_pointer$ = . + 0x800;
+    /* __global_pointer$ = . + 0x800; */
     *(.sdata*)
   } >RAM AT>ROM
   _data_end = .;
