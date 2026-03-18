@@ -226,7 +226,6 @@ int isa_exec_once(Decode *s) {
 
   while (npc_wbu_valid == 0) {
     if (g_cpu_stop_flag) {
-      g_cpu_stop_flag = false;
       difftest_skip_ref();
       return 0;
     }
