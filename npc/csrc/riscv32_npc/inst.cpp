@@ -217,11 +217,43 @@ extern paddr_t npc_pc;
 extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
+extern bool g_cpu_stop_flag;
 
 int isa_exec_once(Decode *s) {
+  int inst_cyc_cnt = 0;
   s->isa.inst = npc_inst.inst;
   s->snpc = s->pc + 4;
+  s->dnpc = s->pc;
 
+  while (npc_wbu_valid == 0) {
+    if (g_cpu_stop_flag) {
+      difftest_skip_ref();
+      break;
+    }
+    single_cycle(); 
+    sync_npc_gpr();
+    inst_cyc_cnt++;
+  }
+  s->dnpc = npc_dnpc;
+#ifdef CONFIG_ITRACE
+  if (g_print_step) {
+    printf("Executing %dcyc @" FMT_WORD "\n", inst_cyc_cnt, s->pc);
+  }
+  log_write("Executing %dcyc @" FMT_WORD "\n", inst_cyc_cnt, s->pc);
+  print_disassemble(s);
+#endif
+  decode_inst(s);
+
+  single_cycle(); 
+  sync_npc_gpr();
+  inst_cyc_cnt++;
+
+  if (npc_stop_flag != 0) {
+    set_nemu_state(NEMU_END, s->pc, gpr(10));
+    return 0;
+  }
+
+  /*
   if (npc_wbu_valid == 0) {
     // Log("Skip!");
     s->dnpc = s->pc;
@@ -245,6 +277,7 @@ int isa_exec_once(Decode *s) {
 
   single_cycle(); 
   sync_npc_gpr();
+  */
 
   return 0;
 }
