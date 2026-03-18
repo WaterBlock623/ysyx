@@ -11,7 +11,7 @@ SECTIONS {
   /* Fast RAM load start */
   _fastram_load_start = LOADADDR(.fasttext);
   _fastram_start = ADDR(.fasttext);
-  .fasttext : {
+  .fasttext : ALIGN_WITH_INPUT {
     *(.ssbl)
   } >FASTRAM AT>ROM
   _fastram_end = .;
@@ -21,20 +21,20 @@ SECTIONS {
   /* Load start */
   _data_load_start = LOADADDR(.text);
   _data_start = ADDR(.text);
-  .text : {
+  .text : ALIGN_WITH_INPUT {
     *(.text*)
   } >RAM AT>ROM
 
-  .rodata : {
+  .rodata : ALIGN_WITH_INPUT {
     *(.rodata*)
     *(.srodata*)
   } >RAM AT>ROM
 
-  .data : {
+  .data : ALIGN_WITH_INPUT {
     *(.data*)
   } >RAM AT>ROM
 
-  .sdata : {
+  .sdata : ALIGN_WITH_INPUT {
     . = ALIGN(16);
     __global_pointer$ = . + 0x800;
     *(.sdata*)
