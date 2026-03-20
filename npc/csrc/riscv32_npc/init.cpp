@@ -66,12 +66,12 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
   paddr_write(addr, len, data);
 }
 
-extern "C" void sdram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
+extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid SDRAM read length");
   len /= 8;
   addr += CONFIG_SDRAM_MMIO;
   uint32_t rdata = paddr_read(addr, len);
-  *data = rdata;
+  return rdata;
   // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
 
