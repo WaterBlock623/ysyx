@@ -122,7 +122,7 @@ config SRAM_MMIO
 endif # HAS_SRAM
 
 menuconfig HAS_FLASH
-  bool "Enable flash"
+  bool "Enable FLASH"
   default n
 if HAS_FLASH
 config FLASH_SIZE
@@ -132,6 +132,18 @@ config FLASH_MMIO
   hex "MMIO address of the FLASH"
   default 0x30000000
 endif # HAS_FLASH
+
+menuconfig HAS_SDRAM
+  bool "Enable SDRAM"
+  default n
+if HAS_SDRAM
+config SDRAM_SIZE
+  hex "Size of SDRAM"
+  default 0x02000000
+config SDRAM_MMIO
+  hex "MMIO address of the SDRAM"
+  default 0xa0000000
+endif # HAS_SDRAM
 
 if !TARGET_AM
 menuconfig HAS_AUDIO

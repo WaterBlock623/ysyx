@@ -66,6 +66,37 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
   paddr_write(addr, len, data);
 }
 
+extern "C" void sdram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
+  Assert(len % 8 == 0, "Invalid SDRAM read length");
+  len /= 8;
+  addr += CONFIG_SDRAM_MMIO;
+  uint32_t rdata = paddr_read(addr, len);
+  *data = rdata;
+  // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
+}
+
+extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32_t len) {
+  Assert(len % 8 == 0, "Invalid SDRAM write length");
+  if (wmask == 0) {
+    return;
+  }
+  wmask &= 3u;
+  len /= 8;
+  addr += CONFIG_SDRAM_MMIO;
+  while ((wmask & 1u) == 0) {
+    addr++;
+    wmask >>= 1;
+    data >>= 8;
+  }
+  int wlen = 0;
+  while (wmask & 1u) {
+    wlen++;
+    wmask >>= 1;
+  }
+  Assert(wmask == 0, "Invalid wmask");
+  paddr_write(addr, wlen, data);
+}
+
 // #define MEM_READ_SKIP 0
 // extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
 //   static int skip_cnt = 0;
