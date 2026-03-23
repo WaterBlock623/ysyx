@@ -41,7 +41,8 @@ GDB_FLAGS += -ex "file $(GDB_ELF)"
 endif
 # CROSS_GDB = riscv64-unknown-linux-gnu-gdb
 CROSS_GDB = riscv64-unknown-elf-gdb
-GDB_FLAGS += -ex "target remote $(GDB_SOCKET)"
+GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
+						 -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
