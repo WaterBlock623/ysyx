@@ -49,9 +49,6 @@ GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
     ( \
-        # if ! echo "$(GDB_SOCKET)" | grep -q ":" && ! nc -zU $(GDB_SOCKET); then \
-        #     sleep 2; \
-        # fi; \
         $(CROSS_GDB) $(GDB_FLAGS); \
     ); \
     wait $$NEMU_PID; \
