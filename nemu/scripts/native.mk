@@ -42,7 +42,9 @@ endif
 # CROSS_GDB = riscv64-unknown-linux-gnu-gdb
 CROSS_GDB = riscv64-unknown-elf-gdb
 GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
-						 -ex "target remote $(GDB_SOCKET)"
+						 -ex "source $(NEMU_HOME)/tools/gdb-scripts/smart-connect.py" \
+						 -ex "smart-connect $(GDB_SOCKET)"
+						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
