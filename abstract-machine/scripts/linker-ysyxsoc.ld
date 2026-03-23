@@ -62,8 +62,8 @@ SECTIONS {
   _heap_start = .;
   . = (ORIGIN(RAM) + LENGTH(RAM)) & ~(16 - 1);
   _heap_end = .;
-  _stack_pointer = .;
-  /* _stack_pointer = (ORIGIN(FASTRAM) + LENGTH(FASTRAM)) & ~(16 - 1); */
+  /* _stack_pointer = .; */
+  _stack_pointer = (ORIGIN(FASTRAM) + LENGTH(FASTRAM)) & ~(16 - 1);
 
   /* _stack_top = ALIGN(16); */
   /* . = _stack_top + 0x1000; */
