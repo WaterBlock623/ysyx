@@ -61,7 +61,8 @@ bool isa_try_read_reg(int regno, void *dest) {
   if (success) {
     memcpy(dest, reg, len);
   }
-  return success;
+  // return success;
+  return true;
 }
 
 bool isa_try_write_reg(int regno, const void *src) {
