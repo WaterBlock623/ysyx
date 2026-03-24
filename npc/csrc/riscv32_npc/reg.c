@@ -35,15 +35,15 @@ const char *regs[] = {
 #define safe_deref(ptr, ...) do { if (ptr) { *ptr = (__VA_ARGS__); } } while(0)
 
 bool isa_try_find_reg(int regno, void **reg, size_t *len) {
-  printf("reg: %d\n", regno);
+  // printf("reg: %d\n", regno);
   if (regno >=0 && regno < LENGTH(cpu.gpr)) {
     safe_deref(reg, cpu.gpr + regno);
     safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
     return true;
   }
   switch (regno) {
-    case 32:
-    // case LENGTH(cpu.gpr):
+    case MUXDEF(CONFIG_ISA64, 32, 64):
+    case LENGTH(cpu.gpr):
       safe_deref(reg, &cpu.pc);
       safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
       return true;
@@ -60,6 +60,8 @@ bool isa_try_read_reg(int regno, void *dest) {
   bool success = isa_try_find_reg(regno, &reg, &len);
   if (success) {
     memcpy(dest, reg, len);
+  } else {
+    memset(dest, 0, len);
   }
   // return success;
   return true;
