@@ -35,7 +35,7 @@ const char *regs[] = {
 #define safe_deref(ptr, ...) do { if (ptr) { *ptr = (__VA_ARGS__); } } while(0)
 
 bool isa_try_find_reg(int regno, void **reg, size_t *len) {
-  // printf("reg: %d\n", regno);
+  printf("reg: %d\n", regno);
   if (regno >=0 && regno < LENGTH(cpu.gpr)) {
     safe_deref(reg, cpu.gpr + regno);
     safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
