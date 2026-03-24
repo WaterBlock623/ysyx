@@ -38,7 +38,7 @@ endif
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
-CSRCS = $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+CSRCS += $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 
 # Menuconfig
@@ -86,10 +86,10 @@ INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
 export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) \
-						-D__TOP_NAME__="\"$(TOPNAME)\"" \
-						-D__VTOP_NAME__="\"V$(TOPNAME)\"" \
-						-D__TOP_NAME_INCLUDE__="\\\"V$(TOPNAME).h\\\"" \
-						-D__TOP_NAME_SYMS_INCLUDE__="\\\"V$(TOPNAME)__Syms.h\\\"" \
+						-D__TOP_NAME__=$(TOPNAME) \
+						-D__VTOP_NAME__=V$(TOPNAME) \
+						-D__TOP_NAME_INCLUDE__=V$(TOPNAME).h \
+						-D__TOP_NAME_SYMS_INCLUDE__=V$(TOPNAME)__Syms.h \
 						-D__WAVE__=$(WAVE)
 
 NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
@@ -98,7 +98,8 @@ NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-build_ar: verilog
+build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
+	@echo $(CSRCS)
 	# Build archives
 	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \

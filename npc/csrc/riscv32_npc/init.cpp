@@ -13,18 +13,20 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include "verilated.h"
-#include "verilated_fst_c.h"
-#include __TOP_NAME_INCLUDE__
-#include __TOP_NAME_SYMS_INCLUDE__
-#include "local-include/reg.h"
+#include <sys/cdefs.h>
 #include <generated/autoconf.h>
 #include <isa.h>
 #include <memory/paddr.h>
-#include <sys/cdefs.h>
+#include "local-include/reg.h"
+#include "verilated.h"
+#include "verilated_fst_c.h"
+#include str(__TOP_NAME_INCLUDE__)
+#include str(__TOP_NAME_SYMS_INCLUDE__)
 #ifdef CONFIG_NVBOARD
 #include <nvboard.h>
 #endif
+
+void nvboard_bind_all_pins(__VTOP_NAME__ *top);
 
 static VerilatedContext *contextp = NULL;
 static __VTOP_NAME__ *top = NULL;
