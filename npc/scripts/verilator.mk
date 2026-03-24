@@ -99,7 +99,7 @@ lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
-	@echo $(CSRCS)
+	@echo "!!!!!$(NVBOARD_ARCHIVE)"
 	# Build archives
 	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
