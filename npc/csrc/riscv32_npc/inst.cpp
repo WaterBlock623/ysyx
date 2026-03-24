@@ -28,8 +28,11 @@ __BEGIN_DECLS
 #include <cpu/decode.h>
 #include "local-include/reg.h"
 #include <cpu/difftest.h>
+#include <device/mmio.h>
 
 #define R(idx) gpr(idx)
+
+extern bool g_print_step;
 
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, 
@@ -69,7 +72,6 @@ static void decode_operand(Decode *s, int *rd, int *rs1, int *rs2, word_t *src1,
 
 #ifdef CONFIG_FTRACE
 const char *get_function_name(paddr_t addr);
-extern bool g_print_step;
 
 static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 #define FUNC_NAME_MAX 128
@@ -128,13 +130,38 @@ static void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc) {
 }
 #endif
 
-bool is_mmio(paddr_t addr);
+bool is_npc_skip(vaddr_t addr) {
+#define NPC_SKIP_COMPARE(addr, name) do { \
+    if ((addr) >= (CONFIG_NPC_ ## name ## _START) && (addr) <= (CONFIG_NPC_ ## name ## _END)) { \
+      return true; \
+    } \
+  } while(0)
+#define NPC_SKIP(addr, name) IFDEF(CONFIG_NPC_SKIP_ ## name, NPC_SKIP_COMPARE(addr, name))
+
+  NPC_SKIP(addr, CLINT);
+  NPC_SKIP(addr, SRAM);
+  NPC_SKIP(addr, UART);
+  NPC_SKIP(addr, SPI);
+  NPC_SKIP(addr, GPIO);
+  NPC_SKIP(addr, PS2);
+  NPC_SKIP(addr, MROM);
+  NPC_SKIP(addr, VGA);
+  NPC_SKIP(addr, FLASH);
+  NPC_SKIP(addr, CHIPLINK_MMIO);
+  NPC_SKIP(addr, PSRAM);
+  NPC_SKIP(addr, SDRAM);
+  NPC_SKIP(addr, CHIPLINK_MEM);
+
+  return false;
+}
 
 void mmio_check(vaddr_t addr) {
-  if (is_mmio(addr)) {
-    // Log("Skip!\n");
+  if (is_npc_skip(addr)) {
+    // Log("Skip by menuconfig. addr: %x", addr);
     difftest_skip_ref();
+    return;
   }
+  fetch_mmio_map(addr);
 }
 
 static int decode_inst(Decode *s) {
@@ -190,26 +217,59 @@ extern paddr_t npc_pc;
 extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
+extern bool g_cpu_stop_flag;
 
 int isa_exec_once(Decode *s) {
-  s->isa.inst = npc_inst.inst;
+  int inst_cyc_cnt = 0;
   s->snpc = s->pc + 4;
+  s->dnpc = s->pc;
 
+  while (npc_wbu_valid == 0) {
+    if (g_cpu_stop_flag) {
+      difftest_skip_ref();
+      return 0;
+    }
+    single_cycle(); 
+    sync_npc_gpr();
+    inst_cyc_cnt++;
+  }
+  s->isa.inst = npc_inst.inst;
+  s->dnpc = npc_dnpc;
+#ifdef CONFIG_ITRACE
+  if (g_print_step) {
+    printf("Executing %dcyc @" FMT_WORD "\n", inst_cyc_cnt, s->pc);
+  }
+  log_write("Executing %dcyc @" FMT_WORD "\n", inst_cyc_cnt, s->pc);
+  print_disassemble(s);
+#endif
+  decode_inst(s);
+
+  if (npc_stop_flag != 0) {
+    set_nemu_state(NEMU_END, s->pc, gpr(10));
+  } else {
+    single_cycle(); 
+    sync_npc_gpr();
+    inst_cyc_cnt++;
+  }
+
+
+
+  /*
   if (npc_wbu_valid == 0) {
-    difftest_skip_ref();
     // Log("Skip!");
     s->dnpc = s->pc;
     if (g_print_step) {
-      printf("Executing @ 0x" FMT_WORD "\n", s->pc);
+      printf("Executing @ " FMT_WORD "\n", s->pc);
     }
-    log_write("Executing @ 0x" FMT_WORD "\n", s->pc);
+    IFDEF(CONFIG_ITRACE, log_write("Executing @ " FMT_WORD "\n", s->pc));
+    difftest_skip_ref();
   } else {
     s->dnpc = npc_dnpc;
     IFDEF(CONFIG_ITRACE, print_disassemble(s));
     // printf("%x\n", gpr(2));
+    decode_inst(s);
   }
 
-  decode_inst(s);
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
     // sim_close();
@@ -218,6 +278,7 @@ int isa_exec_once(Decode *s) {
 
   single_cycle(); 
   sync_npc_gpr();
+  */
 
   return 0;
 }
