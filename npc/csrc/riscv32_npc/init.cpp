@@ -272,8 +272,8 @@ extern "C" void restart() {
 
 __BEGIN_DECLS
 void init_isa() {
-  IFDEF(CONFIG_NVBOARD, nvb_init());
   sim_init();
+  IFDEF(CONFIG_NVBOARD, nvb_init());
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
 }
