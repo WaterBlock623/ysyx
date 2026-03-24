@@ -42,8 +42,7 @@ bool isa_try_find_reg(int regno, void **reg, size_t *len) {
     return true;
   }
   switch (regno) {
-    case MUXDEF(CONFIG_ISA64, 32, 64):
-    case LENGTH(cpu.gpr):
+    case 32:
       safe_deref(reg, &cpu.pc);
       safe_deref(len, MUXDEF(CONFIG_ISA64, 8, 4));
       return true;
