@@ -22,6 +22,9 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sys/cdefs.h>
+#ifdef CONFIG_NVBOARD
+#include <nvboard.h>
+#endif
 
 static VerilatedContext *contextp = NULL;
 static __VTOP_NAME__ *top = NULL;
@@ -157,6 +160,13 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
 //   npc_gpr_ptr = ptr;
 // }
 
+#ifdef CONFIG_NVBOARD
+static void nvb_init(void) {
+  nvboard_bind_all_pins(top);
+  nvboard_init();
+}
+#endif
+
 static void sim_init(void) {
   const char* verilator_argv[] = {
         "riscv32_npc-nemu-interpreter", 
@@ -205,6 +215,7 @@ void single_cycle(void) {
 #ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
+  IFDEF(CONFIG_NVBOARD, nvboard_update());
 }
 
 static void reset(int n) {
@@ -259,11 +270,9 @@ extern "C" void restart() {
 
 __BEGIN_DECLS
 void init_isa() {
+  IFDEF(CONFIG_NVBOARD, nvb_init());
   sim_init();
-  /* Load built-in image. */
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
-  /* Initialize this virtual computer system. */
-  // restart();
 }
 __END_DECLS

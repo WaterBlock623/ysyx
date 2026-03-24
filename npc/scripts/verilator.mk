@@ -1,3 +1,7 @@
+ifeq ($(CONFIG_NVBOARD),y)
+include $(WORK_DIR)/scripts/nvboard.mk
+endif
+
 VERILATOR = verilator
 GTKWAVE = gtkwave
 
