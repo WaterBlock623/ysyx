@@ -1,5 +1,6 @@
 ifeq ($(CONFIG_NVBOARD),y)
 include $(WORK_DIR)/scripts/nvboard.mk
+ARCHIVES += $(NVBOARD_ARCHIVE)
 endif
 
 VERILATOR = verilator
@@ -39,7 +40,7 @@ VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 CSRCS += $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
+ARCHIVES += $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 
 # Menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
@@ -99,7 +100,6 @@ lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
 build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
-	@echo "!!!!!$(NVBOARD_ARCHIVE)"
 	# Build archives
 	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
