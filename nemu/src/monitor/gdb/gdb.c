@@ -12,7 +12,7 @@ extern bool g_cpu_stop_flag;
 
 gdb_action_t emu_cont(void *args) {
   cpu_exec(-1);
-  if (nemu_state.state == NEMU_STOP) {
+  if (nemu_state.state == NEMU_STOP || nemu_state.state == NEMU_ABORT) {
     return ACT_RESUME;
   } else {
     return ACT_SHUTDOWN;
@@ -21,7 +21,7 @@ gdb_action_t emu_cont(void *args) {
 
 gdb_action_t emu_stepi(void *args) {
   cpu_exec(1);
-  if (nemu_state.state == NEMU_STOP) {
+  if (nemu_state.state == NEMU_STOP || nemu_state.state == NEMU_ABORT) {
     return ACT_RESUME;
   } else {
     return ACT_SHUTDOWN;

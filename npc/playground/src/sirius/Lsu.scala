@@ -21,6 +21,10 @@ class Lsu(
   val outBits = out.bits
   val ctrl = inBits.ctrl.lsuCtrl
   val addr = inBits.exuPayload.exu.aluOut
+  val isMemAcc = ctrl.isLoad || ctrl.isStore
+  val canValid = RegNext(RegNext(!reset.asBool))
+  val rData = exte.mem.r.bits.data
+  val rem = addr(1, 0)
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -28,10 +32,30 @@ class Lsu(
 
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
 
+  val eLoadStoreAddressMisaligned = isMemAcc &&
+      ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
+  val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
+  val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
+  val eLoadAccessFault = ctrl.isLoad && 
+    !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
+  val eStoreAccessFault = ctrl.isStore && 
+    !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+
+  val eCause = MuxCase(0.U, Seq(
+    eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
+    eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
+    eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
+    eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
+    ))
+
+  when (!inBits.exuPayload.trap.isTrap) {
+    outBits.lsuPayload.trap.isTrap := eLoadStoreAddressMisaligned || eLoadAccessFault || eStoreAccessFault
+    outBits.lsuPayload.trap.cause := eCause
+  }
+
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
-  val isMemAcc = ctrl.isLoad || ctrl.isStore
-  val canValid = RegNext(RegNext(!reset.asBool))
 
   // val canSendReq = state === sIdle && in.valid && isMemAcc
 
@@ -72,9 +96,9 @@ class Lsu(
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !outBits.lsuPayload.trap.isTrap
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !outBits.lsuPayload.trap.isTrap
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !eLoadStoreAddressMisaligned
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
 
   val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
     Seq(
@@ -86,8 +110,6 @@ class Lsu(
   exte.mem.ar.bits.size := axSize
   exte.mem.aw.bits.size := axSize
 
-  val rData = exte.mem.r.bits.data
-  val rem = addr(1, 0)
 
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
   val lbu = byteData(rem)
@@ -138,13 +160,4 @@ class Lsu(
       LoadStoreLengthEnum.b.asUInt -> sbMask
     )
   )
-
-
-  when (!inBits.exuPayload.trap.isTrap) {
-    outBits.lsuPayload.trap.isTrap := 
-      isMemAcc &&
-      ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
-      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
-    outBits.lsuPayload.trap.cause := Mux(ctrl.isLoad, 4.U(cfg.mxlen.W), 6.U(cfg.mxlen.W))
-  }
 }

@@ -271,6 +271,9 @@ source "$(shell,echo $NEMU_HOME)/src/memory/Kconfig"
 source "$(shell,echo $NEMU_HOME)/src/device/Kconfig"
 endif
 
+if MODE_SYSTEM
+source "$(shell,echo $NPC_HOME)/Kconfig"
+endif
 
 menu "Miscellaneous"
 choice

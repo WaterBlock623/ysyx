@@ -62,7 +62,13 @@ Context* __am_irq_handle(Context *c) {
       ev.event = EVENT_YIELD; 
       c->mepc += 4;
       break;
-    default: ev.event = EVENT_ERROR; break;
+    default: 
+      if (user_handler) {
+        ev.event = EVENT_ERROR; break;
+      } else {
+        printf("Unknown trap: mcause=%u\n", c->mcause);
+        assert(0);
+      }
   }
 
   if (user_handler) {

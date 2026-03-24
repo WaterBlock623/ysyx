@@ -25,17 +25,10 @@
 static IOMap maps[NR_MAP] = {};
 static int nr_map = 0;
 
-static IOMap* fetch_mmio_map(paddr_t addr) {
+IOMap* fetch_mmio_map(paddr_t addr) {
   int mapid = find_mapid_by_addr(maps, nr_map, addr);
   return (mapid == -1 ? NULL : &maps[mapid]);
 }
-
-#ifdef CONFIG_NPC
-bool is_mmio(paddr_t addr) {
-  int mapid = find_mapid_by_addr(maps, nr_map, addr);
-  return (mapid == -1 ? false : true);
-}
-#endif
 
 static void report_mmio_overlap(const char *name1, paddr_t l1, paddr_t r1,
     const char *name2, paddr_t l2, paddr_t r2) {

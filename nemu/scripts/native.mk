@@ -39,15 +39,17 @@ $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
 GDB_FLAGS += -ex "file $(GDB_ELF)"
 endif
-GDB_FLAGS += -ex "target remote $(GDB_SOCKET)"
+# CROSS_GDB = riscv64-unknown-linux-gnu-gdb
+CROSS_GDB = riscv64-unknown-elf-gdb
+GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
+						 -ex "source $(NEMU_HOME)/tools/gdb-scripts/smart-connect.py" \
+						 -ex "smart-connect $(GDB_SOCKET)"
+						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
     ( \
-        if ! echo "$(GDB_SOCKET)" | grep -q ":" && ! nc -zU $(GDB_SOCKET); then \
-            sleep 0.5; \
-        fi; \
-        riscv64-unknown-linux-gnu-gdb $(GDB_FLAGS); \
+        $(CROSS_GDB) $(GDB_FLAGS); \
     ); \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
