@@ -1,6 +1,5 @@
 ifeq ($(CONFIG_NVBOARD),y)
 include $(WORK_DIR)/scripts/nvboard.mk
-ARCHIVES += $(NVBOARD_ARCHIVE)
 endif
 
 VERILATOR = verilator
@@ -41,6 +40,9 @@ VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 CSRCS += $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES += $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
+ifeq ($(CONFIG_NVBOARD),y)
+ARCHIVES += $(NVBOARD_ARCHIVE)
+endif
 
 # Menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
