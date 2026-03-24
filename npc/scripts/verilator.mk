@@ -97,7 +97,7 @@ CXXFLAGS += $(INCFLAGS) \
 
 NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
-									 ADD_LIBS="-lz -lSDL2_ttf"
+									 ADD_LIBS="-lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
 lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
