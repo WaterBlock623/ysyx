@@ -49,11 +49,3 @@ object CsrEnum extends ChiselEnum {
 object CsrWOpCode extends ChiselEnum {
   val write, set, clear = Value
 }
-
-object McauseEnum {
-  val LoadAddressMisaligned: BigInt = 4
-  val LoadAccessFault: BigInt = 5
-  val StoreOrAmoAddressMisaligned: BigInt = 6
-  val StoreOrAmoAccessFault: BigInt = 7
-  val EnvironmentCallFromM: BigInt = 11
-}

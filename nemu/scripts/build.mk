@@ -8,7 +8,6 @@ LDFLAGS += -shared -fPIC
 endif
 
 INC_PATH := $(ADD_INC_PATH) $(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
-INC_PATH := $(abspath $(INC_PATH))
 # ifneq ($(CONFIG_NPC),)
 # INC_PATH := $(ADD_INC_PATH) $(INC_PATH)
 # endif
@@ -34,16 +33,14 @@ OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 $(OBJ_DIR)/%.o: %.c
 	@echo + CC $<
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -c -o $@ $(abspath $<)
+	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
-	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
 
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $(abspath $<)
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
-	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
 
 # Depencies
 -include $(OBJS:.o=.d)

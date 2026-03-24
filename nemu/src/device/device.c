@@ -32,8 +32,6 @@ void init_sdcard();
 void init_alarm();
 void init_mrom(device_init_param_t *);
 void init_sram(device_init_param_t *);
-void init_flash(device_init_param_t *);
-void init_sdram(device_init_param_t *);
 
 void send_key(uint8_t, bool);
 void vga_update_screen();
@@ -112,8 +110,6 @@ void init_device(device_init_param_t *param) {
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
   IFDEF(CONFIG_HAS_MROM, init_mrom(param));
   IFDEF(CONFIG_HAS_SRAM, init_sram(param));
-  IFDEF(CONFIG_HAS_FLASH, init_flash(param));
-  IFDEF(CONFIG_HAS_SDRAM, init_sdram(param));
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }

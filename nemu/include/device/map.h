@@ -41,10 +41,17 @@ static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
   int i;
   for (i = 0; i < size; i ++) {
     if (map_inside(maps + i, addr)) {
+#ifdef CONFIG_NPC
+      // if (is_write) {
+      //   difftest_skip_ref();
+      // } else {
+      //   difftest_skip_next_ref();
+      // }
+#else
       if (maps[i].is_difftest_skip_ref) {
-        // Log("Skip mmio fetch. addr: %x", addr);
         difftest_skip_ref();
       }
+#endif
       return i;
     }
   }

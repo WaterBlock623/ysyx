@@ -31,7 +31,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 0
+#define MAX_INST_TO_PRINT 10
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
@@ -124,11 +124,7 @@ void cpu_exec(uint64_t n) {
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
-    case NEMU_ABORT:
-#ifdef CONFIG_DEBUGER_GDB
-      break;
-#endif
-    case NEMU_END: 
+    case NEMU_END: case NEMU_ABORT:
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
