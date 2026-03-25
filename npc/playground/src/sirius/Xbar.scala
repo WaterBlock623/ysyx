@@ -198,8 +198,8 @@ class ClintDevice extends Module {
         MuxCase(
           sError,
           Seq(
-            (in.ar.bits.addr === "h10000600".U) -> sMtimeLo,
-            (in.ar.bits.addr === "h10000604".U) -> sMtimeHi
+            (in.ar.bits.addr === "h02000000".U) -> sMtimeLo,
+            (in.ar.bits.addr === "h02000004".U) -> sMtimeHi
           )
         ),
         sIdle
