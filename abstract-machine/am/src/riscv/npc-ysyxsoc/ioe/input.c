@@ -25,27 +25,33 @@ static uint8_t keycode_ext[] = {
   SCAN_EXT_KEYS(KEY_MAP)
 };
 
-static void get_keybrd(AM_INPUT_KEYBRD_T *kbd, bool is_ext, bool is_down) {
+static void get_keybrd(AM_INPUT_KEYBRD_T *kbd) {
   uint8_t scan_code = inb(KBD_ADDR);
   // if (scan_code) printf("# 0x%x\n", scan_code);
+  static bool is_ext = false;
+  static bool is_down = true;
   switch (scan_code) {
     case 0x0:
       kbd->keydown = false;
       kbd->keycode = AM_KEY_NONE;
       break;
     case 0xE0:
-      get_keybrd(kbd, true, is_down);
+      is_ext = true;
+      get_keybrd(kbd);
       break;
     case 0xF0:
-      get_keybrd(kbd, is_ext, false);
+      is_down = false;
+      get_keybrd(kbd);
       break;
     default:
       kbd->keydown = is_down;
       kbd->keycode = is_ext ? keycode_ext[scan_code] : keycode[scan_code];
+      is_ext = false;
+      is_down = true;
       break;
   }
 }
 
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
-  get_keybrd(kbd, false, true); 
+  get_keybrd(kbd); 
 }
