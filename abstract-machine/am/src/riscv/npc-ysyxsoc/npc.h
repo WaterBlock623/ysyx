@@ -10,7 +10,7 @@
 #define VGACTL_ADDR     (DEVICE_BASE + 0x00000100)
 //#define AUDIO_ADDR      (DEVICE_BASE + 0x00000200)
 //#define DISK_ADDR       (DEVICE_BASE + 0x00000300)
-#define KBD_ADDR        (DEVICE_BASE + 0x00000500)
+#define KBD_ADDR        0x10011000
 #define RTC_ADDR        (DEVICE_BASE + 0x00000600)
 #define TIME_ADDR        (DEVICE_BASE + 0x00000700)
 #define FB_ADDR         (MMIO_BASE   + 0x01000000)
