@@ -17,11 +17,11 @@
 
 #define KEY_MAP(name, scan) [scan] = AM_KEY_NAMES(name)
 
-static uint8_t keycode[] = {
+static uint8_t keycode[256] = {
   SCAN_KEYS(KEY_MAP)
 };
 
-static uint8_t keycode_ext[] = {
+static uint8_t keycode_ext[256] = {
   SCAN_EXT_KEYS(KEY_MAP)
 };
 
