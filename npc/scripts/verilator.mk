@@ -24,7 +24,7 @@ $(info profile.vlt not found, skipping PGO)
 endif
 
 VERILATOR_BUILDFLAGS += -MMD --cc --build -j 16 --autoflush \
-				-O3 --x-assign fast --x-initial fast --noassert --threads 8
+				-O3 --x-assign fast --x-initial fast --noassert --threads 1
 VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
