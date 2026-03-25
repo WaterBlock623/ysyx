@@ -26,8 +26,8 @@ static uint8_t keycode_ext[] = {
 };
 
 static void get_keybrd(AM_INPUT_KEYBRD_T *kbd, bool is_ext, bool is_down) {
-  volatile uint8_t scan_code = inb(KBD_ADDR);
-  // if (scan_code) printf("# 0x%x\n", scan_code);
+  uint8_t scan_code = inb(KBD_ADDR);
+  if (scan_code) printf("# 0x%x\n", scan_code);
   switch (scan_code) {
     case 0x0:
       kbd->keydown = false;
