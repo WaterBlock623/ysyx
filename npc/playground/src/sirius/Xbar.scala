@@ -82,7 +82,7 @@ class Xbar(
     rAddr := in.ar.bits.addr
   }
 
-  when(isClintAddr(rAddr)) {
+  when(isClintAddr(rAddrReg)) {
     clint.ar :<>= in.ar
   } .otherwise {
     mem.ar :<>= in.ar
@@ -108,7 +108,7 @@ class Xbar(
     wAddr := in.aw.bits.addr
   }
 
-  when(isClintAddr(wAddr)) {
+  when(isClintAddr(wAddrReg)) {
     clint.aw :<>= in.aw
     clint.w :<>= in.w
   }.otherwise {
