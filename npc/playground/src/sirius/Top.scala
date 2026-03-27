@@ -858,8 +858,8 @@ class Top(
     extends Module {
 
   val memBusArbiter = Module(new MemBusArbiter)
-  // val xbar = Module(new Xbar)
-  // val clintDevice = Module(new ClintDevice)
+  val xbar = Module(new Xbar)
+  val clintDevice = Module(new ClintDevice)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
@@ -881,8 +881,8 @@ class Top(
       val slave = Flipped(new YsyxSocAxi4IO)
     })
     0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    // io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
-    io.master :<>= memBusArbiter.out.viewAs[YsyxSocAxi4IO]
+    io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
+    // io.master :<>= memBusArbiter.out.viewAs[YsyxSocAxi4IO]
 
     val debugInfoDpiC = Module(new DebugInfoDpiC)
     // val memDpiC = Module(new MemDpiC)
@@ -918,8 +918,8 @@ class Top(
 
   memBusArbiter.in(0) :<>= ifu.exte.mem
   memBusArbiter.in(1) :<>= lsu.exte.mem
-  // xbar.in :<>= memBusArbiter.out
-  // clintDevice.in :<>= xbar.out(1)
+  xbar.in :<>= memBusArbiter.out
+  clintDevice.in :<>= xbar.out(1)
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
