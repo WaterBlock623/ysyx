@@ -31,14 +31,14 @@ class Ifu(
   state := MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(exte.mem.ar.ready && canValid, sWaitResp, sIdle),
-      sWaitResp -> Mux(exte.mem.r.valid, Mux(out.fire, sIdle, sKeepData), sWaitResp),
+      sWaitResp -> Mux(RegNext(exte.mem.r.valid), Mux(out.fire, sIdle, sKeepData), sWaitResp),
       sKeepData -> Mux(out.fire, sIdle, sKeepData)
 
     )
   )
 
-  out.valid := (state === sWaitResp && exte.mem.r.valid) || state === sKeepData
-  val dataReg = RegEnable(exte.mem.r.bits.data, state === sWaitResp && exte.mem.r.valid && !out.fire)
+  out.valid := (state === sWaitResp && RegNext(exte.mem.r.valid)) || state === sKeepData
+  val dataReg = RegEnable(exte.mem.r.bits.data, state === sWaitResp && RegNext(exte.mem.r.valid) && !out.fire)
   outBits.ifuPayload.ifu.inst := Mux(state === sKeepData, dataReg, exte.mem.r.bits.data)
   
   val pc = exte.pcReg.pc
