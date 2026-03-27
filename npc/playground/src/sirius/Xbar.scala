@@ -41,11 +41,12 @@ class MemBusArbiter(
 
   switch(state) {
     is(sIdle) {
-      when(ifuValid) {
-        out :<>= ifu
-      }.elsewhen(lsuValid) {
-        out :<>= lsu
-      }
+      // when(ifuValid) {
+      //   out :<>= ifu
+      // }.elsewhen(lsuValid) {
+      //   out :<>= lsu
+      // }
+      out :<= 0.U.asTypeOf(chiselTypeOf(out))
     }
     is(sIfu) {
       out :<>= ifu
@@ -62,19 +63,14 @@ class Xbar(
   val in = IO(Flipped(new Axi4IO))
   val out = IO(Vec(2, new Axi4IO))
 
-  val mem = out(0)
+  val soc = out(0)
   val clint = out(1)
   def isClintAddr(addr: UInt): Bool = addr >= "h02000000".U && addr < "h02010000".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
 
-  // val rAddrComb = in.ar.bits.addr
   val canUpdateRAddr = in.ar.valid
-  // val rAddrReg = RegEnable(
-  //   rAddrComb,
-  //   canUpdateRAddr
-  // )
   val rAddrReg = Reg(chiselTypeOf(in.ar.bits.addr))
   val rAddr = WireDefault(rAddrReg)
   rAddrReg := rAddr
@@ -82,25 +78,19 @@ class Xbar(
     rAddr := in.ar.bits.addr
   }
 
-  when(isClintAddr(rAddrReg)) {
+  when(isClintAddr(rAddr)) {
     clint.ar :<>= in.ar
   } .otherwise {
-    mem.ar :<>= in.ar
+    soc.ar :<>= in.ar
   }
 
   when(isClintAddr(rAddrReg)) {
     in.r :<>= clint.r
   } .otherwise {
-    in.r :<>= mem.r
+    in.r :<>= soc.r
   }
 
-  // val wAddrComb = in.aw.bits.addr
   val canUpdateWAddr = in.aw.valid && in.w.valid
-  // val wAddrReg = RegEnable(
-  //   wAddrComb,
-  //   canUpdateWAddr
-  // )
-  // val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
   val wAddrReg = Reg(chiselTypeOf(in.aw.bits.addr))
   val wAddr = WireDefault(wAddrReg)
   wAddrReg := wAddr
@@ -108,18 +98,18 @@ class Xbar(
     wAddr := in.aw.bits.addr
   }
 
-  when(isClintAddr(wAddrReg)) {
+  when(isClintAddr(wAddr)) {
     clint.aw :<>= in.aw
     clint.w :<>= in.w
   }.otherwise {
-    mem.aw :<>= in.aw
-    mem.w :<>= in.w
+    soc.aw :<>= in.aw
+    soc.w :<>= in.w
   }
 
   when(isClintAddr(wAddrReg)) {
     in.b :<>= clint.b
   }.otherwise {
-    in.b :<>= mem.b
+    in.b :<>= soc.b
   }
 }
 
