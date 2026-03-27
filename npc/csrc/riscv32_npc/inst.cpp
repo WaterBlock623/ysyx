@@ -232,7 +232,7 @@ int isa_exec_once(Decode *s) {
     single_cycle(); 
     sync_npc_gpr();
     inst_cyc_cnt++;
-    if (inst_cyc_cnt > 1000 && inst_cyc_cnt % 1000 == 0) {
+    if (inst_cyc_cnt >= 1000 && inst_cyc_cnt % 1000 == 0) {
       printf("[npc] Warning: A instruction has been executed for %d cycles at " FMT_WORD "\n", inst_cyc_cnt, s->pc);
     }
   }
