@@ -175,7 +175,7 @@ static void sim_init(void) {
     };
   Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
-  // contextp->commandArgs(2, (const char **)verilator_argv);
+  contextp->commandArgs(1, verilator_argv);
   top = new __VTOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
