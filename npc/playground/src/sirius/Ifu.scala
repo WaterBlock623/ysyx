@@ -37,7 +37,7 @@ class Ifu(
     )
   )
 
-  out.valid := RegNext((state === sWaitResp && exte.mem.r.valid) || state === sKeepData)
+  out.valid := (state === sWaitResp && exte.mem.r.valid) || state === sKeepData
   val dataReg = RegEnable(exte.mem.r.bits.data, state === sWaitResp && exte.mem.r.valid && !out.fire)
   outBits.ifuPayload.ifu.inst := Mux(state === sKeepData, dataReg, exte.mem.r.bits.data)
   
