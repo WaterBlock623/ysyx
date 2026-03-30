@@ -83,7 +83,7 @@ CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(C
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
 INC_PATH := $(NPC_HOME)/csrc/$(GUEST_ISA)/include \
-						$(WORK_DIR)/include $(NEMU_HOME)/include \
+						$(CFG_DIR)/include $(NEMU_HOME)/include \
 						$(NEMU_HOME)/tools/mini-gdbstub/include \
 						$(INC_PATH)
 export ADD_INC_PATH := $(INC_PATH)
@@ -95,7 +95,7 @@ CXXFLAGS += $(INCFLAGS) \
 						-D__TOP_NAME_SYMS_INCLUDE__=V$(TOPNAME)__Syms.h \
 						-D__WAVE__=$(WAVE)
 
-NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
+NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
 									 ADD_LIBS="-lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
