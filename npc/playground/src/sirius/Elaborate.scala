@@ -28,7 +28,7 @@ object Elaborate extends App {
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
     new sirius.Top()(cfg, UnitConfig.default),
-    args,
+    Array("--target-dir", argMap("target-dir")),
     firtoolOptions
   )
 }
