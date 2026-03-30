@@ -222,8 +222,10 @@ void single_cycle(void) {
 
 static void reset(int n) {
   top->reset = 1;
-  while (n-- > 0)
+  while (n-- > 0) {
+    printf("%d\n", n);
     single_cycle();
+  }
   top->reset = 0;
 }
 
