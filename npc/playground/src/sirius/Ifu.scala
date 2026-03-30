@@ -52,4 +52,5 @@ class Ifu(
   if (cfg.isDebug) {
     debug.get := outBits.ifuPayload.ifu.inst
   }
+  PerfWhen("instFetch", exte.mem.r.fire, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
 }

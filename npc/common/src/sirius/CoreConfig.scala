@@ -9,6 +9,7 @@ import org.chipsalliance.rvdecoderdb
 case class CoreConfig(
   // Debug
   val isDebug: Boolean = true,
+  val perf: Boolean = true,
 
   // rvdecoderdb
   val rvOpCodesPath:     os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
