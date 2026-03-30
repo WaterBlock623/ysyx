@@ -20,8 +20,8 @@ all: build_ar
 
 # Menuconfig
 # include $(NEMU_HOME)/scripts/config.mk
--include $(CFG_DIR)/include/config/auto.conf
--include $(CFG_DIR)/include/config/auto.conf.cmd
+include $(CFG_DIR)/include/config/auto.conf
+include $(CFG_DIR)/include/config/auto.conf.cmd
 
 remove_quote = $(patsubst "%",%,$(1))
 

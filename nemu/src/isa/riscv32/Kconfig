@@ -26,6 +26,10 @@ config NPC_TOP_NAME
   string "Top module name"
   default "Top"
 
+config NPC_VERILATOR_GPR
+  string "Verilator GPR"
+  default "Top__DOT__getGprDpiC__DOT__temp_regs"
+
 endif #NPC
 
 

@@ -188,7 +188,10 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+  // npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+#define CONCAT_PTR_INNER(a, b) a->b
+#define CONCAT_PTR(a, b) CONCAT_PTR_INNER(a, b)
+  npc_gpr_ptr = (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
 }
 
 extern "C" void sim_close(void) {

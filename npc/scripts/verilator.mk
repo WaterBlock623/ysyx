@@ -102,7 +102,8 @@ CXXFLAGS += $(INCFLAGS) \
 						-D__VTOP_NAME__=V$(TOPNAME) \
 						-D__TOP_NAME_INCLUDE__=V$(TOPNAME).h \
 						-D__TOP_NAME_SYMS_INCLUDE__=V$(TOPNAME)__Syms.h \
-						-D__WAVE__=$(WAVE)
+						-D__WAVE__=$(WAVE) \
+						-D__NPC_VERILATOR_GPR__=$(CONFIG_NPC_VERILATOR_GPR)
 
 NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
