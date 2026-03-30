@@ -218,9 +218,10 @@ extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
 extern bool g_cpu_stop_flag;
+extern uint64_t g_nr_guest_cyc;
 
 int isa_exec_once(Decode *s) {
-  int inst_cyc_cnt = 0;
+  static int inst_cyc_cnt = 0;
   s->snpc = s->pc + 4;
   s->dnpc = s->pc;
 
@@ -253,6 +254,8 @@ int isa_exec_once(Decode *s) {
     single_cycle(); 
     sync_npc_gpr();
     inst_cyc_cnt++;
+    g_nr_guest_cyc += inst_cyc_cnt;
+    inst_cyc_cnt = 0;
   }
 
 
