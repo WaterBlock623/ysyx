@@ -57,7 +57,6 @@ extern "C" void mrom_read(uint32_t addr, uint32_t *data) {
 }
 #endif
 
-#ifdef CONFIG_HAS_PSRAM
 extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid PSRAM read length");
   len /= 8;
@@ -73,7 +72,6 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
   addr += CONFIG_MBASE;
   paddr_write(addr, len, data);
 }
-#endif
 
 #ifdef CONFIG_HAS_SDRAM
 extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
