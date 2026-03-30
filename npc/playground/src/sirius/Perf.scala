@@ -17,7 +17,7 @@ object PerfWhen {
     if (cfg.perf) {
       val eventCntReg = CntWhen(cntCond, width)
       when (printCond) {
-        printf("[perf %m] " + name + " = %d\n", eventCntReg)
+        printf("[perf %m]\t" + name + "\t=\t%d\n", eventCntReg)
       } 
       Some(eventCntReg)
     } else {
