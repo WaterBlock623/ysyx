@@ -42,7 +42,7 @@ ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 # 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
 # 			  			sed 's/.*\.//'
 # TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
-TOPNAME = ysyxSoCFull
+TOPNAME = $(CONFIG_NPC_TOP_NAME)
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
 else

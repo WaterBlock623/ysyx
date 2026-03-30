@@ -22,6 +22,10 @@ config NPC_PACKAGE_NAME
   string "Scala package name"
   default "sirius"
 
+config NPC_TOP_NAME
+  string "Top module name"
+  default "Top"
+
 endif #NPC
 
 
