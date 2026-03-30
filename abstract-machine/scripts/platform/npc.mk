@@ -20,6 +20,8 @@ CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINAR
 
 export IMG = "$(IMAGE).bin"
 export ADD_ARGS += --elf "$(IMAGE).elf"
+export GDB_ELF = $(IMAGE).elf
+export AM_GDB_FLAGS += --batch -ex "continue"
 export BUILD_DIR = $(shell pwd)/build
 
 insert-arg: image
