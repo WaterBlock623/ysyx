@@ -2,8 +2,8 @@ MILL = $(NPC_HOME)/mill
 RSYNC = rsync
 PRJ = playground
 
-VSRC_TMP_DIR = $(BUILD_DIR)/vsrc_tmp
-VSRC_DIR = $(BUILD_DIR)/vsrc
+VSRC_TMP_DIR = $(BUILD_DIR)/$(ARCH)-vsrc_tmp
+VSRC_DIR = $(BUILD_DIR)/$(ARCH)-vsrc
 
 RSYNC_CMD = $(RSYNC) -rlpgoD --checksum --delete --itemize-changes \
 						--omit-dir-times $(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)

@@ -5,7 +5,7 @@ endif
 VERILATOR = verilator
 GTKWAVE = gtkwave
 
-OBJ_DIR = $(BUILD_DIR)/obj_dir
+OBJ_DIR = $(BUILD_DIR)/$(ARCH)-obj_dir
 WAVE_DIR = $(BUILD_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
