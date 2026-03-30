@@ -161,5 +161,5 @@ class Lsu(
     )
   )
 
-  PerfWhen("memoryWrite", exte.mem.b.fire, in.bits.ctrl.debugCtrl.isEbreak)
+  PerfWhen("memoryWrite", exte.mem.b.fire, in.bits.ctrl.debugCtrl.get.isEbreak)
 }
