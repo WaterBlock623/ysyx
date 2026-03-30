@@ -160,4 +160,6 @@ class Lsu(
       LoadStoreLengthEnum.b.asUInt -> sbMask
     )
   )
+
+  // PerfWhen("memoryWrite", exte.mem.b.fire)
 }
