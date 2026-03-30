@@ -23,10 +23,22 @@ else
 $(info profile.vlt not found, skipping PGO)
 endif
 
+VSRCS += $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VERILATOR_BUILDFLAGS += -MMD --cc --build -j 16 --autoflush \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 1
+
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(ARCH),)
+$(error Need ARCH)
+endif
+ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
+VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
+VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
+endif
+endif
+
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
 # 				--threads-max-mtasks 128 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
@@ -35,9 +47,6 @@ $(info WAVE is enable)
 VERILATOR_BUILDFLAGS += --trace-fst
 endif
 
-VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
-VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
-VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 CSRCS += $(shell find $(abspath $(NPC_HOME)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES += $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 ifeq ($(CONFIG_NVBOARD),y)
