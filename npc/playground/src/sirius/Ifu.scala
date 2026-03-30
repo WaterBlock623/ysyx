@@ -54,6 +54,6 @@ class Ifu(
     debug.get := outBits.ifuPayload.ifu.inst
   }
   PerfWhen("instFetch", exte.mem.r.fire, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
-  PerfWhen("waitRespCyc", state === sWaitResp, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
+  PerfWhen("waitReadCyc", state === sIdle || state === sWaitResp, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
   PerfWhen("keepDataCyc", state === sKeepData, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
 }
