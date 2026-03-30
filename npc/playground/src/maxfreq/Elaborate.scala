@@ -2,6 +2,7 @@ package maxfreq
 
 object Elaborate extends App {
   val firtoolOptions = Array(
+    "-default-layer-specialization=enable",
     "--lowering-options=" + List(
       // make yosys happy
       // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
