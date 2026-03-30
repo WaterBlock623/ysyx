@@ -1,4 +1,4 @@
-MILL = $(WORK_DIR)/mill
+MILL = $(NPC_HOME)/mill
 RSYNC = rsync
 PRJ = playground
 
@@ -9,7 +9,7 @@ RSYNC_CMD = $(RSYNC) -rlpgoD --checksum --delete --itemize-changes \
 						--omit-dir-times $(VSRC_TMP_DIR:/=)/ $(VSRC_DIR)
 
 SRC_DIRS = common playground generator
-SEARCH_DIRS = $(addprefix $(WORK_DIR)/,$(SRC_DIRS))
+SEARCH_DIRS = $(addprefix $(NPC_HOME)/,$(SRC_DIRS))
 FIND_FILTER = -type f -name '*.scala'
 MILL_SRCS = $(shell find $(SEARCH_DIRS) $(FIND_FILTER))
 VSRC_TIMESTAMP = $(BUILD_DIR)/.vsrc_timestamp

@@ -1,5 +1,5 @@
-WORK_DIR = $(shell pwd)
-BUILD_DIR ?= $(WORK_DIR)/build
+WORK_DIR ?= $(shell pwd)
+BUILD_DIR ?= $(NPC_HOME)/build
 $(info NPC BUILD_DIR $(BUILD_DIR))
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -39,13 +39,13 @@ endif # TOPNAME
 endif # PACKAGE_NAME
 
 # Verilator
-include $(WORK_DIR)/scripts/verilator.mk
+include $(NPC_HOME)/scripts/verilator.mk
 
 # Chisel
-include $(WORK_DIR)/scripts/chisel.mk
+include $(NPC_HOME)/scripts/chisel.mk
 
 # Util
-include $(WORK_DIR)/../Makefile
+include $(NPC_HOME)/../Makefile
 
 run: all
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

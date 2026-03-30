@@ -1,4 +1,4 @@
-NXDC_FILES = $(WORK_DIR)/constr/$(TOPNAME).nxdc
+NXDC_FILES = $(NPC_HOME)/constr/$(TOPNAME).nxdc
 # constraint file
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)

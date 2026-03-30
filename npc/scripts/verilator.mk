@@ -1,5 +1,5 @@
 ifeq ($(CONFIG_NVBOARD),y)
-include $(WORK_DIR)/scripts/nvboard.mk
+include $(NPC_HOME)/scripts/nvboard.mk
 endif
 
 VERILATOR = verilator
@@ -38,7 +38,7 @@ endif
 VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
-CSRCS += $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+CSRCS += $(shell find $(abspath $(NPC_HOME)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 ARCHIVES += $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
 ifeq ($(CONFIG_NVBOARD),y)
 ARCHIVES += $(NVBOARD_ARCHIVE)
@@ -82,7 +82,7 @@ CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(C
 CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(CONFIG_FTRACE_COND)),true)
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
-INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
+INC_PATH := $(NPC_HOME)/csrc/$(GUEST_ISA)/include \
 						$(WORK_DIR)/include $(NEMU_HOME)/include \
 						$(NEMU_HOME)/tools/mini-gdbstub/include \
 						$(INC_PATH)
