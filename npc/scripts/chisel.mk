@@ -12,7 +12,7 @@ SRC_DIRS = common playground generator
 SEARCH_DIRS = $(addprefix $(NPC_HOME)/,$(SRC_DIRS))
 FIND_FILTER = -type f -name '*.scala'
 MILL_SRCS = $(shell find $(SEARCH_DIRS) $(FIND_FILTER))
-VSRC_TIMESTAMP = $(BUILD_DIR)/.vsrc_timestamp
+VSRC_TIMESTAMP = $(BUILD_DIR)/.$(ARCH)-vsrc_timestamp
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(ARCH),)

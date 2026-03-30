@@ -1,3 +1,5 @@
+remove_quote = $(patsubst "%",%,$(1))
+
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(ARCH),)
 $(error Need ARCH)
@@ -23,8 +25,6 @@ all: build_ar
 include $(CFG_DIR)/include/config/auto.conf
 include $(CFG_DIR)/include/config/auto.conf.cmd
 
-remove_quote = $(patsubst "%",%,$(1))
-
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),menuconfig)
 ifeq ($(CONFIG_NPC_PACKAGE_NAME),)
@@ -42,7 +42,7 @@ ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 # 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
 # 			  			sed 's/.*\.//'
 # TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
-TOPNAME = $(CONFIG_NPC_TOP_NAME)
+TOPNAME = $(call remove_quote,$(CONFIG_NPC_TOP_NAME))
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
 else
