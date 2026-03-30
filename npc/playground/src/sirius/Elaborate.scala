@@ -23,7 +23,7 @@ object Elaborate extends App {
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
       // isDebug = false,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
-      pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x")),
+      pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16),
     )
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
