@@ -179,5 +179,5 @@ class Exu(
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 
-  PerfWhen("computationFinish", out.fire, in.bits.ctrl.debugCtrl.get.isEbreak)
+  PerfWhen("calcFinish", out.fire, in.bits.ctrl.debugCtrl.get.isEbreak)
 }
