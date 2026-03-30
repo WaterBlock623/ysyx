@@ -248,17 +248,15 @@ int isa_exec_once(Decode *s) {
 #endif
   decode_inst(s);
 
+  single_cycle(); 
+  sync_npc_gpr();
+  inst_cyc_cnt++;
+  g_nr_guest_cyc += inst_cyc_cnt;
+  inst_cyc_cnt = 0;
+
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
-  } else {
-    single_cycle(); 
-    sync_npc_gpr();
-    inst_cyc_cnt++;
-    g_nr_guest_cyc += inst_cyc_cnt;
-    inst_cyc_cnt = 0;
   }
-
-
 
   /*
   if (npc_wbu_valid == 0) {
