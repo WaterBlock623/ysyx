@@ -21,7 +21,6 @@ CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINAR
 export IMG = "$(IMAGE).bin"
 export ADD_ARGS += --elf "$(IMAGE).elf"
 export GDB_ELF = $(IMAGE).elf
-export AM_GDB_FLAGS += --batch -ex "continue"
 export BUILD_DIR = $(shell pwd)/build
 
 insert-arg: image
@@ -39,6 +38,7 @@ gdb: insert-arg
 	$(MAKE) -C $(NPC_HOME) gdb
 
 runbatch: ADD_ARGS += -b
+runbatch: export AM_GDB_FLAGS += --batch -ex "continue"
 runbatch: insert-arg
 	$(MAKE) -C $(NPC_HOME) runbatch 
 
