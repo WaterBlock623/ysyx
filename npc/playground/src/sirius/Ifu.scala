@@ -28,7 +28,7 @@ class Ifu(
 
   exte.mem.ar.valid := state === sIdle && canValid
 
-  state := MuxLookup(state, sIdle)(
+  val nextState = MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(exte.mem.ar.ready && canValid, sWaitResp, sIdle),
       sWaitResp -> Mux(exte.mem.r.valid, Mux(out.fire, sIdle, sKeepData), sWaitResp),
@@ -36,6 +36,7 @@ class Ifu(
 
     )
   )
+  state := nextState
 
   // out.valid := (state === sWaitResp && exte.mem.r.valid) || state === sKeepData
   out.valid := state === sKeepData
@@ -53,4 +54,6 @@ class Ifu(
     debug.get := outBits.ifuPayload.ifu.inst
   }
   PerfWhen("instFetch", exte.mem.r.fire, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
+  PerfWhen("waitRespCyc", state === sWaitResp, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
+  PerfWhen("keepDataCyc", state === sKeepData, out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U))
 }
