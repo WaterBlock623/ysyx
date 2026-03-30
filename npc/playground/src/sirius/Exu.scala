@@ -178,4 +178,6 @@ class Exu(
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
+
+  PerfWhen("computationFinish", out.fire, in.bits.ctrl.debugCtrl.get.isEbreak)
 }
