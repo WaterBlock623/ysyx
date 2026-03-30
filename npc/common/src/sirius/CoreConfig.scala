@@ -10,6 +10,7 @@ case class CoreConfig(
   // Debug
   val isDebug: Boolean = true,
   val perf: Boolean = true,
+  val ysyxsoc: Boolean = true,
 
   // rvdecoderdb
   val rvOpCodesPath:     os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
@@ -27,6 +28,7 @@ case class CoreConfig(
   val registerAddrWidth: Int = 4,
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32,
+  val pcInit: BigInt = 0x30000000,
 
   // CsrID
   val mvendorid: Int = 0x79737978,

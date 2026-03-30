@@ -41,20 +41,23 @@ paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
 
 // DIP-C
+#ifdef CONFIG_HAS_FLASH
 extern "C" void flash_read(uint32_t addr, uint32_t *data) { 
-#ifdef CONFIG_FLASH_MMIO
   addr += CONFIG_FLASH_MMIO;
-#endif
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
   // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
+#endif
 
+#ifdef CONFIG_HAS_MROM
 extern "C" void mrom_read(uint32_t addr, uint32_t *data) {
   addr &= ~3u;
   *data = paddr_read(addr, 4);
 }
+#endif
 
+#ifdef CONFIG_HAS_PSRAM
 extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid PSRAM read length");
   len /= 8;
@@ -70,7 +73,9 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
   addr += CONFIG_MBASE;
   paddr_write(addr, len, data);
 }
+#endif
 
+#ifdef CONFIG_HAS_SDRAM
 extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid SDRAM read length");
   len /= 8;
@@ -101,6 +106,7 @@ extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32
   Assert(wmask == 0, "Invalid wmask");
   paddr_write(addr, wlen, data);
 }
+#endif
 
 // #define MEM_READ_SKIP 0
 // extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {

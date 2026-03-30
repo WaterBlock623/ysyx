@@ -23,7 +23,8 @@ $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	-rm -rf $(VSRC_TMP_DIR)
 	-mkdir -p $(VSRC_TMP_DIR)
 	-mkdir -p $(VSRC_DIR)
-	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --target-dir $(VSRC_TMP_DIR)
+	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate \
+		--target-dir $(VSRC_TMP_DIR) --ysyxsoc true --pc-init 0x30000000
 	$(RSYNC_CMD)
 	-$(MAKE) lint
 	touch $@

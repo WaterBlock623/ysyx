@@ -1,6 +1,11 @@
 package sirius
 
 object Elaborate extends App {
+  val argMap = args.sliding(2, 2).collect {
+    case Array(key, value) if key.startsWith("--") => 
+      key.stripPrefix("--") -> value
+  }.toMap
+
   val firtoolOptions = Array(
     "-default-layer-specialization=enable",
     "--lowering-options=" + List(
@@ -17,6 +22,8 @@ object Elaborate extends App {
     CoreConfig(
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
       // isDebug = false,
+      ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
+      pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x")),
     )
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
