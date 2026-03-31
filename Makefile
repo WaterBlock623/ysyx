@@ -42,9 +42,9 @@ endef
 .clean_index:
 	rm -f $(WORK_INDEX)
 
-count:
-	find ./nemu -type f -name '*.c' -o -name '*.h' | xargs cat |\
-		perl -n -e 'print if m/.+/' | wc -l
+# count:
+# 	find ./nemu -type f -name '*.c' -o -name '*.h' | xargs cat |\
+# 		perl -n -e 'print if m/.+/' | wc -l
 
 _default:
 	@echo "Please run 'make' under subprojects."

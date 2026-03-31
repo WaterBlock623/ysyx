@@ -33,7 +33,7 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 # Command to execute NEMU
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
-_NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
+_NEMU_EXEC = ($(BINARY) $(ARGS) $(IMG) 2>&1 | tee $(BUILD_DIR)/std-output.txt)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
@@ -46,7 +46,7 @@ GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
 						 -ex "smart-connect $(GDB_SOCKET)"
 						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
-NEMU_EXEC := $(_NEMU_EXEC) & \
+NEMU_EXEC = $(_NEMU_EXEC) & \
     NEMU_PID=$$!; \
     ( \
         $(CROSS_GDB) $(GDB_FLAGS); \
@@ -55,7 +55,7 @@ NEMU_EXEC := $(_NEMU_EXEC) & \
     NEMU_RET=$$?; \
     exit $$NEMU_RET
 else
-NEMU_EXEC := $(_NEMU_EXEC)
+NEMU_EXEC = $(_NEMU_EXEC)
 endif
 
 run-env: $(BINARY) $(DIFF_REF_SO)
@@ -63,16 +63,17 @@ run-env: $(BINARY) $(DIFF_REF_SO)
 run: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "run NEMU")
-	$(NEMU_EXEC)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
+	@echo '$(NEMU_EXEC)'
+	@$(NEMU_EXEC)
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt >/dev/null 2>&1
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 gdb: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(_NEMU_EXEC)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt >/dev/null 2>&1
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):
