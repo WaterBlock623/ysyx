@@ -893,22 +893,22 @@ class Top(
   val exuOut = exu.out
   val lsuOut = lsu.out
 
-  if (cfg.isDebug) {
-    if (cfg.ysyxsoc) {
-      val io = IO(new Bundle {
-        val interrupt = Input(Bool())
-        val master = new Axi4FlatIO
-        val slave = Flipped(new Axi4FlatIO)
-      })
-      0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-      io.master :<>= xbar.out(0).viewAs[Axi4FlatIO]
-    } else {
-      val memDpiC = Module(new MemDpiC)
-      memDpiC.axi :<>= xbar.out(0).viewAs[Axi4FlatIO]
-      memDpiC.clock := clock
-      memDpiC.reset := reset
-    }
+  if (cfg.ysyxsoc) {
+    val io = IO(new Bundle {
+      val interrupt = Input(Bool())
+      val master = new Axi4FlatIO
+      val slave = Flipped(new Axi4FlatIO)
+    })
+    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+    io.master :<>= xbar.out(0).viewAs[Axi4FlatIO]
+  } else if (cfg.isDebug) {
+    val memDpiC = Module(new MemDpiC)
+    memDpiC.axi :<>= xbar.out(0).viewAs[Axi4FlatIO]
+    memDpiC.clock := clock
+    memDpiC.reset := reset
+  }
 
+  if (cfg.isDebug) {
     val debugInfoDpiC = Module(new DebugInfoDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
@@ -917,17 +917,6 @@ class Top(
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
     getGprDpiC.gpr := registerFile.debug.get
-  } else {
-    // val io = IO(new Bundle {
-    //   val interrupt = Input(Bool())
-    //   val master = new YsyxSocAxi4IO
-    //   val slave = Flipped(new YsyxSocAxi4IO)
-    // })
-    // 0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    // io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
-    //
-    // val getGprDpiC = Module(new GetGprDpiC)
-    // getGprDpiC.gpr := registerFile.debug
   }
 
   memBusArbiter.in(0) :<>= ifu.exte.mem

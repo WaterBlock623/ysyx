@@ -21,7 +21,7 @@ object Elaborate extends App {
   val cfg =
     CoreConfig(
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
-      // isDebug = false,
+      isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
       pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16),
     )
