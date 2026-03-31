@@ -23,6 +23,7 @@ object Elaborate extends App {
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
       isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
+      perf = argMap.getOrElse("perf", "false").toBoolean,
       pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16),
     )
   firtoolOptions.foreach(s => println(s))
