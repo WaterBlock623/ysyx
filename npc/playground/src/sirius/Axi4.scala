@@ -95,7 +95,7 @@ object Axi4Resp {
 //   )
 // }
 
-class YsyxSocAxi4IO(val busWidth: Int = 32) extends Bundle {
+class Axi4FlatIO(val busWidth: Int = 32) extends Bundle {
   val awready = Input(Bool())
   val awvalid = Output(Bool())
   val awaddr = Output(UInt(busWidth.W))
@@ -132,9 +132,9 @@ class YsyxSocAxi4IO(val busWidth: Int = 32) extends Bundle {
   val rlast = Input(Bool())
   val rid = Input(UInt(4.W))
 }
-object YsyxSocAxi4IO {
-  implicit val view: DataView[Axi4IO, YsyxSocAxi4IO] = 
-    Axi4IO.view.invert(axi4IO => new YsyxSocAxi4IO(axi4IO.busWidth))
+object Axi4FlatIO {
+  implicit val view: DataView[Axi4IO, Axi4FlatIO] = 
+    Axi4IO.view.invert(axi4IO => new Axi4FlatIO(axi4IO.busWidth))
 }
 
 class Axi4IO(val busWidth: Int = 32) extends Bundle {
@@ -175,8 +175,8 @@ class Axi4IO(val busWidth: Int = 32) extends Bundle {
   })))
 }
 object Axi4IO {
-  implicit val view: DataView[YsyxSocAxi4IO, Axi4IO] = DataView(
-    ysyxSocAxi4IO => new Axi4IO(ysyxSocAxi4IO.busWidth),
+  implicit val view: DataView[Axi4FlatIO, Axi4IO] = DataView(
+    axi4FlatIO => new Axi4IO(axi4FlatIO.busWidth),
     _.awready -> _.aw.ready,
     _.awvalid -> _.aw.valid,
     _.awaddr -> _.aw.bits.addr,

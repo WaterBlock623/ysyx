@@ -35,6 +35,7 @@
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
+uint64_t g_nr_guest_cyc = 0;
 static uint64_t g_timer = 0; // unit: us
 bool g_print_step = false;
 bool g_cpu_stop_flag = false;
@@ -92,6 +93,10 @@ static void statistic() {
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+  if (g_nr_guest_cyc > 0) {
+    Log("total guest cycles = " NUMBERIC_FMT, g_nr_guest_cyc);
+    Log("IPC = %f", (double)g_nr_guest_inst / (double)g_nr_guest_cyc);
+  }
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }

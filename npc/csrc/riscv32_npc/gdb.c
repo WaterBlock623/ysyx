@@ -26,14 +26,12 @@ REG(pc, 32, code_ptr, 32) \
 "</feature>" \
 "</target>"
 
-/*
 #define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, \
     MUXDEF(CONFIG_RVE, GDB_TARGET_RV32E, TARGET_RV32))
-*/
 
-#define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32)
+// #define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32)
 
 arch_info_t arch_info = { .target_desc = GDB_TARGET,
                           .smp = 1,
-                          .reg_num = MUXDEF(CONFIG_RVE, 17, 33)
+                          .reg_num = MUXDEF(CONFIG_RVE, 16, 32)
                         };

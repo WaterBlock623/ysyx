@@ -54,6 +54,7 @@ class MemBusArbiter(
       out :<>= lsu
     }
   }
+  out.w.bits.last := true.B
 }
 
 class Xbar(
@@ -62,76 +63,53 @@ class Xbar(
   val in = IO(Flipped(new Axi4IO))
   val out = IO(Vec(2, new Axi4IO))
 
-  val mem = out(0)
-  def isMemAddr(addr: UInt): Bool = addr >= "h2000_0000".U && addr <= "h2000_0fff".U
-  // val uart = out(1)
-  // def isUartAddr(addr: UInt): Bool = addr === "h10000000".U
+  val soc = out(0)
   val clint = out(1)
-  def isClintAddr(addr: UInt): Bool = addr === "h10000600".U || addr === "h10000604".U
+  def isClintAddr(addr: UInt): Bool = addr >= "h02000000".U && addr < "h02010000".U
 
   out :<= 0.U.asTypeOf(chiselTypeOf(out))
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
 
-  val rAddrComb = in.ar.bits.addr
   val canUpdateRAddr = in.ar.valid
-  val rAddrReg = RegEnable(
-    rAddrComb,
-    canUpdateRAddr
-  )
+  val rAddrReg = Reg(chiselTypeOf(in.ar.bits.addr))
+  val rAddr = WireDefault(rAddrReg)
+  rAddrReg := rAddr
+  when (canUpdateRAddr) {
+    rAddr := in.ar.bits.addr
+  }
 
-  when(isMemAddr(rAddrComb)) {
-    mem.ar :<>= in.ar
-  // }.elsewhen(isUartAddr(rAddrComb)) {
-  //   uart.ar :<>= in.ar
-  }.elsewhen(isClintAddr(rAddrComb)) {
+  when(isClintAddr(rAddr)) {
     clint.ar :<>= in.ar
-  }.otherwise {
-    mem.ar :<>= in.ar // test
+  } .otherwise {
+    soc.ar :<>= in.ar
   }
 
-  when(isMemAddr(rAddrReg)) {
-    in.r :<>= mem.r
-  // }.elsewhen(isUartAddr(rAddrReg)) {
-  //   in.r :<>= uart.r
-  }.elsewhen(isClintAddr(rAddrReg)) {
+  when(isClintAddr(rAddrReg)) {
     in.r :<>= clint.r
-  }.otherwise {
-    // in.r.bits.resp := "b11".U
-    in.r :<>= mem.r // test
+  } .otherwise {
+    in.r :<>= soc.r
   }
 
-  val wAddrComb = in.aw.bits.addr
   val canUpdateWAddr = in.aw.valid && in.w.valid
-  val wAddrReg = RegEnable(
-    wAddrComb,
-    canUpdateWAddr
-  )
-  val wAddr = Mux(canUpdateWAddr, wAddrComb, wAddrReg)
+  val wAddrReg = Reg(chiselTypeOf(in.aw.bits.addr))
+  val wAddr = WireDefault(wAddrReg)
+  wAddrReg := wAddr
+  when (canUpdateWAddr) {
+    wAddr := in.aw.bits.addr
+  }
 
-  when(isMemAddr(wAddr)) {
-    mem.aw :<>= in.aw
-    mem.w :<>= in.w
-  // }.elsewhen(isUartAddr(wAddr)) {
-  //   uart.aw :<>= in.aw
-  //   uart.w :<>= in.w
-  }.elsewhen(isClintAddr(wAddr)) {
+  when(isClintAddr(wAddr)) {
     clint.aw :<>= in.aw
     clint.w :<>= in.w
   }.otherwise {
-    // test
-    mem.aw :<>= in.aw
-    mem.w :<>= in.w
+    soc.aw :<>= in.aw
+    soc.w :<>= in.w
   }
 
-  when(isMemAddr(wAddrReg)) {
-    in.b :<>= mem.b
-  // }.elsewhen(isUartAddr(wAddrReg)) {
-  //   in.b :<>= uart.b
-  }.elsewhen(isClintAddr(wAddrReg)) {
+  when(isClintAddr(wAddrReg)) {
     in.b :<>= clint.b
   }.otherwise {
-    // in.b.bits.resp := "b11".U
-    in.b :<>= mem.b // test
+    in.b :<>= soc.b
   }
 }
 
@@ -176,8 +154,8 @@ class ClintDevice extends Module {
         MuxCase(
           sError,
           Seq(
-            (in.ar.bits.addr === "h10000600".U) -> sMtimeLo,
-            (in.ar.bits.addr === "h10000604".U) -> sMtimeHi
+            (in.ar.bits.addr === "h02000000".U) -> sMtimeLo,
+            (in.ar.bits.addr === "h02000004".U) -> sMtimeHi
           )
         ),
         sIdle

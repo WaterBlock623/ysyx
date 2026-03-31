@@ -113,4 +113,9 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
 
   // csr
   outBits.iduPayload.idu.csrAddr := inst(31, 20)
+
+  InstTypeEnum.allWithNames.foreach { case (typ, name) =>
+    PerfWhen("type" + name, (ctrl.id.instType === typ.asUInt) && out.fire, ctrl.debug.isEbreak)
+    PerfWhen("type" + name + "Cyc", (ctrl.id.instType === typ.asUInt) && in.valid, ctrl.debug.isEbreak)
+  }
 }

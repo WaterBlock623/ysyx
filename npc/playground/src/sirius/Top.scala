@@ -397,19 +397,18 @@ class DebugInfoDpiC(
 //   )
 // }
 
-/*
 class MemDpiC(
   implicit private val cfg: CoreConfig)
     extends ExtModule {
   val clock = IO(Input(Clock()))
   val reset = IO(Input(Reset()))
-  val AXI = IO(Flipped(new VerilogAxi4LiteIO))
+  val axi = IO(Flipped(new Axi4FlatIO))
 
   private val memAddrMsb = cfg.memoryAddrWidth - 1
   private val maskMsb = (cfg.xlen >> 3) - 1
   private val maskZero = 32 - (cfg.xlen >> 3)
 
-  private val delayProb = 50
+  private val delayProb = 0
   private val maxDelayCycle = 30
   
   setInline(
@@ -423,37 +422,57 @@ module MemDpiC(
   input clock,
   input reset,
 
-  input AXI_AWVALID,
-  output reg AXI_AWREADY,
-  input [$memAddrMsb:0] AXI_AWADDR,
+  input axi_awvalid,
+  output reg axi_awready,
+  input [$memAddrMsb:0] axi_awaddr,
+  input [3:0] axi_awid,
+  input [7:0] axi_awlen,
+  input [2:0] axi_awsize,
+  input [1:0] axi_awburst,
 
-  input AXI_WVALID,
-  output reg AXI_WREADY,
-  input [31:0] AXI_WDATA,
-  input [$maskMsb:0] AXI_WSTRB,
+  input axi_wvalid,
+  output reg axi_wready,
+  input [31:0] axi_wdata,
+  input [$maskMsb:0] axi_wstrb,
+  input axi_wlast,
 
-  output reg AXI_BVALID,
-  input AXI_BREADY,
-  output reg [1:0] AXI_BRESP,
+  output reg axi_bvalid,
+  input axi_bready,
+  output reg [1:0] axi_bresp,
+  output reg [3:0] axi_bid,
 
-  input AXI_ARVALID,
-  output reg AXI_ARREADY,
-  input [$memAddrMsb:0] AXI_ARADDR,
+  input axi_arvalid,
+  output reg axi_arready,
+  input [$memAddrMsb:0] axi_araddr,
+  input [3:0] axi_arid,
+  input [7:0] axi_arlen,
+  input [2:0] axi_arsize,
+  input [1:0] axi_arburst,
 
-  output reg AXI_RVALID,
-  input AXI_RREADY,
-  output reg [31:0] AXI_RDATA,
-  output reg [1:0] AXI_RRESP
+  output reg axi_rvalid,
+  input axi_rready,
+  output reg [31:0] axi_rdata,
+  output reg [1:0] axi_rresp,
+  output reg axi_rlast,
+  output reg [3:0] axi_rid
 );
 
-assign AXI_RRESP = 0;
+reg [3:0] r_arid_reg;
+reg [3:0] r_awid_reg;
+
+assign axi_rresp = 0;
+assign axi_bresp = 0;
+assign axi_rlast = 1;
+assign axi_rid   = r_arid_reg;
+assign axi_bid   = r_awid_reg;
+
 reg [31:0] internal_ls_rData;
 reg read_state; // 0: IDLE, 1: WAIT_RESP
 integer read_delay_cnt;
 
-assign AXI_ARREADY= (read_state == 0) && (read_delay_cnt == 0);
-assign AXI_RVALID = (read_state == 1) && (read_delay_cnt == 0);
-assign AXI_RDATA = AXI_RVALID ? internal_ls_rData : ${cfg.xlen}'b0;
+assign axi_arready = (read_state == 0) && (read_delay_cnt == 0);
+assign axi_rvalid = (read_state == 1) && (read_delay_cnt == 0);
+assign axi_rdata = axi_rvalid ? internal_ls_rData : ${cfg.xlen}'b0;
 
 always @(posedge clock) begin
   if (reset) begin
@@ -463,16 +482,17 @@ always @(posedge clock) begin
     if (read_state == 0) begin
       if (read_delay_cnt > 0) begin
         read_delay_cnt <= read_delay_cnt - 1;
-      end else if (AXI_ARVALID && AXI_ARREADY) begin
+      end else if (axi_arvalid && axi_arready) begin
         read_state <= 1;
+        r_arid_reg <= axi_arid;
         /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        internal_ls_rData <= dpic_pmem_read(AXI_ARADDR);
+        internal_ls_rData <= dpic_pmem_read(axi_araddr);
       end
     end else begin
       if (read_delay_cnt > 0) begin
         read_delay_cnt <= read_delay_cnt - 1;
-      end else if (AXI_RVALID && AXI_RREADY) begin
+      end else if (axi_rvalid && axi_rready) begin
         read_state <= 0;
         /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
@@ -481,13 +501,12 @@ always @(posedge clock) begin
   end
 end
 
-assign AXI_BRESP = 0;
 reg write_state; // 0: IDLE, 1: WAIT_RESP
 integer write_delay_cnt;
 
-assign AXI_AWREADY = (write_state == 0) && (AXI_AWVALID && AXI_WVALID) && (write_delay_cnt == 0);
-assign AXI_WREADY = AXI_AWREADY;
-assign AXI_BVALID = (write_state == 1) && (write_delay_cnt == 0);
+assign axi_awready = (write_state == 0) && (axi_awvalid && axi_wvalid) && (write_delay_cnt == 0);
+assign axi_wready = axi_awready;
+assign axi_bvalid = (write_state == 1) && (write_delay_cnt == 0);
 
 always @(posedge clock) begin
   if (reset) begin
@@ -497,16 +516,17 @@ always @(posedge clock) begin
     if (write_state == 0) begin
       if (write_delay_cnt > 0) begin
         write_delay_cnt <= write_delay_cnt - 1;
-      end else if (AXI_AWVALID && AXI_WVALID) begin
+      end else if (axi_awvalid && axi_wvalid) begin
         write_state <= 1;
+        r_awid_reg <= axi_awid;
         /* verilator lint_off UNSIGNED */
         write_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        dpic_pmem_write(AXI_AWADDR, AXI_WDATA, {${maskZero}'b0, AXI_WSTRB});
+        dpic_pmem_write(axi_awaddr, axi_wdata, {${maskZero}'b0, axi_wstrb});
       end
     end else begin
       if (write_delay_cnt > 0) begin
         write_delay_cnt <= write_delay_cnt - 1;
-      end else if (AXI_BVALID && AXI_BREADY) begin
+      end else if (axi_bvalid && axi_bready) begin
         write_state <= 0;
         /* verilator lint_off UNSIGNED */
         write_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
@@ -519,7 +539,6 @@ endmodule
 """
   )
 }
-*/
 
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)
@@ -875,33 +894,29 @@ class Top(
   val lsuOut = lsu.out
 
   if (cfg.isDebug) {
-    val io = IO(new Bundle {
-      val interrupt = Input(Bool())
-      val master = new YsyxSocAxi4IO
-      val slave = Flipped(new YsyxSocAxi4IO)
-    })
-    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    io.master :<>= xbar.out(0).viewAs[YsyxSocAxi4IO]
+    if (cfg.ysyxsoc) {
+      val io = IO(new Bundle {
+        val interrupt = Input(Bool())
+        val master = new Axi4FlatIO
+        val slave = Flipped(new Axi4FlatIO)
+      })
+      0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+      io.master :<>= xbar.out(0).viewAs[Axi4FlatIO]
+    } else {
+      val memDpiC = Module(new MemDpiC)
+      memDpiC.axi :<>= xbar.out(0).viewAs[Axi4FlatIO]
+      memDpiC.clock := clock
+      memDpiC.reset := reset
+    }
 
     val debugInfoDpiC = Module(new DebugInfoDpiC)
-    // val memDpiC = Module(new MemDpiC)
-    // val getRetDpiC = Module(new GetRetDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    // val uartDevice = Module(new UartDevice)
-    // val clintDevice = Module(new ClintDevice)
-
     debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := pcReg.debug.get.pc
     debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := ifu.debug.get
     debugInfoDpiC.wbuValid := wbu.out.valid
-    // memDpiC.AXI :<>= xbar.out(0).viewAs[VerilogAxi4LiteIO]
-    // memDpiC.clock := clock
-    // memDpiC.reset := reset
     getGprDpiC.gpr := registerFile.debug.get
-    // getRetDpiC.a0 := registerFile.debug.get(10)
-    // uartDevice.in :<>= xbar.out(1)
-    // clintDevice.in :<>= xbar.out(2)
   } else {
     // val io = IO(new Bundle {
     //   val interrupt = Input(Bool())

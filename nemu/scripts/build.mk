@@ -7,7 +7,7 @@ CFLAGS  += -fPIC -fvisibility=hidden
 LDFLAGS += -shared -fPIC
 endif
 
-INC_PATH := $(ADD_INC_PATH) $(WORK_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
+INC_PATH := $(ADD_INC_PATH) $(CFG_DIR)/include $(NEMU_HOME)/include $(INC_PATH)
 INC_PATH := $(abspath $(INC_PATH))
 # ifneq ($(CONFIG_NPC),)
 # INC_PATH := $(ADD_INC_PATH) $(INC_PATH)
@@ -36,14 +36,14 @@ $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c -o $@ $(abspath $<)
 	$(call call_fixdep, $(@:.o=.d), $@)
-	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
+	@sed -i 's|include/config|$(abspath $(CFG_DIR)/include/config)|g' $(@:.o=.d)
 
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $(abspath $<)
 	$(call call_fixdep, $(@:.o=.d), $@)
-	@sed -i 's|include/config|$(abspath $(WORK_DIR)/include/config)|g' $(@:.o=.d)
+	@sed -i 's|include/config|$(abspath $(CFG_DIR)/include/config)|g' $(@:.o=.d)
 
 # Depencies
 -include $(OBJS:.o=.d)
@@ -59,8 +59,8 @@ compile_git:
 
 $(info NEMU archives $(ARCHIVES))
 $(BINARY): $(OBJS) $(ARCHIVES) $(BINARY_DEPS) | compile_git
-	@echo + LD $@ BECAUSE OF $?
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
+	@echo + LD $@
+	$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 
 clean:
 	-rm -rf $(BUILD_DIR)

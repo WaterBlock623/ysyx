@@ -291,3 +291,6 @@ config RT_CHECK
   default y
 
 endmenu
+
+config NVBOARD
+  bool "Enable NVBOARD"

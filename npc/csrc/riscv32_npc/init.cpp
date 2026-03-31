@@ -13,15 +13,20 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include "verilated.h"
-#include "verilated_fst_c.h"
-#include __TOP_NAME_INCLUDE__
-#include __TOP_NAME_SYMS_INCLUDE__
-#include "local-include/reg.h"
+#include <sys/cdefs.h>
 #include <generated/autoconf.h>
 #include <isa.h>
 #include <memory/paddr.h>
-#include <sys/cdefs.h>
+#include "local-include/reg.h"
+#include "verilated.h"
+#include "verilated_fst_c.h"
+#include str(__TOP_NAME_INCLUDE__)
+#include str(__TOP_NAME_SYMS_INCLUDE__)
+#ifdef CONFIG_NVBOARD
+#include <nvboard.h>
+#endif
+
+void nvboard_bind_all_pins(__VTOP_NAME__ *top);
 
 static VerilatedContext *contextp = NULL;
 static __VTOP_NAME__ *top = NULL;
@@ -36,19 +41,21 @@ paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
 
 // DIP-C
+#ifdef CONFIG_HAS_FLASH
 extern "C" void flash_read(uint32_t addr, uint32_t *data) { 
-#ifdef CONFIG_FLASH_MMIO
   addr += CONFIG_FLASH_MMIO;
-#endif
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
   // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
+#endif
 
+#ifdef CONFIG_HAS_MROM
 extern "C" void mrom_read(uint32_t addr, uint32_t *data) {
   addr &= ~3u;
   *data = paddr_read(addr, 4);
 }
+#endif
 
 extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid PSRAM read length");
@@ -66,6 +73,7 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
   paddr_write(addr, len, data);
 }
 
+#ifdef CONFIG_HAS_SDRAM
 extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
   Assert(len % 8 == 0, "Invalid SDRAM read length");
   len /= 8;
@@ -96,48 +104,49 @@ extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32
   Assert(wmask == 0, "Invalid wmask");
   paddr_write(addr, wlen, data);
 }
+#endif
 
-// #define MEM_READ_SKIP 0
-// extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-//   static int skip_cnt = 0;
-//   if (skip_cnt < MEM_READ_SKIP) {
-//     skip_cnt++;
-//     Log("Skip raddr: %u", raddr);
-//     return 0;
-//   }
-//   raddr &= ~3u;
-//
-//   static uint32_t last_raddr = 0;
-//   static uint32_t rdata = 0;
-//   if (raddr != last_raddr) {
-//     last_raddr = raddr;
-//     rdata = paddr_read(raddr, 4);
-//   }
-//   return rdata;
-// }
-//
-// extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
-//                                 uint32_t wmask) {
-//   waddr &= ~3u;
-//   wmask &= 15u;
-//   // Log("Front " FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, wmask);
-//   if (wmask == 0) {
-//     return;
-//   }
-//   while ((wmask & 1u) == 0) {
-//     waddr++;
-//     wmask >>= 1;
-//     wdata >>= 8;
-//   }
-//   int len = 0;
-//   while (wmask & 1u) {
-//     len++;
-//     wmask >>= 1;
-//   }
-//   Assert(wmask == 0, "Invalid wmask");
-//   // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
-//   paddr_write(waddr, len, wdata);
-// }
+#define MEM_READ_SKIP 0
+extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
+  static int skip_cnt = 0;
+  if (skip_cnt < MEM_READ_SKIP) {
+    skip_cnt++;
+    Log("Skip raddr: %u", raddr);
+    return 0;
+  }
+  raddr &= ~3u;
+
+  static uint32_t last_raddr = 0;
+  static uint32_t rdata = 0;
+  if (raddr != last_raddr) {
+    last_raddr = raddr;
+    rdata = paddr_read(raddr, 4);
+  }
+  return rdata;
+}
+
+extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
+                                uint32_t wmask) {
+  waddr &= ~3u;
+  wmask &= 15u;
+  // Log("Front " FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, wmask);
+  if (wmask == 0) {
+    return;
+  }
+  while ((wmask & 1u) == 0) {
+    waddr++;
+    wmask >>= 1;
+    wdata >>= 8;
+  }
+  int len = 0;
+  while (wmask & 1u) {
+    len++;
+    wmask >>= 1;
+  }
+  Assert(wmask == 0, "Invalid wmask");
+  // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
+  paddr_write(waddr, len, wdata);
+}
 
 extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
                                uint32_t inst, int wbu_valid) {
@@ -157,13 +166,20 @@ extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
 //   npc_gpr_ptr = ptr;
 // }
 
+#ifdef CONFIG_NVBOARD
+static void nvb_init(void) {
+  nvboard_bind_all_pins(top);
+  nvboard_init();
+}
+#endif
+
 static void sim_init(void) {
   const char* verilator_argv[] = {
         "riscv32_npc-nemu-interpreter", 
     };
   Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
-  // contextp->commandArgs(2, (const char **)verilator_argv);
+  contextp->commandArgs(1, verilator_argv);
   top = new __VTOP_NAME__{contextp};
 #ifdef CONFIG_NPC_WAVE
   Verilated::traceEverOn(true);
@@ -172,7 +188,10 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+  // npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+#define CONCAT_PTR_INNER(a, b) a->b
+#define CONCAT_PTR(a, b) CONCAT_PTR_INNER(a, b)
+  npc_gpr_ptr = (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
 }
 
 extern "C" void sim_close(void) {
@@ -205,12 +224,14 @@ void single_cycle(void) {
 #ifdef CONFIG_NPC_WAVE
   tfp->dump(contextp->time());
 #endif
+  IFDEF(CONFIG_NVBOARD, nvboard_update());
 }
 
 static void reset(int n) {
   top->reset = 1;
-  while (n-- > 0)
+  while (n-- > 0) {
     single_cycle();
+  }
   top->reset = 0;
 }
 
@@ -260,10 +281,8 @@ extern "C" void restart() {
 __BEGIN_DECLS
 void init_isa() {
   sim_init();
-  /* Load built-in image. */
+  IFDEF(CONFIG_NVBOARD, nvb_init());
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
-  /* Initialize this virtual computer system. */
-  // restart();
 }
 __END_DECLS

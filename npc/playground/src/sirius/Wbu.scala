@@ -69,4 +69,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   csr.pc := pc
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
+
+  PerfWhen("totalCyc", true.B, in.bits.ctrl.debugCtrl.get.isEbreak)
+  PerfWhen("totalInst", out.valid, in.bits.ctrl.debugCtrl.get.isEbreak)
 }

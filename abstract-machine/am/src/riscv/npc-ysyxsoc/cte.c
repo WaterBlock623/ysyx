@@ -8,6 +8,7 @@
 #define SEXT_DYN(x, len) ({ ((x) & (1ul << ((len) - 1))) ? ((x) | ~BITMASK(len)) : (x); })
 
 static void misaligned_load_store(Context *c, bool is_load) {
+  printf("Misaligned %s!\n", is_load ? "load" : "store");
   uint32_t inst;
   memcpy(&inst, (void *)c->mepc, 4);
   bool is_w = (inst >> 13) & 1u;

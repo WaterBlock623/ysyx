@@ -1,7 +1,11 @@
+ifeq ($(CONFIG_NVBOARD),y)
+include $(NPC_HOME)/scripts/nvboard.mk
+endif
+
 VERILATOR = verilator
 GTKWAVE = gtkwave
 
-OBJ_DIR = $(BUILD_DIR)/obj_dir
+OBJ_DIR = $(BUILD_DIR)/$(ARCH)-obj_dir
 WAVE_DIR = $(BUILD_DIR)/wave
 WAVE = $(WAVE_DIR)/sim.fst
 $(shell mkdir -p $(OBJ_DIR))
@@ -19,10 +23,22 @@ else
 $(info profile.vlt not found, skipping PGO)
 endif
 
+VSRCS += $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VERILATOR_BUILDFLAGS += -MMD --cc --build -j 16 --autoflush \
 				-O3 --x-assign fast --x-initial fast --noassert --threads 1
+
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(ARCH),)
+$(error Need ARCH)
+endif
+ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
+VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
+VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
+endif
+endif
+
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
 # 				--threads-max-mtasks 128 --threads-dpi all --prof-pgo --prof-exec $(VLT_ARGS)
@@ -31,11 +47,11 @@ $(info WAVE is enable)
 VERILATOR_BUILDFLAGS += --trace-fst
 endif
 
-VSRCS = $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
-VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
-VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
-CSRCS = $(shell find $(abspath $(WORK_DIR)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-ARCHIVES = $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
+CSRCS += $(shell find $(abspath $(NPC_HOME)/csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+ARCHIVES += $(OBJ_DIR)/libV$(TOPNAME).a $(OBJ_DIR)/libverilated.a $(OBJ_DIR)/V$(TOPNAME)__ALL.a
+ifeq ($(CONFIG_NVBOARD),y)
+ARCHIVES += $(NVBOARD_ARCHIVE)
+endif
 
 # Menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
@@ -75,26 +91,28 @@ CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(C
 CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(CONFIG_FTRACE_COND)),true)
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
-INC_PATH := $(WORK_DIR)/csrc/$(GUEST_ISA)/include \
-						$(WORK_DIR)/include $(NEMU_HOME)/include \
+INC_PATH := $(NPC_HOME)/csrc/$(GUEST_ISA)/include \
+						$(CFG_DIR)/include $(NEMU_HOME)/include \
 						$(NEMU_HOME)/tools/mini-gdbstub/include \
 						$(INC_PATH)
 export ADD_INC_PATH := $(INC_PATH)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) \
-						-D__TOP_NAME__="\"$(TOPNAME)\"" \
-						-D__VTOP_NAME__="\"V$(TOPNAME)\"" \
-						-D__TOP_NAME_INCLUDE__="\\\"V$(TOPNAME).h\\\"" \
-						-D__TOP_NAME_SYMS_INCLUDE__="\\\"V$(TOPNAME)__Syms.h\\\"" \
-						-D__WAVE__=$(WAVE)
+						-D__TOP_NAME__=$(TOPNAME) \
+						-D__VTOP_NAME__=V$(TOPNAME) \
+						-D__TOP_NAME_INCLUDE__=V$(TOPNAME).h \
+						-D__TOP_NAME_SYMS_INCLUDE__=V$(TOPNAME)__Syms.h \
+						-D__WAVE__=$(WAVE) \
+						-D__NPC_VERILATOR_GPR__=$(CONFIG_NPC_VERILATOR_GPR)
 
-NEMU_MAKE_FLAGS += WORK_DIR="$(WORK_DIR)" \
-									 ADD_ARCHIVES="$(ARCHIVES)" ADD_LIBS="-lz"
+NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
+									 ADD_ARCHIVES="$(ARCHIVES)" \
+									 ADD_LIBS="-lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
 lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-build_ar: verilog
+build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
 	# Build archives
 	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \

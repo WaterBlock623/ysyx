@@ -218,9 +218,10 @@ extern paddr_t npc_dnpc;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
 extern bool g_cpu_stop_flag;
+extern uint64_t g_nr_guest_cyc;
 
 int isa_exec_once(Decode *s) {
-  int inst_cyc_cnt = 0;
+  static int inst_cyc_cnt = 0;
   s->snpc = s->pc + 4;
   s->dnpc = s->pc;
 
@@ -232,6 +233,9 @@ int isa_exec_once(Decode *s) {
     single_cycle(); 
     sync_npc_gpr();
     inst_cyc_cnt++;
+    if (inst_cyc_cnt >= 10000 && inst_cyc_cnt % 10000 == 0) {
+      printf("[npc] Warning: A instruction has been executed for %d cycles at " FMT_WORD "\n", inst_cyc_cnt, s->pc);
+    }
   }
   s->isa.inst = npc_inst.inst;
   s->dnpc = npc_dnpc;
@@ -244,15 +248,15 @@ int isa_exec_once(Decode *s) {
 #endif
   decode_inst(s);
 
+  single_cycle(); 
+  sync_npc_gpr();
+  inst_cyc_cnt++;
+  g_nr_guest_cyc += inst_cyc_cnt;
+  inst_cyc_cnt = 0;
+
   if (npc_stop_flag != 0) {
     set_nemu_state(NEMU_END, s->pc, gpr(10));
-  } else {
-    single_cycle(); 
-    sync_npc_gpr();
-    inst_cyc_cnt++;
   }
-
-
 
   /*
   if (npc_wbu_valid == 0) {

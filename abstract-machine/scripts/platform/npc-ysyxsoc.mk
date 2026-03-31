@@ -1,10 +1,11 @@
 AM_SRCS := riscv/npc-ysyxsoc/start.S \
            riscv/npc-ysyxsoc/trm.c \
            riscv/npc-ysyxsoc/bootloader.c \
-           riscv/npc-ysyxsoc/ioe.c \
-           riscv/npc-ysyxsoc/gpu.c \
-           riscv/npc-ysyxsoc/timer.c \
-           riscv/npc-ysyxsoc/input.c \
+           riscv/npc-ysyxsoc/ioe/ioe.c \
+           riscv/npc-ysyxsoc/ioe/gpu.c \
+           riscv/npc-ysyxsoc/ioe/timer.c \
+           riscv/npc-ysyxsoc/ioe/input.c \
+           riscv/npc-ysyxsoc/ioe/uart.c \
            riscv/npc-ysyxsoc/cte.c \
            riscv/npc-ysyxsoc/trap.S \
            platform/dummy/vme.c \

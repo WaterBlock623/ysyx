@@ -1,5 +1,17 @@
-WORK_DIR = $(shell pwd)
-BUILD_DIR ?= $(WORK_DIR)/build
+remove_quote = $(patsubst "%",%,$(1))
+
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(ARCH),)
+$(error Need ARCH)
+endif
+ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
+CFG_DIR = $(NPC_HOME)/config/ysyxsoc
+else # normal npc
+CFG_DIR = $(NPC_HOME)/config/npc
+endif
+endif
+
+BUILD_DIR ?= $(NPC_HOME)/build
 $(info NPC BUILD_DIR $(BUILD_DIR))
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -9,12 +21,12 @@ all: build_ar
 	$(MAKE) -C $(NEMU_HOME) $(NEMU_MAKE_FLAGS)
 
 # Menuconfig
-include $(NEMU_HOME)/scripts/config.mk
--include $(WORK_DIR)/include/config/auto.conf
--include $(WORK_DIR)/include/config/auto.conf.cmd
+# include $(NEMU_HOME)/scripts/config.mk
+include $(CFG_DIR)/include/config/auto.conf
+include $(CFG_DIR)/include/config/auto.conf.cmd
 
-remove_quote = $(patsubst "%",%,$(1))
-
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),menuconfig)
 ifeq ($(CONFIG_NPC_PACKAGE_NAME),)
 $(error PACKAGE_NAME cannot be empty)
 else
@@ -25,27 +37,29 @@ ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
 # 			  			grep "new " | \
 # 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
 # 			  			sed 's/.*\.//'
-EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
-							tr -d '\n' | \
-			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
-			  			sed 's/.*\.//'
+# EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
+# 							tr -d '\n' | \
+# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
+# 			  			sed 's/.*\.//'
 # TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
-TOPNAME = ysyxSoCFull
+TOPNAME = $(call remove_quote,$(CONFIG_NPC_TOP_NAME))
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
 else
 $(info TOPNAME is $(TOPNAME))
 endif # TOPNAME
 endif # PACKAGE_NAME
+endif # menuconfig
+endif # clean
 
 # Verilator
-include $(WORK_DIR)/scripts/verilator.mk
+include $(NPC_HOME)/scripts/verilator.mk
 
 # Chisel
-include $(WORK_DIR)/scripts/chisel.mk
+include $(NPC_HOME)/scripts/chisel.mk
 
 # Util
-include $(WORK_DIR)/../Makefile
+include $(NPC_HOME)/../Makefile
 
 run: all
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
@@ -62,4 +76,7 @@ runbatch: all
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: force all run gdb runbatch clean
+menuconfig:
+	$(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk menuconfig
+
+.PHONY: force all run gdb runbatch clean menuconfig
