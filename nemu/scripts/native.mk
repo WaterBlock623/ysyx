@@ -65,15 +65,15 @@ run: run-env
 	$(call git_commit, "run NEMU")
 	@echo '$(NEMU_EXEC)'
 	@$(NEMU_EXEC)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt >/dev/null 2>&1
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 gdb: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(_NEMU_EXEC)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
+	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt >/dev/null 2>&1
+	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):
