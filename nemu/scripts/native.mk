@@ -58,7 +58,7 @@ else
 NEMU_EXEC := $(_NEMU_EXEC)
 endif
 
-$(info $(NEMU_EXEC))
+# $(info $(NEMU_EXEC))
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
