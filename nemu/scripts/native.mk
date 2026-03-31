@@ -63,8 +63,8 @@ run-env: $(BINARY) $(DIFF_REF_SO)
 run: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "run NEMU")
-	echo '###########################################'
-	$(NEMU_EXEC)
+	@echo $(NEMU_EXEC)
+	@$(NEMU_EXEC)
 	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt
 	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat
 
