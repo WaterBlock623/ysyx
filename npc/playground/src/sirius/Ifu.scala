@@ -67,13 +67,15 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
+  val outBits = out.bits
   val pc = exte.pcReg.pc
+
+  val icache = Module(new Icache(lineNum = 16, lineByte = 4, addrByte = 4))
 
   out.bits.ifuPayload.trap := 0.U.asTypeOf(
     chiselTypeOf(out.bits.ifuPayload.trap)
   )
 
-  val outBits = out.bits
 
   val sIdle :: sWaitResp :: sKeepData :: Nil = Enum(3)
   val state = RegInit(sIdle)
@@ -102,7 +104,6 @@ class Ifu(
   // exte.mem.ar.valid := state === sIdle && canValid
   // exte.mem.ar.bits.addr := pc
   // exte.mem.r.ready := true.B
-  val icache = Module(new Icache(lineNum = 16, lineByte = 4, addrByte = 4))
   exte.mem :<>= icache.io.mem
   icache.io.cached :<= 0.U.asTypeOf(new Axi4IO)
   icache.io.cached.ar.bits.size := "b010".U
