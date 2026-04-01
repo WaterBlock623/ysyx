@@ -46,7 +46,7 @@ class Icache(lineNum: BigInt, lineByte: BigInt, addrByte: BigInt) extends Module
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.cached.ar.ready := true.B
+  io.cached.ar.ready := state === sReadCache && hit
   io.cached.r.valid := state === sReadCache && hit
   io.cached.r.bits.data := line.data
   when (state === sMiss) {
