@@ -2,12 +2,13 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import scala.collection.immutable.NumericRange
 
 class Icache(
   lineNum:   BigInt,
   lineByte:  BigInt,
   addrByte:  BigInt,
-  whiteList: Option[Range] = None)
+  whiteList: Option[NumericRange[BigInt]] = None)
     extends Module {
   require(lineNum > 0 && lineNum.bitCount == 1)
   require(lineByte > 0 && lineByte.bitCount == 1)
@@ -93,7 +94,7 @@ class Ifu(
       lineNum = 16,
       lineByte = 4,
       addrByte = 4,
-      if (cfg.ysyxsoc) { Some(0xa0000000 until 0xc0000000) }
+      if (cfg.ysyxsoc) { Some(BigInt("a0000000", 16) until BigInt("c0000000", 16)) }
       else { None }
     )
   )
