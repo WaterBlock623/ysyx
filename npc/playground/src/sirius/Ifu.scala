@@ -21,7 +21,9 @@ class Icache(lineNum: BigInt, lineByte: BigInt, addrByte: BigInt) extends Module
     val off = UInt(log2Ceil(lineByte).W)
   }
   val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.valid)
-  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
+  val rAddr = Mux(io.cached.ar.valid, io.cached.ar.bits.addr, rAddrReg)
+  rAddrReg := rAddr
+  val rAddrLine = rAddr.asTypeOf(new AddrLine)
 
   class Line extends Bundle {
     val tag = UInt((addrByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W)
@@ -33,27 +35,26 @@ class Icache(lineNum: BigInt, lineByte: BigInt, addrByte: BigInt) extends Module
   val lineValid = validReg(rAddrLine.idx)
   val hit = lineValid && line.tag === rAddrLine.tag
 
-  val sIdle :: sHit :: sMiss :: Nil = Enum(3)
+  val sIdle :: sReadCache :: sMiss :: Nil = Enum(3)
   val state = RegInit(sIdle)
   val nextState = MuxLookup(state, sIdle)(Seq(
-    sIdle -> Mux(io.cached.ar.valid, Mux(hit, sHit, sMiss), sIdle),
-    sHit -> Mux(io.cached.r.fire, sIdle, sHit),
+    sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
+    sReadCache -> Mux(hit, Mux(io.cached.r.fire, sIdle, sReadCache), sMiss),
     sMiss -> Mux(io.mem.r.fire, sIdle, sMiss)
     ))
   state := nextState
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.cached.ar.ready := state === sHit
-  io.cached.r.valid := state === sHit
+  io.cached.ar.ready := true.B
+  io.cached.r.valid := state === sReadCache && hit
   io.cached.r.bits.data := line.data
   when (state === sMiss) {
     io.mem :<>= io.cached
   }
   when (state === sMiss && io.mem.r.fire) {
     lineValid := true.B
-    line.tag := rAddrLine.tag
-    line.data := io.mem.r.bits.data
+    cache.write(rAddrLine.idx, (rAddrLine.tag ## io.mem.r.bits.data).asTypeOf(new Line))
   }
 }
 
