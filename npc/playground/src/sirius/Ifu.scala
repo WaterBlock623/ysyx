@@ -42,8 +42,8 @@ class Icache(lineNum: BigInt, lineByte: BigInt, addrByte: BigInt) extends Module
     ))
   state := nextState
 
-  io.cached :<= 0.U.asTypeOf(chiselTypeOf(io.cached))
-  0.U.asTypeOf(chiselTypeOf(io.mem)) :>= io.mem
+  0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
+  io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
   io.cached.ar.ready := state === sHit
   io.cached.r.valid := state === sHit
   io.cached.r.bits.data := line.data
