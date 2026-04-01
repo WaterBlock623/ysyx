@@ -255,34 +255,9 @@ int isa_exec_once(Decode *s) {
   inst_cyc_cnt = 0;
 
   if (npc_stop_flag != 0) {
+    printf("STOP!\n");
     set_nemu_state(NEMU_END, s->pc, gpr(10));
   }
-
-  /*
-  if (npc_wbu_valid == 0) {
-    // Log("Skip!");
-    s->dnpc = s->pc;
-    if (g_print_step) {
-      printf("Executing @ " FMT_WORD "\n", s->pc);
-    }
-    IFDEF(CONFIG_ITRACE, log_write("Executing @ " FMT_WORD "\n", s->pc));
-    difftest_skip_ref();
-  } else {
-    s->dnpc = npc_dnpc;
-    IFDEF(CONFIG_ITRACE, print_disassemble(s));
-    // printf("%x\n", gpr(2));
-    decode_inst(s);
-  }
-
-  if (npc_stop_flag != 0) {
-    set_nemu_state(NEMU_END, s->pc, gpr(10));
-    // sim_close();
-    return 0;
-  }
-
-  single_cycle(); 
-  sync_npc_gpr();
-  */
 
   return 0;
 }
