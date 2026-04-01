@@ -33,7 +33,7 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 # Command to execute NEMU
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
-_NEMU_EXEC = ($(BINARY) $(ARGS) $(IMG) 2>&1 | tee $(BUILD_DIR)/std-output.txt)
+_NEMU_EXEC = (stdbuf -oL $(BINARY) $(ARGS) $(IMG) 2>&1 | tee $(BUILD_DIR)/std-output.txt)
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
