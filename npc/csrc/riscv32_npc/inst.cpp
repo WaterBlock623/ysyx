@@ -249,7 +249,6 @@ int isa_exec_once(Decode *s) {
   decode_inst(s);
 
   if (npc_stop_flag != 0) {
-    printf("STOP!\n");
     set_nemu_state(NEMU_END, s->pc, gpr(10));
   }
 
