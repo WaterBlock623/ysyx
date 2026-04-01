@@ -248,16 +248,16 @@ int isa_exec_once(Decode *s) {
 #endif
   decode_inst(s);
 
+  if (npc_stop_flag != 0) {
+    printf("STOP!\n");
+    set_nemu_state(NEMU_END, s->pc, gpr(10));
+  }
+
   single_cycle(); 
   sync_npc_gpr();
   inst_cyc_cnt++;
   g_nr_guest_cyc += inst_cyc_cnt;
   inst_cyc_cnt = 0;
-
-  if (npc_stop_flag != 0) {
-    printf("STOP!\n");
-    set_nemu_state(NEMU_END, s->pc, gpr(10));
-  }
 
   return 0;
 }
