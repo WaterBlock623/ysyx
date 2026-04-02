@@ -2,6 +2,7 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.BoringUtils
 import scala.collection.immutable.NumericRange
 
 class Icache(
@@ -94,8 +95,9 @@ class Ifu(
       lineNum = 16,
       lineByte = 4,
       addrByte = 4,
-      if (cfg.ysyxsoc) { Some(BigInt("a0000000", 16) until BigInt("c0000000", 16)) }
-      else { None }
+      if (cfg.ysyxsoc) {
+        Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+      } else { None }
     )
   )
 
@@ -162,12 +164,12 @@ class Ifu(
   if (cfg.isDebug) {
     debug.get := outBits.ifuPayload.ifu.inst
   }
-  PerfWhen(
-    "instFetch",
-    exte.mem.r.fire,
-    out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-  )
   if (cfg.perf) {
+    PerfWhen(
+      "instFetch",
+      exte.mem.r.fire,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
     val isMemBusy = RegInit(false.B)
     when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
       isMemBusy := true.B
@@ -183,6 +185,30 @@ class Ifu(
     PerfWhen(
       "keepDataCyc",
       out.valid && !out.ready,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    val icacheState = BoringUtils.tapAndRead(icache.state)
+    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+    val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
+    val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
+    val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
+    val idleToRead =
+      icacheState === icacheSIdle && icacheNextState === icacheSRead
+    val readToMiss = 
+      icacheState === icacheSRead && icacheNextState === icacheSMiss
+    PerfWhen(
+      "icacheTotalAcc",
+      idleToRead,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    PerfWhen(
+      "icacheMiss",
+      readToMiss,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    PerfWhen(
+      "icacheMissPenalty",
+      icacheState === icacheSMiss,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
   }
