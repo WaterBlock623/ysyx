@@ -1,10 +1,62 @@
 import chisel3._
-import chisel3.util._
-// LTL (线性时序逻辑) 用于定义形式化属性
-import chisel3.ltl._
-// 核心：导入大写的 Formal 对象
-import chisel3.simulator.Formal
+import chisel3.ltl.AssertProperty
+
+import java.nio.file.{Files, Paths}
+import scala.sys.process._
 import org.scalatest.flatspec.AnyFlatSpec
+
+object Formal {
+  def verify[T <: RawModule](gen: => T, topName: String, depth: Int = 5)
+    : Unit = {
+
+    val workDir = Paths.get("formal")
+    Files.createDirectories(workDir)
+
+    val firtoolOptions = Array(
+      "--default-layer-specialization=enable",
+      "--verification-flavor=immediate",
+      "--lowering-options=" + List(
+        // make yosys happy
+        // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+        "disallowLocalVariables",
+        "disallowPackedArrays",
+        "locationInfoStyle=wrapInAtSquareBracket"
+      ).reduce(_ + "," + _)
+    )
+    val sv = circt.stage.ChiselStage.emitSystemVerilog(gen, firtoolOpts = firtoolOptions)
+
+    val svPath = workDir.resolve(s"$topName.sv")
+    Files.write(svPath, sv.getBytes)
+
+    val sby =
+      s"""
+         |[options]
+         |mode bmc
+         |depth $depth
+         |
+         |[engines]
+         |smtbmc
+         |
+         |[script]
+         |read -formal $topName.sv
+         |prep -top $topName
+         |
+         |[files]
+         |$topName.sv
+         |""".stripMargin
+
+    val sbyPath = workDir.resolve(s"$topName.sby")
+    Files.write(sbyPath, sby.getBytes)
+
+    println(s"[Formal] Generated: $svPath")
+    println(s"[Formal] Running SymbiYosys...")
+
+    val exitCode =
+      Process(Seq("sby", "-f", sbyPath.getFileName.toString), workDir.toFile).!
+
+    org.scalatest.Assertions.assert(exitCode == 0)
+  }
+}
 
 class Sub extends Module {
   val io = IO(new Bundle {
@@ -13,20 +65,16 @@ class Sub extends Module {
     val c = Output(UInt(4.W))
   })
 
-  // 当 io.a === 2.U 时，c = a + ~b + 0 = a - b - 1 (不等于 ref)
   io.c := io.a + ~io.b + Mux(io.a === 2.U, 0.U, 1.U)
 
   val ref = io.a - io.b
 
-  // Chisel 7+ 推荐使用 AssertProperty
-  // 它会被自动映射到形式化后端的 Assert 指令
-  AssertProperty(io.c === ref)
+  // AssertProperty(io.c === ref)
+  assert(io.c === ref)
 }
 
-class FormalTest extends AnyFlatSpec {
-  "Sub" should "pass formal verification" in {
-    // 使用新的 Formal.verify 接口
-    // 默认后端通常是 svsim + yosys-smtbmc
-    Formal.verify(new Sub(), Seq(Formal.BoundedCheck(1)))
+class FormalSpec extends AnyFlatSpec {
+  "Sub" should "pass" in {
+    Formal.verify(new Sub, "Sub", 5)
   }
 }
