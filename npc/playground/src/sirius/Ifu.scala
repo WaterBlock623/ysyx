@@ -189,9 +189,12 @@ class Ifu(
     )
     val icacheState = BoringUtils.tapAndRead(icache.state)
     val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
-    val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
-    val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
+    // val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
+    // val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
+    // val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
+    val icacheSIdle = 0.U
+    val icacheSRead = 1.U
+    val icacheSMiss = 2.U
     val idleToRead =
       icacheState === icacheSIdle && icacheNextState === icacheSRead
     val readToMiss = 
