@@ -167,6 +167,11 @@ config TRACE_END
   int "When tracing is disabled (unit: number of instructions)"
   default -1
 
+config PCTRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable pc tracer"
+  default n
+
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable instruction tracer"

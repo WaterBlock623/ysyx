@@ -5,6 +5,16 @@
 extern uint64_t g_nr_guest_inst;
 extern bool g_print_step;
 
+#ifdef CONFIG_PCTRACE
+void pctrace(Decode *s) {
+  FILE *bin = fopen("pctrace.bin", "w");
+  Assert(bin, "Can not open pctrace.bin");
+  unsigned long size = fwrite(&s->pc, sizeof(vaddr_t), 1, bin);
+  Assert(size == sizeof(vaddr_t), "Write pctrace fail");
+}
+#endif
+
+
 #ifdef CONFIG_ITRACE
 IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
 IFDEF(CONFIG_ITRACE, unsigned int iringbuf_ptr = 0);
