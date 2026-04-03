@@ -7,8 +7,11 @@ extern bool g_print_step;
 
 #ifdef CONFIG_PCTRACE
 void pctrace(Decode *s) {
-  FILE *bin = fopen("pctrace.bin", "w");
-  Assert(bin, "Can not open pctrace.bin");
+  static FILE *bin = NULL;
+  if (bin == NULL) {
+    bin = fopen("pctrace.bin", "w");
+    Assert(bin, "Can not open pctrace.bin");
+  }
   unsigned long ret = fwrite(&s->pc, 1, sizeof(vaddr_t), bin);
   Assert(ret == sizeof(vaddr_t), "Write pctrace fail");
 }
