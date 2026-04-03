@@ -9,8 +9,8 @@ extern bool g_print_step;
 void pctrace(Decode *s) {
   FILE *bin = fopen("pctrace.bin", "w");
   Assert(bin, "Can not open pctrace.bin");
-  unsigned long size = fwrite(&s->pc, sizeof(vaddr_t), 1, bin);
-  Assert(size == sizeof(vaddr_t), "Write pctrace fail");
+  unsigned long ret = fwrite(&s->pc, 1, sizeof(vaddr_t), bin);
+  Assert(ret == sizeof(vaddr_t), "Write pctrace fail");
 }
 #endif
 
