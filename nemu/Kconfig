@@ -153,6 +153,11 @@ config DEBUGER_GDB
   bool "GDB"
 endchoice
 
+config SIM_SOC
+  depends on !NPC
+  bool "Make nemu be like soc"
+  default n
+
 config TRACE
   bool "Enable tracer"
   default y
