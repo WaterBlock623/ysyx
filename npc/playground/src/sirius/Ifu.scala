@@ -144,7 +144,7 @@ class Ifu(
     new Icache(
       lineNum = 16,
       lineByte = 4,
-      busByte = 4,
+      busByte = 16,
       if (cfg.ysyxsoc) {
         Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
       } else { None }
