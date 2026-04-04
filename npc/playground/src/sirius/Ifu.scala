@@ -228,32 +228,32 @@ class Ifu(
       out.valid && !out.ready,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
-    val icacheState = BoringUtils.tapAndRead(icache.state)
-    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    // val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
-    // val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
-    // val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
-    val icacheSIdle = 0.U
-    val icacheSRead = 1.U
-    val icacheSMiss = 2.U
-    val idleToRead =
-      icacheState === icacheSIdle && icacheNextState === icacheSRead
-    val readToMiss =
-      icacheState === icacheSRead && icacheNextState === icacheSMiss
-    PerfWhen(
-      "icacheTotalAcc",
-      idleToRead,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheMiss",
-      readToMiss,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheMissPenalty",
-      icacheState === icacheSMiss,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
+    // val icacheState = BoringUtils.tapAndRead(icache.state)
+    // val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+    // // val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
+    // // val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
+    // // val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
+    // val icacheSIdle = 0.U
+    // val icacheSRead = 1.U
+    // val icacheSMiss = 2.U
+    // val idleToRead =
+    //   icacheState === icacheSIdle && icacheNextState === icacheSRead
+    // val readToMiss =
+    //   icacheState === icacheSRead && icacheNextState === icacheSMiss
+    // PerfWhen(
+    //   "icacheTotalAcc",
+    //   idleToRead,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheMiss",
+    //   readToMiss,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheMissPenalty",
+    //   icacheState === icacheSMiss,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
   }
 }
