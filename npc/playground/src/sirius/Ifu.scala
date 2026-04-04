@@ -119,7 +119,9 @@ class Icache(
   io.cached.r.bits.data := Mux(
     state === sReadCache,
     cache(rAddrLine.idx)
-      .data(rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte))),
+      .data(if (lineByte == busByte) {
+        0.U
+      } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
     cachedRDataReg
   )
 }
