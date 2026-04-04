@@ -73,7 +73,7 @@ class Icache(
   state := nextState
 
   // Update cache
-  val cacheWPtr = if (log2Ceil(lineByte) == log2Ceil(busByte)) {
+  val cacheWPtr = if (lineByte == busByte) {
     0.U
   } else {
     val cacheWPtrIntr = Reg(UInt(log2Ceil(burstTimes).W))
@@ -93,6 +93,7 @@ class Icache(
 
   // Mem bus
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
+  io.mem.ar.bits.addr := rAddrReg & ~(busByte.U - 1.U)
   io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
   io.mem.ar.bits.size := "b010".U
   io.mem.ar.bits.burst := Axi4Burst.warp.U
@@ -114,8 +115,13 @@ class Icache(
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   io.cached.ar.ready := state === sIdle
-  io.cached.r.valid := cachedRValidReg
-  io.cached.r.bits.data := cachedRDataReg
+  io.cached.r.valid := (state === sReadCache && hit) || cachedRValidReg
+  io.cached.r.bits.data := Mux(
+    state === sReadCache,
+    cache(rAddrLine.idx)
+      .data(rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte))),
+    cachedRDataReg
+  )
 }
 
 class Ifu(
