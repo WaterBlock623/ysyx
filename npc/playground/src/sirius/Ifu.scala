@@ -89,6 +89,7 @@ class Icache(
   when(io.mem.r.fire && inWhiteList) {
     cache(rAddrLine.idx).data(cacheWPtr) := io.mem.r.bits.data
     cache(rAddrLine.idx).tag := rAddrLine.tag
+    lineValid := true.B
   }
 
   // Mem bus
