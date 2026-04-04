@@ -46,7 +46,7 @@ GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
 						 -ex "smart-connect $(GDB_SOCKET)"
 						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
-NEMU_EXEC = $(_NEMU_EXEC) & \
+NEMU_EXEC = $(_NEMU_EXEC) &; \
     NEMU_PID=$$(cat $(BUILD_DIR/nemu.pid)); \
     $(CROSS_GDB) $(GDB_FLAGS); \
     wait $$NEMU_PID; \
