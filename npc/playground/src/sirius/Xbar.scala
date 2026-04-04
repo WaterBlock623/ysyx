@@ -54,7 +54,7 @@ class MemBusArbiter(
       out :<>= lsu
     }
   }
-  out.w.bits.last := true.B
+  // out.w.bits.last := true.B
 }
 
 class Xbar(

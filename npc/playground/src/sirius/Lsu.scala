@@ -31,6 +31,7 @@ class Lsu(
   outBits.ctrl := inBits.ctrl.viewAsSupertype(new WbuCtrl)
 
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
+  exte.mem.w.bits.last := true.B
 
   val eLoadStoreAddressMisaligned = isMemAcc &&
       ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
