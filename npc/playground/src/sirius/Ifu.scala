@@ -8,7 +8,7 @@ import scala.collection.immutable.NumericRange
 class Icache(
   lineNum:   BigInt,
   lineByte:  BigInt,
-  busByte:  BigInt,
+  busByte:   BigInt,
   whiteList: Option[NumericRange[BigInt]] = None)
     extends Module {
   require(lineNum > 0 && lineNum.bitCount == 1)
@@ -23,7 +23,7 @@ class Icache(
 
   assert(!io.cached.aw.valid && !io.cached.w.valid)
 
-  // Addr 
+  // Addr
   class AddrLine extends Bundle {
     val tag = UInt(
       (busByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
@@ -73,18 +73,24 @@ class Icache(
   state := nextState
 
   // Update cache
-  val cacheWPtr = Reg(UInt(log2Ceil(burstTimes).W))
-  when (io.mem.ar.valid) {
-    cacheWPtr := io.cached.ar.bits.addr(log2Ceil(lineByte) - 1, log2Ceil(busByte))
-  } .elsewhen (io.mem.r.fire) {
-    cacheWPtr := cacheWPtr + 1.U
+  val cacheWPtr = if (log2Ceil(lineByte) == log2Ceil(busByte)) {
+    0.U
+  } else {
+    val cacheWPtrIntr = Reg(UInt(log2Ceil(burstTimes).W))
+    when(io.mem.ar.valid) {
+      cacheWPtrIntr := io.cached.ar.bits
+        .addr(log2Ceil(lineByte) - 1, log2Ceil(busByte))
+    }.elsewhen(io.mem.r.fire) {
+      cacheWPtrIntr := cacheWPtrIntr + 1.U
+    }
+    cacheWPtrIntr
   }
 
-  when (io.mem.r.fire && inWhiteList) {
+  when(io.mem.r.fire && inWhiteList) {
     cache(rAddrLine.idx).data(cacheWPtr) := io.mem.r.bits.data
     cache(rAddrLine.idx).tag := rAddrLine.tag
   }
-  
+
   // Mem bus
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
   io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
@@ -92,17 +98,17 @@ class Icache(
   io.mem.ar.bits.burst := Axi4Burst.warp.U
   io.mem.ar.valid := state === sReq
   io.mem.r.ready := true.B
-  when (io.mem.r.valid) {
+  when(io.mem.r.valid) {
     assert(io.mem.r.bits.resp(1) === 0.U)
   }
 
   // Cached bus
   val cachedRValidReg = RegInit(false.B)
   val cachedRDataReg = Reg(UInt((busByte * 8).toInt.W))
-  when (state === sFirstResp && io.mem.r.fire) {
-    cachedRValidReg := true.B 
+  when(state === sFirstResp && io.mem.r.fire) {
+    cachedRValidReg := true.B
     cachedRDataReg := io.mem.r.bits.data
-  } .elsewhen (io.cached.r.ready) {
+  }.elsewhen(io.cached.r.ready) {
     cachedRValidReg := false.B
   }
 
