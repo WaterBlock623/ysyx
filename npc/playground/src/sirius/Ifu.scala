@@ -93,7 +93,7 @@ class Icache(
 
   // Mem bus
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.mem.ar.bits.addr := rAddrReg & ~(busByte.U - 1.U)
+  io.mem.ar.bits.addr := rAddrReg & ~((busByte - 1).U(rAddrReg.getWidth.W))
   io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
   io.mem.ar.bits.size := "b010".U
   io.mem.ar.bits.burst := Axi4Burst.warp.U
