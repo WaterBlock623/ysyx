@@ -72,4 +72,7 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
 
   PerfWhen("totalCyc", true.B, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
   PerfWhen("totalInst", out.valid, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  when (in.bits.ctrl.debugCtrl.get.isEbreak) {
+    printf("### PC=%x", pc)
+  }
 }
