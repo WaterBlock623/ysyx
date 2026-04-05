@@ -32,7 +32,7 @@ class Icache(
     val off = UInt(log2Ceil(lineByte).W)
   }
   val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.valid)
-  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
+  val rAddrLine = dontTouch(rAddrReg.asTypeOf(new AddrLine))
   val inWhiteList = if (whiteList.isDefined) {
     rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
   } else { true.B }
