@@ -88,9 +88,11 @@ class Icache(
 
   when(io.mem.r.fire && inWhiteList) {
     line.data(cacheWPtr) := io.mem.r.bits.data
-    printf("%x\n", line.data(cacheWPtr))
     line.tag := rAddrLine.tag
     lineValid := true.B
+  }
+  when(RegNext(io.mem.r.fire && inWhiteList)) {
+    printf("%x\n", line.data(RegNext(cacheWPtr)))
   }
 
   // Mem bus
