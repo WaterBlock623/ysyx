@@ -47,6 +47,7 @@ class Icache(
   val cache = Mem(lineNum.toInt, new Line)
   val validReg = RegInit(0.U.asTypeOf(Vec(lineNum.toInt, Bool())))
   val line = cache.read(rAddrLine.idx)
+  dontTouch(line)
   val lineValid = validReg(rAddrLine.idx)
   val hit = lineValid && line.tag === rAddrLine.tag
 
@@ -119,10 +120,9 @@ class Icache(
   io.cached.r.valid := (state === sReadCache && hit) || cachedRValidReg
   io.cached.r.bits.data := Mux(
     state === sReadCache,
-    cache(rAddrLine.idx)
-      .data(if (lineByte == busByte) {
-        0.U
-      } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
+    line.data(if (lineByte == busByte) {
+      0.U
+    } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
     cachedRDataReg
   )
 }
