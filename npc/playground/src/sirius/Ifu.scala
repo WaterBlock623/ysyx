@@ -224,6 +224,9 @@ class Ifu(
     debug.get := outBits.ifuPayload.ifu.inst
   }
   if (cfg.perf) {
+    when (out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)) {
+      printf("### PC=%x", pc)
+    }
     PerfWhen(
       "instFetch",
       exte.mem.r.fire,
