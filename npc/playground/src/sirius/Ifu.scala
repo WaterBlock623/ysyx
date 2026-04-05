@@ -88,6 +88,7 @@ class Icache(
 
   when(io.mem.r.fire && inWhiteList) {
     line.data(cacheWPtr) := io.mem.r.bits.data
+    printf("%x\n", io.mem.r.bits.data)
     line.tag := rAddrLine.tag
     lineValid := true.B
   }
