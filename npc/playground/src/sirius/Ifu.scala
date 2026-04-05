@@ -265,6 +265,11 @@ class Ifu(
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
     PerfWhen(
+      "icacheHit",
+      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    PerfWhen(
       "icacheBlackList",
       icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
