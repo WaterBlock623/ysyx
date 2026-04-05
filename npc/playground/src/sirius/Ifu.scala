@@ -44,11 +44,16 @@ class Icache(
     )
     val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
   }
-  val cache = Mem(lineNum.toInt, new Line)
+  // val cache = Mem(lineNum.toInt, new Line)
+  val cacheData = Mem(lineNum.toInt, (new Line).data)
+  val cacheTag = Mem(lineNum.toInt, (new Line).tag)
   val validReg = RegInit(0.U.asTypeOf(Vec(lineNum.toInt, Bool())))
-  val line = cache(rAddrLine.idx)
+  // val line = cache(rAddrLine.idx)
+  val lineData = cacheData(rAddrLine.idx)
+  val lineTag = cacheTag(rAddrLine.idx)
   val lineValid = validReg(rAddrLine.idx)
-  val hit = lineValid && line.tag === rAddrLine.tag
+  // val hit = lineValid && line.tag === rAddrLine.tag
+  val hit = lineValid && lineTag === rAddrLine.tag
 
   // FSM
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
@@ -87,13 +92,16 @@ class Icache(
   }
 
   when(io.mem.r.fire && inWhiteList) {
-    line.data(cacheWPtr) := io.mem.r.bits.data
+    // line.data(cacheWPtr) := io.mem.r.bits.data
+    lineData(cacheWPtr) := io.mem.r.bits.data
     printf("%x\n", io.mem.r.bits.data)
-    line.tag := rAddrLine.tag
+    // line.tag := rAddrLine.tag
+    lineTag := rAddrLine.tag
     lineValid := true.B
   }
   when(RegNext(io.mem.r.fire && inWhiteList)) {
-    printf("%x\n", line.data(RegNext(cacheWPtr)))
+    // printf("%x\n", line.data(RegNext(cacheWPtr)))
+    printf("%x\n", lineData(RegNext(cacheWPtr)))
   }
 
   // Mem bus
@@ -123,7 +131,10 @@ class Icache(
   io.cached.r.valid := (state === sReadCache && hit) || cachedRValidReg
   io.cached.r.bits.data := Mux(
     state === sReadCache,
-    line.data(if (lineByte == busByte) {
+    // line.data(if (lineByte == busByte) {
+    //   0.U
+    // } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
+    lineData(if (lineByte == busByte) {
       0.U
     } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
     cachedRDataReg
