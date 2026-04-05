@@ -162,8 +162,8 @@ class Lsu(
     )
   )
 
-  PerfWhen("memoryRead", exte.mem.r.fire, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("waitRead", in.valid && ctrl.isLoad && !outBits.lsuPayload.trap.isTrap, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("memoryWrite", exte.mem.b.fire, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("waitWrite", in.valid && ctrl.isStore && !outBits.lsuPayload.trap.isTrap, in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen("memoryRead", exte.mem.r.fire, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen("waitRead", in.valid && ctrl.isLoad && !outBits.lsuPayload.trap.isTrap, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen("memoryWrite", exte.mem.b.fire, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen("waitWrite", in.valid && ctrl.isStore && !outBits.lsuPayload.trap.isTrap, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
 }
