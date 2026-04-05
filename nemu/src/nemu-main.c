@@ -65,5 +65,5 @@ int main(int argc, char *argv[]) {
   IFDEF(CONFIG_NPC, sim_close());
 
   return 1;
-  return is_exit_status_bad();
+  // return is_exit_status_bad();
 }
