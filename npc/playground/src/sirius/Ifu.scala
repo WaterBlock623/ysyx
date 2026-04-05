@@ -32,7 +32,7 @@ class Icache(
     val off = UInt(log2Ceil(lineByte).W)
   }
   val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
-  val rAddrLine = dontTouch(rAddrReg.asTypeOf(new AddrLine))
+  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
   val inWhiteList = if (whiteList.isDefined) {
     rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
   } else { true.B }
@@ -94,14 +94,9 @@ class Icache(
   when(io.mem.r.fire && inWhiteList) {
     // line.data(cacheWPtr) := io.mem.r.bits.data
     lineData(cacheWPtr) := io.mem.r.bits.data
-    printf("%x\n", io.mem.r.bits.data)
     // line.tag := rAddrLine.tag
     lineTag := rAddrLine.tag
     lineValid := true.B
-  }
-  when(RegNext(io.mem.r.fire && inWhiteList)) {
-    // printf("%x\n", line.data(RegNext(cacheWPtr)))
-    printf("%x\n", lineData(RegNext(cacheWPtr)))
   }
 
   // Mem bus
