@@ -144,6 +144,10 @@ class ClintDevice extends Module {
 
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
   assert(!in.aw.valid && !in.w.valid)
+  when (in.ar.valid) {
+    assert(in.ar.bits.len === 0.U)
+  }
+  in.r.bits.last := true.B
 
   val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(4)
   val state = RegInit(sIdle)
