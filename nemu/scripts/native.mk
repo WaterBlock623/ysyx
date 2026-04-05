@@ -52,6 +52,7 @@ NEMU_EXEC = $(_NEMU_EXEC) & \
     $(CROSS_GDB) $(GDB_FLAGS); \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
+		echo $$NEMU_RET; \
     exit $$NEMU_RET
 else
 NEMU_EXEC = $(_NEMU_EXEC)
@@ -63,8 +64,7 @@ run: SHELL := /bin/bash
 run: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "run NEMU")
-	@echo '$(NEMU_EXEC)'
-	@$(NEMU_EXEC)
+	$(NEMU_EXEC)
 	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt >/dev/null 2>&1
 	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
