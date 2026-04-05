@@ -50,6 +50,7 @@ GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC = $(_NEMU_EXEC) & \
 		NEMU_PID=$!; \
     $(CROSS_GDB) $(GDB_FLAGS); \
+		echo $$NEMU_PID; \
     wait $$NEMU_PID; \
     NEMU_RET=$$?; \
 		echo $$NEMU_RET; \
