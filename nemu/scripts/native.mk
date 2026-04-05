@@ -33,7 +33,8 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 # Command to execute NEMU
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
-_NEMU_EXEC = (stdbuf -oL sh -c "echo $$$$ >$(BUILD_DIR)/nemu.pid; exec $(BINARY) $(ARGS) $(IMG)" 2>&1 | tee $(BUILD_DIR)/std-output.txt)
+_NEMU_EXEC = set -o pipefail; \
+						 stdbuf -oL $(BINARY) $(ARGS) $(IMG) 2>&1 | tee $(BUILD_DIR)/std-output.txt
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
@@ -47,8 +48,9 @@ GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
 						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC = $(_NEMU_EXEC) & \
+		NEMU_PID=$!; \
     $(CROSS_GDB) $(GDB_FLAGS); \
-    wait $$(cat $(BUILD_DIR)/nemu.pid); \
+    wait $$NEMU_PID; \
     NEMU_RET=$$?; \
     exit $$NEMU_RET
 else
