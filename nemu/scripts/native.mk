@@ -48,7 +48,7 @@ GDB_FLAGS += -ex "set can-use-hw-watchpoints 0" \
 						 # -ex "target remote $(GDB_SOCKET)"
 GDB_FLAGS += $(AM_GDB_FLAGS)
 NEMU_EXEC = $(_NEMU_EXEC) & \
-		NEMU_PID=$!; \
+		NEMU_PID=$$!; \
     $(CROSS_GDB) $(GDB_FLAGS); \
 		echo PID: $$NEMU_PID; \
     wait $$NEMU_PID; \
