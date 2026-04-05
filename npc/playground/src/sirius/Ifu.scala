@@ -47,7 +47,6 @@ class Icache(
   val cache = Mem(lineNum.toInt, new Line)
   val validReg = RegInit(0.U.asTypeOf(Vec(lineNum.toInt, Bool())))
   val line = cache(rAddrLine.idx)
-  dontTouch(line)
   val lineValid = validReg(rAddrLine.idx)
   val hit = lineValid && line.tag === rAddrLine.tag
 
