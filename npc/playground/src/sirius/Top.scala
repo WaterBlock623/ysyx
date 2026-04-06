@@ -252,7 +252,7 @@ class DebugInfoDpiC(
 //
 //   if (DELAY <= 0) begin
 //       assign out = in;
-//   end 
+//   end
 //   else begin
 //     reg [WIDTH-1:0] delay_pipeline [0:DELAY-1];
 //
@@ -262,7 +262,7 @@ class DebugInfoDpiC(
 //         for (i = 0; i < DELAY; i = i + 1) begin
 //           delay_pipeline[i] <= {WIDTH{1'b0}};
 //         end
-//       end 
+//       end
 //       else begin
 //         delay_pipeline[0] <= in;
 //
@@ -410,7 +410,7 @@ class MemDpiC(
 
   private val delayProb = 0
   private val maxDelayCycle = 30
-  
+
   setInline(
     "MemDpiC.sv",
     s"""
@@ -486,7 +486,7 @@ always @(posedge clock) begin
         read_state <= 1;
         r_arid_reg <= axi_arid;
         /* verilator lint_off UNSIGNED */
-        read_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        read_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         internal_ls_rData <= dpic_pmem_read(axi_araddr);
       end
     end else begin
@@ -495,7 +495,7 @@ always @(posedge clock) begin
       end else if (axi_rvalid && axi_rready) begin
         read_state <= 0;
         /* verilator lint_off UNSIGNED */
-        read_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        read_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
   end
@@ -520,7 +520,7 @@ always @(posedge clock) begin
         write_state <= 1;
         r_awid_reg <= axi_awid;
         /* verilator lint_off UNSIGNED */
-        write_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        write_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         dpic_pmem_write(axi_awaddr, axi_wdata, {${maskZero}'b0, axi_wstrb});
       end
     end else begin
@@ -529,7 +529,7 @@ always @(posedge clock) begin
       end else if (axi_bvalid && axi_bready) begin
         write_state <= 0;
         /* verilator lint_off UNSIGNED */
-        write_delay_cnt <= ($$urandom_range(0, 99) < ${100-delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        write_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
       end
     end
   end
@@ -728,7 +728,6 @@ endmodule
 //   )
 // }
 
-
 // class MemDpiC(
 //   implicit private val cfg: CoreConfig)
 //     extends ExtModule {
@@ -876,8 +875,18 @@ class Top(
   implicit private val ucfg: UnitConfig)
     extends Module {
 
-  val memBusArbiter = Module(new MemBusArbiter)
-  val xbar = Module(new Xbar)
+  // val memBusArbiter = Module(new MemBusArbiter)
+  // val xbar = Module(new Xbar)
+  val xbar = Module(
+    new Xbar(
+      2,
+      2,
+      Seq(
+        addr => addr < "h02000000".U || addr >= "h02010000".U,
+        addr => addr >= "h02000000".U && addr > "h02010000".U
+      )
+    )
+  )
   val clintDevice = Module(new ClintDevice)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
@@ -900,10 +909,10 @@ class Top(
       val slave = Flipped(new Axi4FlatIO)
     })
     0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    io.master :<>= xbar.out(0).viewAs[Axi4FlatIO]
+    io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
   } else if (cfg.isDebug) {
     val memDpiC = Module(new MemDpiC)
-    memDpiC.axi :<>= xbar.out(0).viewAs[Axi4FlatIO]
+    memDpiC.axi :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
     memDpiC.clock := clock
     memDpiC.reset := reset
   }
@@ -919,10 +928,12 @@ class Top(
     getGprDpiC.gpr := registerFile.debug.get
   }
 
-  memBusArbiter.in(0) :<>= ifu.exte.mem
-  memBusArbiter.in(1) :<>= lsu.exte.mem
-  xbar.in :<>= memBusArbiter.out
-  clintDevice.in :<>= xbar.out(1)
+  // memBusArbiter.in(0) :<>= ifu.exte.mem
+  // memBusArbiter.in(1) :<>= lsu.exte.mem
+  // xbar.in :<>= memBusArbiter.out
+  xbar.io.in(0) :<>= lsu.exte.mem
+  xbar.io.in(1) :<>= ifu.exte.mem
+  clintDevice.in :<>= xbar.io.out(1)
   pcReg.ifuIn :<>= ifu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
