@@ -2,7 +2,6 @@ package sirius
 
 import chisel3._
 import chisel3.util._
-import chisel3.SpecifiedDirection.Flip
 
 class Xbar(
   nMasters: Int = 2,
@@ -13,7 +12,6 @@ class Xbar(
     extends Module {
 
   require(routeFn.length == nSlaves)
-
   val masterIdBits = log2Ceil(nMasters)
   require(masterIdBits < idWidth, "ID width not enough")
 
@@ -25,8 +23,12 @@ class Xbar(
   })
 
   for (m <- 0 until nMasters) {
-    assert(io.in(m).aw.bits.id(idWidth - 1, lowIdBits) === 0.U)
-    assert(io.in(m).ar.bits.id(idWidth - 1, lowIdBits) === 0.U)
+    when (io.in(m).aw.fire) {
+      assert(io.in(m).aw.bits.id(idWidth - 1, lowIdBits) === 0.U)
+    }
+    when (io.in(m).ar.fire) {
+      assert(io.in(m).ar.bits.id(idWidth - 1, lowIdBits) === 0.U)
+    }
   }
 
   def decode(addr: UInt): Vec[Bool] = {
@@ -40,31 +42,27 @@ class Xbar(
   val awReady = Wire(Vec(nMasters, Vec(nSlaves, Bool())))
   val wReady = Wire(Vec(nMasters, Vec(nSlaves, Bool())))
   for (s <- 0 until nSlaves) {
-
     val awArb = Module(new Arbiter(chiselTypeOf(io.in(0).aw.bits), nMasters))
     val wArb = Module(new Arbiter(chiselTypeOf(io.in(0).w.bits), nMasters))
 
     for (m <- 0 until nMasters) {
       val sel = decode(io.in(m).aw.bits.addr)(s)
-
       val fireCond = io.in(m).aw.valid && io.in(m).w.valid && sel
 
       awArb.io.in(m).valid := fireCond
       awArb.io.in(m).bits := io.in(m).aw.bits
       awArb.io.in(m).bits.id :=
-        Cat(m.U(masterIdBits.W), io.in(m).aw.bits.id(lowIdBits - 1, 0))
+        m.U(masterIdBits.W) ## io.in(m).aw.bits.id(lowIdBits - 1, 0)
 
       wArb.io.in(m).valid := fireCond
       wArb.io.in(m).bits := io.in(m).w.bits
 
-      // io.in(m).aw.ready := awArb.io.in(m).ready && fireCond
-      // io.in(m).w.ready := wArb.io.in(m).ready && fireCond
       awReady(m)(s) := awArb.io.in(m).ready && fireCond
       wReady(m)(s) := wArb.io.in(m).ready && fireCond
     }
 
-    io.out(s).aw <> awArb.io.out
-    io.out(s).w <> wArb.io.out
+    io.out(s).aw :<>= awArb.io.out
+    io.out(s).w :<>= wArb.io.out
   }
   for (m <- 0 until nMasters) {
     io.in(m).aw.ready := awReady(m).reduce(_ || _)
@@ -82,17 +80,16 @@ class Xbar(
       arArb.io.in(m).valid := io.in(m).ar.valid && sel
       arArb.io.in(m).bits := io.in(m).ar.bits
       arArb.io.in(m).bits.id :=
-        Cat(m.U(masterIdBits.W), io.in(m).ar.bits.id(lowIdBits - 1, 0))
+        m.U(masterIdBits.W) ## io.in(m).ar.bits.id(lowIdBits - 1, 0)
 
       arReady(m)(s) := arArb.io.in(m).ready && sel
     }
 
-    io.out(s).ar <> arArb.io.out
+    io.out(s).ar :<>= arArb.io.out
   }
   for (m <- 0 until nMasters) {
     io.in(m).ar.ready := arReady(m).reduce(_ || _)
   }
-  
 
   // B
   for (s <- 0 until nSlaves) {
