@@ -80,6 +80,9 @@ class Xbar(
       val debugArReady = dontTouch(arArb.io.in(m).ready && sel)
       // io.in(m).ar.ready := arArb.io.in(m).ready && sel
       io.in(m).ar.ready := debugArReady
+      when (arArb.io.in(m).ready) {
+        printf(s"Master$m Slave$s ready:%d sel:%d", arArb.io.in(m).ready, sel)
+      }
     }
 
     io.out(s).ar <> arArb.io.out
