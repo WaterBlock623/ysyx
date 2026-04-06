@@ -883,7 +883,7 @@ class Top(
       2,
       Seq(
         addr => addr < "h02000000".U || addr >= "h02010000".U,
-        addr => addr >= "h02000000".U && addr > "h02010000".U
+        addr => addr >= "h02000000".U && addr < "h02010000".U
       )
     )
   )
