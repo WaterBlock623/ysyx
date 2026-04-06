@@ -69,7 +69,7 @@ class Xbar(
     val arArb = Module(new Arbiter(chiselTypeOf(io.in(0).ar.bits), nMasters))
 
     for (m <- 0 until nMasters) {
-      val sel = decode(io.in(m).ar.bits.addr)(s)
+      val sel = dontTouch(decode(io.in(m).ar.bits.addr)(s))
 
       arArb.io.in(m).valid := io.in(m).ar.valid && sel
       arArb.io.in(m).bits  := io.in(m).ar.bits
