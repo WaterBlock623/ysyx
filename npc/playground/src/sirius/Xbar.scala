@@ -77,7 +77,9 @@ class Xbar(
       arArb.io.in(m).bits.id :=
         Cat(m.U(masterIdBits.W), io.in(m).ar.bits.id(lowIdBits - 1, 0))
 
-      io.in(m).ar.ready := arArb.io.in(m).ready && sel
+      val debugArReady = dontTouch(arArb.io.in(m).ready && sel)
+      // io.in(m).ar.ready := arArb.io.in(m).ready && sel
+      io.in(m).ar.ready := debugArReady
     }
 
     io.out(s).ar <> arArb.io.out
