@@ -263,6 +263,11 @@ class ClintDevice extends Module {
     assert(in.ar.bits.len === 0.U)
   }
   in.r.bits.last := true.B
+  val idReg = Reg(chiselTypeOf(in.ar.bits.id))
+  when (in.ar.fire) {
+    idReg := in.ar.bits.id
+  }
+  in.r.bits.id := idReg
 
   val sIdle :: sMtimeLo :: sMtimeHi :: sError :: Nil = Enum(4)
   val state = RegInit(sIdle)
