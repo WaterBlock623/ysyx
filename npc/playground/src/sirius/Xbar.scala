@@ -102,7 +102,7 @@ class Xbar(
     val realId = bid(lowIdBits - 1, 0)
 
     for (m <- 0 until nMasters) {
-      when(masterSel === m.U) {
+      when(masterSel === m.U && io.out(s).b.valid) {
         io.in(m).b.valid := io.out(s).b.valid
         io.in(m).b.bits := io.out(s).b.bits
         io.in(m).b.bits.id := realId
@@ -120,7 +120,7 @@ class Xbar(
     val realId = rid(lowIdBits - 1, 0)
 
     for (m <- 0 until nMasters) {
-      when(masterSel === m.U) {
+      when(masterSel === m.U && io.out(s).r.valid) {
         io.in(m).r.valid := io.out(s).r.valid
         io.in(m).r.bits := io.out(s).r.bits
         io.in(m).r.bits.id := realId
