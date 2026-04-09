@@ -15,12 +15,13 @@ object Formal {
     val firtoolOptions = Array(
       "--default-layer-specialization=enable",
       "--verification-flavor=immediate",
+      // "--lowering-options=verifLabels=false",
       "--lowering-options=" + List(
         // make yosys happy
         // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
         "disallowLocalVariables",
         "disallowPackedArrays",
-        "locationInfoStyle=wrapInAtSquareBracket"
+        "locationInfoStyle=wrapInAtSquareBracket",
       ).reduce(_ + "," + _)
     )
     val sv = circt.stage.ChiselStage
@@ -73,4 +74,45 @@ object Formal {
     org.scalatest.Assertions
       .assert(exitCode == 0, "RUN FAIL: Wave: " + tracePath.toString)
   }
+}
+
+class InitialReset(cycle: Int) extends ExtModule(Map("CYCLE" -> cycle)) {
+  val clock = IO(Input(Bool()))
+  val reset = IO(Output(Bool()))
+
+  setInline("InitialReset.sv",
+    s"""
+module InitialReset #(
+    CYCLE = 1
+)(
+    input clock,
+    output reg reset
+);
+    reg [31:0] cnt;
+
+    initial reset <= 1;
+    initial cnt <= 0;
+
+    always @(posedge clock) begin
+        if (cnt < CYCLE) begin
+            cnt <= cnt + 1;
+        end
+        if (cnt == CYCLE) begin
+            reset <= 0;
+        end else begin
+            reset <= 1;
+        end
+    end
+endmodule
+    """)
+}
+
+class InitialResetWrapper[T <: Module](gen: => T, cycle: Int = 1) extends Module {
+  val initReset = Module(new InitialReset(cycle))
+  initReset.clock := clock.asBool
+  withReset(initReset.reset) {
+    val module = Module(gen)
+    
+  }
+   
 }

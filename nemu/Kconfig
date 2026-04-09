@@ -153,6 +153,11 @@ config DEBUGER_GDB
   bool "GDB"
 endchoice
 
+config SIM_SOC
+  depends on !NPC
+  bool "Make nemu be like soc"
+  default n
+
 config TRACE
   bool "Enable tracer"
   default y
@@ -166,6 +171,11 @@ config TRACE_END
   depends on TRACE
   int "When tracing is disabled (unit: number of instructions)"
   default -1
+
+config PCTRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable pc tracer"
+  default n
 
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER

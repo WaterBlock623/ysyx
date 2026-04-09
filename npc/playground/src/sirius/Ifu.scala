@@ -8,12 +8,13 @@ import scala.collection.immutable.NumericRange
 class Icache(
   lineNum:   BigInt,
   lineByte:  BigInt,
-  addrByte:  BigInt,
+  busByte:   BigInt,
   whiteList: Option[NumericRange[BigInt]] = None)
     extends Module {
   require(lineNum > 0 && lineNum.bitCount == 1)
-  require(lineByte > 0 && lineByte.bitCount == 1)
-  require(lineByte == 4)
+  require(lineByte >= busByte && lineByte.bitCount == 1)
+  require(busByte > 0 && busByte.bitCount == 1)
+  val burstTimes = lineByte / busByte
 
   val io = IO(new Bundle {
     val cached = Flipped(new Axi4IO)
@@ -22,59 +23,117 @@ class Icache(
 
   assert(!io.cached.aw.valid && !io.cached.w.valid)
 
+  // Addr
   class AddrLine extends Bundle {
     val tag = UInt(
-      (addrByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
+      (busByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
     )
     val idx = UInt(log2Ceil(lineNum).W)
     val off = UInt(log2Ceil(lineByte).W)
   }
-  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.valid)
-  val rAddr = Mux(io.cached.ar.valid, io.cached.ar.bits.addr, rAddrReg)
-  rAddrReg := rAddr
-  val rAddrLine = rAddr.asTypeOf(new AddrLine)
-  val inWhireList = if (whiteList.isDefined) {
-    rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
+  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
+  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
+  val inWhiteList = if (whiteList.isDefined) {
+    rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
   } else { true.B }
 
+  // Cache
   class Line extends Bundle {
     val tag = UInt(
-      (addrByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
+      (busByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
     )
-    val data = UInt((lineByte * 8).toInt.W)
+    val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
   }
-  val cache = Mem(lineNum.toInt, new Line)
+  // val cache = Mem(lineNum.toInt, new Line)
+  val cacheData = Mem(lineNum.toInt, (new Line).data)
+  val cacheTag = Mem(lineNum.toInt, (new Line).tag)
   val validReg = RegInit(0.U.asTypeOf(Vec(lineNum.toInt, Bool())))
-  val line = cache.read(rAddrLine.idx)
+  // val line = cache(rAddrLine.idx)
+  val lineData = cacheData(rAddrLine.idx)
+  val lineTag = cacheTag(rAddrLine.idx)
   val lineValid = validReg(rAddrLine.idx)
-  val hit = lineValid && line.tag === rAddrLine.tag
+  // val hit = lineValid && line.tag === rAddrLine.tag
+  val hit = lineValid && lineTag === rAddrLine.tag
 
-  val sIdle :: sReadCache :: sMiss :: Nil = Enum(3)
+  // FSM
+  val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
   val state = RegInit(sIdle)
   val nextState = MuxLookup(state, sIdle)(
     Seq(
-      sIdle -> Mux(io.cached.ar.valid && inWhireList, sReadCache, sIdle),
-      sReadCache -> Mux(hit, Mux(io.cached.r.fire, sIdle, sReadCache), sMiss),
-      sMiss -> Mux(io.mem.r.fire, sIdle, sMiss)
+      sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
+      sReadCache -> Mux(
+        hit && inWhiteList,
+        Mux(io.cached.r.fire, sIdle, sReadCache),
+        sReq
+      ),
+      sReq -> Mux(io.mem.ar.fire, sFirstResp, sReq),
+      sFirstResp -> Mux(
+        io.mem.r.fire,
+        Mux(io.mem.r.bits.last, sIdle, sFillCache),
+        sFirstResp
+      ),
+      sFillCache -> Mux(io.mem.r.fire && io.mem.r.bits.last, sIdle, sFillCache)
     )
   )
   state := nextState
 
-  0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
-  io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.cached.ar.ready := state === sReadCache && hit
-  io.cached.r.valid := state === sReadCache && hit
-  io.cached.r.bits.data := line.data
-  when(state === sMiss || (state === sIdle && !inWhireList)) {
-    io.mem :<>= io.cached
+  // Update cache
+  val cacheWPtr = if (lineByte == busByte) {
+    0.U
+  } else {
+    val cacheWPtrIntr = Reg(UInt(log2Ceil(burstTimes).W))
+    when(io.mem.ar.valid) {
+      cacheWPtrIntr := io.cached.ar.bits
+        .addr(log2Ceil(lineByte) - 1, log2Ceil(busByte))
+    }.elsewhen(io.mem.r.fire) {
+      cacheWPtrIntr := cacheWPtrIntr + 1.U
+    }
+    cacheWPtrIntr
   }
-  when(state === sMiss && io.mem.r.fire) {
+
+  when(io.mem.r.fire && inWhiteList) {
+    // line.data(cacheWPtr) := io.mem.r.bits.data
+    lineData(cacheWPtr) := io.mem.r.bits.data
+    // line.tag := rAddrLine.tag
+    lineTag := rAddrLine.tag
     lineValid := true.B
-    cache.write(
-      rAddrLine.idx,
-      (rAddrLine.tag ## io.mem.r.bits.data).asTypeOf(new Line)
-    )
   }
+
+  // Mem bus
+  io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
+  io.mem.ar.bits.addr := rAddrReg & ~((busByte - 1).U(rAddrReg.getWidth.W))
+  io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
+  io.mem.ar.bits.size := "b010".U
+  io.mem.ar.bits.burst := Axi4Burst.warp.U
+  io.mem.ar.valid := state === sReq
+  io.mem.r.ready := true.B
+  when(io.mem.r.valid) {
+    assert(io.mem.r.bits.resp(1) === 0.U)
+  }
+
+  // Cached bus
+  val cachedRValidReg = RegInit(false.B)
+  val cachedRDataReg = Reg(UInt((busByte * 8).toInt.W))
+  when(state === sFirstResp && io.mem.r.fire) {
+    cachedRValidReg := true.B
+    cachedRDataReg := io.mem.r.bits.data
+  }.elsewhen(io.cached.r.ready) {
+    cachedRValidReg := false.B
+  }
+
+  0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
+  io.cached.ar.ready := state === sIdle
+  io.cached.r.valid := (state === sReadCache && hit) || cachedRValidReg
+  io.cached.r.bits.data := Mux(
+    state === sReadCache,
+    // line.data(if (lineByte == busByte) {
+    //   0.U
+    // } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
+    lineData(if (lineByte == busByte) {
+      0.U
+    } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
+    cachedRDataReg
+  )
 }
 
 class Ifu(
@@ -92,9 +151,9 @@ class Ifu(
 
   val icache = Module(
     new Icache(
-      lineNum = 16,
-      lineByte = 4,
-      addrByte = 4,
+      lineNum = 4,
+      lineByte = 32,
+      busByte = 4,
       if (cfg.ysyxsoc) {
         Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
       } else { None }
@@ -189,29 +248,35 @@ class Ifu(
     )
     val icacheState = BoringUtils.tapAndRead(icache.state)
     val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    // val icacheSIdle = BoringUtils.tapAndRead(icache.sIdle)
-    // val icacheSRead = BoringUtils.tapAndRead(icache.sReadCache)
-    // val icacheSMiss = BoringUtils.tapAndRead(icache.sMiss)
+    val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
     val icacheSIdle = 0.U
-    val icacheSRead = 1.U
-    val icacheSMiss = 2.U
-    val idleToRead =
-      icacheState === icacheSIdle && icacheNextState === icacheSRead
-    val readToMiss = 
-      icacheState === icacheSRead && icacheNextState === icacheSMiss
+    val icacheSReadCache = 1.U
+    val icacheSReq = 2.U
+    val icacheSFirstResp = 3.U
+    val icacheSFillCache = 4.U
     PerfWhen(
       "icacheTotalAcc",
-      idleToRead,
+      icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
     PerfWhen(
       "icacheMiss",
-      readToMiss,
+      icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    PerfWhen(
+      "icacheHit",
+      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    )
+    PerfWhen(
+      "icacheBlackList",
+      icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
     PerfWhen(
       "icacheMissPenalty",
-      icacheState === icacheSMiss,
+      icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
   }

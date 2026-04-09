@@ -213,9 +213,11 @@ static int decode_exec(Decode *s) {
 }
 
 void print_disassemble(Decode *);
+void pctrace(Decode *);
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
+  IFDEF(CONFIG_PCTRACE, pctrace(s));
   IFDEF(CONFIG_ITRACE, print_disassemble(s));
   return decode_exec(s);
 }
