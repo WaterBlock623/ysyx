@@ -151,7 +151,7 @@ class Ifu(
 
   val icache = Module(
     new Icache(
-      lineNum = 16,
+      lineNum = 8,
       lineByte = 16,
       busByte = 4,
       if (cfg.ysyxsoc) {
