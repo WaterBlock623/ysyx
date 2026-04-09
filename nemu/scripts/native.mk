@@ -34,7 +34,8 @@ $(info NEMU BUILD_DIR $(BUILD_DIR))
 IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
 _NEMU_EXEC = set -o pipefail; \
-						 stdbuf -oL $(BINARY) $(ARGS) $(IMG) 2>&1 | tee $(BUILD_DIR)/std-output.txt
+						 stdbuf -oL $(BINARY) $(ARGS) $(IMG) 2>&1 | \
+						 tee $(BUILD_DIR)/std-output-$$(date +%F-%H-%M-%S-%N).txt
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
