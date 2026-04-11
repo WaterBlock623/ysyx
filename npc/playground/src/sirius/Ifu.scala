@@ -7,14 +7,17 @@ import scala.collection.immutable.NumericRange
 
 class Xorshift32 extends Module {
   val io = IO(new Bundle {
+    val en = Input(Bool())
     val out = Output(UInt(32.W))
   })
   val reg = RegInit(1.U(32.W))
+  io.out := reg
   val tmp1 = reg ^ (reg << 13)
   val tmp2 = tmp1 ^ (tmp1 >> 17)
   val next = tmp2 ^ (tmp2 << 5)
-  reg := next
-  io.out := reg
+  when (io.en) {
+    reg := next
+  }
 }
 
 class CacheLine(
@@ -150,7 +153,7 @@ class Icache(
   cache.io.wayIdx := wayIdx
 
   val (isHit, hitData) = valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
-    val isHit = valid && line.tag === rAddrLine.tag
+    val isHit = valid && (line.tag === rAddrLine.tag)
     val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
     (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
   }.reduce { (a, b) => 
@@ -180,6 +183,7 @@ class Icache(
   state := nextState
 
   // Update cache
+  xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
   cache.io.write := io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
