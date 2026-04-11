@@ -11,7 +11,7 @@ CFLAGS = -O3 -flto -g -std=gnu11 -lm
 
 all: $(BINARY)
 
-debug: CFLAGS += -ggdb3 -fsanitize=undefined -fsanitize=leak -fsanitize=address
+debug: CFLAGS += -O0 -ggdb3 -fsanitize=undefined -fsanitize=leak -fsanitize=address
 debug: $(BINARY)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
