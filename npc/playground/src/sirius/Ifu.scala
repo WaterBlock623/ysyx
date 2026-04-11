@@ -152,51 +152,53 @@ class Icache(
   val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
   cache.io.wayIdx := wayIdx
 
-  // val (isHit, hitData) = valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
-  //   val isHit = valid && (line.tag === rAddrLine.tag)
-  //   val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
-  //   (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
-  // }.reduce { (a, b) => 
-  //   (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data))) 
-  // }
+  val (isHit, hitData) = valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
+    val isHit = valid && (line.tag === rAddrLine.tag)
+    val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
+    (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
+  }.reduce { (a, b) => 
+    (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data))) 
+  }
 
-  val hits = VecInit(valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
-    valid && (line.tag === rAddrLine.tag)
-  })
-  val isHit = hits.asUInt =/= 0.U
-  val hitData = cache.io.rData(OHToUInt(hits)).data
+  // val hits = VecInit(valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
+  //   valid && (line.tag === rAddrLine.tag)
+  // })
+  // val isHit = hits.asUInt =/= 0.U
+  // val hitData = cache.io.rData(OHToUInt(hits)).data
 
   // FSM
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
   val state = RegInit(sIdle)
+  val nextState = WireDefault(state)
+  state := nextState
   switch(state) {
     is(sIdle) {
       when (io.cached.ar.valid) {
-        state := sReadCache
+        nextState := sReadCache
       }
     }
     is(sReadCache) {
       when(isHit && inWhiteList) {
         when(io.cached.r.fire) {
-          state := sIdle
+          nextState := sIdle
         }
       } .otherwise {
-        state := sReq
+        nextState := sReq
       }
     }
     is(sReq) {
       when(io.mem.ar.fire) {
-        state := sFirstResp
+        nextState := sFirstResp
       }
     }
     is(sFirstResp) {
       when (io.mem.r.fire) {
-        state := Mux(io.mem.r.bits.last, sIdle, sFillCache)
+        nextState := Mux(io.mem.r.bits.last, sIdle, sFillCache)
       }
     }
     is(sFillCache) {
       when (io.mem.r.fire && io.mem.r.bits.last) {
-        state := sIdle
+        nextState := sIdle
       }
     }
   }
