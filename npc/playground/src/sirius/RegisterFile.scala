@@ -22,7 +22,7 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   // debug := regFile
 
   val regFile = Mem(cfg.registerNum, UInt(cfg.xlen.W))
-  when(wbuIn.wEn) {
+  when(wbuIn.wEn && (wbuIn.wAddr =/= 0.U)) {
     regFile.write(wbuIn.wAddr, wbuIn.wData)
   }
   iduIn.rData(0) := regFile.read(iduIn.rAddr(0))
