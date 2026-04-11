@@ -5,16 +5,100 @@ import chisel3.util._
 import chisel3.util.experimental.BoringUtils
 import scala.collection.immutable.NumericRange
 
+class Xorshift32 extends Module {
+  val io = IO(new Bundle {
+    val out = Output(UInt(32.W))
+  })
+  val reg = RegInit(1.U(32.W))
+  val tmp1 = reg ^ (reg << 13)
+  val tmp2 = tmp1 ^ (tmp1 >> 17)
+  val next = tmp2 ^ (tmp2 << 5)
+  reg := next
+  io.out := reg
+}
+
+class CacheLine(
+  tagWidth:   Int,
+  burstTimes: Int,
+  busByte:    BigInt)
+    extends Bundle {
+  val valid = Bool()
+  val tag = UInt(tagWidth.W)
+  val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
+}
+
+class CacheFile(
+  setNum:      BigInt,
+  wayNum:      BigInt,
+  busByte:     BigInt,
+  tagWidth:    Int,
+  burstTimes:  Int,
+  setIdxWidth: Int,
+  wayIdxWidth: Int)
+    extends Module {
+  val io = IO(new Bundle {
+    val valid = Input(Bool())
+    val write = Input(Bool())
+    val setIdx = Input(UInt(setIdxWidth.W))
+    val wayIdx = Input(UInt(wayIdxWidth.W))
+    val wData = Input(
+      new CacheLine(
+        tagWidth = tagWidth,
+        burstTimes = burstTimes,
+        busByte = busByte
+      )
+    )
+    val rData = Output(
+      Vec(
+        wayNum.toInt,
+        new CacheLine(
+          tagWidth = tagWidth,
+          burstTimes = burstTimes,
+          busByte = busByte
+        )
+      )
+    )
+  })
+
+  val cache = Mem(
+    setNum.toInt,
+    Vec(
+      wayNum.toInt,
+      new CacheLine(
+        tagWidth = tagWidth,
+        burstTimes = burstTimes,
+        busByte = busByte
+      )
+    )
+  )
+
+  val wData = VecInit.fill(wayNum.toInt)(io.wData)
+  io.rData := DontCare
+  when(io.valid) {
+    io.rData := cache.read(io.setIdx)
+    when(io.write) {
+      cache.write(io.setIdx, wData, UIntToOH(io.wayIdx).asBools)
+    }
+  }
+}
+
 class Icache(
-  lineNum:   BigInt,
-  lineByte:  BigInt,
+  setNum:    BigInt,
+  wayNum:    BigInt,
+  wayByte:   BigInt,
   busByte:   BigInt,
   whiteList: Option[NumericRange[BigInt]] = None)
     extends Module {
-  require(lineNum > 0 && lineNum.bitCount == 1)
-  require(lineByte >= busByte && lineByte.bitCount == 1)
+  require(setNum > 0 && setNum.bitCount == 1)
+  require(wayNum > 0 && wayNum.bitCount == 1)
+  require(wayByte >= busByte && wayByte.bitCount == 1)
   require(busByte > 0 && busByte.bitCount == 1)
-  val burstTimes = lineByte / busByte
+  val wayIdxWidth = log2Ceil(wayNum).toInt
+  val burstTimes = (wayByte / busByte).toInt
+  val offWidth = 2
+  val dataIdxWidth = (log2Ceil(wayByte) - offWidth).toInt
+  val setIdxWidth = log2Ceil(setNum).toInt
+  val tagWidth = (busByte * 8 - offWidth - dataIdxWidth - setIdxWidth).toInt
 
   val io = IO(new Bundle {
     val cached = Flipped(new Axi4IO)
@@ -25,11 +109,10 @@ class Icache(
 
   // Addr
   class AddrLine extends Bundle {
-    val tag = UInt(
-      (busByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
-    )
-    val idx = UInt(log2Ceil(lineNum).W)
-    val off = UInt(log2Ceil(lineByte).W)
+    val tag = UInt(tagWidth.W)
+    val setIdx = UInt(setIdxWidth.W)
+    val dataIdx = UInt(dataIdxWidth.W)
+    val off = UInt(offWidth.W)
   }
   val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
   val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
@@ -37,23 +120,44 @@ class Icache(
     rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
   } else { true.B }
 
+  // Random
+  val xorshift32 = Module(new Xorshift32)
+  val rand = xorshift32.io.out
+
   // Cache
-  class Line extends Bundle {
-    val tag = UInt(
-      (busByte * 8 - log2Ceil(lineByte) - log2Ceil(lineNum)).toInt.W
+  val cache = Module(
+    new CacheFile(
+      setNum = setNum,
+      wayNum = wayNum,
+      busByte = busByte,
+      tagWidth = tagWidth,
+      burstTimes = burstTimes,
+      setIdxWidth = setIdxWidth,
+      wayIdxWidth = wayIdxWidth
     )
-    val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
+  )
+  cache.io.valid := false.B
+  cache.io.write := false.B
+
+  val setIdx = if (setIdxWidth != 0) { rAddrLine.setIdx }
+  else { 0.U }
+  cache.io.setIdx := setIdx
+
+  val valids = VecInit(cache.io.rData.map(_.valid))
+  val invalidWayIdx = PriorityEncoder(~valids.asUInt)
+  val isAllValid = valids.asUInt.andR
+  val allValidWayIdx = if (wayIdxWidth != 0) { rand(31, 31 - wayIdxWidth + 1) }
+  else { 0.U }
+  val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
+  cache.io.wayIdx := wayIdx
+
+  val (isHit, hitData) = cache.io.rData.map { line =>
+    val isHit = line.valid && line.tag === rAddrLine.tag
+    val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
+    (isHit, data.asTypeOf(chiselTypeOf(line.data)))
+  }.reduce { (a, b) => 
+    (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data))) 
   }
-  // val cache = Mem(lineNum.toInt, new Line)
-  val cacheData = Mem(lineNum.toInt, (new Line).data)
-  val cacheTag = Mem(lineNum.toInt, (new Line).tag)
-  val validReg = RegInit(0.U.asTypeOf(Vec(lineNum.toInt, Bool())))
-  // val line = cache(rAddrLine.idx)
-  val lineData = cacheData(rAddrLine.idx)
-  val lineTag = cacheTag(rAddrLine.idx)
-  val lineValid = validReg(rAddrLine.idx)
-  // val hit = lineValid && line.tag === rAddrLine.tag
-  val hit = lineValid && lineTag === rAddrLine.tag
 
   // FSM
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
@@ -62,7 +166,7 @@ class Icache(
     Seq(
       sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
       sReadCache -> Mux(
-        hit && inWhiteList,
+        isHit && inWhiteList,
         Mux(io.cached.r.fire, sIdle, sReadCache),
         sReq
       ),
@@ -78,25 +182,27 @@ class Icache(
   state := nextState
 
   // Update cache
-  val cacheWPtr = if (lineByte == busByte) {
+  cache.io.write := io.mem.r.fire && inWhiteList
+  cache.io.valid := cache.io.write || state === sReadCache
+
+  val dataIdx = if (wayByte == busByte) {
     0.U
   } else {
-    val cacheWPtrIntr = Reg(UInt(log2Ceil(burstTimes).W))
+    val dataIdxReg = Reg(UInt(log2Ceil(burstTimes).W))
     when(io.mem.ar.valid) {
-      cacheWPtrIntr := io.cached.ar.bits
-        .addr(log2Ceil(lineByte) - 1, log2Ceil(busByte))
+      dataIdxReg := io.cached.ar.bits.addr.asTypeOf(new AddrLine).dataIdx
     }.elsewhen(io.mem.r.fire) {
-      cacheWPtrIntr := cacheWPtrIntr + 1.U
+      dataIdxReg := dataIdxReg + 1.U
     }
-    cacheWPtrIntr
+    dataIdxReg
   }
 
   when(io.mem.r.fire && inWhiteList) {
-    // line.data(cacheWPtr) := io.mem.r.bits.data
-    lineData(cacheWPtr) := io.mem.r.bits.data
-    // line.tag := rAddrLine.tag
-    lineTag := rAddrLine.tag
-    lineValid := true.B
+    val line = WireDefault(cache.io.rData(wayIdx))
+    line.valid := true.B
+    line.tag := rAddrLine.tag
+    line.data(dataIdx) := io.mem.r.bits.data
+    cache.io.wData := line
   }
 
   // Mem bus
@@ -123,15 +229,10 @@ class Icache(
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   io.cached.ar.ready := state === sIdle
-  io.cached.r.valid := (state === sReadCache && hit) || cachedRValidReg
+  io.cached.r.valid := (state === sReadCache && isHit) || cachedRValidReg
   io.cached.r.bits.data := Mux(
     state === sReadCache,
-    // line.data(if (lineByte == busByte) {
-    //   0.U
-    // } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
-    lineData(if (lineByte == busByte) {
-      0.U
-    } else { rAddrReg(log2Ceil(lineByte) - 1, log2Ceil(busByte)) }),
+    hitData,
     cachedRDataReg
   )
 }
@@ -151,8 +252,9 @@ class Ifu(
 
   val icache = Module(
     new Icache(
-      lineNum = 4,
-      lineByte = 32,
+      setNum = 2,
+      wayNum = 8,
+      wayByte = 16,
       busByte = 4,
       if (cfg.ysyxsoc) {
         Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
