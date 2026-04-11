@@ -57,26 +57,45 @@ class AluBase(
   val direct1Result = io.src1
   val clearResult = io.src1 & ~io.src2
 
-  io.out := MuxLookup(io.aluOp, addResult)(
-    Seq(
-      add.asUInt -> addResult,
-      sub.asUInt -> subResult,
-      eql.asUInt -> eqlResult,
-      neq.asUInt -> neqResult,
-      lt.asUInt -> ltResult,
-      ltu.asUInt -> ltuResult,
-      ge.asUInt -> geResult,
-      geu.asUInt -> geuResult,
-      and.asUInt -> andResult,
-      or.asUInt -> orResult,
-      xor.asUInt -> xorResult,
-      sll.asUInt -> sllResult,
-      srl.asUInt -> srlResult,
-      sra.asUInt -> sraResult,
-      direct1.asUInt -> direct1Result,
-      clear.asUInt -> clearResult,
-    )
-  )
+  io.out := addResult
+  switch(io.aluOp) {
+    is(add.asUInt) { io.out := addResult }
+    is(sub.asUInt) { io.out := subResult }
+    is(eql.asUInt) { io.out := eqlResult }
+    is(neq.asUInt) { io.out := neqResult }
+    is(lt.asUInt) { io.out := ltResult }
+    is(ltu.asUInt) { io.out := ltuResult }
+    is(ge.asUInt) { io.out := geResult }
+    is(geu.asUInt) { io.out := geuResult }
+    is(and.asUInt) { io.out := andResult }
+    is(or.asUInt) { io.out := orResult }
+    is(xor.asUInt) { io.out := xorResult }
+    is(sll.asUInt) { io.out := sllResult }
+    is(srl.asUInt) { io.out := srlResult }
+    is(sra.asUInt) { io.out := sraResult }
+    is(direct1.asUInt) { io.out := direct1Result }
+    is(clear.asUInt) { io.out := clearResult }
+  }
+  // io.out := MuxLookup(io.aluOp, addResult)(
+  //   Seq(
+  //     add.asUInt -> addResult,
+  //     sub.asUInt -> subResult,
+  //     eql.asUInt -> eqlResult,
+  //     neq.asUInt -> neqResult,
+  //     lt.asUInt -> ltResult,
+  //     ltu.asUInt -> ltuResult,
+  //     ge.asUInt -> geResult,
+  //     geu.asUInt -> geuResult,
+  //     and.asUInt -> andResult,
+  //     or.asUInt -> orResult,
+  //     xor.asUInt -> xorResult,
+  //     sll.asUInt -> sllResult,
+  //     srl.asUInt -> srlResult,
+  //     sra.asUInt -> sraResult,
+  //     direct1.asUInt -> direct1Result,
+  //     clear.asUInt -> clearResult,
+  //   )
+  // )
 }
 
 class JumpTargetGenerator(
@@ -151,7 +170,7 @@ class Exu(
     Seq(
       AluInSelEnum.imm.asUInt -> imm,
       AluInSelEnum.rs.asUInt -> rs2Data,
-      AluInSelEnum.csr.asUInt -> csrData,
+      AluInSelEnum.csr.asUInt -> csrData
     )
   )
   val aluIn = Wire(new AluIO)
@@ -179,5 +198,9 @@ class Exu(
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
 
-  PerfWhen("calcFinish", out.fire, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen(
+    "calcFinish",
+    out.fire,
+    in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B)
+  )
 }
