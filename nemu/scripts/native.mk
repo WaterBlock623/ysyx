@@ -35,7 +35,8 @@ IMG ?=
 # NEMU_EXEC := numactl -m 0 -C 0,2,4,6 -- $(BINARY) $(ARGS) $(IMG)
 _NEMU_EXEC = set -o pipefail; \
 						 stdbuf -oL $(BINARY) $(ARGS) $(IMG) 2>&1 | \
-						 tee $(BUILD_DIR)/std-output$(if $(TASK_NAME),-$(TASK_NAME),).txt
+						 tee $(BUILD_DIR)/std-output$(if $(TASK_NAME),-$(TASK_NAME),).txt; \
+						 sleep 5
 ifeq ($(CONFIG_DEBUGER_GDB),y)
 $(info GDB_SOCKET $(GDB_SOCKET))
 ifneq ($(GDB_ELF),)
