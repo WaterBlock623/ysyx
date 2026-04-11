@@ -164,7 +164,7 @@ class Icache(
     valid && (line.tag === rAddrLine.tag)
   })
   val isHit = hits.asUInt =/= 0.U
-  val hitData = cache.io.rData(PriorityEncoder(hits)).data
+  val hitData = cache.io.rData(OHToUInt(hits)).data
 
   // FSM
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
