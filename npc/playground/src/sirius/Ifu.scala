@@ -200,11 +200,13 @@ class Icache(
   }
 
   when(io.mem.r.fire && inWhiteList) {
-    valids(setIdx)(wayIdx) := true.B
     val line = WireDefault(cache.io.rData(wayIdx))
-    line.tag := rAddrLine.tag
     line.data(dataIdx) := io.mem.r.bits.data
+    line.tag := rAddrLine.tag
     cache.io.wData := line
+    when (io.mem.r.bits.last) {
+      valids(setIdx)(wayIdx) := true.B
+    }
   }
 
   // Mem bus
