@@ -22,7 +22,6 @@ class CacheLine(
   burstTimes: Int,
   busByte:    BigInt)
     extends Bundle {
-  val valid = Bool()
   val tag = UInt(tagWidth.W)
   val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
 }
@@ -142,16 +141,16 @@ class Icache(
   else { 0.U }
   cache.io.setIdx := setIdx
 
-  val valids = VecInit(cache.io.rData.map(_.valid))
-  val invalidWayIdx = PriorityEncoder(~valids.asUInt)
-  val isAllValid = valids.asUInt.andR
+  val valids = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Vec(wayNum.toInt, Bool()))))
+  val invalidWayIdx = PriorityEncoder(~valids(setIdx).asUInt)
+  val isAllValid = valids(setIdx).asUInt.andR
   val allValidWayIdx = if (wayIdxWidth != 0) { rand(31, 31 - wayIdxWidth + 1) }
   else { 0.U }
   val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
   cache.io.wayIdx := wayIdx
 
-  val (isHit, hitData) = cache.io.rData.map { line =>
-    val isHit = line.valid && line.tag === rAddrLine.tag
+  val (isHit, hitData) = valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
+    val isHit = valid && line.tag === rAddrLine.tag
     val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
     (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
   }.reduce { (a, b) => 
@@ -197,8 +196,8 @@ class Icache(
   }
 
   when(io.mem.r.fire && inWhiteList) {
+    valids(setIdx)(wayIdx) := true.B
     val line = WireDefault(cache.io.rData(wayIdx))
-    line.valid := true.B
     line.tag := rAddrLine.tag
     line.data(dataIdx) := io.mem.r.bits.data
     cache.io.wData := line
