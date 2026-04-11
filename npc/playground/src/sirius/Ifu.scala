@@ -154,9 +154,9 @@ class Icache(
   val (isHit, hitData) = cache.io.rData.map { line =>
     val isHit = line.valid && line.tag === rAddrLine.tag
     val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
-    (isHit, data)
+    (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
   }.reduce { (a, b) => 
-    (a._1 || b._1, a._2.asUInt | b._2.asUInt) 
+    (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data))) 
   }
 
   // FSM
@@ -232,7 +232,7 @@ class Icache(
   io.cached.r.valid := (state === sReadCache && isHit) || cachedRValidReg
   io.cached.r.bits.data := Mux(
     state === sReadCache,
-    hitData,
+    hitData(rAddrLine.dataIdx),
     cachedRDataReg
   )
 }
