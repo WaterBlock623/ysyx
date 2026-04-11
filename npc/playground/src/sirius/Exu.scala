@@ -48,7 +48,7 @@ class AluBase(
   val addResult = addSubResult
   val subResult = addSubResult
   val eqlResult = addSubResult === 0.U
-  val overflow = io.src1.head(1) === xorSrc2.head(1) && io.src1.head(1) === addSubResult.head(1)
+  val overflow = io.src1.head(1) === xorSrc2.head(1) && io.src1.head(1) =/= addSubResult.head(1)
   val ltResult = addSubResult.head(1) ^ overflow
   val geResult = !ltResult
   val geuResult = addSub.head(1)
