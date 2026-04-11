@@ -25,7 +25,12 @@ class RegisterFile(implicit private val cfg: CoreConfig) extends Module {
   when(wbuIn.wEn) {
     regFile.write(wbuIn.wAddr, wbuIn.wData)
   }
-  regFile(0) := 0.U
   iduIn.rData(0) := regFile.read(iduIn.rAddr(0))
   iduIn.rData(1) := regFile.read(iduIn.rAddr(1))
+  when (iduIn.rAddr(0) === 0.U) {
+    iduIn.rData(0) := 0.U
+  }
+  when (iduIn.rAddr(1) === 0.U) {
+    iduIn.rData(1) := 0.U
+  }
 }
