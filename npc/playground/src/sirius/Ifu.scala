@@ -374,38 +374,38 @@ class Ifu(
       out.valid && !out.ready,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
-    val icacheState = BoringUtils.tapAndRead(icache.state)
-    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-    val icacheSIdle = 0.U
-    val icacheSReadCache = 1.U
-    val icacheSReq = 2.U
-    val icacheSFirstResp = 3.U
-    val icacheSFillCache = 4.U
-    PerfWhen(
-      "icacheTotalAcc",
-      icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheMiss",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheHit",
-      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheBlackList",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
-    PerfWhen(
-      "icacheMissPenalty",
-      icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
-    )
+    // val icacheState = BoringUtils.tapAndRead(icache.state)
+    // val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+    // val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+    // val icacheSIdle = 0.U
+    // val icacheSReadCache = 1.U
+    // val icacheSReq = 2.U
+    // val icacheSFirstResp = 3.U
+    // val icacheSFillCache = 4.U
+    // PerfWhen(
+    //   "icacheTotalAcc",
+    //   icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheMiss",
+    //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheHit",
+    //   icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheBlackList",
+    //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
+    // PerfWhen(
+    //   "icacheMissPenalty",
+    //   icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
+    //   out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+    // )
   }
 }
