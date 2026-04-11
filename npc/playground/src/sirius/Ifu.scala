@@ -163,24 +163,46 @@ class Icache(
   // FSM
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
   val state = RegInit(sIdle)
-  val nextState = MuxLookup(state, sIdle)(
-    Seq(
-      sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
-      sReadCache -> Mux(
-        isHit && inWhiteList,
-        Mux(io.cached.r.fire, sIdle, sReadCache),
-        sReq
-      ),
-      sReq -> Mux(io.mem.ar.fire, sFirstResp, sReq),
-      sFirstResp -> Mux(
-        io.mem.r.fire,
-        Mux(io.mem.r.bits.last, sIdle, sFillCache),
-        sFirstResp
-      ),
-      sFillCache -> Mux(io.mem.r.fire && io.mem.r.bits.last, sIdle, sFillCache)
-    )
-  )
-  state := nextState
+  switch(state) {
+    is(sIdle) {
+      when (io.cached.ar.valid) {
+        state := sReadCache
+      }
+    }
+    is(sReq) {
+      when(io.mem.ar.fire) {
+        state := sFirstResp
+      }
+    }
+    is(sFirstResp) {
+      when (io.mem.r.fire) {
+        state := Mux(io.mem.r.bits.last, sIdle, sFillCache)
+      }
+    }
+    is(sFillCache) {
+      when (io.mem.r.fire && io.mem.r.bits.last) {
+        state := sIdle
+      }
+    }
+  }
+  // val nextState = MuxLookup(state, sIdle)(
+  //   Seq(
+  //     sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
+  //     sReadCache -> Mux(
+  //       isHit && inWhiteList,
+  //       Mux(io.cached.r.fire, sIdle, sReadCache),
+  //       sReq
+  //     ),
+  //     sReq -> Mux(io.mem.ar.fire, sFirstResp, sReq),
+  //     sFirstResp -> Mux(
+  //       io.mem.r.fire,
+  //       Mux(io.mem.r.bits.last, sIdle, sFillCache),
+  //       sFirstResp
+  //     ),
+  //     sFillCache -> Mux(io.mem.r.fire && io.mem.r.bits.last, sIdle, sFillCache)
+  //   )
+  // )
+  // state := nextState
 
   // Update cache
   xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
