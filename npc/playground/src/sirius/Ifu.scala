@@ -136,8 +136,7 @@ class Icache(
       wayIdxWidth = wayIdxWidth
     )
   )
-  cache.io.valid := false.B
-  cache.io.write := false.B
+  cache.io.wData := DontCare
 
   val setIdx = if (setIdxWidth != 0) { rAddrLine.setIdx }
   else { 0.U }
