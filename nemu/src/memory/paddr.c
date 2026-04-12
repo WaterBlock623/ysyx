@@ -31,10 +31,12 @@ inline paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBAS
 
 static inline word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+  printf("READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", len, addr, ret);
   return ret;
 }
 
 static inline void pmem_write(paddr_t addr, int len, word_t data) {
+  printf("WRITE %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", len, addr, data);
   host_write(guest_to_host(addr), len, data);
 }
 
