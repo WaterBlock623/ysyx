@@ -191,6 +191,21 @@ class Axi4BurstSpliter extends Module {
   when(io.in.ar.fire) {
     bitsReg := io.in.ar.bits
   }
+  when (io.in.r.fire) {
+    switch(bitsReg.burst) {
+      is(Axi4Burst.incr.U) {
+        bitsReg.addr := bitsReg.addr + 4.U
+      }
+      is(Axi4Burst.warp.U) {
+        val size = 1.U << bitsReg.size
+        val len = bitsReg.len + 1.U
+        val warpMask = size * len - 1.U
+        val addrHi = bitsReg.addr & ~warpMask
+        val addrLo = (bitsReg.addr + 4.U) & warpMask
+        bitsReg.addr := addrHi | addrLo
+      }
+    }
+  }
 
   val sInReq :: sOutReq :: sResp :: Nil = Enum(3)
   val state = RegInit(sInReq)
