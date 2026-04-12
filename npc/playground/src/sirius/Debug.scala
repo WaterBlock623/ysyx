@@ -118,6 +118,7 @@ always @(posedge clock) begin
         r_arid_reg <= axi_arid;
         /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
+        $$display("VERILOG READ: %x", axi_araddr);
         internal_ls_rData <= dpic_pmem_read(axi_araddr);
       end
     end else begin
