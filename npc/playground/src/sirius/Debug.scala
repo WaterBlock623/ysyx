@@ -199,7 +199,7 @@ class Axi4BurstSpliter extends Module {
       is(Axi4Burst.warp.U) {
         val size = 1.U << bitsReg.size
         val len = bitsReg.len + 1.U
-        val warpMask = size * len - 1.U
+        val warpMask = (size * len - 1.U).pad(bitsReg.addr.getWidth)
         val addrHi = bitsReg.addr & ~warpMask
         val addrLo = (bitsReg.addr + 4.U) & warpMask
         bitsReg.addr := addrHi | addrLo
