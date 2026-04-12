@@ -188,7 +188,7 @@ class Axi4BurstSpliter extends Module {
   }
 
   val bitsReg = Reg(chiselTypeOf(io.in.ar.bits))
-  when (io.in.ar.fire) {
+  when(io.in.ar.fire) {
     bitsReg := io.in.ar.bits
   }
 
