@@ -122,7 +122,7 @@ always @(posedge clock) begin
         read_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
         dpic_pmem_read(axi_araddr, dpi_rdata);
         internal_ls_rData <= dpi_rdata;
-        $$strobe("VERILOG READ: *0x%x=0x%x", axi_araddr, internal_ls_rData);
+        /* $$strobe("VERILOG READ: *0x%x=0x%x", axi_araddr, internal_ls_rData); */
       end
     end else begin
       if (read_delay_cnt > 0) begin
