@@ -45,7 +45,7 @@ class MemDpiC(
   setInline(
     "MemDpiC.sv",
     s"""
-import "DPI-C" function int dpic_pmem_read(input int raddr);
+import "DPI-C" function void dpic_pmem_read(input int raddr, output int rdata);
 import "DPI-C" function void dpic_pmem_write(
   input int waddr, input int wdata, input int wmask);
 
@@ -105,6 +105,8 @@ assign axi_arready = (read_state == 0) && (read_delay_cnt == 0);
 assign axi_rvalid = (read_state == 1) && (read_delay_cnt == 0);
 assign axi_rdata = axi_rvalid ? internal_ls_rData : ${cfg.xlen}'b0;
 
+reg [31:0] dpi_rdata;
+
 always @(posedge clock) begin
   if (reset) begin
     read_state <= 0;
@@ -118,7 +120,8 @@ always @(posedge clock) begin
         r_arid_reg <= axi_arid;
         /* verilator lint_off UNSIGNED */
         read_delay_cnt <= ($$urandom_range(0, 99) < ${100 - delayProb}) ? 0 : $$urandom_range(1, ${maxDelayCycle});
-        internal_ls_rData <= dpic_pmem_read(axi_araddr);
+        dpic_pmem_read(axi_araddr, dpi_rdata);
+        internal_ls_rData <= dpi_rdata;
         $$strobe("VERILOG READ: *0x%x=0x%x", axi_araddr, internal_ls_rData);
       end
     end else begin

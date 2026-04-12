@@ -106,24 +106,28 @@ extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32
 }
 #endif
 
-#define MEM_READ_SKIP 0
-extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-  static int skip_cnt = 0;
-  if (skip_cnt < MEM_READ_SKIP) {
-    skip_cnt++;
-    Log("Skip raddr: %u", raddr);
-    return 0;
-  }
-  raddr &= ~3u;
+// #define MEM_READ_SKIP 0
+extern "C" void dpic_pmem_read(uint32_t raddr, uint32_t *rdata) {
+  // static int skip_cnt = 0;
+  // if (skip_cnt < MEM_READ_SKIP) {
+  //   skip_cnt++;
+  //   Log("Skip raddr: %u", raddr);
+  //   *rdata = 0;
+  //   return;
+  // }
+  // raddr &= ~3u;
 
-  static uint32_t last_raddr = 0;
-  static uint32_t rdata = 0;
-  if (raddr != last_raddr) {
-    last_raddr = raddr;
-    rdata = paddr_read(raddr, 4);
-    printf("READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, raddr, rdata);
-  }
-  return rdata;
+  // static uint32_t last_raddr = 0;
+  // static uint32_t rdata = 0;
+  // if (raddr != last_raddr) {
+  //   last_raddr = raddr;
+  //   *rdata = paddr_read(raddr, 4);
+  //   printf("READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, raddr, rdata);
+  // }
+  // return rdata;
+
+  raddr &= ~3u;
+  *rdata = paddr_read(raddr, 4);
 }
 
 extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
