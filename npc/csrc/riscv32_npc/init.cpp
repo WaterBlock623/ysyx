@@ -121,6 +121,7 @@ extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
   if (raddr != last_raddr) {
     last_raddr = raddr;
     rdata = paddr_read(raddr, 4);
+    printf("READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, raddr, rdata);
   }
   return rdata;
 }
@@ -145,6 +146,7 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   }
   Assert(wmask == 0, "Invalid wmask");
   // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
+  printf("WRITE %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, waddr, wdata);
   paddr_write(waddr, len, wdata);
 }
 
