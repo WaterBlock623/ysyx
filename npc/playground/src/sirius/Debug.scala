@@ -45,8 +45,8 @@ class MemDpiC(
   setInline(
     "MemDpiC.sv",
     s"""
-import "DPI-C" function int dpic_pmem_read(input int raddr);
-import "DPI-C" function void dpic_pmem_write(
+import "DPI-C" context function int dpic_pmem_read(input int raddr);
+import "DPI-C" context function void dpic_pmem_write(
   input int waddr, input int wdata, input int wmask);
 
 module MemDpiC(
