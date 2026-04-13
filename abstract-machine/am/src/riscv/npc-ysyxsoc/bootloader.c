@@ -44,6 +44,16 @@ void _trm_init(void);
 __attribute__((section(".ssbl")))
 __attribute__((noinline))
 void _ssbl(void) {
+  ((uint32_t *)_trm_init)[0] = 0x00000013;
+  ((uint32_t *)_trm_init)[1] = 0x00000013;
+  ((uint32_t *)_trm_init)[2] = 0x00000013;
+  ((uint32_t *)_trm_init)[3] = 0x00000013;
+  ((uint32_t *)_trm_init)[4] = 0x00000013;
+  ((uint32_t *)_trm_init)[5] = 0x00000013;
+  ((uint32_t *)_trm_init)[6] = 0x00000013;
+  ((uint32_t *)_trm_init)[7] = 0x00008067;
+  _trm_init();
+
   _memcpy(_data_start, _data_load_start, (size_t)_data_size); 
   _memset(_bss_start, 0, (size_t)_bss_size);
   _trm_init();
