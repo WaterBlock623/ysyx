@@ -15,7 +15,7 @@ class Xorshift32 extends Module {
   val tmp1 = reg ^ (reg << 13)
   val tmp2 = tmp1 ^ (tmp1 >> 17)
   val next = tmp2 ^ (tmp2 << 5)
-  when (io.en) {
+  when(io.en) {
     reg := next
   }
 }
@@ -105,6 +105,7 @@ class Icache(
   val io = IO(new Bundle {
     val cached = Flipped(new Axi4IO)
     val mem = new Axi4IO
+    val flush = Input(Bool())
   })
 
   assert(!io.cached.aw.valid && !io.cached.w.valid)
@@ -145,6 +146,9 @@ class Icache(
   cache.io.setIdx := setIdx
 
   val valids = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Vec(wayNum.toInt, Bool()))))
+  when(io.flush) {
+    valids := 0.U.asTypeOf(chiselTypeOf(valids))
+  }
   val invalidWayIdx = PriorityEncoder(~valids(setIdx).asUInt)
   val isAllValid = valids(setIdx).asUInt.andR
   val allValidWayIdx = if (wayIdxWidth != 0) { rand(31, 31 - wayIdxWidth + 1) }
@@ -152,13 +156,16 @@ class Icache(
   val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
   cache.io.wayIdx := wayIdx
 
-  val (isHit, hitData) = valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
-    val isHit = valid && (line.tag === rAddrLine.tag)
-    val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
-    (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
-  }.reduce { (a, b) => 
-    (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data))) 
-  }
+  val (isHit, hitData) = valids(setIdx)
+    .zip(cache.io.rData)
+    .map { case (valid, line) =>
+      val isHit = valid && (line.tag === rAddrLine.tag)
+      val data = line.data.asUInt & Fill(line.data.getWidth, isHit)
+      (isHit, data.asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
+    }
+    .reduce { (a, b) =>
+      (a._1 || b._1, (a._2.asUInt | b._2.asUInt).asTypeOf(chiselTypeOf(cache.io.rData.head.data)))
+    }
 
   // val hits = VecInit(valids(setIdx).zip(cache.io.rData).map { case (valid, line) =>
   //   valid && (line.tag === rAddrLine.tag)
@@ -173,7 +180,7 @@ class Icache(
   state := nextState
   switch(state) {
     is(sIdle) {
-      when (io.cached.ar.valid) {
+      when(io.cached.ar.valid) {
         nextState := sReadCache
       }
     }
@@ -182,7 +189,7 @@ class Icache(
         when(io.cached.r.fire) {
           nextState := sIdle
         }
-      } .otherwise {
+      }.otherwise {
         nextState := sReq
       }
     }
@@ -192,12 +199,12 @@ class Icache(
       }
     }
     is(sFirstResp) {
-      when (io.mem.r.fire) {
+      when(io.mem.r.fire) {
         nextState := Mux(io.mem.r.bits.last, sIdle, sFillCache)
       }
     }
     is(sFillCache) {
-      when (io.mem.r.fire && io.mem.r.bits.last) {
+      when(io.mem.r.fire && io.mem.r.bits.last) {
         nextState := sIdle
       }
     }
@@ -243,7 +250,7 @@ class Icache(
     line.data(dataIdx) := io.mem.r.bits.data
     line.tag := rAddrLine.tag
     cache.io.wData := line
-    when (io.mem.r.bits.last) {
+    when(io.mem.r.bits.last) {
       valids(setIdx)(wayIdx) := true.B
     }
   }
@@ -286,6 +293,7 @@ class Ifu(
   val exte = IO(new Bundle {
     val pcReg = new IfuToPcRegIO
     val mem = new Axi4IO
+    val globalCtrl = Flipped(new GlobalCtrl)
   })
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
@@ -304,6 +312,7 @@ class Ifu(
       } else { None }
     )
   )
+  icache.io.flush := exte.globalCtrl.globalCtrl.isFlushIcache
 
   out.bits.ifuPayload.trap := 0.U.asTypeOf(
     chiselTypeOf(out.bits.ifuPayload.trap)

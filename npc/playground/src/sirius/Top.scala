@@ -36,6 +36,9 @@ class Top(
   val exuOut = exu.out
   val lsuOut = lsu.out
 
+  val globalCtrl = idu.exte.globalCtrl
+  ifu.exte.globalCtrl := globalCtrl
+
   if (cfg.ysyxsoc) {
     val io = IO(new Bundle {
       val interrupt = Input(Bool())
