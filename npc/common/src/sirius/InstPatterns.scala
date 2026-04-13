@@ -31,6 +31,8 @@ case class InstPattern(
 
   isWriteBackCsr: Boolean = false,
   isCsrWriteCheck: Boolean = false,
+
+  isFlushIcache: Boolean = false,
 )(
   implicit private val insts: Iterable[rvdecoderdb.Instruction],
   implicit private val cfg:   CoreConfig)
@@ -68,4 +70,5 @@ case class InstPatterns(
   implicit private val cfg:   CoreConfig) {
   val patternRvI = InstPatternRvI().pattern
   val patternRvZicsr = InstPatternRvZicsr().pattern
+  val patternRvZifencei = InstPatternRvZifencei().pattern
 }
