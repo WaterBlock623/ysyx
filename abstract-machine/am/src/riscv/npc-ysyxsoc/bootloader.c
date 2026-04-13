@@ -56,6 +56,7 @@ void _ssbl(void) {
 
   _memcpy(_data_start, _data_load_start, (size_t)_data_size); 
   _memset(_bss_start, 0, (size_t)_bss_size);
+  asm volatile("fence.i");
   _trm_init();
 }
 
