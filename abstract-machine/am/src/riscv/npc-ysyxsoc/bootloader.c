@@ -65,5 +65,6 @@ extern char _fastram_load_start[], _fastram_start[], _fastram_end[], _fastram_si
 __attribute__((section(".fsbl")))
 void _fsbl(void) {
   _memcpy(_fastram_start, _fastram_load_start, (size_t)_fastram_size); 
+  asm volatile("fence.i");
   _ssbl();
 }
