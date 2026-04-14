@@ -41,6 +41,6 @@ gdb: insert-arg
 runbatch: ADD_ARGS += -b
 runbatch: export AM_GDB_FLAGS += --batch -ex "continue"
 runbatch: insert-arg
-	$(MAKE) -C $(NEMU_HOME) runbatch 
+	$(MAKE) -C $(NEMU_HOME) run 
 
 .PHONY: insert-arg
