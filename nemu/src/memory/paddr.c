@@ -57,8 +57,10 @@ void init_mem() {
 }
 
 void mtrace(bool is_write, paddr_t addr, int len, word_t data);
+void mbintrace(bool is_write, paddr_t addr, int len);
 
 word_t paddr_read(paddr_t addr, int len) {
+  IFDEF(CONFIG_MBINTRACE, mbintrace(false, addr, len));
   if (likely(in_pmem(addr))) {
     word_t data = pmem_read(addr, len);
     IFDEF(CONFIG_MTRACE, mtrace(false, addr, len, data));
@@ -70,6 +72,7 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  IFDEF(CONFIG_MBINTRACE, mbintrace(true, addr, len));
   if (likely(in_pmem(addr))) { 
     IFDEF(CONFIG_MTRACE, mtrace(true, addr, len, data));
     pmem_write(addr, len, data); 

@@ -17,6 +17,17 @@ void pctrace(Decode *s) {
 }
 #endif
 
+#ifdef CONFIG_MBINTRACE
+void mbintrace(bool is_write, paddr_t addr, int len) {
+  static FILE *bin = NULL;
+  if (bin == NULL) {
+    bin = fopen("mbintrace.bin", "w");
+    Assert(bin, "Can not open mbintrace.bin");
+  }
+  unsigned long ret = fwrite(&addr, 1, sizeof(paddr_t), bin);
+  Assert(ret == sizeof(paddr_t), "Write mbintrace fail");
+}
+#endif
 
 #ifdef CONFIG_ITRACE
 IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
