@@ -57,6 +57,10 @@ class ExuCtrl(implicit private val cfg: CoreConfig) extends LsuCtrl {
   val exuCtrl = new CtrlSignals().ex
 }
 
+class GlobalCtrl(implicit private val cfg: CoreConfig) extends Bundle {
+  val globalCtrl = new CtrlSignals().global
+}
+
 // IO
 class IfuToIduIO(implicit private val cfg: CoreConfig) extends Bundle {
   val ifuPayload = Output(new IfuPayload)

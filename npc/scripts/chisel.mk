@@ -19,9 +19,11 @@ ifeq ($(ARCH),)
 $(error Need ARCH)
 endif
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
+else ifneq ($(findstring syn,$(ARCH)),) # syn
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false
 else # normal npc
-SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000
+SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
 endif
 endif
 
@@ -56,5 +58,7 @@ bsp:
 
 idea:
 	$(MILL) -i mill.idea.GenIdea/idea
+
+
 
 .PHONY: test verilog help reformat checkformat bsp idea

@@ -109,10 +109,15 @@ NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
 									 ADD_LIBS="-lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
+make_ysyxsoc:
+ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
+	$(MAKE) -C $(YSYXSOC_DIR) verilog
+endif
+
 lint:
 	-$(VERILATOR) $(VERILATOR_FLAGS) -Wall --lint-only --top-module $(TOPNAME) $(VSRCS)
 
-build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
+build_ar: verilog make_ysyxsoc $(CSRCS) $(NVBOARD_ARCHIVE)
 	# Build archives
 	$(VERILATOR) $(VERILATOR_BUILDFLAGS) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
@@ -122,4 +127,6 @@ build_ar: verilog $(CSRCS) $(NVBOARD_ARCHIVE)
 wave:
 	$(GTKWAVE) $(WAVE)
 
-.PHONY: lint build_ar run gdb wave
+
+
+.PHONY: lint build_ar run gdb wave make_ysyxsoc

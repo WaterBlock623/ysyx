@@ -67,6 +67,7 @@ class InstDecoder(
 class Idu(implicit private val cfg: CoreConfig) extends Module {
   val exte = IO(new Bundle {
     val regFile = new IduToRegFileIO
+    val globalCtrl = new GlobalCtrl
   })
   val in = IO(Flipped(Decoupled(new IfuToIduIO)))
   val out = IO(Decoupled(new IduToExuIO))
@@ -99,6 +100,7 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   outBits.ctrl.exuCtrl := ctrl.ex
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
+  exte.globalCtrl.globalCtrl := ctrl.global
 
   when (!inBits.ifuPayload.trap.isTrap) {
     outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall
@@ -115,7 +117,7 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   outBits.iduPayload.idu.csrAddr := inst(31, 20)
 
   InstTypeEnum.allWithNames.foreach { case (typ, name) =>
-    PerfWhen("type" + name, (ctrl.id.instType === typ.asUInt) && out.fire, ctrl.debug.isEbreak)
-    PerfWhen("type" + name + "Cyc", (ctrl.id.instType === typ.asUInt) && in.valid, ctrl.debug.isEbreak)
+    PerfWhen("type" + name, (ctrl.id.instType === typ.asUInt) && out.fire, in.valid && ctrl.debug.isEbreak)
+    PerfWhen("type" + name + "Cyc", (ctrl.id.instType === typ.asUInt) && in.valid, in.valid && ctrl.debug.isEbreak)
   }
 }

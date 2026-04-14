@@ -9,7 +9,7 @@ import org.chipsalliance.rvdecoderdb
 case class CoreConfig(
   // Debug
   val isDebug: Boolean = true,
-  val perf: Boolean = true,
+  val perf:    Boolean = true,
   val ysyxsoc: Boolean = true,
 
   // rvdecoderdb
@@ -20,22 +20,23 @@ case class CoreConfig(
   ] = _.filter(inst => inst.pseudoFrom.isEmpty && inst.ratified),
 
   // 基础配置
-  val xlen:              Int = 32,
-  val extensions:        () => Set[ExtTypeEnum.Type] = () => Set(
-    ExtTypeEnum.I,
-    ExtTypeEnum.Zicsr
-  ),
-  val registerAddrWidth: Int = 4,
+  val xlen:       Int = 32,
+  val extensions: () => Set[ExtTypeEnum.Type] = () =>
+    Set(
+      ExtTypeEnum.I,
+      ExtTypeEnum.Zicsr,
+      ExtTypeEnum.Zifencei
+    ),
+  val registerAddrWidth:   Int = 4,
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32,
-  val pcInit: BigInt = 0x30000000,
+  val pcInit:              BigInt = 0x30000000,
 
   // CsrID
   val mvendorid: Int = 0x79737978,
-  val marchid: Int = 26010008,
-) {
+  val marchid:   Int = 26010008) {
   require(xlen == 32 || xlen == 64)
-  val mxlen: Int = xlen
+  val mxlen:       Int = xlen
   val registerNum: Int = 1 << registerAddrWidth
   require(memoryAddrWidth <= 32)
 
@@ -48,16 +49,17 @@ case class CoreConfig(
       ListMap(
         (Set(ExtTypeEnum.I), Set(32, 64)) -> InstFields.fieldRvI,
         (Set(ExtTypeEnum.Zicsr), Set(32)) -> InstFields.fieldRvZicsr,
+        (Set(ExtTypeEnum.Zifencei), Set(32)) -> InstFields.fieldRvZifencei
       )
     )
 
   println(rvOpCodesPath)
-  def patternMap(instPatterns: InstPatterns)
-    : CfgMap[InstPattern, Seq[InstPattern]] =
+  def patternMap(instPatterns: InstPatterns): CfgMap[InstPattern, Seq[InstPattern]] =
     CfgMap(
       ListMap(
         (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI,
         (Set(ExtTypeEnum.Zicsr), Set(32)) -> instPatterns.patternRvZicsr,
+        (Set(ExtTypeEnum.Zifencei), Set(32)) -> instPatterns.patternRvZifencei
       )
     )
 }

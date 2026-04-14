@@ -1,13 +1,18 @@
 package sirius
 
 object Elaborate extends App {
-  val argMap = args.sliding(2, 2).collect {
-    case Array(key, value) if key.startsWith("--") => 
-      key.stripPrefix("--") -> value
-  }.toMap
+  val argMap = args
+    .sliding(2, 2)
+    .collect {
+      case Array(key, value) if key.startsWith("--") =>
+        key.stripPrefix("--") -> value
+    }
+    .toMap
 
   val firtoolOptions = Array(
     "-default-layer-specialization=enable",
+    // "--verification-flavor=immediate",
+    "--verification-flavor=if-else-fatal",
     "--lowering-options=" + List(
       // make yosys happy
       // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
@@ -21,14 +26,18 @@ object Elaborate extends App {
   val cfg =
     CoreConfig(
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
-      // isDebug = false,
+      isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
-      pcInit = BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16),
+      perf = argMap.getOrElse("perf", "false").toBoolean,
+      pcInit =
+        BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16)
     )
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
     new sirius.Top()(cfg, UnitConfig.default),
-    Array("--target-dir", argMap("target-dir")),
+    if (argMap.contains("target-dir")) {
+      Array("--target-dir", argMap("target-dir"))
+    } else { Array("--help") },
     firtoolOptions
   )
 }

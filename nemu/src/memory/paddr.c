@@ -31,10 +31,14 @@ inline paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBAS
 
 static inline word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+  // IFDEF(CONFIG_TARGET_SHARE, printf("SHARE"));
+  // printf("[NEMU] READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", len, addr, ret);
   return ret;
 }
 
 static inline void pmem_write(paddr_t addr, int len, word_t data) {
+  // IFDEF(CONFIG_TARGET_SHARE, printf("SHARE"));
+  // printf("[NEMU] WRITE %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", len, addr, data);
   host_write(guest_to_host(addr), len, data);
 }
 
@@ -53,8 +57,10 @@ void init_mem() {
 }
 
 void mtrace(bool is_write, paddr_t addr, int len, word_t data);
+void mbintrace(bool is_write, paddr_t addr, int len);
 
 word_t paddr_read(paddr_t addr, int len) {
+  IFDEF(CONFIG_MBINTRACE, mbintrace(false, addr, len));
   if (likely(in_pmem(addr))) {
     word_t data = pmem_read(addr, len);
     IFDEF(CONFIG_MTRACE, mtrace(false, addr, len, data));
@@ -66,6 +72,7 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  IFDEF(CONFIG_MBINTRACE, mbintrace(true, addr, len));
   if (likely(in_pmem(addr))) { 
     IFDEF(CONFIG_MTRACE, mtrace(true, addr, len, data));
     pmem_write(addr, len, data); 

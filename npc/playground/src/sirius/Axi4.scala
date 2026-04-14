@@ -11,6 +11,12 @@ object Axi4Resp {
   val decerr: BigInt = 0b11
 }
 
+object Axi4Burst {
+  val fixed: BigInt = 0b00
+  val incr: BigInt = 0b01
+  val warp: BigInt = 0b10
+}
+
 // class VerilogAxi4LiteIO(val busWidth: Int = 32) extends Bundle {
 //   val AWVALID = Output(Bool())
 //   val AWREADY = Input(Bool())

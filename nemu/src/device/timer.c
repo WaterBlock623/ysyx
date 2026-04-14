@@ -19,7 +19,9 @@
 #include <time.h>
 
 static uint32_t *rtc_port_base = NULL;
+#ifndef CONFIG_SIM_SOC
 static int32_t *date_port_base = NULL;
+#endif
 
 static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
   assert(offset == 0 || offset == 4);
@@ -33,6 +35,7 @@ static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
   }
 }
 
+#ifndef CONFIG_SIM_SOC
 static void date_io_handler(uint32_t offset, int len, bool is_write) {
   Assert(!is_write, "Date io is read only");
 
@@ -63,6 +66,7 @@ static void date_io_handler(uint32_t offset, int len, bool is_write) {
       break;
   }
 }
+#endif
 
 #ifndef CONFIG_TARGET_AM
 static void timer_intr() {
@@ -80,8 +84,10 @@ void init_timer() {
 #else
   add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler, true);
 
+#ifndef CONFIG_SIM_SOC
   date_port_base = (int32_t *)new_space(24);
   add_mmio_map("date", CONFIG_DATE_MMIO, date_port_base, 24, date_io_handler, true);
+#endif
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));
   get_time();
