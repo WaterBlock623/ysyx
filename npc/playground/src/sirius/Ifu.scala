@@ -380,19 +380,19 @@ class Ifu(
   if (cfg.perf) {
     PerfWhen(
       "instFetch",
-      exte.mem.r.fire,
+      icache.io.cached.r.fire,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
-    val isMemBusy = RegInit(false.B)
-    when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
-      isMemBusy := true.B
-    }
-    when(isMemBusy && exte.mem.r.valid) {
-      isMemBusy := false.B
-    }
+    // val isMemBusy = RegInit(false.B)
+    // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
+    //   isMemBusy := true.B
+    // }
+    // when(isMemBusy && exte.mem.r.valid) {
+    //   isMemBusy := false.B
+    // }
     PerfWhen(
       "waitReadCyc",
-      isMemBusy,
+      !out.valid && out.ready,
       out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
     )
     PerfWhen(
