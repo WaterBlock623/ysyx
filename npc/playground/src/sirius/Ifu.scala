@@ -294,6 +294,7 @@ class Ifu(
     val pcReg = new IfuToPcRegIO
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
+    val flush = Input(Bool())
   })
   val out = IO(Decoupled(new IfuToIduIO))
   val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
@@ -318,60 +319,45 @@ class Ifu(
     chiselTypeOf(out.bits.ifuPayload.trap)
   )
 
-  val sIdle :: sWaitResp :: sKeepData :: Nil = Enum(3)
-  val state = RegInit(sIdle)
+  val sReq :: sResp :: Nil = Enum(2)
+  val state = RegInit(sReq)
   val canValid = RegNext(RegNext(!reset.asBool))
+  val flushReg = RegInit(false.B)
+  when(exte.flush) {
+    flushReg := true.B
+  }
+  when(icache.io.cached.r.fire) {
+    flushReg := false.B
+  }
 
-  val nextState = MuxLookup(state, sIdle)(
+  val nextState = MuxLookup(state, sReq)(
     Seq(
-      sIdle -> Mux(
+      sReq -> Mux(
         icache.io.cached.ar.fire,
-        Mux(
-          icache.io.cached.r.valid,
-          Mux(out.fire, sIdle, sKeepData),
-          sWaitResp
-        ),
-        sIdle
+        sResp,
+        sReq
       ),
-      sWaitResp -> Mux(
-        icache.io.cached.r.valid,
-        Mux(out.fire, sIdle, sKeepData),
-        sWaitResp
-      ),
-      sKeepData -> Mux(out.fire, sIdle, sKeepData)
+      sResp -> Mux(
+        icache.io.cached.r.fire,
+        sReq,
+        sResp
+      )
     )
   )
   state := nextState
 
-  // exte.mem :<= 0.U.asTypeOf(new Axi4IO)
-  // exte.mem.ar.bits.size := "b010".U
-  // assert(!exte.mem.aw.valid && !exte.mem.w.valid && !exte.mem.b.valid)
-  // exte.mem.ar.valid := state === sIdle && canValid
-  // exte.mem.ar.bits.addr := pc
-  // exte.mem.r.ready := true.B
   exte.mem :<>= icache.io.mem
   icache.io.cached :<= 0.U.asTypeOf(new Axi4IO)
   icache.io.cached.ar.bits.size := "b010".U
   assert(
     !icache.io.cached.aw.valid && !icache.io.cached.w.valid && !icache.io.cached.b.valid
   )
-  icache.io.cached.ar.valid := state === sIdle && canValid
+  icache.io.cached.ar.valid := state === sReq && canValid
   icache.io.cached.ar.bits.addr := pc
-  icache.io.cached.r.ready := true.B
+  icache.io.cached.r.ready := out.ready || flushReg
 
-  val dataReg = RegEnable(
-    icache.io.cached.r.bits.data,
-    state =/= sKeepData && nextState === sKeepData
-  )
-  // out.valid := (state === sWaitResp && exte.mem.r.valid) || state === sKeepData
-  // out.valid := state === sKeepData
-  out.valid := icache.io.cached.r.valid || state === sKeepData
-  // outBits.ifuPayload.ifu.inst := dataReg
-  outBits.ifuPayload.ifu.inst := Mux(
-    state === sKeepData,
-    dataReg,
-    icache.io.cached.r.bits.data
-  )
+  out.valid := icache.io.cached.r.valid && !flushReg
+  outBits.ifuPayload.ifu.inst := icache.io.cached.r.bits.data
   outBits.ifuPayload.ifu.pc := pc
 
   if (cfg.isDebug) {
