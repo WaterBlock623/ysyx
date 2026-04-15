@@ -238,7 +238,7 @@ class Icache(
   } else {
     val dataIdxReg = Reg(UInt(log2Ceil(burstTimes).W))
     when(io.mem.ar.valid) {
-      dataIdxReg := io.cached.ar.bits.addr.asTypeOf(new AddrLine).dataIdx
+      dataIdxReg := rAddrLine.dataIdx
     }.elsewhen(io.mem.r.fire) {
       dataIdxReg := dataIdxReg + 1.U
     }
