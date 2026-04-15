@@ -214,7 +214,9 @@ void print_disassemble(Decode *);
 extern CPU_state npc_state;
 extern ISADecodeInfo npc_inst;
 extern paddr_t npc_pc;
-extern paddr_t npc_dnpc;
+// extern paddr_t npc_dnpc;
+extern int npc_is_jump;
+extern uint32_t npc_jump_target;
 extern int npc_stop_flag;
 extern int npc_wbu_valid;
 extern bool g_cpu_stop_flag;
@@ -238,7 +240,8 @@ int isa_exec_once(Decode *s) {
     }
   }
   s->isa.inst = npc_inst.inst;
-  s->dnpc = npc_dnpc;
+  // s->dnpc = npc_dnpc;
+  s->dnpc = npc_is_jump ? npc_jump_target : s->snpc;
 #ifdef CONFIG_ITRACE
   if (g_print_step) {
     printf("Executing %dcyc @" FMT_WORD "\n", inst_cyc_cnt, s->pc);

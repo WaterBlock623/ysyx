@@ -13,13 +13,13 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include <sys/cdefs.h>
-#include <generated/autoconf.h>
-#include <isa.h>
-#include <memory/paddr.h>
 #include "local-include/reg.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include <generated/autoconf.h>
+#include <isa.h>
+#include <memory/paddr.h>
+#include <sys/cdefs.h>
 #include str(__TOP_NAME_INCLUDE__)
 #include str(__TOP_NAME_SYMS_INCLUDE__)
 #ifdef CONFIG_NVBOARD
@@ -32,17 +32,19 @@ static VerilatedContext *contextp = NULL;
 static __VTOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
-static uint32_t* npc_gpr_ptr = NULL;
+static uint32_t *npc_gpr_ptr = NULL;
 paddr_t npc_pc;
 // CPU_state npc_state = {};
 int npc_stop_flag = 0;
 ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
+int npc_is_jump = 0;
+uint32_t npc_jump_target = 0;
 
 // DIP-C
 #ifdef CONFIG_HAS_FLASH
-extern "C" void flash_read(uint32_t addr, uint32_t *data) { 
+extern "C" void flash_read(uint32_t addr, uint32_t *data) {
   addr += CONFIG_FLASH_MMIO;
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
@@ -57,7 +59,7 @@ extern "C" void mrom_read(uint32_t addr, uint32_t *data) {
 }
 #endif
 
-extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
+extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) {
   Assert(len % 8 == 0, "Invalid PSRAM read length");
   len /= 8;
   addr += CONFIG_MBASE;
@@ -74,7 +76,7 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
 }
 
 #ifdef CONFIG_HAS_SDRAM
-extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
+extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) {
   Assert(len % 8 == 0, "Invalid SDRAM read length");
   len /= 8;
   addr += CONFIG_SDRAM_MMIO;
@@ -83,7 +85,8 @@ extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) {
   // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
 
-extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32_t len) {
+extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask,
+                            uint32_t len) {
   Assert(len % 8 == 0, "Invalid SDRAM write length");
   if (wmask == 0) {
     return;
@@ -154,13 +157,16 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
-                               uint32_t inst, int wbu_valid) {
+extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t inst,
+                               int wbu_valid, int is_jump, uint32_t jump_target) {
   npc_stop_flag = is_ebreak;
   npc_pc = pc;
-  npc_dnpc = dnpc;
+  // npc_dnpc = dnpc;
+  // npc_dnpc = is_jump ? jump_target : pc + 4u;
   npc_inst.inst = inst;
   npc_wbu_valid = wbu_valid;
+  npc_is_jump = is_jump;
+  npc_jump_target = jump_target;
   // Log("%u %u %u", is_ebreak, pc, inst);
 }
 
@@ -180,9 +186,9 @@ static void nvb_init(void) {
 #endif
 
 static void sim_init(void) {
-  const char* verilator_argv[] = {
-        "riscv32_npc-nemu-interpreter", 
-    };
+  const char *verilator_argv[] = {
+      "riscv32_npc-nemu-interpreter",
+  };
   Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
   contextp->commandArgs(1, verilator_argv);
@@ -194,10 +200,12 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  // npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+  // npc_gpr_ptr = (uint32_t
+  // *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
 #define CONCAT_PTR_INNER(a, b) a->b
 #define CONCAT_PTR(a, b) CONCAT_PTR_INNER(a, b)
-  npc_gpr_ptr = (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
+  npc_gpr_ptr =
+      (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
 }
 
 extern "C" void sim_close(void) {
@@ -289,6 +297,5 @@ void init_isa() {
   sim_init();
   IFDEF(CONFIG_NVBOARD, nvb_init());
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
-
 }
 __END_DECLS

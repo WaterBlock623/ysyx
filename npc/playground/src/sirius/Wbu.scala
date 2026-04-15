@@ -12,15 +12,15 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
     val csr = new WbuToCsrIO
   })
   val in = IO(Flipped(Decoupled(new LsuToWbuIO)))
-  val out = IO(Output(new Bundle {
+  val debug = Option.when(cfg.isDebug)(IO(Output(new Bundle {
     val valid = Bool()
-  }))
+    val isJump = Bool()
+    val jumpTarget = UInt(cfg.xlen.W)
+  })))
 
   // DecoupledIO
   DecoupledFsm(false, in)
   in.ready := true.B
-  out.valid := in.valid
-  dontTouch(out)
   val inBits = in.bits
 
   val ctrl = inBits.ctrl.wbuCtrl
@@ -70,6 +70,13 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
+  if (cfg.isDebug) {
+    dontTouch(debug.get)
+    debug.get.valid := in.valid
+    debug.get.isJump := pcReg.wEn && pcReg.isJump
+    debug.get.jumpTarget := pcReg.target
+  }
+
   PerfWhen("totalCyc", true.B, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("totalInst", out.valid, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen("totalInst", in.valid, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
 }

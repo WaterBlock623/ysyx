@@ -8,20 +8,23 @@ class DebugInfoDpiC(
     extends ExtModule {
   val isEbreak = IO(Input(Bool()))
   val pc = IO(Input(UInt(cfg.xlen.W)))
-  val dnpc = IO(Input(UInt(cfg.xlen.W)))
+  // val dnpc = IO(Input(UInt(cfg.xlen.W)))
   val inst = IO(Input(UInt(cfg.xlen.W)))
   val wbuValid = IO(Input(Bool()))
+  val isJump = IO(Input(Bool()))
+  val jumpTarget = IO(Input(UInt(cfg.xlen.W)))
   setInline(
     "DebugInfoDpiC.sv",
     s"""|import "DPI-C" function void set_debug_info(input int is_ebreak, 
-        |  input int pc, input int dnpc, input int inst, input int wbu_valid
+        |  input int pc, input int inst, input int wbu_valid, 
+        |  input int is_jump, input int jump_target
         |  );
         |module DebugInfoDpiC(input isEbreak, input [${cfg.xlen - 1}:0] pc, 
-        |  input [${cfg.xlen - 1}:0] dnpc, input [${cfg.xlen - 1}:0] inst,
-        |  input wbuValid
+        |  input [${cfg.xlen - 1}:0] inst,
+        |  input wbuValid, input isJump, input [${cfg.xlen - 1}:0] jumpTarget
         |  );
         |always @(*) begin
-        | set_debug_info({31'b0, isEbreak}, pc, dnpc, inst, {31'b0, wbuValid});
+        | set_debug_info({31'b0, isEbreak}, pc, inst, {31'b0, wbuValid}, {31'b0, isJump}, jumpTarget);
         |end
         |endmodule
     """.stripMargin

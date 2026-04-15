@@ -58,11 +58,13 @@ class Top(
   if (cfg.isDebug) {
     val debugInfoDpiC = Module(new DebugInfoDpiC)
     val getGprDpiC = Module(new GetGprDpiC)
-    debugInfoDpiC.isEbreak := idu.out.bits.ctrl.debugCtrl.get.isEbreak
-    debugInfoDpiC.pc := pcReg.debug.get.pc
-    debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
-    debugInfoDpiC.inst := ifu.debug.get
-    debugInfoDpiC.wbuValid := wbu.out.valid
+    debugInfoDpiC.isEbreak := wbu.in.bits.ctrl.debugCtrl.get.isEbreak
+    debugInfoDpiC.pc := wbu.in.bits.lsuPayload.ifu.pc
+    // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
+    debugInfoDpiC.inst := wbu.in.bits.lsuPayload.ifu.inst
+    debugInfoDpiC.wbuValid := wbu.debug.get.valid
+    debugInfoDpiC.isJump := wbu.debug.get.isJump
+    debugInfoDpiC.jumpTarget := wbu.debug.get.jumpTarget
     getGprDpiC.gpr := registerFile.debug.get
   }
 
