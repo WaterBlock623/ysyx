@@ -60,6 +60,7 @@ class Top(
     val getGprDpiC = Module(new GetGprDpiC)
     debugInfoDpiC.isEbreak := wbu.in.bits.ctrl.debugCtrl.get.isEbreak
     debugInfoDpiC.pc := wbu.in.bits.lsuPayload.ifu.pc
+    debugInfoDpiC.pcRaw := pcReg.debug.get.pc
     // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := wbu.in.bits.lsuPayload.ifu.inst
     debugInfoDpiC.wbuValid := wbu.debug.get.valid
