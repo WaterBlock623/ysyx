@@ -37,7 +37,6 @@ class Top(
   val lsuOut = lsu.out
 
   val globalCtrl = idu.exte.globalCtrl
-  ifu.exte.globalCtrl := globalCtrl
 
   if (cfg.ysyxsoc) {
     val io = IO(new Bundle {
@@ -79,8 +78,24 @@ class Top(
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  idu.in :<>= ifuOut
-  exu.in :<>= iduOut
-  lsu.in :<>= exuOut
-  wbu.in :<>= lsuOut
+  ifu.exte.globalCtrl := globalCtrl
+
+  if (cfg.pipeline) {
+    def pipelineConnect[T <: Data](prevOut: DecoupledIO[T], thisIn: DecoupledIO[T]) = {
+      prevOut.ready := thisIn.ready || !thisIn.valid
+      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+      thisIn.valid := RegEnable(prevOut.valid, false.B, prevOut.ready)
+    }
+    pipelineConnect(ifuOut, idu.in)
+    pipelineConnect(iduOut, exu.in)
+    pipelineConnect(exuOut, lsu.in)
+    pipelineConnect(lsuOut, wbu.in)
+
+     
+  } else {
+    idu.in :<>= ifuOut
+    exu.in :<>= iduOut
+    lsu.in :<>= exuOut
+    wbu.in :<>= lsuOut
+  }
 }

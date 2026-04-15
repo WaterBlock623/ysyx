@@ -31,6 +31,7 @@ case class CoreConfig(
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32,
   val pcInit:              BigInt = 0x30000000,
+  val pipeline:            Boolean = true,
 
   // CsrID
   val mvendorid: Int = 0x79737978,
