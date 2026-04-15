@@ -360,9 +360,9 @@ class Ifu(
   outBits.ifuPayload.ifu.inst := icache.io.cached.r.bits.data
   outBits.ifuPayload.ifu.pc := pc
 
-  if (cfg.isDebug) {
-    debug.get := outBits.ifuPayload.ifu.inst
-  }
+  // if (cfg.isDebug) {
+  //   debug.get := outBits.ifuPayload.ifu.inst
+  // }
   if (cfg.perf) {
     PerfWhen(
       "instFetch",
