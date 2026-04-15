@@ -297,7 +297,7 @@ class Ifu(
     val flush = Input(Bool())
   })
   val out = IO(Decoupled(new IfuToIduIO))
-  val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
+  // val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
   val outBits = out.bits
   val pc = exte.pcReg.pc

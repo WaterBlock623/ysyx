@@ -33,7 +33,8 @@ static __VTOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
 static uint32_t *npc_gpr_ptr = NULL;
-paddr_t npc_pc;
+paddr_t npc_pc = 0;
+paddr_t npc_pc_raw = 0;
 // CPU_state npc_state = {};
 int npc_stop_flag = 0;
 ISADecodeInfo npc_inst = {};
@@ -157,10 +158,12 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t inst,
-                               int wbu_valid, int is_jump, uint32_t jump_target) {
+extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t pc_raw,
+                               uint32_t inst, int wbu_valid, int is_jump,
+                               uint32_t jump_target) {
   npc_stop_flag = is_ebreak;
   npc_pc = pc;
+  npc_pc_raw = pc_raw;
   // npc_dnpc = dnpc;
   // npc_dnpc = is_jump ? jump_target : pc + 4u;
   npc_inst.inst = inst;
@@ -288,7 +291,7 @@ void sync_npc_gpr(void) {
 
 extern "C" void restart() {
   reset(20);
-  cpu.pc = npc_pc;
+  cpu.pc = npc_pc_raw;
   sync_npc_gpr();
 }
 
