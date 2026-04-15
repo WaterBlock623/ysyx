@@ -16,7 +16,6 @@ class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
   val ifu = new Bundle {
     val pc = UInt(cfg.xlen.W)
     val inst = UInt(cfg.xlen.W)
-    val debugInst = UInt(cfg.xlen.W)
   }
 }
 
