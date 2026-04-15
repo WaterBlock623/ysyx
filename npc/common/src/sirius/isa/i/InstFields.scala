@@ -3,11 +3,14 @@ package sirius
 import chisel3._
 import chisel3.util.experimental.decode._
 import chisel3.util.BitPat
+import org.chipsalliance.rvdecoderdb
 import cpuutil.CanAutoGenSig
 
 object InstFieldsRvI {
   val fields = Seq(
     MakeBoolField("isEbreak", "debug", _.name == "ebreak"),
+    MakeBoolField("readRs1", "global", p => rvdecoderdb.Utils.readRs1(p.inst.get)),
+    MakeBoolField("readRs2", "global", p => rvdecoderdb.Utils.readRs2(p.inst.get)),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("aluIn1Sel", "ex", AluInSelEnum, _.aluIn1Sel),
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),

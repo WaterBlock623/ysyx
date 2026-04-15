@@ -81,17 +81,25 @@ class Top(
   ifu.exte.globalCtrl := globalCtrl
 
   if (cfg.pipeline) {
-    def pipelineConnect[T <: Data](prevOut: DecoupledIO[T], thisIn: DecoupledIO[T]) = {
-      prevOut.ready := thisIn.ready || !thisIn.valid
+    def pipelineConnect[T <: Data](
+      prevOut: DecoupledIO[T],
+      thisIn:  DecoupledIO[T],
+      stall:   Bool = false.B
+    ) = {
+      val ready = thisIn.ready || !thisIn.valid
+      prevOut.ready := ready && !stall
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-      thisIn.valid := RegEnable(prevOut.valid, false.B, prevOut.ready)
+      thisIn.valid := RegEnable(prevOut.valid && !stall, false.B, ready)
     }
+
+    val stallIdu = Wire(Bool())
+    val stallExu = Wire(Bool())
     pipelineConnect(ifuOut, idu.in)
-    pipelineConnect(iduOut, exu.in)
-    pipelineConnect(exuOut, lsu.in)
+    pipelineConnect(iduOut, exu.in, stallIdu)
+    pipelineConnect(exuOut, lsu.in, stallExu)
     pipelineConnect(lsuOut, wbu.in)
 
-     
+    
   } else {
     idu.in :<>= ifuOut
     exu.in :<>= iduOut
