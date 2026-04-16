@@ -19,6 +19,7 @@ class ArbiterAutoLock[T <: Data](val gen: T, val n: Int) extends Module {
   val io = IO(new ArbiterIO(gen, n))
 
   val arbiter = Module(new Arbiter(gen, n))
+  dontTouch(arbiter.io)
   val autoLocker = Module(new AutoLocker(n))
 
   val valids = VecInit(io.in.map(_.valid)).asUInt
