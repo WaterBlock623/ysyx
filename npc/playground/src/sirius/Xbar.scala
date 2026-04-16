@@ -3,6 +3,33 @@ package sirius
 import chisel3._
 import chisel3.util._
 
+class AutoLocker(nPort: Int) extends Module {
+  val io = IO(new Bundle {
+    val in = Input(UInt(nPort.W))
+    val out = Output(UInt(nPort.W))
+  })
+
+  val prevOut = RegNext(io.out, 0.U)
+  val keeping = prevOut & io.in
+  val hasKeeping = keeping.orR
+  io.out := Mux(hasKeeping, keeping, io.in)
+}
+
+class ArbiterAutoLock[T <: Data](val gen: T, val n: Int) extends Module {
+  val io = IO(new ArbiterIO(gen, n))
+
+  val arbiter = Module(new Arbiter(gen, n))
+  val autoLocker = Module(new AutoLocker(n))
+
+  val valids = VecInit(io.in.map(_.valid)).asUInt
+  autoLocker.io.in := valids
+
+  io :<>= arbiter.io
+  for (i <- 0 until n) {
+    arbiter.io.in(n).valid := autoLocker.io.out(n)
+  }
+}
+
 class Xbar(
   nMasters: Int = 2,
   nSlaves:  Int = 2,
@@ -42,8 +69,8 @@ class Xbar(
   val awReady = Wire(Vec(nMasters, Vec(nSlaves, Bool())))
   val wReady = Wire(Vec(nMasters, Vec(nSlaves, Bool())))
   for (s <- 0 until nSlaves) {
-    val awArb = Module(new Arbiter(chiselTypeOf(io.in(0).aw.bits), nMasters))
-    val wArb = Module(new Arbiter(chiselTypeOf(io.in(0).w.bits), nMasters))
+    val awArb = Module(new ArbiterAutoLock(chiselTypeOf(io.in(0).aw.bits), nMasters))
+    val wArb = Module(new ArbiterAutoLock(chiselTypeOf(io.in(0).w.bits), nMasters))
 
     for (m <- 0 until nMasters) {
       val sel = decode(io.in(m).aw.bits.addr)(s)
@@ -72,7 +99,7 @@ class Xbar(
   // AR
   val arReady = Wire(Vec(nMasters, Vec(nSlaves, Bool())))
   for (s <- 0 until nSlaves) {
-    val arArb = Module(new Arbiter(chiselTypeOf(io.in(0).ar.bits), nMasters))
+    val arArb = Module(new ArbiterAutoLock(chiselTypeOf(io.in(0).ar.bits), nMasters))
 
     for (m <- 0 until nMasters) {
       val sel = decode(io.in(m).ar.bits.addr)(s)
