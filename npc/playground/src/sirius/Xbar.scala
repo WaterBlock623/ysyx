@@ -18,7 +18,11 @@ class AutoLocker(nPort: Int) extends Module {
 class ArbiterAutoLock[T <: Data](val gen: T, val n: Int) extends Module {
   val io = IO(new ArbiterIO(gen, n))
 
-  val arbiter = Module(new Arbiter(gen, n))
+  val testaa = 1
+  val arbiter = Module(new Arbiter(gen, n) {
+    for ((in, g) <- this.io.in.zip(this.grant))
+      in.ready := g && in.valid && this.io.out.ready
+  })
   dontTouch(arbiter.io)
   val autoLocker = Module(new AutoLocker(n))
 
