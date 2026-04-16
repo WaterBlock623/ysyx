@@ -295,6 +295,7 @@ class Ifu(
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
     val flush = Input(Bool())
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val out = IO(Decoupled(new IfuToIduIO))
   // val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
@@ -367,7 +368,7 @@ class Ifu(
     PerfWhen(
       "instFetch",
       icache.io.cached.r.fire,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     // val isMemBusy = RegInit(false.B)
     // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
@@ -379,12 +380,12 @@ class Ifu(
     PerfWhen(
       "waitReadCyc",
       !out.valid && out.ready,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     PerfWhen(
       "keepDataCyc",
       out.valid && !out.ready,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     val icacheState = BoringUtils.tapAndRead(icache.state)
     val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
@@ -397,27 +398,27 @@ class Ifu(
     PerfWhen(
       "icacheTotalAcc",
       icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     PerfWhen(
       "icacheMiss",
       icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     PerfWhen(
       "icacheHit",
       icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     PerfWhen(
       "icacheBlackList",
       icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
     PerfWhen(
       "icacheMissPenalty",
       icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
-      out.valid && (out.bits.ifuPayload.ifu.inst === "h00100073".U)
+      exte.debugEbreak
     )
   }
 }

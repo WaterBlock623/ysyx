@@ -38,6 +38,17 @@ class Top(
 
   val globalCtrl = idu.exte.globalCtrl
 
+  if (cfg.perf && cfg.isDebug) {
+    val ebreaks = Seq(
+      ifu.exte.debugEbreak,
+      idu.exte.debugEbreak,
+      exu.exte.debugEbreak,
+      lsu.exte.debugEbreak,
+      wbu.exte.debugEbreak
+    )
+    ebreaks.foreach {_.get := wbu.in.bits.ctrl.debugCtrl.get.isEbreak}
+  }
+
   if (cfg.ysyxsoc) {
     val io = IO(new Bundle {
       val interrupt = Input(Bool())

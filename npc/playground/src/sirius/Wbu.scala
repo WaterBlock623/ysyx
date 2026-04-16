@@ -5,11 +5,14 @@ import chisel3.util.MuxLookup
 import chisel3.util.Decoupled
 
 // 控制pc跳转和gpr读写
-class Wbu(implicit private val cfg: CoreConfig) extends Module {
+class Wbu(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val exte = IO(new Bundle {
     val pcReg = new WbuToPcRegIO
     val regFlie = new WbuToRegFileIO
     val csr = new WbuToCsrIO
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new LsuToWbuIO)))
   val debug = Option.when(cfg.isDebug)(IO(Output(new Bundle {
@@ -40,8 +43,14 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
 
   // pc
   val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
-  pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget))
-  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(0)) || inBits.lsuPayload.trap.isTrap
+  pcReg.target := Mux(
+    inBits.lsuPayload.trap.isTrap,
+    exte.csr.mtvec,
+    Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
+  )
+  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(
+    0
+  )) || inBits.lsuPayload.trap.isTrap
   pcReg.wEn := in.valid
 
   // gpr
@@ -55,13 +64,13 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
       WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.staticNextPc.asUInt -> (pc + 4.U),
       WriteBackSelEnum.lsu.asUInt -> loadData,
-      WriteBackSelEnum.csr.asUInt -> csrData,
+      WriteBackSelEnum.csr.asUInt -> csrData
     )
   )
 
   // csr
   val csr = exte.csr
-  csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr && 
+  csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr &&
     (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
   csr.wData := inBits.lsuPayload.exu.aluOut
@@ -77,6 +86,14 @@ class Wbu(implicit private val cfg: CoreConfig) extends Module {
     debug.get.jumpTarget := pcReg.target
   }
 
-  PerfWhen("totalCyc", true.B, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("totalInst", in.valid, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen(
+    "totalCyc",
+    true.B,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "totalInst",
+    in.valid,
+    exte.debugEbreak
+  )
 }

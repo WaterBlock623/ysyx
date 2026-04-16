@@ -141,6 +141,7 @@ class Exu(
     extends Module {
   val exte = IO(new Bundle {
     val csr = new ExuToCsrIO
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new IduToExuIO)))
   val out = IO(Decoupled(new ExuToLsuIO))
@@ -218,6 +219,6 @@ class Exu(
   PerfWhen(
     "calcFinish",
     out.fire,
-    in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B)
+    exte.debugEbreak
   )
 }

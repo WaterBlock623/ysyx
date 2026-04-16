@@ -13,6 +13,7 @@ class Lsu(
 
   val exte = IO(new Bundle {
     val mem = new Axi4IO
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
   val out = IO(Decoupled(new LsuToWbuIO))
@@ -34,23 +35,26 @@ class Lsu(
   exte.mem.w.bits.last := true.B
 
   val eLoadStoreAddressMisaligned = isMemAcc &&
-      ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+    ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
       (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
   val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
   val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
-  val eLoadAccessFault = ctrl.isLoad && 
+  val eLoadAccessFault = ctrl.isLoad &&
     !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
-  val eStoreAccessFault = ctrl.isStore && 
+  val eStoreAccessFault = ctrl.isStore &&
     !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
 
-  val eCause = MuxCase(0.U, Seq(
-    eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
-    eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
-    eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
-    eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
-    ))
+  val eCause = MuxCase(
+    0.U,
+    Seq(
+      eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
+      eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
+      eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
+      eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
+    )
+  )
 
-  when (!inBits.exuPayload.trap.isTrap) {
+  when(!inBits.exuPayload.trap.isTrap) {
     outBits.lsuPayload.trap.isTrap := eLoadStoreAddressMisaligned || eLoadAccessFault || eStoreAccessFault
     outBits.lsuPayload.trap.cause := eCause
   }
@@ -93,7 +97,6 @@ class Lsu(
   exte.mem.r.ready := isRespReady && ctrl.isLoad
   exte.mem.b.ready := isRespReady && ctrl.isStore
 
-
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
@@ -110,7 +113,6 @@ class Lsu(
   )
   exte.mem.ar.bits.size := axSize
   exte.mem.aw.bits.size := axSize
-
 
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
   val lbu = byteData(rem)
@@ -162,8 +164,24 @@ class Lsu(
     )
   )
 
-  PerfWhen("memoryRead", exte.mem.r.fire, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("waitRead", in.valid && ctrl.isLoad && !outBits.lsuPayload.trap.isTrap, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("memoryWrite", exte.mem.b.fire, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
-  PerfWhen("waitWrite", in.valid && ctrl.isStore && !outBits.lsuPayload.trap.isTrap, in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B))
+  PerfWhen(
+    "memoryRead",
+    exte.mem.r.fire,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "waitRead",
+    in.valid && ctrl.isLoad && !outBits.lsuPayload.trap.isTrap,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "memoryWrite",
+    exte.mem.b.fire,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "waitWrite",
+    in.valid && ctrl.isStore && !outBits.lsuPayload.trap.isTrap,
+    exte.debugEbreak
+  )
 }
