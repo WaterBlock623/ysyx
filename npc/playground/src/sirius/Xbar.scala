@@ -26,7 +26,7 @@ class ArbiterAutoLock[T <: Data](val gen: T, val n: Int) extends Module {
 
   io :<>= arbiter.io
   for (i <- 0 until n) {
-    arbiter.io.in(n).valid := autoLocker.io.out(n)
+    arbiter.io.in(i).valid := autoLocker.io.out(i)
   }
 }
 
