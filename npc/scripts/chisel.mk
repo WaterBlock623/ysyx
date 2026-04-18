@@ -28,7 +28,7 @@ endif
 endif
 
 test:
-	$(MILL) -i $(PRJ).test
+	$(MILL) $(PRJ).test.testOnly $(PACKAGE_NAME).*
 
 $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	# Generate verilogs
