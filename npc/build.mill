@@ -43,8 +43,9 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 }
 
 object common extends BaseModule {
+  def rvopcodedb = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "rvdecoderdb")
+
   override def sources = Task {
-    def rvopcodedb = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "rvdecoderdb")
     super.sources() ++ Seq(rvopcodedb())
   }
 }
