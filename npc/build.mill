@@ -26,7 +26,8 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
   override def forkArgs = Task {
-    super.forkArgs() ++ Seq(s"-Dproject.root=${Task.workspace}")
+    // 使用 mill.api.BuildCtx.workspaceRoot 替代 Task.workspace
+    super.forkArgs() ++ Seq(s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}")
   }
 
   trait BaseTests extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
@@ -43,7 +44,8 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 
 object common extends BaseModule {
   override def sources = Task {
-    super.sources() ++ Seq(PathRef(Task.workspace / "rvdecoderdb" / "rvdecoderdb"))
+    // 使用 mill.api.BuildCtx.workspaceRoot 替代 Task.workspace
+    super.sources() ++ Seq(PathRef(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "rvdecoderdb"))
   }
 }
 
@@ -60,7 +62,8 @@ object playground extends BaseModule {
 
     os.proc(
       "java",
-      s"-Dproject.root=${Task.workspace}",
+      // 使用 mill.api.BuildCtx.workspaceRoot 替代 Task.workspace
+      s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}",
       "-cp", cp,
       "sirius.GenCtrlSignals",
       dest.toString()
