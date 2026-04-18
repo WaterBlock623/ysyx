@@ -7,7 +7,6 @@ import mill._
 // import mill.define.Sources
 // import mill.modules.Util
 import mill.scalalib._
-import mill.scalalib.coursier.CoursierModule._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
 // support BSP
