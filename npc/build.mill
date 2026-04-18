@@ -2,8 +2,8 @@ package build
 
 // import Mill dependency
 import mill._
-import mill.define.Sources
-import mill.modules.Util
+// import mill.define.Sources
+// import mill.modules.Util
 import mill.scalalib._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
@@ -23,22 +23,18 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
     "-Ymacro-annotations",
   )
 
-  override def ivyDeps = T {
-    Agg(ivy"org.chipsalliance::chisel:$chiselVersion")
-  }
+  override def mvnDeps = Seq(mvn"org.chipsalliance::chisel:$chiselVersion")
 
-  override def scalacPluginIvyDeps = T {
-    Agg(ivy"org.chipsalliance:::chisel-plugin:$chiselVersion")
-  }
+  override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
   override def forkArgs = T {
     super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
   }
 
   trait BaseTests extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
-    override def ivyDeps = T {
-      m.ivyDeps() ++ Agg(
-        ivy"org.scalatest::scalatest:$scalaTestVersion",
+    override def mvnDeps = T {
+      m.mvnDeps() ++ Seq(
+        mvn"org.scalatest::scalatest:$scalaTestVersion",
 //        ivy"edu.berkeley.cs::chiseltest:6.0.0"
       )
     }

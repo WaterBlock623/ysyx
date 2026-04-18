@@ -14,19 +14,6 @@ FIND_FILTER = -type f -name '*.scala'
 MILL_SRCS = $(shell find $(SEARCH_DIRS) $(FIND_FILTER))
 VSRC_TIMESTAMP = $(BUILD_DIR)/.$(ARCH)-vsrc_timestamp
 
-ifneq ($(MAKECMDGOALS),clean)
-ifeq ($(ARCH),)
-$(error Need ARCH)
-endif
-ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
-else ifneq ($(findstring syn,$(ARCH)),) # syn
-SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false
-else # normal npc
-SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
-endif
-endif
-
 test:
 	$(MILL) $(PRJ).test.testOnly $(PACKAGE_NAME).*
 
