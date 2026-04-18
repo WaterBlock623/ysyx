@@ -3,6 +3,7 @@ package sirius
 import chisel3._
 import chisel3.util.MuxLookup
 import chisel3.util.Decoupled
+import rvspeccore.core.RVConfig
 
 // 控制pc跳转和gpr读写
 class Wbu(
