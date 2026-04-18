@@ -10,7 +10,7 @@ import mill.scalalib.TestModule.ScalaTest
 trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   override def scalaVersion = "2.13.18"
   def chiselVersion = "7.11.0"
-  
+
   def myScalaTestVersion = "3.2.20"
 
   override def scalacOptions = Seq(
@@ -18,22 +18,23 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
     "-deprecation",
     "-feature",
     "-Xcheckinit",
-    "-Ymacro-annotations",
+    "-Ymacro-annotations"
   )
 
-  override def mvnDeps = Seq(mvn"org.chipsalliance::chisel:$chiselVersion")
+  override def mvnDeps = Seq(
+    mvn"org.chipsalliance::chisel:$chiselVersion",
+    mvn"cn.ac.ios.tis::riscvspeccore:1.3-chisel7.11.0-7e43b32-SNAPSHOT")
 
   override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
   override def forkArgs = Task {
-    // 使用 mill.api.BuildCtx.workspaceRoot 替代 Task.workspace
     super.forkArgs() ++ Seq(s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}")
   }
 
   trait BaseTests extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
     override def mvnDeps = Task {
       m.mvnDeps() ++ Seq(
-        mvn"org.scalatest::scalatest:$myScalaTestVersion",
+        mvn"org.scalatest::scalatest:$myScalaTestVersion"
 //        ivy"edu.berkeley.cs::chiseltest:6.0.0"
       )
     }
@@ -63,9 +64,9 @@ object playground extends BaseModule {
 
     os.proc(
       "java",
-      // 使用 mill.api.BuildCtx.workspaceRoot 替代 Task.workspace
       s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}",
-      "-cp", cp,
+      "-cp",
+      cp,
       "sirius.GenCtrlSignals",
       dest.toString()
     ).call(stdout = os.Inherit, stderr = os.Inherit)
