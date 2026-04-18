@@ -1,3 +1,5 @@
+//| mill-version: 1.1.0
+
 package build
 
 // import Mill dependency
@@ -5,13 +7,14 @@ import mill._
 // import mill.define.Sources
 // import mill.modules.Util
 import mill.scalalib._
+import mill.scalalib.coursier.CoursierModule._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
 // support BSP
 import mill.bsp._
 
 trait BaseModule extends ScalaModule with ScalafmtModule { m =>
-  def scalaVersion = "2.13.18"
+  override def scalaVersion = "2.13.18"
   def chiselVersion = "7.11.0"
   def scalaTestVersion = "3.2.20"
 
@@ -69,13 +72,5 @@ object playground extends BaseModule {
     ).call(stdout = os.Inherit, stderr = os.Inherit)
 
     Seq(PathRef(dest))
-  }
-
-  override def repositoriesTask = T.task {
-    super.repositoriesTask() ++ Seq(
-      coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),
-      coursier.MavenRepository("https://oss.sonatype.org/content/repositories/releases"),
-      coursier.MavenRepository("https://oss.sonatype.org/content/repositories/snapshots")
-    )
   }
 }
