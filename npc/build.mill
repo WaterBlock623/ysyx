@@ -2,10 +2,7 @@
 
 package build
 
-// import Mill dependency
 import mill._
-// import mill.define.Sources
-// import mill.modules.Util
 import mill.scalalib._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
@@ -13,7 +10,8 @@ import mill.scalalib.TestModule.ScalaTest
 trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   override def scalaVersion = "2.13.18"
   def chiselVersion = "7.11.0"
-  def scalaTestVersion = "3.2.20"
+  
+  def myScalaTestVersion = "3.2.20"
 
   override def scalacOptions = Seq(
     "-language:reflectiveCalls",
@@ -27,14 +25,14 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 
   override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
-  override def forkArgs = T {
-    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
+  override def forkArgs = Task {
+    super.forkArgs() ++ Seq(s"-Dproject.root=${Task.workspace}")
   }
 
   trait BaseTests extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
-    override def mvnDeps = T {
+    override def mvnDeps = Task {
       m.mvnDeps() ++ Seq(
-        mvn"org.scalatest::scalatest:$scalaTestVersion",
+        mvn"org.scalatest::scalatest:$myScalaTestVersion",
 //        ivy"edu.berkeley.cs::chiseltest:6.0.0"
       )
     }
@@ -44,8 +42,8 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
 }
 
 object common extends BaseModule {
-  override def sources = T.sources {
-    super.sources() ++ Seq(PathRef(T.workspace / "rvdecoderdb" / "rvdecoderdb"))
+  override def sources = Task {
+    super.sources() ++ Seq(PathRef(Task.workspace / "rvdecoderdb" / "rvdecoderdb"))
   }
 }
 
@@ -56,13 +54,13 @@ object generator extends BaseModule {
 object playground extends BaseModule {
   override def moduleDeps = Seq(common)
 
-  override def generatedSources: T[Seq[PathRef]] = T {
-    val dest = T.dest
+  override def generatedSources: T[Seq[PathRef]] = Task {
+    val dest = Task.dest
     val cp = generator.runClasspath().map(_.path).mkString(":")
 
     os.proc(
       "java",
-      s"-Dproject.root=${T.workspace}",
+      s"-Dproject.root=${Task.workspace}",
       "-cp", cp,
       "sirius.GenCtrlSignals",
       dest.toString()
