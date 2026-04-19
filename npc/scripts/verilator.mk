@@ -57,7 +57,7 @@ endif
 CFLAGS_BUILD += -Wall -Werror -Wno-error=stringop-overread
 CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
-CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3 -mno-avx -mno-avx2 -march=x86-64 -static,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3 -mno-avx -mno-avx2 -march=x86-64,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG_ONLY_G),-g,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
