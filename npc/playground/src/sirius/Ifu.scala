@@ -361,6 +361,14 @@ class Ifu(
   outBits.ifuPayload.ifu.inst := icache.io.cached.r.bits.data
   outBits.ifuPayload.ifu.pc := pc
 
+  if (cfg.formal) {
+    import rvspeccore.checker._
+    implicit val XLEN: Int = cfg.xlen
+    when (out.valid) {
+      assume(RVI.regImm(out.bits.ifuPayload.ifu.inst))
+    }
+  }
+
   if (cfg.perf) {
     PerfWhen(
       "instFetch",
