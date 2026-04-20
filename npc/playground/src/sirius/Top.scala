@@ -180,7 +180,7 @@ class Top(
       basicCore.wbu.exte.debugEbreak
     )
     val wbuIn = tapAndRead(basicCore.wbu.in)
-    val ebreakSignal = wbuIn.bits.ctrl.debugCtrl.get.isEbreak
+    val ebreakSignal = wbuIn.bits.ctrl.wb.get.isEbreak
     ebreaks.foreach { e => drive(e.get) := ebreakSignal }
 
     val debugInfoDpiC = Module(new DebugInfoDpiC)
