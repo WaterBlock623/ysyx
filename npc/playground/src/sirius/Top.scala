@@ -9,8 +9,8 @@ class BasicCore(
   implicit private val ucfg: UnitConfig)
     extends Module {
   val io = IO(new Bundle {
-    val axiIfu = Flipped(new Axi4IO)
-    val axiLsu = Flipped(new Axi4IO)
+    val axiIfu = new Axi4IO
+    val axiLsu = new Axi4IO
   })
 
   val pcReg = Module(new PcReg)
@@ -29,8 +29,8 @@ class BasicCore(
 
   val globalCtrl = idu.exte.globalCtrl
 
-  ifu.exte.mem :<>= io.axiIfu
-  lsu.exte.mem :<>= io.axiLsu
+  io.axiIfu :<>= ifu.exte.mem
+  io.axiLsu :<>= lsu.exte.mem
   pcReg.ifuIn :<>= ifu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
