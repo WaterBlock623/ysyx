@@ -23,11 +23,11 @@ class AxiReadConstraint extends Module {
 
   // val ar_fire = io.ar.valid && io.ar.ready
 
-  val valid_d = RegNext(io.ar.valid, init=false.B)
-  val ready_d = RegNext(io.ar.ready, init=false.B)
-  val bits_d  = RegNext(io.ar.bits)
+  val valid_d = RegNext(io.ar.valid, init = false.B)
+  val ready_d = RegNext(io.ar.ready, init = false.B)
+  val bits_d = RegNext(io.ar.bits)
 
-  when (valid_d && !ready_d) {
+  when(valid_d && !ready_d) {
     assume(io.ar.valid)
     assume(io.ar.bits === bits_d)
   }
@@ -56,12 +56,12 @@ class IcacheTest extends ModuleWithInitReset {
 
   val s_mem_idle :: s_mem_resp :: Nil = Enum(2)
   val memState = RegInit(s_mem_idle)
-  
+
   val memArReg = Reg(chiselTypeOf(dut.io.mem.ar.bits))
   val burstCnt = RegInit(0.U(8.W))
-  
+
   dut.io.mem.ar.ready := memState === s_mem_idle
-  
+
   when(dut.io.mem.ar.fire) {
     memArReg := dut.io.mem.ar.bits
     burstCnt := 0.U
@@ -72,10 +72,10 @@ class IcacheTest extends ModuleWithInitReset {
   val isWrap = memArReg.burst === 2.U
   val wrapMask = (memArReg.len + 1.U) << 2
   val baseAddr = memArReg.addr & ~(wrapMask - 1.U)
-  
+
   val incrementedAddr = memArReg.addr + (burstCnt << 2)
   val wrappedAddr = baseAddr | (incrementedAddr & (wrapMask - 1.U))
-  
+
   currentAddr := Mux(isWrap, wrappedAddr, incrementedAddr)
 
   dut.io.mem.r.valid := memState === s_mem_resp
@@ -103,16 +103,81 @@ class IcacheTest extends ModuleWithInitReset {
   }
 }
 
-class AxiSlaveConstraint extends Module {
-  val io = IO(Flipped(new Axi4IO))
+object AxiSlaveConstraint {
+  def apply[T <: Axi4IO](axi: T): T = {
+    when(axi.ar.valid) {
+      assert(axi.ar.bits.len === 0.U)
+    }
+    when(axi.aw.valid) {
+      assert(axi.aw.bits.len === 0.U)
+    }
+
+    def keepBoolUntil(valid: Bool, reset: Bool): Bool = {
+      val validReg = RegInit(false.B)
+      when(valid) {
+        validReg := true.B
+      }
+      when(reset) {
+        validReg := false.B
+      }
+      valid || validReg
+    }
+
+    // R
+    val rId = Reg(chiselTypeOf(axi.ar.bits.id))
+    when(axi.ar.fire) {
+      rId := axi.ar.bits.id
+    }
+    when(axi.r.valid) {
+      assume(axi.r.bits.id === rId)
+      assume(axi.r.bits.last)
+    }
+    val arFired = keepBoolUntil(axi.ar.fire, axi.r.fire)
+    when (!arFired) {
+      assume(!axi.r.valid)
+    }
+
+    // W
+    val wId = Reg(chiselTypeOf(axi.aw.bits.id))
+    when(axi.aw.fire) {
+      wId := axi.aw.bits.id
+    }
+    when(axi.w.valid) {
+      assert(axi.w.bits.last)
+    }
+    when(axi.b.valid) {
+      assume(axi.b.bits.id === wId)
+    }
+    val awFired = keepBoolUntil(axi.aw.fire, axi.b.fire)
+    val wFired = keepBoolUntil(axi.w.fire, axi.b.fire)
+    when (!awFired || !wFired) {
+      assume(!axi.b.valid)
+    }
+
+    axi
+  }
 }
 
 class BasicCoreTest extends ModuleWithInitReset {
-
+  val io = IO(new Bundle {
+    val imem = new Axi4IO
+    val dmem = new Axi4IO
+  })
+  AxiSlaveConstraint(io.imem)
+  AxiSlaveConstraint(io.dmem)
+  val rvOpCodesPath = os.Path(getClass.getResource("/riscv-opcodes").toURI)
+  val cfg = CoreConfig.default.copy(isDebug = false, perf = false, formal = true, rvOpCodesPath = rvOpCodesPath)
+  val ucfg = UnitConfig.default
+  val basicCore = Module(new BasicCore()(cfg, ucfg))
+  io.imem :<>= basicCore.io.axiIfu
+  io.dmem :<>= basicCore.io.axiLsu
 }
 
-class FormalTest extends AnyFlatSpec {
+class SiriusSpec extends AnyFlatSpec {
   "icache" should "pass" in {
     Formal.verify(new IcacheTest, "IcacheTest", 30, 10)
+  }
+  "basicCore" should "pass" in {
+    Formal.verify(new BasicCoreTest, "BasicCoreTest", 5, 0)
   }
 }

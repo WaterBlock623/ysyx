@@ -6,6 +6,7 @@ import mill._
 import mill.scalalib._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
+import mill.api.Task.Simple
 
 trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   override def scalaVersion = "2.13.18"
@@ -40,13 +41,17 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
     }
   }
 
-  object test extends BaseTests
+  object test extends BaseTests {
+    def rvopcodes = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "riscv-opcodes")
+    override def sources = Task {
+      super.sources() ++ Seq(rvopcodes())
+    }
+  }
 }
 
 object common extends BaseModule {
   def rvopcodedb = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "rvdecoderdb")
-
-  override def sources = Task {
+  override def resources = Task {
     super.sources() ++ Seq(rvopcodedb())
   }
 }

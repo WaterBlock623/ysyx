@@ -94,7 +94,7 @@ class Wbu(
     )
 
     import rvspeccore.checker._
-    val checker = Module(new CheckerWithState(enableReg = false)(rvConfig))
+    val checker = Module(new CheckerWithState(enableReg = false, singleInstMode = Some(RVI.ADDI))(rvConfig))
     checker.io.instCommit.valid := RegNext(in.valid)
     checker.io.instCommit.excp  := RegNext(in.bits.lsuPayload.trap.isTrap)
     checker.io.instCommit.inst  := RegNext(in.bits.lsuPayload.ifu.inst)
