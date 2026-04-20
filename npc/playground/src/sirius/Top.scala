@@ -4,24 +4,15 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.dataview._
 
-class Top(
+class BasicCore(
   implicit private val cfg:  CoreConfig,
   implicit private val ucfg: UnitConfig)
     extends Module {
+  val io = IO(new Bundle {
+    val axiIfu = Flipped(new Axi4IO)
+    val axiLsu = Flipped(new Axi4IO)
+  })
 
-  // val memBusArbiter = Module(new MemBusArbiter)
-  // val xbar = Module(new Xbar)
-  val xbar = Module(
-    new Xbar(
-      2,
-      2,
-      Seq(
-        addr => addr < "h02000000".U || addr >= "h02010000".U,
-        addr => addr >= "h02000000".U && addr < "h02010000".U
-      )
-    )
-  )
-  val clintDevice = Module(new ClintDevice)
   val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
@@ -38,52 +29,8 @@ class Top(
 
   val globalCtrl = idu.exte.globalCtrl
 
-  if (cfg.ysyxsoc) {
-    val io = IO(new Bundle {
-      val interrupt = Input(Bool())
-      val master = new Axi4FlatIO
-      val slave = Flipped(new Axi4FlatIO)
-    })
-    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
-  } else if (cfg.isDebug) {
-    val memDpiC = Module(new MemDpiC)
-    val axi4BurstSpliter = Module(new Axi4BurstSpliter)
-    axi4BurstSpliter.io.in :<>= xbar.io.out(0)
-    memDpiC.axi :<>= axi4BurstSpliter.io.out.viewAs[Axi4FlatIO]
-    memDpiC.clock := clock
-    memDpiC.reset := reset
-  }
-
-  if (cfg.isDebug) {
-    val ebreaks = Seq(
-      ifu.exte.debugEbreak,
-      idu.exte.debugEbreak,
-      exu.exte.debugEbreak,
-      lsu.exte.debugEbreak,
-      wbu.exte.debugEbreak
-    )
-    ebreaks.foreach {_.get := wbu.in.bits.ctrl.debugCtrl.get.isEbreak}
-
-    val debugInfoDpiC = Module(new DebugInfoDpiC)
-    val getGprDpiC = Module(new GetGprDpiC)
-    debugInfoDpiC.isEbreak := wbu.in.bits.ctrl.debugCtrl.get.isEbreak
-    debugInfoDpiC.pc := wbu.in.bits.lsuPayload.ifu.pc
-    debugInfoDpiC.pcRaw := pcReg.debug.get.pc
-    // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
-    debugInfoDpiC.inst := wbu.in.bits.lsuPayload.ifu.inst
-    debugInfoDpiC.wbuValid := wbu.debug.get.valid
-    debugInfoDpiC.isJump := wbu.debug.get.isJump
-    debugInfoDpiC.jumpTarget := wbu.debug.get.jumpTarget
-    getGprDpiC.gpr := registerFile.debug.get
-  }
-
-  // memBusArbiter.in(0) :<>= ifu.exte.mem
-  // memBusArbiter.in(1) :<>= lsu.exte.mem
-  // xbar.in :<>= memBusArbiter.out
-  xbar.io.in(0) :<>= lsu.exte.mem
-  xbar.io.in(1) :<>= ifu.exte.mem
-  clintDevice.in :<>= xbar.io.out(1)
+  ifu.exte.mem :<>= io.axiIfu
+  lsu.exte.mem :<>= io.axiLsu
   pcReg.ifuIn :<>= ifu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
@@ -181,5 +128,71 @@ class Top(
     exu.in :<>= iduOut
     lsu.in :<>= exuOut
     wbu.in :<>= lsuOut
+  }
+}
+
+class Top(
+  implicit private val cfg:  CoreConfig,
+  implicit private val ucfg: UnitConfig)
+    extends Module {
+
+  val basicCore = Module(new BasicCore)
+  val xbar = Module(
+    new Xbar(
+      2,
+      2,
+      Seq(
+        addr => addr < "h02000000".U || addr >= "h02010000".U,
+        addr => addr >= "h02000000".U && addr < "h02010000".U
+      )
+    )
+  )
+  val clintDevice = Module(new ClintDevice)
+
+  xbar.io.in(0) :<>= basicCore.io.axiLsu
+  xbar.io.in(1) :<>= basicCore.io.axiIfu
+  clintDevice.in :<>= xbar.io.out(1)
+
+  if (cfg.ysyxsoc) {
+    val io = IO(new Bundle {
+      val interrupt = Input(Bool())
+      val master = new Axi4FlatIO
+      val slave = Flipped(new Axi4FlatIO)
+    })
+    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+    io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
+  } else if (cfg.isDebug) {
+    val memDpiC = Module(new MemDpiC)
+    val axi4BurstSpliter = Module(new Axi4BurstSpliter)
+    axi4BurstSpliter.io.in :<>= xbar.io.out(0)
+    memDpiC.axi :<>= axi4BurstSpliter.io.out.viewAs[Axi4FlatIO]
+    memDpiC.clock := clock
+    memDpiC.reset := reset
+  }
+
+  if (cfg.isDebug) {
+    import chisel3.util.experimental.BoringUtils._
+    val ebreaks = Seq(
+      basicCore.ifu.exte.debugEbreak,
+      basicCore.idu.exte.debugEbreak,
+      basicCore.exu.exte.debugEbreak,
+      basicCore.lsu.exte.debugEbreak,
+      basicCore.wbu.exte.debugEbreak
+    )
+    val wbuIn = tapAndRead(basicCore.wbu.in)
+    val ebreakSignal = wbuIn.bits.ctrl.debugCtrl.get.isEbreak
+    ebreaks.foreach { e => drive(e.get) := ebreakSignal }
+
+    val debugInfoDpiC = Module(new DebugInfoDpiC)
+    val getGprDpiC = Module(new GetGprDpiC)
+    debugInfoDpiC.isEbreak := ebreakSignal
+    debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
+    debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+    // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
+    debugInfoDpiC.inst := wbuIn.bits.lsuPayload.ifu.inst
+    debugInfoDpiC.wbuValid := tapAndRead(basicCore.wbu.debug.get.valid)
+    debugInfoDpiC.isJump := tapAndRead(basicCore.wbu.debug.get.isJump)
+    debugInfoDpiC.jumpTarget := tapAndRead(basicCore.wbu.debug.get.jumpTarget)
+    getGprDpiC.gpr := tapAndRead(basicCore.registerFile.debug.get)
   }
 }

@@ -164,6 +164,24 @@ class Lsu(
     )
   )
 
+  if (cfg.formal) {
+    when (in.valid) {
+      assume(!outBits.lsuPayload.trap.isTrap)
+    }
+
+    val width = 1.U << axSize
+    val memAccessWire = rvspeccore.checker.ConnectHelper.makeMemSource()(cfg.xlen)
+    memAccessWire.read.valid := exte.mem.r.fire
+    memAccessWire.read.addr := addr
+    memAccessWire.read.data := exte.mem.r.bits.data
+    memAccessWire.read.memWidth := width
+
+    memAccessWire.write.valid := exte.mem.w.fire
+    memAccessWire.write.addr := addr
+    memAccessWire.write.data := exte.mem.w.bits.data
+    memAccessWire.write.memWidth := width
+  }
+
   PerfWhen(
     "memoryRead",
     exte.mem.r.fire,

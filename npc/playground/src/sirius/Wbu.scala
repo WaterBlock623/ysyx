@@ -79,6 +79,31 @@ class Wbu(
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
+  if (cfg.formal) {
+    import rvspeccore.core.RVConfig
+    val rvConfig = RVConfig(
+      XLEN = cfg.xlen,
+      extensions = "ZifenceiZicsr",
+      fakeExtensions = "",
+      initValue = Map(
+        "pc" -> s"h${cfg.pcInit.toString(16)}",
+        // "mstatus" -> "h1800"
+      ),
+      functions = Seq(),
+      formal = Seq("CheckMem")
+    )
+
+    import rvspeccore.checker._
+    val checker = Module(new CheckerWithState(enableReg = false)(rvConfig))
+    checker.io.instCommit.valid := RegNext(in.valid)
+    checker.io.instCommit.excp  := RegNext(in.bits.lsuPayload.trap.isTrap)
+    checker.io.instCommit.inst  := RegNext(in.bits.lsuPayload.ifu.inst)
+    checker.io.instCommit.pc    := RegNext(in.bits.lsuPayload.ifu.pc)
+    checker.io.instCommit.npc   := DontCare
+
+    ConnectHelper.setChecker(checker)(cfg.xlen, rvConfig)
+  }
+
   if (cfg.isDebug) {
     dontTouch(debug.get)
     debug.get.valid := in.valid
