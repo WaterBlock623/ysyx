@@ -97,9 +97,9 @@ class Idu(
   val instDecoder = Module(new InstDecoder())
   instDecoder.io.inst := inst
   val ctrl = instDecoder.io.ctrlSignals
-  if (cfg.isDebug) {
-    outBits.ctrl.debugCtrl.get := ctrl.debug
-  }
+  // if (cfg.isDebug) {
+  //   outBits.ctrl.debugCtrl.get := ctrl.debug
+  // }
   outBits.ctrl.exuCtrl := ctrl.ex
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
