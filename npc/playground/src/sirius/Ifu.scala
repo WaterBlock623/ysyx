@@ -303,18 +303,61 @@ class Ifu(
   val outBits = out.bits
   val pc = exte.pcReg.pc
 
-  val icache = Module(
-    new Icache(
-      setNum = 2,
-      wayNum = 8,
-      wayByte = 8,
-      busByte = 4,
-      if (cfg.ysyxsoc) {
-        Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
-      } else { None }
+  val mem = if (cfg.formal) {
+    exte.mem
+  } else {
+    val icache = Module(
+      new Icache(
+        setNum = 2,
+        wayNum = 8,
+        wayByte = 8,
+        busByte = 4,
+        if (cfg.ysyxsoc) {
+          Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+        } else { None }
+      )
     )
-  )
-  icache.io.flush := exte.globalCtrl.globalCtrl.isFlushIcache
+    icache.io.flush := exte.globalCtrl.globalCtrl.isFlushIcache
+    exte.mem :<>= icache.io.mem
+
+    if (cfg.perf) {
+      val icacheState = BoringUtils.tapAndRead(icache.state)
+      val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      val icacheSIdle = 0.U
+      val icacheSReadCache = 1.U
+      val icacheSReq = 2.U
+      val icacheSFirstResp = 3.U
+      val icacheSFillCache = 4.U
+      PerfWhen(
+        "icacheTotalAcc",
+        icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMiss",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheHit",
+        icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheBlackList",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMissPenalty",
+        icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
+        exte.debugEbreak
+      )
+    }
+
+    icache.io.cached
+  }
 
   out.bits.ifuPayload.trap := 0.U.asTypeOf(
     chiselTypeOf(out.bits.ifuPayload.trap)
@@ -327,19 +370,19 @@ class Ifu(
   when(exte.flush) {
     flushReg := true.B
   }
-  when(icache.io.cached.r.fire) {
+  when(mem.r.fire) {
     flushReg := false.B
   }
 
   val nextState = MuxLookup(state, sReq)(
     Seq(
       sReq -> Mux(
-        icache.io.cached.ar.fire,
+        mem.ar.fire,
         sResp,
         sReq
       ),
       sResp -> Mux(
-        icache.io.cached.r.fire,
+        mem.r.fire,
         sReq,
         sResp
       )
@@ -347,18 +390,17 @@ class Ifu(
   )
   state := nextState
 
-  exte.mem :<>= icache.io.mem
-  icache.io.cached :<= 0.U.asTypeOf(new Axi4IO)
-  icache.io.cached.ar.bits.size := "b010".U
+  mem :<= 0.U.asTypeOf(new Axi4IO)
+  mem.ar.bits.size := "b010".U
   assert(
-    !icache.io.cached.aw.valid && !icache.io.cached.w.valid && !icache.io.cached.b.valid
+    !mem.aw.valid && !mem.w.valid && !mem.b.valid
   )
-  icache.io.cached.ar.valid := state === sReq && canValid
-  icache.io.cached.ar.bits.addr := pc
-  icache.io.cached.r.ready := out.ready || flushReg
+  mem.ar.valid := state === sReq && canValid
+  mem.ar.bits.addr := pc
+  mem.r.ready := out.ready || flushReg
 
-  out.valid := icache.io.cached.r.valid && !flushReg
-  outBits.ifuPayload.ifu.inst := icache.io.cached.r.bits.data
+  out.valid := mem.r.valid && !flushReg
+  outBits.ifuPayload.ifu.inst := mem.r.bits.data
   outBits.ifuPayload.ifu.pc := pc
 
   if (cfg.formal) {
@@ -372,7 +414,7 @@ class Ifu(
   if (cfg.perf) {
     PerfWhen(
       "instFetch",
-      icache.io.cached.r.fire,
+      mem.r.fire,
       exte.debugEbreak
     )
     // val isMemBusy = RegInit(false.B)
@@ -390,39 +432,6 @@ class Ifu(
     PerfWhen(
       "keepDataCyc",
       out.valid && !out.ready,
-      exte.debugEbreak
-    )
-    val icacheState = BoringUtils.tapAndRead(icache.state)
-    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-    val icacheSIdle = 0.U
-    val icacheSReadCache = 1.U
-    val icacheSReq = 2.U
-    val icacheSFirstResp = 3.U
-    val icacheSFillCache = 4.U
-    PerfWhen(
-      "icacheTotalAcc",
-      icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMiss",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheHit",
-      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheBlackList",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMissPenalty",
-      icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
       exte.debugEbreak
     )
   }

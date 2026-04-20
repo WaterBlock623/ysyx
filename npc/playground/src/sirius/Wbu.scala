@@ -90,7 +90,7 @@ class Wbu(
         // "mstatus" -> "h1800"
       ),
       functions = Seq(),
-      formal = Seq("CheckMem")
+      formal = Seq("CheckMem", "ArbitraryRegFile")
     )
 
     import rvspeccore.checker._

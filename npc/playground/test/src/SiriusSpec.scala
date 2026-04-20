@@ -7,70 +7,6 @@ import formal.ModuleWithInitReset
 import org.scalatest.flatspec.AnyFlatSpec
 import scala.util.Random
 
-// class IcacheTest extends ModuleWithInitReset {
-//   val io = IO(new Bundle {
-//     val req = Flipped(new Axi4IO)
-//     val block = Input(Bool())
-//   })
-//
-//   val busy = RegInit(false.B)
-//   val arvalid = RegInit(false.B)
-//   val addrReg = RegEnable(io.req.ar.bits.addr, !busy && io.req.ar.valid)
-//   val memSize = 128 // byte
-//   // val mem = dontTouch(Reg(Vec(memSize / 4, UInt(32.W))))
-//   val random = new Random()
-//   val mem = dontTouch(
-//     RegInit(VecInit(Seq.fill(memSize / 4)(BigInt(32, random).U(32.W))))
-//   )
-//   val dut = Module(
-//     new Icache(
-//       setNum = 2,
-//       wayNum = 8,
-//       wayByte = 8,
-//       busByte = 4
-//     )
-//   )
-//
-//   when(!busy && io.req.ar.valid) {
-//     busy := true.B
-//     arvalid := true.B
-//   }
-//   when(busy && io.req.r.fire) {
-//     busy := false.B
-//   }
-//   when(arvalid && dut.io.cached.ar.fire) {
-//     arvalid := false.B
-//   }
-//
-//   dut.io.flush := false.B
-//   dut.io.cached :<>= io.req
-//   dut.io.cached.ar.valid := arvalid
-//   dut.io.cached.ar.bits.addr := addrReg
-//   dut.io.cached.aw.valid := false.B
-//   dut.io.cached.w.valid := false.B
-//   0.U.asTypeOf(chiselTypeOf(dut.io.mem)) :>= dut.io.mem
-//   dut.io.mem.ar.ready := true.B
-//   val memRValid = RegInit(false.B)
-//   val memRAddr = Reg(chiselTypeOf(dut.io.mem.ar.bits.addr))
-//   when (dut.io.mem.ar.fire) {
-//     memRValid := true.B
-//     memRAddr := dut.io.mem.ar.bits.addr
-//   }
-//   when (dut.io.mem.r.fire) {
-//     memRValid := false.B
-//   }
-//   dut.io.mem.r.valid := memRValid
-//   dut.io.mem.r.bits.data := mem(memRAddr >> 2)
-//
-//   val dutRData = dut.io.cached.r.bits.data
-//   val refRData = WireDefault(mem(addrReg >> 2))
-//   dontTouch(refRData)
-//   when(dut.io.cached.r.valid) {
-//     assert(dutRData === refRData)
-//     // assert(dutRData === 0.U)
-//   }
-// }
-
 class AxiReadConstraint extends Module {
   val io = IO(new Bundle {
     val ar = Flipped((new Axi4IO).ar)
@@ -165,6 +101,14 @@ class IcacheTest extends ModuleWithInitReset {
   when(io.req.r.valid) {
     assert(io.req.r.bits.data === refRData)
   }
+}
+
+class AxiSlaveConstraint extends Module {
+  val io = IO(Flipped(new Axi4IO))
+}
+
+class BasicCoreTest extends ModuleWithInitReset {
+
 }
 
 class FormalTest extends AnyFlatSpec {
