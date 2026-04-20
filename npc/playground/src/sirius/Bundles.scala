@@ -46,7 +46,7 @@ class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
 // 控制信号
 class WbuCtrl(implicit private val cfg: CoreConfig) extends Bundle {
   val wbuCtrl = new CtrlSignals().wb
-  val debugCtrl = Option.when(cfg.isDebug)(new CtrlSignals().debug)
+  // val debugCtrl = Option.when(cfg.isDebug)(new CtrlSignals().debug)
 }
 
 class LsuCtrl(implicit private val cfg: CoreConfig) extends WbuCtrl {
