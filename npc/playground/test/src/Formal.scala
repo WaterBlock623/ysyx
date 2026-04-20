@@ -6,7 +6,8 @@ import java.nio.file.{Files, Paths}
 import scala.sys.process._
 
 object Formal {
-  def verify[T <: Module](gen: => T, topName: String, depth: Int, skip: Int = 0): Unit = {
+  def verify[T <: Module](gen: => T, topName: String, depth: Int, skip: Int = 0, append: Int = 0)
+    : Unit = {
     import java.util.UUID
     val workDir = Paths.get(s"formal_${topName}_${UUID.randomUUID()}")
     Files.createDirectories(workDir)
@@ -56,6 +57,7 @@ object Formal {
          |vcd off
          |fst on
          |depth $depth
+         |append $append
          |
          |[engines]
          |smtbmc boolector
@@ -82,12 +84,15 @@ object Formal {
     println(s"[Formal] Running SymbiYosys...")
 
     val exitCode =
-      Process(Seq(
-        "sby", 
-        // "--autotune", 
-        "-f", 
-        sbyPath.getFileName.toString), 
-      workDir.toFile).!
+      Process(
+        Seq(
+          "sby",
+          // "--autotune",
+          "-f",
+          sbyPath.getFileName.toString
+        ),
+        workDir.toFile
+      ).!
 
     val tracePath =
       workDir

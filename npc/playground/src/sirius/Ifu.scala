@@ -377,7 +377,7 @@ class Ifu(
   val nextState = MuxLookup(state, sReq)(
     Seq(
       sReq -> Mux(
-        mem.ar.fire,
+        mem.ar.fire && !mem.r.fire,
         sResp,
         sReq
       ),
@@ -407,7 +407,9 @@ class Ifu(
     import rvspeccore.checker._
     implicit val XLEN: Int = cfg.xlen
     when (out.valid) {
-      assume(RVI.regImm(out.bits.ifuPayload.ifu.inst))
+      assume(
+        RVI(out.bits.ifuPayload.ifu.inst)
+      )
     }
   }
 

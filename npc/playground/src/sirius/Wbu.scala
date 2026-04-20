@@ -3,6 +3,7 @@ package sirius
 import chisel3._
 import chisel3.util.MuxLookup
 import chisel3.util.Decoupled
+import chisel3.util.Counter
 
 // 控制pc跳转和gpr读写
 class Wbu(
@@ -80,6 +81,10 @@ class Wbu(
   csr.causeNum := inBits.lsuPayload.trap.cause
 
   if (cfg.formal) {
+    when (exte.pcReg.wEn && exte.pcReg.isJump) {
+      assume(exte.pcReg.target(1, 0) === 0.U)
+    }
+
     import rvspeccore.core.RVConfig
     val rvConfig = RVConfig(
       XLEN = cfg.xlen,
@@ -87,21 +92,27 @@ class Wbu(
       fakeExtensions = "",
       initValue = Map(
         "pc" -> s"h${cfg.pcInit.toString(16)}",
-        // "mstatus" -> "h1800"
+        "mstatus" -> "h1800"
       ),
       functions = Seq(),
       formal = Seq("CheckMem", "ArbitraryRegFile")
     )
 
     import rvspeccore.checker._
-    val checker = Module(new CheckerWithState(enableReg = false, singleInstMode = Some(RVI.ADDI))(rvConfig))
-    checker.io.instCommit.valid := RegNext(in.valid)
+    val checker = Module(new CheckerWithState(enableReg = false)(rvConfig))
+    checker.io.instCommit.valid := RegNext(in.valid && !reset.asBool)
     checker.io.instCommit.excp  := RegNext(in.bits.lsuPayload.trap.isTrap)
     checker.io.instCommit.inst  := RegNext(in.bits.lsuPayload.ifu.inst)
     checker.io.instCommit.pc    := RegNext(in.bits.lsuPayload.ifu.pc)
     checker.io.instCommit.npc   := DontCare
 
     ConnectHelper.setChecker(checker)(cfg.xlen, rvConfig)
+    ConnectHelper.makePrivilegeSource()(rvConfig) := DontCare
+
+    // val cnt = Counter(checker.io.instCommit.valid, 127)
+    // when (cnt._1 === 1.U) {
+    //   assert(false.B)
+    // }
   }
 
   if (cfg.isDebug) {

@@ -165,7 +165,8 @@ class BasicCoreTest extends ModuleWithInitReset {
   })
   AxiSlaveConstraint(io.imem)
   AxiSlaveConstraint(io.dmem)
-  val rvOpCodesPath = os.Path(getClass.getResource("/riscv-opcodes").toURI)
+  val workSpaceRoot = os.Path(sys.env("WORKSPACE_ROOT_DIR"))
+  val rvOpCodesPath = workSpaceRoot / "rvdecoderdb" / "riscv-opcodes"
   val cfg = CoreConfig.default.copy(isDebug = false, perf = false, formal = true, rvOpCodesPath = rvOpCodesPath)
   val ucfg = UnitConfig.default
   val basicCore = Module(new BasicCore()(cfg, ucfg))
@@ -178,6 +179,6 @@ class SiriusSpec extends AnyFlatSpec {
     Formal.verify(new IcacheTest, "IcacheTest", 30, 10)
   }
   "basicCore" should "pass" in {
-    Formal.verify(new BasicCoreTest, "BasicCoreTest", 5, 0)
+    Formal.verify(new BasicCoreTest, "BasicCoreTest", depth = 16, skip = 0, append = 1)
   }
 }

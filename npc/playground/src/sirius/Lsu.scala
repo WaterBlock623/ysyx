@@ -169,7 +169,7 @@ class Lsu(
       assume(!outBits.lsuPayload.trap.isTrap)
     }
 
-    val width = 1.U << axSize
+    val width = (1.U << axSize) * 8.U
     val memAccessWire = rvspeccore.checker.ConnectHelper.makeMemSource()(cfg.xlen)
     memAccessWire.read.valid := exte.mem.r.fire
     memAccessWire.read.addr := addr

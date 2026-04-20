@@ -106,8 +106,8 @@ class Idu(
   exte.globalCtrl.globalCtrl := ctrl.global
 
   when(!inBits.ifuPayload.trap.isTrap) {
-    outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall
-    outBits.iduPayload.trap.cause := 11.U(cfg.mxlen.W)
+    outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall || ctrl.wb.isEbreak
+    outBits.iduPayload.trap.cause := Mux(ctrl.wb.isEcall, 11.U(cfg.mxlen.W), 3.U(cfg.mxlen.W))
   }
 
   // imm

@@ -1,4 +1,4 @@
-//| mill-version: 1.1.0
+//| mill-version: 1.1.5
 
 package build
 
@@ -42,10 +42,12 @@ trait BaseModule extends ScalaModule with ScalafmtModule { m =>
   }
 
   object test extends BaseTests {
-    def rvopcodes = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "riscv-opcodes")
-    override def sources = Task {
-      super.sources() ++ Seq(rvopcodes())
-    }
+    // def rvopcodes = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "riscv-opcodes")
+    def workspaceRoot = Task.Source(mill.api.BuildCtx.workspaceRoot)
+
+    def forkEnv = super.forkEnv() ++ Map(
+      "WORKSPACE_ROOT_DIR" -> workspaceRoot().path.toString
+    )
   }
 }
 
