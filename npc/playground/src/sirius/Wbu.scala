@@ -114,9 +114,15 @@ class Wbu(
 
     val memAccessWire = rvspeccore.checker.ConnectHelper.makeMemSource()(cfg.xlen)
     val formalSig = in.bits.lsuPayload.lsu.formal.get
-    memAccessWire := formalSig
-    memAccessWire.read.valid := formalSig.read.valid && in.valid && !reset.asBool
-    memAccessWire.write.valid := formalSig.write.valid && in.valid && !reset.asBool
+    memAccessWire.read.valid := RegNext(formalSig.read.valid && in.valid && !reset.asBool)
+    memAccessWire.read.addr := RegNext(formalSig.read.addr)
+    memAccessWire.read.data := RegNext(formalSig.read.data)
+    memAccessWire.read.memWidth := RegNext(formalSig.read.memWidth)
+
+    memAccessWire.write.valid := RegNext(formalSig.write.valid && in.valid && !reset.asBool)
+    memAccessWire.write.addr := RegNext(formalSig.write.addr)
+    memAccessWire.write.data := RegNext(formalSig.write.data)
+    memAccessWire.write.memWidth := RegNext(formalSig.write.memWidth)
 
     // val cnt = Counter(checker.io.instCommit.valid, 127)
     // when (cnt._1 === 1.U) {

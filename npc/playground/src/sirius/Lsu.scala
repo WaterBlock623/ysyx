@@ -90,7 +90,7 @@ class Lsu(
   val isMemDone =
     state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
 
-  out.valid := isBypass || isMemDone || isTrap || (in.valid && out.bits.lsuPayload.trap.isTrap)
+  out.valid := isBypass || isMemDone || isTrap || (in.valid && eLoadStoreAddressMisaligned)
   in.ready := out.fire
 
   val isRespReady = state === sWaitResp && out.ready
@@ -188,7 +188,7 @@ class Lsu(
     val storeQueue = Module(new Queue(new rvspeccore.checker.StoreOrLoadInfo, 1, true, true))
     storeQueue.io.enq.valid := exte.mem.w.fire
     storeQueue.io.enq.bits.addr := addr
-    storeQueue.io.enq.bits.data := exte.mem.w.bits.data
+    storeQueue.io.enq.bits.data := regData
     storeQueue.io.enq.bits.memWidth := width
 
     formalSig.read.addr := loadQueue.io.deq.bits.addr
