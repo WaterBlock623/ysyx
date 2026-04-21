@@ -406,9 +406,21 @@ class Ifu(
   if (cfg.formal) {
     import rvspeccore.checker._
     implicit val XLEN: Int = cfg.xlen
-    when (out.valid) {
+    when(out.valid) {
+      val inst = out.bits.ifuPayload.ifu.inst
       assume(
-        RVI(out.bits.ifuPayload.ifu.inst)
+        RVI(inst) ||
+          RVZifencei(inst) ||
+          {
+            val allowCsr = Set(
+              CsrAddr.mcycle,
+              CsrAddr.mcycleh,
+              CsrAddr.mepc, 
+              // CsrAddr.mstatus, 
+              CsrAddr.mtvec
+            )
+            RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
+          }
       )
     }
   }

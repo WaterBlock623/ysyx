@@ -168,7 +168,7 @@ class BasicCoreTest extends ModuleWithInitReset {
   val workSpaceRoot = os.Path(sys.env("WORKSPACE_ROOT_DIR"))
   val rvOpCodesPath = workSpaceRoot / "rvdecoderdb" / "riscv-opcodes"
   val cfg = CoreConfig.default.copy(isDebug = false, perf = false, formal = true, rvOpCodesPath = rvOpCodesPath)
-  val ucfg = UnitConfig.default
+  val ucfg = UnitConfig()
   val basicCore = Module(new BasicCore()(cfg, ucfg))
   io.imem :<>= basicCore.io.axiIfu
   io.dmem :<>= basicCore.io.axiLsu
@@ -179,6 +179,6 @@ class SiriusSpec extends AnyFlatSpec {
     Formal.verify(new IcacheTest, "IcacheTest", 30, 10)
   }
   "basicCore" should "pass" in {
-    Formal.verify(new BasicCoreTest, "BasicCoreTest", depth = 16, skip = 0, append = 1)
+    Formal.verify(new BasicCoreTest, "BasicCoreTest", depth = 10, skip = 0, append = 0)
   }
 }

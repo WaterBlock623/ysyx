@@ -8,8 +8,9 @@ import scala.sys.process._
 object Formal {
   def verify[T <: Module](gen: => T, topName: String, depth: Int, skip: Int = 0, append: Int = 0)
     : Unit = {
-    import java.util.UUID
-    val workDir = Paths.get(s"formal_${topName}_${UUID.randomUUID()}")
+    // import java.util.UUID
+    // val workDir = Paths.get(s"formal_${topName}_${UUID.randomUUID()}")
+    val workDir = Paths.get(s"formal_${topName}")
     Files.createDirectories(workDir)
 
     val firtoolOptions = Array(
@@ -61,6 +62,7 @@ object Formal {
          |
          |[engines]
          |smtbmc boolector
+         |smtbmc boolector -- --noincr
          |
          |[script]
          |read -sv $topName.sv
@@ -89,20 +91,24 @@ object Formal {
           "sby",
           // "--autotune",
           "-f",
-          sbyPath.getFileName.toString
+          sbyPath.getFileName.toString,
+          "-d",
+          workDir.toString
         ),
         workDir.toFile
       ).!
 
-    val tracePath =
-      workDir
-        .resolve(topName + "_basic")
-        .resolve("engine_0")
-        .resolve("trace.fst")
-        .toAbsolutePath
+    // val tracePath =
+    //   workDir
+    //     .resolve(topName + "_basic")
+    //     .resolve("engine_0")
+    //     .resolve("trace.fst")
+    //     .toAbsolutePath
+    // import java.nio.file.Files
 
+    val waves = os.walk(os.Path(workDir.toAbsolutePath)).filter(p => os.isFile(p) && p.ext == "fst")
     org.scalatest.Assertions
-      .assert(exitCode == 0, "RUN FAIL: Wave: " + tracePath.toString)
+      .assert(exitCode == 0, "RUN FAIL: Wave:\n" + waves.mkString("\n"))
   }
 }
 

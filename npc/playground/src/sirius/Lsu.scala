@@ -166,20 +166,41 @@ class Lsu(
 
   if (cfg.formal) {
     when (in.valid) {
-      assume(!outBits.lsuPayload.trap.isTrap)
+      assume(
+        !eLoadAddressMisaligned && 
+        !eLoadStoreAddressMisaligned && 
+        !eLoadAccessFault && 
+        !eStoreAccessFault
+      )
     }
 
+    val formalSig = out.bits.lsuPayload.lsu.formal.get
     val width = (1.U << axSize) * 8.U
-    val memAccessWire = rvspeccore.checker.ConnectHelper.makeMemSource()(cfg.xlen)
-    memAccessWire.read.valid := exte.mem.r.fire
-    memAccessWire.read.addr := addr
-    memAccessWire.read.data := exte.mem.r.bits.data
-    memAccessWire.read.memWidth := width
 
-    memAccessWire.write.valid := exte.mem.w.fire
-    memAccessWire.write.addr := addr
-    memAccessWire.write.data := exte.mem.w.bits.data
-    memAccessWire.write.memWidth := width
+    implicit val XLEN: Int = cfg.xlen
+    val loadQueue = Module(new Queue(new rvspeccore.checker.StoreOrLoadInfo, 1, true, true))
+    loadQueue.io.enq.valid := exte.mem.r.fire
+    loadQueue.io.enq.bits.addr := addr
+    loadQueue.io.enq.bits.data := exte.mem.r.bits.data
+    loadQueue.io.enq.bits.memWidth := width
+
+    val storeQueue = Module(new Queue(new rvspeccore.checker.StoreOrLoadInfo, 1, true, true))
+    storeQueue.io.enq.valid := exte.mem.w.fire
+    storeQueue.io.enq.bits.addr := addr
+    storeQueue.io.enq.bits.data := exte.mem.w.bits.data
+    storeQueue.io.enq.bits.memWidth := width
+
+    formalSig.read.addr := loadQueue.io.deq.bits.addr
+    formalSig.read.data := loadQueue.io.deq.bits.data
+    formalSig.read.memWidth := loadQueue.io.deq.bits.memWidth
+    formalSig.read.valid := loadQueue.io.deq.valid
+    loadQueue.io.deq.ready := out.fire && loadQueue.io.deq.valid
+
+    formalSig.write.addr := storeQueue.io.deq.bits.addr
+    formalSig.write.data := storeQueue.io.deq.bits.data
+    formalSig.write.memWidth := storeQueue.io.deq.bits.memWidth
+    formalSig.write.valid := storeQueue.io.deq.valid
+    storeQueue.io.deq.ready := out.fire && storeQueue.io.deq.valid
   }
 
   PerfWhen(

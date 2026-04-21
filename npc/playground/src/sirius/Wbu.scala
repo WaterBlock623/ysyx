@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util.MuxLookup
 import chisel3.util.Decoupled
 import chisel3.util.Counter
+import rvspeccore.checker.RVZicsr
 
 // 控制pc跳转和gpr读写
 class Wbu(
@@ -72,7 +73,7 @@ class Wbu(
   // csr
   val csr = exte.csr
   csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr &&
-    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid
+    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid && !inBits.lsuPayload.trap.isTrap
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
   csr.wData := inBits.lsuPayload.exu.aluOut
 
@@ -81,7 +82,9 @@ class Wbu(
   csr.causeNum := inBits.lsuPayload.trap.cause
 
   if (cfg.formal) {
-    when (exte.pcReg.wEn && exte.pcReg.isJump) {
+    implicit val XLEN: Int = cfg.xlen
+
+    when(exte.pcReg.wEn && exte.pcReg.isJump) {
       assume(exte.pcReg.target(1, 0) === 0.U)
     }
 
@@ -101,13 +104,19 @@ class Wbu(
     import rvspeccore.checker._
     val checker = Module(new CheckerWithState(enableReg = false)(rvConfig))
     checker.io.instCommit.valid := RegNext(in.valid && !reset.asBool)
-    checker.io.instCommit.excp  := RegNext(in.bits.lsuPayload.trap.isTrap)
-    checker.io.instCommit.inst  := RegNext(in.bits.lsuPayload.ifu.inst)
-    checker.io.instCommit.pc    := RegNext(in.bits.lsuPayload.ifu.pc)
-    checker.io.instCommit.npc   := DontCare
+    checker.io.instCommit.excp := RegNext(in.bits.lsuPayload.trap.isTrap)
+    checker.io.instCommit.inst := RegNext(in.bits.lsuPayload.ifu.inst)
+    checker.io.instCommit.pc := RegNext(in.bits.lsuPayload.ifu.pc)
+    checker.io.instCommit.npc := DontCare
 
     ConnectHelper.setChecker(checker)(cfg.xlen, rvConfig)
     ConnectHelper.makePrivilegeSource()(rvConfig) := DontCare
+
+    val memAccessWire = rvspeccore.checker.ConnectHelper.makeMemSource()(cfg.xlen)
+    val formalSig = in.bits.lsuPayload.lsu.formal.get
+    memAccessWire := formalSig
+    memAccessWire.read.valid := formalSig.read.valid && in.valid && !reset.asBool
+    memAccessWire.write.valid := formalSig.write.valid && in.valid && !reset.asBool
 
     // val cnt = Counter(checker.io.instCommit.valid, 127)
     // when (cnt._1 === 1.U) {

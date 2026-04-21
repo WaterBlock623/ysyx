@@ -40,6 +40,7 @@ class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
 class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   val lsu = new Bundle {
     val loadData = UInt(cfg.xlen.W)
+    val formal = Option.when(cfg.formal)(new rvspeccore.core.MemIO()(cfg.xlen))
   }
 }
 

@@ -15,7 +15,7 @@ MILL_SRCS = $(shell find $(SEARCH_DIRS) $(FIND_FILTER))
 VSRC_TIMESTAMP = $(BUILD_DIR)/.$(ARCH)-vsrc_timestamp
 
 test:
-	$(MILL) $(PRJ).test.testOnly $(PACKAGE_NAME).*
+	$(MILL) $(PRJ).test.testOnly $(PACKAGE_NAME).* $(if $(ALL),-- -z $(ALL),)
 
 $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	# Generate verilogs

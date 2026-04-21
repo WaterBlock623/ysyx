@@ -26,17 +26,18 @@ case class UnitConfig(
         )
       )
     ),
-  val csr32Map: ListMap[(Int, Int), () => CsrParent32] = ListMap(
-    (CsrAddr.mcycleh, CsrAddr.mcycle) -> (() => new CsrMcycle32)
+  val csr32Map: ListMap[(Int, Int), CoreConfig => CsrParent32] = ListMap(
+    (CsrAddr.mcycleh, CsrAddr.mcycle) -> (cfg => new CsrMcycle32()(cfg))
   ),
-  val csrMap: ListMap[Int, () => CsrParent] = ListMap(
-    CsrAddr.mvendorid -> (() => new CsrMvendorid),
-    CsrAddr.marchid -> (() => new CsrMarchid),
-    CsrAddr.mtvec -> (() => new CsrMtvec),
-    CsrAddr.mepc -> (() => new CsrMepc),
-    CsrAddr.mcause -> (() => new CsrMcause),
-    CsrAddr.mstatus -> (() => new CsrMstatus),
-  ))
+  val csrMap: ListMap[Int, CoreConfig => CsrParent] = ListMap(
+    CsrAddr.mvendorid -> (cfg => new CsrMvendorid()(cfg)),
+    CsrAddr.marchid -> (cfg => new CsrMarchid()(cfg)),
+    CsrAddr.mtvec -> (cfg => new CsrMtvec()(cfg)),
+    CsrAddr.mepc -> (cfg => new CsrMepc()(cfg)),
+    CsrAddr.mcause -> (cfg => new CsrMcause()(cfg)),
+    CsrAddr.mstatus -> (cfg => new CsrMstatus()(cfg)),
+  )) {
+}
 object UnitConfig {
   implicit val default: UnitConfig = UnitConfig()
 }

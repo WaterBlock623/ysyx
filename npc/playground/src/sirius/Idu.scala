@@ -39,7 +39,7 @@ class ImmParser(
       InstTypeEnum.B.asUInt -> immTypeB,
       InstTypeEnum.U.asUInt -> immTypeU,
       InstTypeEnum.J.asUInt -> immTypeJ,
-      InstTypeEnum.Zicsr.asUInt -> immTypeJ
+      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr
     )
   )
 }
