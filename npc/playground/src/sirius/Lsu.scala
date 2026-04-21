@@ -90,7 +90,7 @@ class Lsu(
   val isMemDone =
     state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
 
-  out.valid := isBypass || isMemDone || isTrap
+  out.valid := isBypass || isMemDone || isTrap || (in.valid && out.bits.lsuPayload.trap.isTrap)
   in.ready := out.fire
 
   val isRespReady = state === sWaitResp && out.ready
