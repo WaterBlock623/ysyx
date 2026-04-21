@@ -179,6 +179,6 @@ class SiriusSpec extends AnyFlatSpec {
     Formal.verify(new IcacheTest, "IcacheTest", 30, 10)
   }
   "basicCore" should "pass" in {
-    Formal.verify(new BasicCoreTest, "BasicCoreTest", depth = 10, skip = 0, append = 0)
+    Formal.verify(new BasicCoreTest, "BasicCoreTest", depth = 50, skip = 0, append = 0)
   }
 }

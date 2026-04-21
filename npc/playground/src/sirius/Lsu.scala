@@ -85,7 +85,7 @@ class Lsu(
     )
   )
 
-  val isTrap = in.valid && outBits.lsuPayload.trap.isTrap
+  val isTrap = in.valid && inBits.exuPayload.trap.isTrap
   val isBypass = state === sIdle && in.valid && !isMemAcc
   val isMemDone =
     state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
@@ -100,9 +100,9 @@ class Lsu(
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !eLoadStoreAddressMisaligned
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned
+  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !eLoadStoreAddressMisaligned && !isTrap
+  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned && !isTrap
+  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned && !isTrap
 
   val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
     Seq(
@@ -166,12 +166,13 @@ class Lsu(
 
   if (cfg.formal) {
     when (in.valid) {
-      assume(
-        !eLoadAddressMisaligned && 
-        !eLoadStoreAddressMisaligned && 
-        !eLoadAccessFault && 
-        !eStoreAccessFault
-      )
+      assume(!eLoadStoreAddressMisaligned)
+      when (exte.mem.r.valid) {
+        assume(exte.mem.r.bits.resp === Axi4Resp.okay.U)
+      }
+      when (exte.mem.b.valid) {
+        assume(exte.mem.b.bits.resp === Axi4Resp.okay.U)
+      }
     }
 
     val formalSig = out.bits.lsuPayload.lsu.formal.get
