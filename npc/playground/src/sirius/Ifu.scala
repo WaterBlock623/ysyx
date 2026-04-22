@@ -292,7 +292,10 @@ class Icache(
   when(state === sFirstResp && io.mem.r.fire) {
     cachedRValidReg := true.B
     cachedRDataReg := io.mem.r.bits.data
-  }.elsewhen(io.cached.r.ready || abortReg) {
+  }.elsewhen(io.cached.r.ready) {
+    cachedRValidReg := false.B
+  }
+  when (abortReg) {
     cachedRValidReg := false.B
   }
 
