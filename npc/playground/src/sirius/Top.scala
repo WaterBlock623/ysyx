@@ -129,12 +129,13 @@ class BasicCore(
       .reduce(_ || _)
 
     // Jump
-    case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isTrap: Bool)
+    case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
     val stageJumps = Seq(
       StageJump(
         lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isJump,
         lsu.in.bits.ctrl.wbuCtrl.isBranch,
+        lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
         (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) || 
         (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
       ),
@@ -142,17 +143,18 @@ class BasicCore(
         wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isJump,
         wbu.in.bits.ctrl.wbuCtrl.isBranch,
+        wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
         wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
       )
     )
-    val willJump = stageJumps.map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch))).reduce(_ || _)
+    val mayJump = stageJumps.map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr))).reduce(_ || _)
     
     flushIfu := pcReg.wbuIn.isJump
     flushIdu := pcReg.wbuIn.isJump
     flushExu := pcReg.wbuIn.isJump
     ifu.exte.flush := pcReg.wbuIn.isJump
 
-    stallExu := rawCsr || willJump
+    stallExu := rawCsr || mayJump
   } else {
     ifu.exte.flush := false.B
     idu.in :<>= ifuOut

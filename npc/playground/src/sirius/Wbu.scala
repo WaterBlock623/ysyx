@@ -48,9 +48,9 @@ class Wbu(
   pcReg.target := Mux(
     inBits.lsuPayload.trap.isTrap,
     exte.csr.mtvec,
-    Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
+    Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
   )
-  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(
+  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
     0
   )) || inBits.lsuPayload.trap.isTrap)
 
