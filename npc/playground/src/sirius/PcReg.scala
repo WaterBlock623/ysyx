@@ -9,7 +9,6 @@ class PcReg(
   val wbuIn = IO(Flipped(new WbuToPcRegIO))
   val debug = Option.when(cfg.isDebug)(IO(new Bundle {
     val pc = Output(UInt(cfg.xlen.W))
-    val dnpc = Output(UInt(cfg.xlen.W))
   }))
 
   val pcReg = RegInit(cfg.pcInit.U(cfg.xlen.W))
