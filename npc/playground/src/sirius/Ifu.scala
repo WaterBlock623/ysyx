@@ -184,18 +184,11 @@ class Icache(
   // val hitData = cache.io.rData(OHToUInt(hits)).data
 
   // FSM
+  val abortReg = RegInit(false.B)
   val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
   val state = RegInit(sIdle)
   val nextState = WireDefault(state)
   state := nextState
-
-  val abortReg = RegInit(false.B)
-  when (io.cached.abort) {
-    abortReg := true.B
-  }
-  when (nextState === sIdle) {
-    abortReg := false.B
-  }
 
   switch(state) {
     is(sIdle) {
@@ -295,8 +288,15 @@ class Icache(
   }.elsewhen(io.cached.r.ready) {
     cachedRValidReg := false.B
   }
-  when (abortReg) {
+  when (abortReg || io.cached.abort) {
     cachedRValidReg := false.B
+  }
+
+  when (io.cached.abort) {
+    abortReg := true.B
+  }
+  when (nextState === sIdle) {
+    abortReg := false.B
   }
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
