@@ -318,7 +318,6 @@ class Ifu(
     )
     icache.io.flush := exte.globalCtrl.globalCtrl.isFlushIcache
     exte.mem :<>= icache.io.mem
-    exte.pcReg.ready := mem.ar.fire
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -358,6 +357,8 @@ class Ifu(
 
     icache.io.cached
   }
+
+  exte.pcReg.ready := mem.ar.fire
 
   out.bits.ifuPayload.trap := 0.U.asTypeOf(
     chiselTypeOf(out.bits.ifuPayload.trap)
