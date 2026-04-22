@@ -80,6 +80,7 @@ class Wbu(
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
+  // Debug
   if (cfg.formal) {
     implicit val XLEN: Int = cfg.xlen
 
