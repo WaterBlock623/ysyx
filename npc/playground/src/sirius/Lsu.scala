@@ -23,9 +23,9 @@ class Lsu(
   val ctrl = inBits.ctrl.lsuCtrl
   val addr = inBits.exuPayload.exu.aluOut
   val isMemAcc = ctrl.isLoad || ctrl.isStore
-  val canValid = RegNext(RegNext(!reset.asBool))
   val rData = exte.mem.r.bits.data
   val rem = addr(1, 0)
+  val inTrap = in.valid && inBits.exuPayload.trap.isTrap
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -34,6 +34,7 @@ class Lsu(
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
   exte.mem.w.bits.last := true.B
 
+  // 异常
   val eLoadStoreAddressMisaligned = isMemAcc &&
     ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
       (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
@@ -59,15 +60,17 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
+  val axiCanValid = RegNext(RegNext(!reset.asBool)) && in.valid && isMemAcc &&
+    !inTrap && !eLoadStoreAddressMisaligned
+
+  // FSM
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
-
-  // val canSendReq = state === sIdle && in.valid && isMemAcc
 
   state := MuxLookup(state, sIdle)(
     Seq(
       sIdle -> Mux(
-        in.valid && isMemAcc && canValid && !outBits.lsuPayload.trap.isTrap,
+        axiCanValid,
         MuxCase(
           sIdle,
           Seq(
@@ -85,24 +88,28 @@ class Lsu(
     )
   )
 
-  val isTrap = in.valid && inBits.exuPayload.trap.isTrap
-  val isBypass = state === sIdle && in.valid && !isMemAcc
-  val isMemDone =
-    state === sWaitResp && ((ctrl.isLoad && exte.mem.r.valid) || (ctrl.isStore && exte.mem.b.valid))
+  // Handshake
+  val isBypass = in.valid && !axiCanValid
+  val rValid = ctrl.isLoad && exte.mem.r.valid
+  val bValid = ctrl.isStore && exte.mem.b.valid
+  val isMemDone = state === sWaitResp && (rValid || bValid)
 
-  out.valid := isBypass || isMemDone || isTrap || (in.valid && eLoadStoreAddressMisaligned)
+  out.valid := isBypass || isMemDone
   in.ready := out.fire
 
-  val isRespReady = state === sWaitResp && out.ready
-  exte.mem.r.ready := isRespReady && ctrl.isLoad
-  exte.mem.b.ready := isRespReady && ctrl.isStore
+  // Mem
+  val axiRespCanReady = state === sWaitResp && out.ready
+  exte.mem.r.ready := axiRespCanReady && ctrl.isLoad
+  exte.mem.b.ready := axiRespCanReady && ctrl.isStore
 
   exte.mem.ar.bits.addr := addr
   exte.mem.aw.bits.addr := addr
 
-  exte.mem.ar.valid := (state === sIdle) && in.valid && ctrl.isLoad && canValid && !eLoadStoreAddressMisaligned && !isTrap
-  exte.mem.aw.valid := (state === sIdle || state === sWaitAddrReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned && !isTrap
-  exte.mem.w.valid := (state === sIdle || state === sWaitDataReady) && in.valid && ctrl.isStore && canValid && !eLoadStoreAddressMisaligned && !isTrap
+  exte.mem.ar.valid := axiCanValid && state === sIdle && ctrl.isLoad
+  exte.mem.aw.valid := axiCanValid && 
+    (state === sIdle || state === sWaitAddrReady) && ctrl.isStore
+  exte.mem.w.valid := axiCanValid && 
+    (state === sIdle || state === sWaitDataReady) && ctrl.isStore
 
   val axSize = MuxLookup(ctrl.loadStoreLength, "b010".U)(
     Seq(
@@ -114,6 +121,7 @@ class Lsu(
   exte.mem.ar.bits.size := axSize
   exte.mem.aw.bits.size := axSize
 
+  // Load data
   val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
   val lbu = byteData(rem)
   val lbData = Mux(
@@ -139,6 +147,7 @@ class Lsu(
     )
   )
 
+  // Store data
   val regData = inBits.exuPayload.idu.rs2Data
   val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
   val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
@@ -153,7 +162,7 @@ class Lsu(
   )
 
   val sbMask = (1.U << rem).pad(cfg.xlen)
-  val shMask = (3.U << (rem & 2.U)).pad(cfg.xlen)
+  val shMask = (3.U << (rem(1))).pad(cfg.xlen)
   val swMask = 15.U(cfg.xlen.W)
 
   exte.mem.w.bits.strb := MuxLookup(ctrl.loadStoreLength, swMask)(
@@ -164,13 +173,14 @@ class Lsu(
     )
   )
 
+  // Debug
   if (cfg.formal) {
-    when (in.valid) {
+    when(in.valid) {
       assume(!eLoadStoreAddressMisaligned)
-      when (exte.mem.r.valid) {
+      when(exte.mem.r.valid) {
         assume(exte.mem.r.bits.resp === Axi4Resp.okay.U)
       }
-      when (exte.mem.b.valid) {
+      when(exte.mem.b.valid) {
         assume(exte.mem.b.bits.resp === Axi4Resp.okay.U)
       }
     }
