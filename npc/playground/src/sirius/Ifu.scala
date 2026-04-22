@@ -300,7 +300,7 @@ class Icache(
   }
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
-  io.cached.ar.ready := state === sIdle
+  io.cached.ar.ready := state === sIdle && !cachedRValidReg
   io.cached.r.valid := !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.addr := rAddrReg
   io.cached.r.bits.data := Mux(
