@@ -162,7 +162,7 @@ class Lsu(
   )
 
   val sbMask = (1.U << rem).pad(cfg.xlen)
-  val shMask = (3.U << (rem & 2)).pad(cfg.xlen)
+  val shMask = (3.U << (rem & 2.U)).pad(cfg.xlen)
   val swMask = 15.U(cfg.xlen.W)
 
   exte.mem.w.bits.strb := MuxLookup(ctrl.loadStoreLength, swMask)(
