@@ -50,10 +50,9 @@ class Wbu(
     exte.csr.mtvec,
     Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
   )
-  pcReg.isJump := ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(
+  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(
     0
-  )) || inBits.lsuPayload.trap.isTrap
-  pcReg.wEn := in.valid
+  )) || inBits.lsuPayload.trap.isTrap)
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
@@ -84,7 +83,7 @@ class Wbu(
   if (cfg.formal) {
     implicit val XLEN: Int = cfg.xlen
 
-    when(exte.pcReg.wEn && exte.pcReg.isJump) {
+    when(exte.pcReg.isJump) {
       assume(exte.pcReg.target(1, 0) === 0.U)
     }
 
@@ -133,7 +132,7 @@ class Wbu(
   if (cfg.isDebug) {
     dontTouch(debug.get)
     debug.get.valid := in.valid
-    debug.get.isJump := pcReg.wEn && pcReg.isJump
+    debug.get.isJump := pcReg.isJump
     debug.get.jumpTarget := pcReg.target
   }
 

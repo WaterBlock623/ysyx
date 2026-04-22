@@ -13,14 +13,15 @@ class PcReg(
   }))
 
   val pcReg = RegInit(cfg.pcInit.U(cfg.xlen.W))
-  val pcNext = Mux(wbuIn.isJump, wbuIn.target, pcReg + 4.U)
-  when (wbuIn.wEn) {
-    pcReg := pcNext
+  when (ifuIn.ready) {
+    pcReg := pcReg + 4.U
+  }
+  when (wbuIn.isJump) {
+    pcReg := wbuIn.target
   }
   ifuIn.pc := pcReg
 
   if (cfg.isDebug) {
     debug.get.pc := pcReg
-    debug.get.dnpc := pcNext
   }
 }

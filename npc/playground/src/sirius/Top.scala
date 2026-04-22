@@ -32,6 +32,7 @@ class BasicCore(
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
   pcReg.ifuIn :<>= ifu.exte.pcReg
+  pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
@@ -145,9 +146,6 @@ class BasicCore(
       )
     )
     val willJump = stageJumps.map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch))).reduce(_ || _)
-    pcReg.wbuIn.target := wbu.exte.pcReg.target
-    pcReg.wbuIn.isJump := wbu.exte.pcReg.wEn && wbu.exte.pcReg.isJump
-    pcReg.wbuIn.wEn := pcReg.wbuIn.isJump || ifuOut.fire
     
     flushIfu := pcReg.wbuIn.isJump
     flushIdu := pcReg.wbuIn.isJump
@@ -156,7 +154,6 @@ class BasicCore(
 
     stallExu := rawCsr || willJump
   } else {
-    pcReg.wbuIn :<>= wbu.exte.pcReg
     ifu.exte.flush := false.B
     idu.in :<>= ifuOut
     exu.in :<>= iduOut

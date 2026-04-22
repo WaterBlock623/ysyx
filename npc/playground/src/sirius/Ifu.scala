@@ -298,7 +298,6 @@ class Ifu(
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val out = IO(Decoupled(new IfuToIduIO))
-  // val debug = Option.when(cfg.isDebug)(IO(Output(UInt(cfg.xlen.W))))
 
   val outBits = out.bits
   val pc = exte.pcReg.pc
@@ -319,6 +318,7 @@ class Ifu(
     )
     icache.io.flush := exte.globalCtrl.globalCtrl.isFlushIcache
     exte.mem :<>= icache.io.mem
+    exte.pcReg.ready := mem.ar.fire
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)

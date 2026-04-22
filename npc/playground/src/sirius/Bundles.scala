@@ -85,6 +85,7 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 // 访问外部
 class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
+  val ready = Output(Bool())
 }
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
@@ -127,7 +128,6 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
 class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isJump = Output(Bool())
   val target = Output(UInt(cfg.xlen.W))
-  val wEn = Output(Bool())
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
