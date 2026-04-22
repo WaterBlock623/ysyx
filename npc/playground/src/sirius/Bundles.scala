@@ -40,13 +40,14 @@ class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
 class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   val lsu = new Bundle {
     val loadData = UInt(cfg.xlen.W)
+    val formal = Option.when(cfg.formal)(new rvspeccore.core.MemIO()(cfg.xlen))
   }
 }
 
 // 控制信号
 class WbuCtrl(implicit private val cfg: CoreConfig) extends Bundle {
   val wbuCtrl = new CtrlSignals().wb
-  val debugCtrl = Option.when(cfg.isDebug)(new CtrlSignals().debug)
+  // val debugCtrl = Option.when(cfg.isDebug)(new CtrlSignals().debug)
 }
 
 class LsuCtrl(implicit private val cfg: CoreConfig) extends WbuCtrl {
@@ -84,6 +85,7 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 // 访问外部
 class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
+  val ready = Output(Bool())
 }
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
@@ -126,7 +128,6 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
 class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isJump = Output(Bool())
   val target = Output(UInt(cfg.xlen.W))
-  val wEn = Output(Bool())
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {

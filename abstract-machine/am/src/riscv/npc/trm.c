@@ -23,14 +23,16 @@ void halt(int code) {
   while (1);
 }
 
-static inline void put_csrid(void) {
-  unsigned long long mvendorid = 0, marchid = 0; 
-  asm volatile("csrr %0, mvendorid" : "=r"(mvendorid));
-  asm volatile("csrr %0, marchid" : "=r"(marchid));
-  printf("[TRM] mvendorid: 0x%llx  marchid: %llu\n", mvendorid, marchid);
-}
+// static inline void put_csrid(void) {
+//   unsigned long long mvendorid = 0, marchid = 0; 
+//   asm volatile("csrr %0, mvendorid" : "=r"(mvendorid));
+//   asm volatile("csrr %0, marchid" : "=r"(marchid));
+//   printf("[TRM] mvendorid: 0x%llx  marchid: %llu\n", mvendorid, marchid);
+// }
 
+extern void __am_asm_trap(void);
 void _trm_init() {
+  asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   // put_csrid();
   int ret = main(mainargs);
   halt(ret);

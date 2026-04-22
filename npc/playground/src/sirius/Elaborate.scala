@@ -32,9 +32,10 @@ object Elaborate extends App {
       pcInit =
         BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16)
     )
+  val ucfg = UnitConfig()
   firtoolOptions.foreach(s => println(s))
   circt.stage.ChiselStage.emitSystemVerilogFile(
-    new sirius.Top()(cfg, UnitConfig.default),
+    new sirius.Top()(cfg, ucfg),
     if (argMap.contains("target-dir")) {
       Array("--target-dir", argMap("target-dir"))
     } else { Array("--help") },

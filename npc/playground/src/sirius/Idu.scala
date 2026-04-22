@@ -22,7 +22,7 @@ class ImmParser(
   val immTypeI = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 20)
   val immTypeS = Fill(cfg.xlen - 11, inst(31)) ## inst(30, 25) ## inst(11, 7)
   val immTypeB =
-    Fill(cfg.xlen - 12, inst(31)) ## inst(7) ## inst(30, 25) ## 
+    Fill(cfg.xlen - 12, inst(31)) ## inst(7) ## inst(30, 25) ##
       inst(11, 8) ## 0.U(1.W)
   val immTypeU = Fill(cfg.xlen - 31, inst(31)) ## inst(30, 12) ## 0.U(12.W)
   val immTypeJ =
@@ -39,7 +39,7 @@ class ImmParser(
       InstTypeEnum.B.asUInt -> immTypeB,
       InstTypeEnum.U.asUInt -> immTypeU,
       InstTypeEnum.J.asUInt -> immTypeJ,
-      InstTypeEnum.Zicsr.asUInt -> immTypeJ
+      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr
     )
   )
 }
@@ -64,10 +64,13 @@ class InstDecoder(
   }
 }
 
-class Idu(implicit private val cfg: CoreConfig) extends Module {
+class Idu(
+  implicit private val cfg: CoreConfig)
+    extends Module {
   val exte = IO(new Bundle {
     val regFile = new IduToRegFileIO
     val globalCtrl = new GlobalCtrl
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new IfuToIduIO)))
   val out = IO(Decoupled(new IduToExuIO))
@@ -94,17 +97,17 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   val instDecoder = Module(new InstDecoder())
   instDecoder.io.inst := inst
   val ctrl = instDecoder.io.ctrlSignals
-  if (cfg.isDebug) {
-    outBits.ctrl.debugCtrl.get := ctrl.debug
-  }
+  // if (cfg.isDebug) {
+  //   outBits.ctrl.debugCtrl.get := ctrl.debug
+  // }
   outBits.ctrl.exuCtrl := ctrl.ex
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
   exte.globalCtrl.globalCtrl := ctrl.global
 
-  when (!inBits.ifuPayload.trap.isTrap) {
-    outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall
-    outBits.iduPayload.trap.cause := 11.U(cfg.mxlen.W)
+  when(!inBits.ifuPayload.trap.isTrap) {
+    outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall || ctrl.wb.isEbreak
+    outBits.iduPayload.trap.cause := Mux(ctrl.wb.isEcall, 11.U(cfg.mxlen.W), 3.U(cfg.mxlen.W))
   }
 
   // imm
@@ -117,7 +120,15 @@ class Idu(implicit private val cfg: CoreConfig) extends Module {
   outBits.iduPayload.idu.csrAddr := inst(31, 20)
 
   InstTypeEnum.allWithNames.foreach { case (typ, name) =>
-    PerfWhen("type" + name, (ctrl.id.instType === typ.asUInt) && out.fire, in.valid && ctrl.debug.isEbreak)
-    PerfWhen("type" + name + "Cyc", (ctrl.id.instType === typ.asUInt) && in.valid, in.valid && ctrl.debug.isEbreak)
+    PerfWhen(
+      "type" + name,
+      (ctrl.id.instType === typ.asUInt) && out.fire,
+      exte.debugEbreak
+    )
+    PerfWhen(
+      "type" + name + "Cyc",
+      (ctrl.id.instType === typ.asUInt) && in.valid,
+      exte.debugEbreak
+    )
   }
 }
