@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
 import scala.collection.immutable.NumericRange
+import chisel3.util.random.MaxPeriodGaloisLFSR
 
 class Xorshift32 extends Module {
   val io = IO(new Bundle {
@@ -133,8 +134,10 @@ class Icache(
   } else { true.B }
 
   // Random
-  val xorshift32 = Module(new Xorshift32)
-  val rand = xorshift32.io.out
+  // val xorshift32 = Module(new Xorshift32)
+  // val rand = xorshift32.io.out
+  val lfsr = Module(new MaxPeriodGaloisLFSR(64))
+  val rand = lfsr.io.out.asUInt
 
   // Cache
   val cache = Module(
@@ -160,7 +163,7 @@ class Icache(
   }
   val invalidWayIdx = PriorityEncoder(~valids(setIdx).asUInt)
   val isAllValid = valids(setIdx).asUInt.andR
-  val allValidWayIdx = if (wayIdxWidth != 0) { rand(31, 31 - wayIdxWidth + 1) }
+  val allValidWayIdx = if (wayIdxWidth != 0) { rand.head(wayIdxWidth) }
   else { 0.U }
   val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
   cache.io.wayIdx := wayIdx
@@ -240,7 +243,8 @@ class Icache(
   // state := nextState
 
   // Update cache
-  xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
+  // xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
+  lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
   cache.io.write := io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
