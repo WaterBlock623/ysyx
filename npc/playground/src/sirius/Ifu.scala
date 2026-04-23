@@ -317,6 +317,7 @@ class Ifu(
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
     val flush = Input(Bool())
+    val jumpTarget = Input(UInt(cfg.xlen.W))
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val out = IO(Decoupled(new IfuToIduIO))
@@ -340,8 +341,8 @@ class Ifu(
   cached.abort := exte.flush
   cached.ar.valid := true.B
   val ifetchAddr = Reg(UInt(cfg.xlen.W))
-  when (exte.flush || reset.asBool) {
-    ifetchAddr := exte.pcReg.pc
+  when (exte.flush) {
+    ifetchAddr := exte.jumpTarget
   }.elsewhen(cached.ar.fire) {
     ifetchAddr := ifetchAddr + 4.U
   }

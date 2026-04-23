@@ -38,6 +38,7 @@ class BasicCore(
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
   ifu.exte.globalCtrl := globalCtrl
+  ifu.exte.jumpTarget := wbu.exte.pcReg.target
 
   if (cfg.pipeline) {
     def pipelineConnect[T <: Data](
