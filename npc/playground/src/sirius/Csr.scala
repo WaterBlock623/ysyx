@@ -44,7 +44,7 @@ class CsrMcycle32(
         (cycleCntReg.asUInt + 1.U).asTypeOf(chiselTypeOf(cycleCntReg))
     }
   } else {
-    when (reset.asBool) {
+    when(reset.asBool) {
       cycleCntReg := 0.U.asTypeOf(chiselTypeOf(cycleCntReg))
     }
   }
@@ -90,8 +90,11 @@ class CsrMepc(
     RegInit(MixedVecInit(0.U(1.W), 0.U(1.W), 0.U((cfg.mxlen - 2).W)))
   } else { Reg(MixedVec(UInt(1.W), UInt(1.W), UInt((cfg.mxlen - 2).W))) }
 
-  when(csrIO.wEn || isTrap) {
-    mepcReg := Mux(isTrap, pc, csrIO.wData).asTypeOf(chiselTypeOf(mepcReg))
+  when(csrIO.wEn) {
+    mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
+  }
+  when(isTrap) {
+    mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
   }
 
   csrIO.rData := mepcReg.asUInt
