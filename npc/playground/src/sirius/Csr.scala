@@ -90,8 +90,11 @@ class CsrMepc(
     RegInit(MixedVecInit(0.U(1.W), 0.U(1.W), 0.U((cfg.mxlen - 2).W)))
   } else { Reg(MixedVec(UInt(1.W), UInt(1.W), UInt((cfg.mxlen - 2).W))) }
 
-  when(csrIO.wEn || isTrap) {
-    mepcReg := Mux(isTrap, pc, csrIO.wData).asTypeOf(chiselTypeOf(mepcReg))
+  when(csrIO.wEn) {
+    mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
+  }
+  when(isTrap) {
+    mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
   }
 
   csrIO.rData := mepcReg.asUInt
@@ -136,34 +139,6 @@ class Csr(
     extends Module {
   val exuIn = IO(Flipped(new ExuToCsrIO))
   val wbuIn = IO(Flipped(new WbuToCsrIO))
-
-  // // 实例化
-  // val csrs = ucfg.csrMap
-  //   .map { case (csrSel: String, csr: (() => CsrParent)) =>
-  //     (csrSel -> Module(csr()))
-  //   }
-  // val csrs32 = ucfg.csr32Map
-  //   .map { case ((csrSelHi: String, csrSelLo: String), csr: (() => CsrParent32)) =>
-  //     ((csrSelHi, csrSelLo) -> Module(csr()))
-  //   }
-  // // 连接写使能 选择输出
-  // val rData = VecInit(
-  //   csrs.map { case (csrSel: String, csr: CsrParent) =>
-  //     val en = io.csrSel === csrSel.U
-  //     csr.csrIO.wEn := en && io.wEn
-  //     csr.csrIO.rData & Fill(csr.csrIO.rData.getWidth, en.asUInt)
-  //   }.toSeq ++
-  //   csrs32.flatMap { case ((csrSelHi: String, csrSelLo), csr: CsrParent32) =>
-  //     val enHi = io.csrSel === csrSelHi.U
-  //     val enLo = io.csrSel === csrSelLo.U
-  //     csr.csrIOHi.wEn := enHi && io.wEn
-  //     csr.csrIOLo.wEn := enLo && io.wEn
-  //     Seq(
-  //       csr.csrIOHi.rData & Fill(csr.csrIOHi.rData.getWidth, enHi.asUInt),
-  //       csr.csrIOLo.rData & Fill(csr.csrIOLo.rData.getWidth, enLo.asUInt)
-  //     )
-  //   }.toSeq
-  // ).reduceTree(_ | _)
 
   // 实例化
   val csrs = ucfg.csrMap.map { case (addr, gen) => addr -> Module(gen(cfg)) }
