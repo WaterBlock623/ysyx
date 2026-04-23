@@ -340,7 +340,7 @@ class Ifu(
   cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
   cached.abort := exte.flush
   cached.ar.valid := true.B
-  val ifetchAddr = Reg(UInt(cfg.xlen.W))
+  val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
   when (exte.flush) {
     ifetchAddr := exte.jumpTarget
   }.elsewhen(cached.ar.fire) {
