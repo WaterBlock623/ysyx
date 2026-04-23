@@ -92,7 +92,6 @@ class IcacheIO(implicit private val cfg: CoreConfig) extends Bundle {
   })
   val r = Flipped(Decoupled(new Bundle {
     val data = UInt(cfg.xlen.W)
-    val addr = UInt(cfg.xlen.W)
   }))
 }
 
@@ -303,7 +302,6 @@ class Icache(
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
   io.cached.ar.ready := state === sIdle && !cachedRValidReg
   io.cached.r.valid := !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
-  io.cached.r.bits.addr := rAddrReg
   io.cached.r.bits.data := Mux(
     state === sReadCache,
     hitData(rAddrLine.dataIdx),
@@ -341,12 +339,18 @@ class Ifu(
   cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
   cached.abort := exte.flush
   cached.ar.valid := true.B
-  cached.ar.bits.addr := exte.pcReg.pc
+  val ifetchAddr = Reg(UInt(cfg.xlen.W))
+  when (exte.flush || reset.asBool) {
+    ifetchAddr := exte.pcReg.pc
+  }.elsewhen(cached.ar.fire) {
+    ifetchAddr := ifetchAddr + 4.U
+  }
+  cached.ar.bits.addr := ifetchAddr
   cached.r.ready := out.ready
 
   // pc
   val staticNextPc = exte.pcReg.pc + 4.U
-  exte.pcReg.update := cached.ar.fire
+  exte.pcReg.update := cached.r.fire
   exte.pcReg.staticNextPc := staticNextPc
 
   // out
@@ -354,7 +358,7 @@ class Ifu(
   out.bits.ifuPayload.trap.isTrap := false.B
   out.bits.ifuPayload.trap.cause := DontCare
   outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  outBits.ifuPayload.ifu.pc := cached.r.bits.addr
+  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
   outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
