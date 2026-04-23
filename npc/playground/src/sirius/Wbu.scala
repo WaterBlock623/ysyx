@@ -38,7 +38,7 @@ class Wbu(
   // csr作为跳转地址
   val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
     Seq(
-      JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
+      // JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
       JumpTargetSelEnum.mepc.asUInt -> exte.csr.mepc
     )
   )

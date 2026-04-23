@@ -431,9 +431,7 @@ case class InstPatternRvI(
     InstPattern(
       "ecall",
       ExtTypeEnum.I,
-      DontCare,
-      isJumpCsr = true,
-      jumpTargetSel = JumpTargetSelEnum.mtvec
+      DontCare
     ),
     InstPattern(
       "mret",
