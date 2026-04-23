@@ -33,7 +33,8 @@ class Wbu(
   val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
   val csrData = inBits.lsuPayload.exu.csrData
-  val staticNextPc = inBits.lsuPayload.ifu.staticNextPc
+  // val staticNextPc = inBits.lsuPayload.ifu.staticNextPc
+  val staticNextPc = inBits.lsuPayload.ifu.pc + 4.U
 
   // csr作为跳转地址
   val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
@@ -63,9 +64,9 @@ class Wbu(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
       WriteBackSelEnum.imm.asUInt -> imm,
-      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
       WriteBackSelEnum.lsu.asUInt -> loadData,
-      WriteBackSelEnum.csr.asUInt -> csrData
+      WriteBackSelEnum.csr.asUInt -> csrData,
+      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
     )
   )
 

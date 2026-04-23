@@ -134,11 +134,11 @@ class Icache(
   } else { true.B }
 
   // Random
-  // val xorshift32 = Module(new Xorshift32)
-  // val rand = xorshift32.io.out
-  val lfsr = Module(new MaxPeriodGaloisLFSR(64))
-  lfsr.io.seed := DontCare
-  val rand = lfsr.io.out.asUInt
+  val xorshift32 = Module(new Xorshift32)
+  val rand = xorshift32.io.out
+  // val lfsr = Module(new MaxPeriodGaloisLFSR(64))
+  // lfsr.io.seed := DontCare
+  // val rand = lfsr.io.out.asUInt
 
   // Cache
   val cache = Module(
@@ -244,8 +244,8 @@ class Icache(
   // state := nextState
 
   // Update cache
-  // xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
-  lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
+  xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
+  // lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
   cache.io.write := io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
@@ -365,7 +365,7 @@ class Ifu(
   out.bits.ifuPayload.trap.cause := DontCare
   outBits.ifuPayload.ifu.inst := cached.r.bits.data
   outBits.ifuPayload.ifu.pc := exte.pcReg.pc
-  outBits.ifuPayload.ifu.staticNextPc := staticNextPc
+  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
   if (cfg.formal) {
