@@ -345,7 +345,9 @@ class Ifu(
   cached.r.ready := out.ready
 
   // pc
-  exte.pcReg.ready := cached.ar.fire
+  val staticNextPc = exte.pcReg.pc + 4.U
+  exte.pcReg.update := cached.ar.fire
+  exte.pcReg.staticNextPc := staticNextPc
 
   // out
   out.valid := cached.r.valid
@@ -353,6 +355,7 @@ class Ifu(
   out.bits.ifuPayload.trap.cause := DontCare
   outBits.ifuPayload.ifu.inst := cached.r.bits.data
   outBits.ifuPayload.ifu.pc := cached.r.bits.addr
+  outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
   if (cfg.formal) {

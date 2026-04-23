@@ -12,8 +12,8 @@ class PcReg(
   }))
 
   val pcReg = RegInit(cfg.pcInit.U(cfg.xlen.W))
-  when (ifuIn.ready) {
-    pcReg := pcReg + 4.U
+  when (ifuIn.update) {
+    pcReg := ifuIn.staticNextPc
   }
   when (wbuIn.isJump) {
     pcReg := wbuIn.target
