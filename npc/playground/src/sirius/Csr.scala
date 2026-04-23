@@ -90,15 +90,15 @@ class CsrMepc(
     RegInit(MixedVecInit(0.U(1.W), 0.U(1.W), 0.U((cfg.mxlen - 2).W)))
   } else { Reg(MixedVec(UInt(1.W), UInt(1.W), UInt((cfg.mxlen - 2).W))) }
 
-  // when (csrIO.wEn || isTrap) {
-  //   mepcReg := Mux(isTrap, pc, csrIO.wData).asTypeOf(chiselTypeOf(mepcReg))
+  when (csrIO.wEn || isTrap) {
+    mepcReg := Mux(isTrap, pc, csrIO.wData).asTypeOf(chiselTypeOf(mepcReg))
+  }
+  // when(csrIO.wEn) {
+  //   mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
   // }
-  when(csrIO.wEn) {
-    mepcReg := csrIO.wData.asTypeOf(chiselTypeOf(mepcReg))
-  }
-  when(isTrap) {
-    mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
-  }
+  // when(isTrap) {
+  //   mepcReg := pc.asTypeOf(chiselTypeOf(mepcReg))
+  // }
 
   csrIO.rData := mepcReg.asUInt
   mepcReg(0) := 0.U(1.W)
