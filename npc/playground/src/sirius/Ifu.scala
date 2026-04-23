@@ -137,6 +137,7 @@ class Icache(
   // val xorshift32 = Module(new Xorshift32)
   // val rand = xorshift32.io.out
   val lfsr = Module(new MaxPeriodGaloisLFSR(64))
+  lfsr.io.seed := DontCare
   val rand = lfsr.io.out.asUInt
 
   // Cache
