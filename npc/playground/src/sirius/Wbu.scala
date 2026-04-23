@@ -24,7 +24,6 @@ class Wbu(
   })))
 
   // DecoupledIO
-  DecoupledFsm(false, in)
   in.ready := true.B
   val inBits = in.bits
 
