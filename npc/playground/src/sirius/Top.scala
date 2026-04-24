@@ -51,9 +51,9 @@ class BasicCore(
       prevOut.ready := ready && !stall
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
       val valid = RegInit(false.B)
-      thisIn.valid := valid
+      thisIn.valid := valid && !stall
       when(ready) {
-        valid := prevOut.valid && !stall
+        valid := prevOut.valid
       }
       when(flush) {
         valid := false.B
