@@ -175,25 +175,44 @@ class BasicCore(
         cause.foreach { case (condName, cond) =>
           PerfWhen(
             s"${name}${condName}StallCyc",
-            isStageStall && (cond || RegNext(cond)),
+            isStageStall && cond,
             Some(stopFlag)
           )
         }
       }
 
-      perfPipeline("ifu", !reset.asBool, idu.in.valid, idu.in.ready)
-      perfPipeline("idu", idu.in.valid, exu.in.valid, exu.in.ready, Map("RawGpr" -> isRawGpr))
-      when (RegNext(idu.in.valid) && !exu.in.valid && !isRawGpr && !RegNext(isRawGpr)) {
-        assert(false.B)
-      }
+      perfPipeline(
+        "ifu",
+        !reset.asBool,
+        idu.in.valid,
+        idu.in.ready,
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+      )
+      perfPipeline(
+        "idu",
+        idu.in.valid,
+        exu.in.valid,
+        exu.in.ready,
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump), "RawGpr" -> (isRawGpr || RegNext(isRawGpr)))
+      )
       perfPipeline(
         "exu",
         exu.in.valid,
         lsu.in.valid,
         lsu.in.ready,
-        Map("RawCsr" -> rawCsr, "MayJump" -> mayJump)
+        Map(
+          "Flush" -> RegNext(pcReg.wbuIn.isJump),
+          "RawCsr" -> (rawCsr || RegNext(rawCsr)),
+          "MayJump" -> (mayJump || RegNext(mayJump))
+        )
       )
-      perfPipeline("lsu", lsu.in.valid, wbu.in.valid, wbu.in.ready)
+      perfPipeline(
+        "lsu",
+        lsu.in.valid,
+        wbu.in.valid,
+        wbu.in.ready,
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+      )
 
       PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
     }
