@@ -173,7 +173,7 @@ class BasicCore(
         val isStageStall = RegNext(thisInValid) && !nextInValid
         PerfWhen(s"${name}TotalStallCyc", isStageStall, Some(stopFlag))
         cause.foreach { case (condName, cond) =>
-          PerfWhen(s"${name}${condName}StallCyc", isStageStall && cond, Some(stopFlag))
+          PerfWhen(s"${name}${condName}StallCyc", isStageStall && RegNext(cond), Some(stopFlag))
         }
       }
 
