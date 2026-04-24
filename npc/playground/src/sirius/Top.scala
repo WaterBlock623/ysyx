@@ -99,7 +99,6 @@ class BasicCore(
     val rs1Conflict = readRs1 && rs1 =/= 0.U && stageRds.map(s => conflict(s, rs1)).reduce(_ || _)
     val rs2Conflict = readRs2 && rs2 =/= 0.U && stageRds.map(s => conflict(s, rs2)).reduce(_ || _)
     val isRawGpr = rs1Conflict || rs2Conflict
-    stallIdu := isRawGpr
 
     // RAW(CSR)
     case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: UInt)
@@ -119,14 +118,13 @@ class BasicCore(
         wbu.in.bits.lsuPayload.idu.csrAddr
       )
     )
-    val rawCsr = stageCsrs
-      .map{s => 
-        val isZicsr = s.valid && s.isWriteBackCsr
-        val stageWillWrite = isZicsr && !(s.check && s.imm === 0.U)
-        val exuWillRead = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
-        val exuReadAddr = exu.in.bits.iduPayload.idu.csrAddr
-        stageWillWrite && exuWillRead && s.addr === exuReadAddr
-      }
+    val rawCsr = stageCsrs.map { s =>
+      val isZicsr = s.valid && s.isWriteBackCsr
+      val stageWillWrite = isZicsr && !(s.check && s.imm === 0.U)
+      val exuWillRead = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
+      val exuReadAddr = exu.in.bits.iduPayload.idu.csrAddr
+      stageWillWrite && exuWillRead && s.addr === exuReadAddr
+    }
       .reduce(_ || _)
 
     // Jump
@@ -137,8 +135,8 @@ class BasicCore(
         lsu.in.bits.ctrl.wbuCtrl.isJump,
         lsu.in.bits.ctrl.wbuCtrl.isBranch,
         lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) || 
-        (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
+        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
+          (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
       ),
       StageJump(
         wbu.in.valid,
@@ -148,14 +146,49 @@ class BasicCore(
         wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
       )
     )
-    val mayJump = stageJumps.map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr))).reduce(_ || _)
-    
+    val mayJump = stageJumps
+      .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
+      .reduce(_ || _)
+
+    // Pipeline ctrl
     flushIfu := pcReg.wbuIn.isJump
     flushIdu := pcReg.wbuIn.isJump
     flushExu := pcReg.wbuIn.isJump
     ifu.exte.flush := pcReg.wbuIn.isJump
 
+    stallIdu := isRawGpr
     stallExu := rawCsr || mayJump
+
+    // Debug
+    if (cfg.perf) {
+      val stopFlag = wbu.in.bits.ctrl.wbuCtrl.isEbreak
+      def perfPipeline(
+        name:        String,
+        thisInValid: Bool,
+        nextInValid: Bool,
+        nextInReady: Bool,
+        cause:       Map[String, Bool] = Map.empty
+      ) = {
+        val isStageStall = RegNext(thisInValid) && nextInReady && !nextInValid
+        PerfWhen(s"${name}TotalStallCyc", isStageStall, Some(stopFlag))
+        cause.foreach { case (condName, cond) =>
+          PerfWhen(s"${name}${condName}StallCyc", isStageStall && cond, Some(stopFlag))
+        }
+      }
+
+      perfPipeline("ifu", !reset.asBool, idu.in.valid, idu.in.ready)
+      perfPipeline("idu", idu.in.valid, exu.in.valid, exu.in.ready, Map("RawGpr" -> isRawGpr))
+      perfPipeline(
+        "exu",
+        exu.in.valid,
+        lsu.in.valid,
+        lsu.in.ready,
+        Map("RawCsr" -> rawCsr, "MayJump" -> mayJump)
+      )
+      perfPipeline("lsu", lsu.in.valid, wbu.in.valid, wbu.in.ready)
+
+      PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
+    }
   } else {
     ifu.exte.flush := false.B
     idu.in :<>= ifuOut
