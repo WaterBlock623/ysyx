@@ -360,44 +360,46 @@ class Ifu(
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
 
-    val icacheState = BoringUtils.tapAndRead(icache.state)
-    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-    val icacheSIdle = 0.U
-    val icacheSReadCache = 1.U
-    val icacheSReq = 2.U
-    val icacheSFirstResp = 3.U
-    val icacheSFillCache = 4.U
-    PerfWhen(
-      "icacheTotalAcc",
-      icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMiss",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheHit",
-      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheBlackList",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMissPenalty",
-      icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "instFetch",
-      icache.io.cached.r.fire,
-      exte.debugEbreak
-    )
+    if (cfg.perf) {
+      val icacheState = BoringUtils.tapAndRead(icache.state)
+      val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      val icacheSIdle = 0.U
+      val icacheSReadCache = 1.U
+      val icacheSReq = 2.U
+      val icacheSFirstResp = 3.U
+      val icacheSFillCache = 4.U
+      PerfWhen(
+        "icacheTotalAcc",
+        icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMiss",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheHit",
+        icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheBlackList",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMissPenalty",
+        icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "instFetch",
+        icache.io.cached.r.fire,
+        exte.debugEbreak
+      )
+    }
   } else {
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
     when (exte.flush) {
