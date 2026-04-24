@@ -183,6 +183,9 @@ class BasicCore(
 
       perfPipeline("ifu", !reset.asBool, idu.in.valid, idu.in.ready)
       perfPipeline("idu", idu.in.valid, exu.in.valid, exu.in.ready, Map("RawGpr" -> isRawGpr))
+      when (RegNext(idu.in.valid) && !exu.in.valid && !isRawGpr) {
+        assert(0)
+      }
       perfPipeline(
         "exu",
         exu.in.valid,
