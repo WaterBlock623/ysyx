@@ -51,9 +51,9 @@ class BasicCore(
       prevOut.ready := ready && !stall
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
       val valid = RegInit(false.B)
-      thisIn.valid := valid && !stall
+      thisIn.valid := valid
       when(ready) {
-        valid := prevOut.valid
+        valid := prevOut.valid && !stall
       }
       when(flush) {
         valid := false.B
@@ -169,7 +169,8 @@ class BasicCore(
         nextInReady: Bool,
         cause:       Map[String, Bool] = Map.empty
       ) = {
-        val isStageStall = RegNext(thisInValid) && nextInReady && !nextInValid
+        // val isStageStall = RegNext(thisInValid) && nextInReady && !nextInValid
+        val isStageStall = RegNext(thisInValid) && !nextInValid
         PerfWhen(s"${name}TotalStallCyc", isStageStall, Some(stopFlag))
         cause.foreach { case (condName, cond) =>
           PerfWhen(s"${name}${condName}StallCyc", isStageStall && cond, Some(stopFlag))
