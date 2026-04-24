@@ -7,36 +7,27 @@ import formal.ModuleWithInitReset
 import org.scalatest.flatspec.AnyFlatSpec
 import scala.util.Random
 
-class AxiReadConstraint extends Module {
-  val io = IO(new Bundle {
-    val ar = Flipped((new Axi4IO).ar)
-  })
-  0.U.asTypeOf(chiselTypeOf(io.ar)) :>= io.ar
+object IcacheMasterConstraint {
+  def apply(io: IcacheIO): IcacheIO = {
+    assume(io.ar.bits.addr(1, 0) === 0.U)
 
-  assume(io.ar.bits.id === 0.U)
-  assume(io.ar.bits.len === 0.U)
-  assume(io.ar.bits.burst === 1.U)
-  assume(io.ar.bits.size === 2.U)
+    val validReg = RegNext(io.ar.valid, init = false.B)
+    val readyReg = RegNext(io.ar.ready, init = false.B)
+    val bitsReg = RegNext(io.ar.bits)
 
-  val sizeBytes = 1.U << io.ar.bits.size
-  assume((io.ar.bits.addr & (sizeBytes - 1.U)) === 0.U)
-
-  // val ar_fire = io.ar.valid && io.ar.ready
-
-  val valid_d = RegNext(io.ar.valid, init = false.B)
-  val ready_d = RegNext(io.ar.ready, init = false.B)
-  val bits_d = RegNext(io.ar.bits)
-
-  when(valid_d && !ready_d) {
-    assume(io.ar.valid)
-    assume(io.ar.bits === bits_d)
+    when(validReg && !readyReg) {
+      assume(io.ar.valid)
+      assume(io.ar.bits === bitsReg)
+    }
+    io
   }
 }
 
 class IcacheTest extends ModuleWithInitReset {
   val io = IO(new Bundle {
-    val req = Flipped(new Axi4IO)
+    val req = Flipped(new IcacheIO)
   })
+  IcacheMasterConstraint(io.req)
 
   val memSize = 128
   val random = new Random()
@@ -44,16 +35,11 @@ class IcacheTest extends ModuleWithInitReset {
 
   val dut = Module(new Icache(setNum = 2, wayNum = 8, wayByte = 8, busByte = 4))
 
-  dut.io.flush := false.B
   dut.io.cached :<>= io.req
-  // dut.io.cached.aw.valid := false.B
-  // dut.io.cached.w.valid := false.B
-  val arC = Module(new AxiReadConstraint)
-  arC.io.ar :<= io.req.ar
-  assume(!io.req.aw.valid)
-  assume(!io.req.w.valid)
-  0.U.asTypeOf(chiselTypeOf(dut.io.mem)) :>= dut.io.mem
+  assume(!io.req.fencei)
+  assume(!io.req.abort)
 
+  0.U.asTypeOf(chiselTypeOf(dut.io.mem)) :>= dut.io.mem
   val s_mem_idle :: s_mem_resp :: Nil = Enum(2)
   val memState = RegInit(s_mem_idle)
 
@@ -105,9 +91,9 @@ class IcacheTest extends ModuleWithInitReset {
 
 object AxiSlaveConstraint {
   def apply[T <: Axi4IO](axi: T): T = {
-    when(axi.ar.valid) {
-      assert(axi.ar.bits.len === 0.U)
-    }
+    // when(axi.ar.valid) {
+    //   assert(axi.ar.bits.len === 0.U)
+    // }
     when(axi.aw.valid) {
       assert(axi.aw.bits.len === 0.U)
     }
@@ -124,16 +110,18 @@ object AxiSlaveConstraint {
     }
 
     // R
-    val rId = Reg(chiselTypeOf(axi.ar.bits.id))
-    when(axi.ar.fire) {
-      rId := axi.ar.bits.id
-    }
+    val arBits = RegEnable(axi.ar.bits, axi.ar.fire)
+    val rBurstCnt = Counter(0 until 8, axi.r.fire, axi.ar.fire)
     when(axi.r.valid) {
-      assume(axi.r.bits.id === rId)
-      assume(axi.r.bits.last)
+      assume(axi.r.bits.id === arBits.id)
+      when(rBurstCnt._1 === arBits.len) {
+        assume(axi.r.bits.last)
+      }.otherwise {
+        assume(!axi.r.bits.last)
+      }
     }
-    val arFired = keepBoolUntil(axi.ar.fire, axi.r.fire)
-    when (!arFired) {
+    val arFired = keepBoolUntil(axi.ar.fire, rBurstCnt._1 === arBits.len)
+    when(!arFired) {
       assume(!axi.r.valid)
     }
 
@@ -150,7 +138,7 @@ object AxiSlaveConstraint {
     }
     val awFired = keepBoolUntil(axi.aw.fire, axi.b.fire)
     val wFired = keepBoolUntil(axi.w.fire, axi.b.fire)
-    when (!awFired || !wFired) {
+    when(!awFired || !wFired) {
       assume(!axi.b.valid)
     }
 
@@ -167,7 +155,12 @@ class BasicCoreTest extends ModuleWithInitReset {
   AxiSlaveConstraint(io.dmem)
   val workSpaceRoot = os.Path(sys.env("WORKSPACE_ROOT_DIR"))
   val rvOpCodesPath = workSpaceRoot / "rvdecoderdb" / "riscv-opcodes"
-  val cfg = CoreConfig.default.copy(isDebug = false, perf = false, formal = true, rvOpCodesPath = rvOpCodesPath)
+  val cfg = CoreConfig.default.copy(
+    isDebug = false,
+    perf = false,
+    formal = true,
+    rvOpCodesPath = rvOpCodesPath
+  )
   val ucfg = UnitConfig()
   val basicCore = Module(new BasicCore()(cfg, ucfg))
   io.imem :<>= basicCore.io.axiIfu

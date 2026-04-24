@@ -141,13 +141,15 @@ class Exu(
     extends Module {
   val exte = IO(new Bundle {
     val csr = new ExuToCsrIO
+    val stall = Input(Bool())
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new IduToExuIO)))
   val out = IO(Decoupled(new ExuToLsuIO))
 
   // DecoupledIO
-  val csrValid = !in.bits.ctrl.wbuCtrl.isWriteBackCsr || RegNext(in.valid)
+  val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
+  val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
   in.ready := out.fire
   out.valid := in.valid && csrValid
   val inBits = in.bits

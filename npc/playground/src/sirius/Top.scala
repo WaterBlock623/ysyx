@@ -158,6 +158,7 @@ class BasicCore(
 
     stallIdu := isRawGpr
     stallExu := rawCsr || mayJump
+    exu.exte.stall := stallExu
 
     // Debug
     if (cfg.perf) {

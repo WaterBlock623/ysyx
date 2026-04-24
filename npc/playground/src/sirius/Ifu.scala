@@ -101,7 +101,7 @@ class Icache(
   wayNum:    BigInt,
   wayByte:   BigInt,
   busByte:   BigInt,
-  whiteList: Option[NumericRange[BigInt]] = None)
+  whiteList: Option[NumericRange[BigInt]] = None)(implicit private val cfg: CoreConfig)
     extends Module {
   require(setNum > 0 && setNum.bitCount == 1)
   require(wayNum > 0 && wayNum.bitCount == 1)
@@ -329,68 +329,37 @@ class Ifu(
   val outBits = out.bits
 
   // icache
-  val icache = Module(
-    new Icache(
-      setNum = 2,
-      wayNum = 8,
-      wayByte = 8,
-      busByte = 4,
-      if (cfg.ysyxsoc) {
-        Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
-      } else { None }
-    )
-  )
-  exte.mem :<>= icache.io.mem
-  val cached = icache.io.cached
-  cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
-  cached.abort := exte.flush
-  cached.ar.valid := true.B
-  val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-  when (exte.flush) {
-    ifetchAddr := exte.jumpTarget
-  }.elsewhen(cached.ar.fire) {
-    ifetchAddr := ifetchAddr + 4.U
-  }
-  cached.ar.bits.addr := ifetchAddr
-  cached.r.ready := out.ready
 
-  // pc
-  val staticNextPc = exte.pcReg.pc + 4.U
-  exte.pcReg.update := cached.r.fire
-  exte.pcReg.staticNextPc := staticNextPc
-
-  // out
-  out.valid := cached.r.valid
-  out.bits.ifuPayload.trap.isTrap := false.B
-  out.bits.ifuPayload.trap.cause := DontCare
-  outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
-  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
-
-  // debug
-  if (cfg.formal) {
-    import rvspeccore.checker._
-    implicit val XLEN: Int = cfg.xlen
-    when(out.valid) {
-      val inst = out.bits.ifuPayload.ifu.inst
-      assume(
-        RVI(inst) ||
-          RVZifencei(inst) ||
-          {
-            val allowCsr = Set(
-              CsrAddr.mcycle,
-              CsrAddr.mcycleh,
-              CsrAddr.mepc, 
-              // CsrAddr.mstatus, 
-              CsrAddr.mtvec
-            )
-            RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
-          }
+  if (!cfg.formal) {
+    val icache = Module(
+      new Icache(
+        setNum = 2,
+        wayNum = 8,
+        wayByte = 8,
+        busByte = 4,
+        if (cfg.ysyxsoc) {
+          Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+        } else { None }
       )
+    )
+    exte.mem :<>= icache.io.mem
+    val cached = icache.io.cached
+    cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
+    cached.abort := exte.flush
+    cached.ar.valid := true.B
+    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when (exte.flush) {
+      ifetchAddr := exte.jumpTarget
+    }.elsewhen(cached.ar.fire) {
+      ifetchAddr := ifetchAddr + 4.U
     }
-  }
+    cached.ar.bits.addr := ifetchAddr
+    cached.r.ready := out.ready
 
-  if (cfg.perf) {
+    exte.pcReg.update := cached.r.fire
+    out.valid := cached.r.valid
+    outBits.ifuPayload.ifu.inst := cached.r.bits.data
+
     val icacheState = BoringUtils.tapAndRead(icache.state)
     val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
     val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
@@ -424,12 +393,68 @@ class Ifu(
       icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
       exte.debugEbreak
     )
-
     PerfWhen(
       "instFetch",
       icache.io.cached.r.fire,
       exte.debugEbreak
     )
+  } else {
+    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when (exte.flush) {
+      ifetchAddr := exte.jumpTarget
+    }.elsewhen(exte.mem.ar.fire) {
+      ifetchAddr := ifetchAddr + 4.U
+    }
+
+    exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
+    exte.mem.ar.valid := true.B
+    exte.mem.ar.bits.addr := ifetchAddr
+    exte.mem.ar.bits.size := "b010".U
+    exte.mem.ar.bits.burst := Axi4Burst.incr.U
+    exte.mem.r.ready := out.ready
+
+    exte.pcReg.update := exte.mem.r.fire
+    out.valid := exte.mem.r.valid
+    outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
+  }
+
+  // pc
+  val staticNextPc = exte.pcReg.pc + 4.U
+  // exte.pcReg.update := cached.r.fire
+  exte.pcReg.staticNextPc := staticNextPc
+
+  // out
+  // out.valid := cached.r.valid
+  out.bits.ifuPayload.trap.isTrap := false.B
+  out.bits.ifuPayload.trap.cause := DontCare
+  // outBits.ifuPayload.ifu.inst := cached.r.bits.data
+  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
+  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
+
+  // debug
+  if (cfg.formal) {
+    import rvspeccore.checker._
+    implicit val XLEN: Int = cfg.xlen
+    when(out.valid) {
+      val inst = out.bits.ifuPayload.ifu.inst
+      assume(
+        RVI(inst) ||
+          RVZifencei(inst) ||
+          {
+            val allowCsr = Set(
+              CsrAddr.mcycle,
+              CsrAddr.mcycleh,
+              CsrAddr.mepc, 
+              // CsrAddr.mstatus, 
+              CsrAddr.mtvec
+            )
+            RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
+          }
+      )
+    }
+  }
+
+  if (cfg.perf) {
     // val isMemBusy = RegInit(false.B)
     // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
     //   isMemBusy := true.B
