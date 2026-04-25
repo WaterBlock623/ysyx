@@ -227,7 +227,8 @@ extern "C" void sim_close(void) {
   }
 }
 
-#define WAVE_SKIP_CYC 1904288551
+// #define WAVE_SKIP_CYC 1904288551
+#define WAVE_SKIP_CYC 0
 
 void single_cycle(void) {
   top->clock = 1;
