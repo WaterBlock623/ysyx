@@ -177,6 +177,11 @@ config PCTRACE
   bool "Enable pc tracer"
   default n
 
+config MBINTRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable memory binary tracer"
+  default n
+
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable instruction tracer"

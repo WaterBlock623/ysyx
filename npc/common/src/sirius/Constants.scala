@@ -3,7 +3,7 @@ package sirius
 import chisel3._
 
 object ExtTypeEnum extends ChiselEnum {
-  val I, Zicsr, M = Value
+  val I, Zicsr, Zifencei, M, C = Value
 }
 
 object InstTypeEnum extends ChiselEnum {
@@ -27,7 +27,7 @@ object ExuOutSelEnum extends ChiselEnum {
 }
 
 object JumpTargetSelEnum extends ChiselEnum {
-  val alu, pcPlusImm, mtvec, mepc = Value
+  val alu, pcPlusImm, mepc = Value
 }
 
 object WriteBackSelEnum extends ChiselEnum {

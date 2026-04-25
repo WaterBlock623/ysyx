@@ -62,7 +62,7 @@ class AluBase(
   val srlResult = io.src1 >> shiftNum
   val sraResult = (io.src1.asSInt >> shiftNum).asUInt
   val direct1Result = io.src1
-  val clearResult = io.src1 & ~io.src2
+  val clearResult = io.src2 & ~io.src1 // reversal
 
   io.out := addResult
   switch(io.aluOp) {
@@ -141,14 +141,17 @@ class Exu(
     extends Module {
   val exte = IO(new Bundle {
     val csr = new ExuToCsrIO
+    val stall = Input(Bool())
+    val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new IduToExuIO)))
   val out = IO(Decoupled(new ExuToLsuIO))
 
   // DecoupledIO
-  DecoupledMasterSlaveFsm(out, in)
-  in.ready := out.ready
-  out.valid := in.valid
+  val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
+  val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
+  in.ready := out.fire
+  out.valid := in.valid && csrValid
   val inBits = in.bits
   val outBits = out.bits
 
@@ -162,7 +165,7 @@ class Exu(
 
   // csr
   exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
-  val csrData = exte.csr.rData
+  val csrData = RegNext(exte.csr.rData)
   outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
@@ -178,7 +181,7 @@ class Exu(
   // 连接Alu输入
   val src1 = MuxLookup(ctrl.aluIn1Sel, rs1Data)(
     Seq(
-      // AluInSelEnum.imm.asUInt -> imm,
+      AluInSelEnum.imm.asUInt -> imm,
       AluInSelEnum.rs.asUInt -> rs1Data,
       AluInSelEnum.pc.asUInt -> inBits.iduPayload.ifu.pc
     )
@@ -218,6 +221,6 @@ class Exu(
   PerfWhen(
     "calcFinish",
     out.fire,
-    in.valid && in.bits.ctrl.debugCtrl.map(_.isEbreak).getOrElse(false.B)
+    exte.debugEbreak
   )
 }

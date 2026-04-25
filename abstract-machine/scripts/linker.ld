@@ -12,9 +12,11 @@ SECTIONS {
   _etext = .;
   .rodata : {
     *(.rodata*)
+    *(.srodata*)
   } >RAM
   .data : {
     *(.data*)
+    *(.sdata*)
   } >RAM : data
   edata = .;
   _data = .;
@@ -22,6 +24,7 @@ SECTIONS {
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
+    *(COMMON)
     *(.scommon)
   } >RAM
   _stack_top = ALIGN(0x1000);

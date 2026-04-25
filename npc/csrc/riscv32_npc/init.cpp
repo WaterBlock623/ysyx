@@ -13,13 +13,13 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include <sys/cdefs.h>
-#include <generated/autoconf.h>
-#include <isa.h>
-#include <memory/paddr.h>
 #include "local-include/reg.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
+#include <generated/autoconf.h>
+#include <isa.h>
+#include <memory/paddr.h>
+#include <sys/cdefs.h>
 #include str(__TOP_NAME_INCLUDE__)
 #include str(__TOP_NAME_SYMS_INCLUDE__)
 #ifdef CONFIG_NVBOARD
@@ -32,17 +32,20 @@ static VerilatedContext *contextp = NULL;
 static __VTOP_NAME__ *top = NULL;
 static VerilatedFstC *tfp = NULL;
 
-static uint32_t* npc_gpr_ptr = NULL;
-paddr_t npc_pc;
+static uint32_t *npc_gpr_ptr = NULL;
+paddr_t npc_pc = 0;
+paddr_t npc_pc_raw = 0;
 // CPU_state npc_state = {};
 int npc_stop_flag = 0;
 ISADecodeInfo npc_inst = {};
 paddr_t npc_dnpc;
 int npc_wbu_valid = 0;
+int npc_is_jump = 0;
+uint32_t npc_jump_target = 0;
 
 // DIP-C
 #ifdef CONFIG_HAS_FLASH
-extern "C" void flash_read(uint32_t addr, uint32_t *data) { 
+extern "C" void flash_read(uint32_t addr, uint32_t *data) {
   addr += CONFIG_FLASH_MMIO;
   uint32_t rdata = paddr_read(addr, 4);
   *data = rdata;
@@ -57,7 +60,7 @@ extern "C" void mrom_read(uint32_t addr, uint32_t *data) {
 }
 #endif
 
-extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) { 
+extern "C" void psram_read(uint32_t addr, uint32_t *data, uint32_t len) {
   Assert(len % 8 == 0, "Invalid PSRAM read length");
   len /= 8;
   addr += CONFIG_MBASE;
@@ -74,7 +77,7 @@ extern "C" void psram_write(uint32_t addr, uint32_t data, uint32_t len) {
 }
 
 #ifdef CONFIG_HAS_SDRAM
-extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) { 
+extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) {
   Assert(len % 8 == 0, "Invalid SDRAM read length");
   len /= 8;
   addr += CONFIG_SDRAM_MMIO;
@@ -83,7 +86,8 @@ extern "C" uint32_t sdram_read(uint32_t addr, uint32_t len) {
   // printf("addr: 0x%x  data: 0x%x\n", addr, rdata);
 }
 
-extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32_t len) {
+extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask,
+                            uint32_t len) {
   Assert(len % 8 == 0, "Invalid SDRAM write length");
   if (wmask == 0) {
     return;
@@ -106,23 +110,28 @@ extern "C" void sdram_write(uint32_t addr, uint32_t data, uint32_t wmask, uint32
 }
 #endif
 
-#define MEM_READ_SKIP 0
-extern "C" uint32_t dpic_pmem_read(uint32_t raddr) {
-  static int skip_cnt = 0;
-  if (skip_cnt < MEM_READ_SKIP) {
-    skip_cnt++;
-    Log("Skip raddr: %u", raddr);
-    return 0;
-  }
-  raddr &= ~3u;
+// #define MEM_READ_SKIP 0
+extern "C" void dpic_pmem_read(uint32_t raddr, uint32_t *rdata) {
+  // static int skip_cnt = 0;
+  // if (skip_cnt < MEM_READ_SKIP) {
+  //   skip_cnt++;
+  //   Log("Skip raddr: %u", raddr);
+  //   *rdata = 0;
+  //   return;
+  // }
+  // raddr &= ~3u;
 
-  static uint32_t last_raddr = 0;
-  static uint32_t rdata = 0;
-  if (raddr != last_raddr) {
-    last_raddr = raddr;
-    rdata = paddr_read(raddr, 4);
-  }
-  return rdata;
+  // static uint32_t last_raddr = 0;
+  // static uint32_t rdata = 0;
+  // if (raddr != last_raddr) {
+  //   last_raddr = raddr;
+  //   *rdata = paddr_read(raddr, 4);
+  //   printf("READ %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, raddr, rdata);
+  // }
+  // return rdata;
+
+  raddr &= ~3u;
+  *rdata = paddr_read(raddr, 4);
 }
 
 extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
@@ -145,16 +154,22 @@ extern "C" void dpic_pmem_write(uint32_t waddr, uint32_t wdata,
   }
   Assert(wmask == 0, "Invalid wmask");
   // Log(FMT_PADDR " " FMT_PADDR " %d", waddr, wdata, len);
+  // printf("WRITE %d Byte: *" FMT_PADDR "=" FMT_WORD "\n", 4, waddr, wdata);
   paddr_write(waddr, len, wdata);
 }
 
-extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t dnpc,
-                               uint32_t inst, int wbu_valid) {
+extern "C" void set_debug_info(int is_ebreak, uint32_t pc, uint32_t pc_raw,
+                               uint32_t inst, int wbu_valid, int is_jump,
+                               uint32_t jump_target) {
   npc_stop_flag = is_ebreak;
   npc_pc = pc;
-  npc_dnpc = dnpc;
+  npc_pc_raw = pc_raw;
+  // npc_dnpc = dnpc;
+  // npc_dnpc = is_jump ? jump_target : pc + 4u;
   npc_inst.inst = inst;
   npc_wbu_valid = wbu_valid;
+  npc_is_jump = is_jump;
+  npc_jump_target = jump_target;
   // Log("%u %u %u", is_ebreak, pc, inst);
 }
 
@@ -174,9 +189,9 @@ static void nvb_init(void) {
 #endif
 
 static void sim_init(void) {
-  const char* verilator_argv[] = {
-        "riscv32_npc-nemu-interpreter", 
-    };
+  const char *verilator_argv[] = {
+      "riscv32_npc-nemu-interpreter",
+  };
   Verilated::commandArgs(1, verilator_argv);
   contextp = new VerilatedContext;
   contextp->commandArgs(1, verilator_argv);
@@ -188,10 +203,12 @@ static void sim_init(void) {
   tfp->open(str(__WAVE__));
 #endif
 
-  // npc_gpr_ptr = (uint32_t *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
+  // npc_gpr_ptr = (uint32_t
+  // *)top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs.data();
 #define CONCAT_PTR_INNER(a, b) a->b
 #define CONCAT_PTR(a, b) CONCAT_PTR_INNER(a, b)
-  npc_gpr_ptr = (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
+  npc_gpr_ptr =
+      (uint32_t *)CONCAT_PTR(top->rootp, __NPC_VERILATOR_GPR__).data();
 }
 
 extern "C" void sim_close(void) {
@@ -210,19 +227,28 @@ extern "C" void sim_close(void) {
   }
 }
 
+// #define WAVE_SKIP_CYC 1904288551
+#define WAVE_SKIP_CYC 0
+
 void single_cycle(void) {
   top->clock = 1;
   top->eval();
   contextp->timeInc(1);
 
 #ifdef CONFIG_NPC_WAVE
-  tfp->dump(contextp->time());
+  static uint64_t cycle_cnt = 0;
+  if (cycle_cnt >= WAVE_SKIP_CYC) {
+    tfp->dump(contextp->time());
+  }
 #endif
   top->clock = 0;
   top->eval();
   contextp->timeInc(1);
 #ifdef CONFIG_NPC_WAVE
-  tfp->dump(contextp->time());
+  if (cycle_cnt >= WAVE_SKIP_CYC) {
+    tfp->dump(contextp->time());
+  }
+  cycle_cnt++;
 #endif
   IFDEF(CONFIG_NVBOARD, nvboard_update());
 }
@@ -274,7 +300,7 @@ void sync_npc_gpr(void) {
 
 extern "C" void restart() {
   reset(20);
-  cpu.pc = npc_pc;
+  cpu.pc = npc_pc_raw;
   sync_npc_gpr();
 }
 
@@ -283,6 +309,5 @@ void init_isa() {
   sim_init();
   IFDEF(CONFIG_NVBOARD, nvb_init());
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
-
 }
 __END_DECLS

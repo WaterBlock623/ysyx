@@ -1,5 +1,5 @@
 MEMORY {
-  PMEM : ORIGIN = _pmem_start, LENGTH = 512M
+  PMEM : ORIGIN = _pmem_start, LENGTH = 4M
 }
 
 REGION_ALIAS("ROM", PMEM);

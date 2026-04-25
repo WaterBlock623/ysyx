@@ -1,54 +1,60 @@
+//| mill-version: 1.1.5
+
 package build
 
-// import Mill dependency
 import mill._
-import mill.define.Sources
-import mill.modules.Util
 import mill.scalalib._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
-// support BSP
-import mill.bsp._
+import mill.api.Task.Simple
 
 trait BaseModule extends ScalaModule with ScalafmtModule { m =>
-  def scalaVersion = "2.13.18"
-  def chiselVersion = "7.7.0"
+  override def scalaVersion = "2.13.18"
+  def chiselVersion = "7.11.0"
+
+  def myScalaTestVersion = "3.2.20"
 
   override def scalacOptions = Seq(
     "-language:reflectiveCalls",
     "-deprecation",
     "-feature",
     "-Xcheckinit",
-    "-Ymacro-annotations",
+    "-Ymacro-annotations"
   )
 
-  override def ivyDeps = T {
-    Agg(ivy"org.chipsalliance::chisel:$chiselVersion")
-  }
+  override def mvnDeps = Seq(
+    mvn"org.chipsalliance::chisel:$chiselVersion",
+    mvn"cn.ac.ios.tis::riscvspeccore:1.3-chisel7.11.0-7e43b32-SNAPSHOT")
 
-  override def scalacPluginIvyDeps = T {
-    Agg(ivy"org.chipsalliance:::chisel-plugin:$chiselVersion")
-  }
+  override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
-  override def forkArgs = T {
-    super.forkArgs() ++ Seq(s"-Dproject.root=${T.workspace}")
+  override def forkArgs = Task {
+    super.forkArgs() ++ Seq(s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}")
   }
 
   trait BaseTests extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
-    override def ivyDeps = T {
-      m.ivyDeps() ++ Agg(
-        ivy"org.scalatest::scalatest:3.2.19",
+    override def mvnDeps = Task {
+      m.mvnDeps() ++ Seq(
+        mvn"org.scalatest::scalatest:$myScalaTestVersion"
 //        ivy"edu.berkeley.cs::chiseltest:6.0.0"
       )
     }
   }
 
-  object test extends BaseTests
+  object test extends BaseTests {
+    // def rvopcodes = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "riscv-opcodes")
+    def workspaceRoot = Task.Source(mill.api.BuildCtx.workspaceRoot)
+
+    def forkEnv = super.forkEnv() ++ Map(
+      "WORKSPACE_ROOT_DIR" -> workspaceRoot().path.toString
+    )
+  }
 }
 
 object common extends BaseModule {
-  override def sources = T.sources {
-    super.sources() ++ Seq(PathRef(T.workspace / "rvdecoderdb" / "rvdecoderdb"))
+  def rvopcodedb = Task.Source(mill.api.BuildCtx.workspaceRoot / "rvdecoderdb" / "rvdecoderdb")
+  override def sources = Task {
+    super.sources() ++ Seq(rvopcodedb())
   }
 }
 
@@ -59,26 +65,19 @@ object generator extends BaseModule {
 object playground extends BaseModule {
   override def moduleDeps = Seq(common)
 
-  override def generatedSources: T[Seq[PathRef]] = T {
-    val dest = T.dest
+  override def generatedSources: T[Seq[PathRef]] = Task {
+    val dest = Task.dest
     val cp = generator.runClasspath().map(_.path).mkString(":")
 
     os.proc(
       "java",
-      s"-Dproject.root=${T.workspace}",
-      "-cp", cp,
+      s"-Dproject.root=${mill.api.BuildCtx.workspaceRoot}",
+      "-cp",
+      cp,
       "sirius.GenCtrlSignals",
       dest.toString()
     ).call(stdout = os.Inherit, stderr = os.Inherit)
 
     Seq(PathRef(dest))
-  }
-
-  override def repositoriesTask = T.task {
-    super.repositoriesTask() ++ Seq(
-      coursier.MavenRepository("https://repo.scala-sbt.org/scalasbt/maven-releases"),
-      coursier.MavenRepository("https://oss.sonatype.org/content/repositories/releases"),
-      coursier.MavenRepository("https://oss.sonatype.org/content/repositories/snapshots")
-    )
   }
 }

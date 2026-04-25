@@ -46,6 +46,7 @@ __attribute__((noinline))
 void _ssbl(void) {
   _memcpy(_data_start, _data_load_start, (size_t)_data_size); 
   _memset(_bss_start, 0, (size_t)_bss_size);
+  asm volatile("fence.i");
   _trm_init();
 }
 
@@ -54,5 +55,6 @@ extern char _fastram_load_start[], _fastram_start[], _fastram_end[], _fastram_si
 __attribute__((section(".fsbl")))
 void _fsbl(void) {
   _memcpy(_fastram_start, _fastram_load_start, (size_t)_fastram_size); 
+  asm volatile("fence.i");
   _ssbl();
 }

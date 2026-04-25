@@ -10,3 +10,6 @@
 [submodule "nemu/tools/mini-gdbstub"]
 	path = nemu/tools/mini-gdbstub
 	url = git@github.com:RinHizakura/mini-gdbstub.git
+[submodule "npc/ChiRVFormal"]
+	path = npc/ChiRVFormal
+	url = https://github.com/iscas-tis/ChiRVFormal.git
