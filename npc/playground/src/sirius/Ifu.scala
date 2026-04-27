@@ -260,7 +260,7 @@ class Icache(
     line.data(dataIdx) := io.mem.r.bits.data
     line.tag := rAddrLine.tag
     cache.io.wData := line
-    when(io.mem.r.bits.last) {
+    when(io.mem.r.bits.last && !abortReg) {
       valids(setIdx)(wayIdx) := true.B
     }
   }
