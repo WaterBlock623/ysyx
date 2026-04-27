@@ -135,7 +135,7 @@ class Icache(
     val off = UInt(offWidth.W)
   }
   val rAddrReg = RegEnable(io.cached.ar.bits.addr, state === sReadCache)
-  val rAddr = Mux(io.cached.ar.fire, io.cached.ar.bits.addr, rAddrReg)
+  val rAddr = Mux(state === sReadCache, io.cached.ar.bits.addr, rAddrReg)
   // val rAddr = io.cached.ar.bits.addr
   val rAddrLine = rAddr.asTypeOf(new AddrLine)
   val inWhiteList = if (whiteList.isDefined) {
