@@ -165,19 +165,18 @@ class BasicCore(
         lsu.in.bits.ctrl.wbuCtrl.isJump,
         lsu.in.bits.ctrl.wbuCtrl.isBranch,
         lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        (lsuHasData && lsu.in.bits.exuPayload.trap.isTrap) ||
-          (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
+        lsu.out.bits.lsuPayload.trap.isTrap
       ),
       StageJump(
         wbuHasData,
         wbu.in.bits.ctrl.wbuCtrl.isJump,
         wbu.in.bits.ctrl.wbuCtrl.isBranch,
         wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        wbuHasData && wbu.in.bits.lsuPayload.trap.isTrap
+        wbu.in.bits.lsuPayload.trap.isTrap
       )
     )
     val mayJump = stageJumps
-      .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
+      .map(s => s.valid && (s.isJump || s.isBranch || s.isJumpCsr || s.isTrap))
       .reduce(_ || _)
 
     // Pipeline ctrl
