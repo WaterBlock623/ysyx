@@ -255,12 +255,12 @@ class Icache(
     dataIdxReg
   }
 
-  when(io.mem.r.fire && inWhiteList) {
+  when(io.mem.r.fire && inWhiteList && !abortReg) {
     val line = WireDefault(cache.io.rData(wayIdx))
     line.data(dataIdx) := io.mem.r.bits.data
     line.tag := rAddrLine.tag
     cache.io.wData := line
-    when(io.mem.r.bits.last && !abortReg) {
+    when(io.mem.r.bits.last) {
       valids(setIdx)(wayIdx) := true.B
     }
   }
