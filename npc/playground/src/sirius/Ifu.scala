@@ -200,7 +200,7 @@ class Icache(
   val nextState = WireDefault(state)
   state := nextState
 
-  val rFiredReg = RegInit(true.B)
+  val rFiredReg = RegInit(false.B)
   when (io.cached.r.fire || io.cached.abort) {
     rFiredReg := true.B
   }
