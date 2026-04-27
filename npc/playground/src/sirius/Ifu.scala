@@ -124,6 +124,9 @@ class Icache(
     val mem = new Axi4IO
   })
 
+  val sReadCache :: sReq :: sFirstResp :: sFillCache :: sWait :: Nil = Enum(5)
+  val state = RegInit(sReadCache)
+
   // Addr
   class AddrLine extends Bundle {
     val tag = UInt(tagWidth.W)
@@ -131,7 +134,7 @@ class Icache(
     val dataIdx = UInt(dataIdxWidth.W)
     val off = UInt(offWidth.W)
   }
-  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
+  val rAddrReg = RegEnable(io.cached.ar.bits.addr, state === sReadCache)
   val rAddr = Mux(io.cached.ar.fire, io.cached.ar.bits.addr, rAddrReg)
   // val rAddr = io.cached.ar.bits.addr
   val rAddrLine = rAddr.asTypeOf(new AddrLine)
@@ -195,8 +198,6 @@ class Icache(
   // FSM
   val abortReg = RegInit(false.B)
   // val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
-  val sReadCache :: sReq :: sFirstResp :: sFillCache :: sWait :: Nil = Enum(5)
-  val state = RegInit(sReadCache)
   val nextState = WireDefault(state)
   state := nextState
 
