@@ -318,9 +318,9 @@ class Icache(
   io.cached.ar.ready := nextState === sReadCache && (rFiredReg || io.cached.r.fire)
   io.cached.r.valid := io.cached.ar.valid && !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
-    state === sReadCache,
-    hitData(rAddrLine.dataIdx),
-    cachedRDataReg
+    cachedRValidReg,
+    cachedRDataReg,
+    hitData(rAddrLine.dataIdx)
   )
 }
 
