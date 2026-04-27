@@ -47,17 +47,45 @@ class BasicCore(
       stall:   Bool = false.B,
       flush:   Bool = false.B
     ) = {
-      val ready = thisIn.ready || !thisIn.valid
-      prevOut.ready := ready && !stall
+      val full = RegInit(false.B)
+      val hidden = RegInit(false.B) // Hide out.valid when stall
+
+      thisIn.valid := full && !(hidden && stall)
+      prevOut.ready := !full || thisIn.fire
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-      val valid = RegInit(false.B)
-      thisIn.valid := valid
-      when(ready) {
-        valid := prevOut.valid && !stall
+
+      when(prevOut.fire) {
+        full := true.B
+      }.elsewhen(thisIn.fire) {
+        full := false.B
       }
       when(flush) {
-        valid := false.B
+        full := false.B
       }
+
+      when(!stall) {
+        hidden := false.B
+      }.elsewhen(stall && thisIn.fire) {
+        hidden := true.B
+      }
+      when(flush) {
+        hidden := false.B
+      }
+
+      // val valid = RegInit(false.B)
+      // thisIn.valid := valid
+      // val preload = !valid && stall && prevOut.valid
+      //
+      // val ready = thisIn.ready || !thisIn.valid
+      // prevOut.ready := (ready && !stall) || preload
+      //
+      //
+      // when(ready) {
+      //   valid := prevOut.valid && !stall
+      // }
+      // when(flush) {
+      //   valid := false.B
+      // }
     }
 
     val stallIdu = Wire(Bool())
