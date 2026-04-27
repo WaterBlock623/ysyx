@@ -46,7 +46,7 @@ class BasicCore(
       thisIn:  DecoupledIO[T],
       stall:   Bool = false.B,
       flush:   Bool = false.B
-    ) = {
+    ): Bool = {
       val full = RegInit(false.B)
       val hidden = RegInit(false.B) // Hide out.valid when stall
 
@@ -72,6 +72,8 @@ class BasicCore(
         hidden := false.B
       }
 
+      full
+
       // val valid = RegInit(false.B)
       // thisIn.valid := valid
       // val preload = !valid && stall && prevOut.valid
@@ -93,10 +95,10 @@ class BasicCore(
     val flushIfu = Wire(Bool())
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
-    pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    pipelineConnect(iduOut, exu.in, stall = stallIdu, flush = flushIdu)
-    pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    pipelineConnect(lsuOut, wbu.in)
+    val iduHasData = pipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    val exuHasData = pipelineConnect(iduOut, exu.in, stall = stallIdu, flush = flushIdu)
+    val lsuHasData = pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    val wbuHasData = pipelineConnect(lsuOut, wbu.in)
 
     // RAW(GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
@@ -106,17 +108,17 @@ class BasicCore(
     case class StageRd(valid: Bool, isWriteBack: Bool, rd: UInt)
     val stageRds = Seq(
       StageRd(
-        exu.in.valid,
+        exuHasData,
         exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         exu.in.bits.iduPayload.idu.wAddr
       ),
       StageRd(
-        lsu.in.valid,
+        lsuHasData,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         lsu.in.bits.exuPayload.idu.wAddr
       ),
       StageRd(
-        wbu.in.valid,
+        wbuHasData,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         wbu.in.bits.lsuPayload.idu.wAddr
       )
@@ -132,14 +134,14 @@ class BasicCore(
     case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: UInt)
     val stageCsrs = Seq(
       StageCsr(
-        lsu.in.valid,
+        lsuHasData,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         lsu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
         lsu.in.bits.exuPayload.idu.imm,
         lsu.in.bits.exuPayload.idu.csrAddr
       ),
       StageCsr(
-        wbu.in.valid,
+        wbuHasData,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
         wbu.in.bits.lsuPayload.idu.imm,
@@ -159,19 +161,19 @@ class BasicCore(
     case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
     val stageJumps = Seq(
       StageJump(
-        lsu.in.valid,
+        lsuHasData,
         lsu.in.bits.ctrl.wbuCtrl.isJump,
         lsu.in.bits.ctrl.wbuCtrl.isBranch,
         lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
+        (lsuHasData && lsu.in.bits.exuPayload.trap.isTrap) ||
           (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
       ),
       StageJump(
-        wbu.in.valid,
+        wbuHasData,
         wbu.in.bits.ctrl.wbuCtrl.isJump,
         wbu.in.bits.ctrl.wbuCtrl.isBranch,
         wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
+        wbuHasData && wbu.in.bits.lsuPayload.trap.isTrap
       )
     )
     val mayJump = stageJumps
