@@ -85,7 +85,9 @@ class CacheFile(
   }
 }
 
-class IcacheIO(implicit private val cfg: CoreConfig) extends Bundle {
+class IcacheIO(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val abort = Bool()
   val fencei = Bool()
   val ar = Decoupled(new Bundle {
@@ -101,7 +103,9 @@ class Icache(
   wayNum:    BigInt,
   wayByte:   BigInt,
   busByte:   BigInt,
-  whiteList: Option[NumericRange[BigInt]] = None)(implicit private val cfg: CoreConfig)
+  whiteList: Option[NumericRange[BigInt]] = None
+)(
+  implicit private val cfg: CoreConfig)
     extends Module {
   require(setNum > 0 && setNum.bitCount == 1)
   require(wayNum > 0 && wayNum.bitCount == 1)
@@ -127,10 +131,12 @@ class Icache(
     val dataIdx = UInt(dataIdxWidth.W)
     val off = UInt(offWidth.W)
   }
-  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
-  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
+  // val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
+  // val rAddr = Mux(io.cached.ar.fire, io.cached.ar.bits.addr, rAddrReg)
+  val rAddr = io.cached.ar.bits.addr
+  val rAddrLine = rAddr.asTypeOf(new AddrLine)
   val inWhiteList = if (whiteList.isDefined) {
-    rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
+    rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
   } else { true.B }
 
   // Random
@@ -188,23 +194,20 @@ class Icache(
 
   // FSM
   val abortReg = RegInit(false.B)
-  val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
-  val state = RegInit(sIdle)
+  // val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
+  val sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(4)
+  val state = RegInit(sReadCache)
   val nextState = WireDefault(state)
   state := nextState
 
   switch(state) {
-    is(sIdle) {
-      when(io.cached.ar.fire) {
-        nextState := sReadCache
-      }
-    }
+    // is(sIdle) {
+    //   when(io.cached.ar.fire) {
+    //     nextState := sReadCache
+    //   }
+    // }
     is(sReadCache) {
-      when(isHit && inWhiteList) {
-        when(io.cached.r.fire || abortReg) {
-          nextState := sIdle
-        }
-      }.otherwise {
+      when(io.cached.ar.valid && !(isHit && inWhiteList)) {
         nextState := sReq
       }
     }
@@ -215,12 +218,12 @@ class Icache(
     }
     is(sFirstResp) {
       when(io.mem.r.fire) {
-        nextState := Mux(io.mem.r.bits.last, sIdle, sFillCache)
+        nextState := Mux(io.mem.r.bits.last, sReadCache, sFillCache)
       }
     }
     is(sFillCache) {
       when(io.mem.r.fire && io.mem.r.bits.last) {
-        nextState := sIdle
+        nextState := sReadCache
       }
     }
   }
@@ -273,7 +276,7 @@ class Icache(
 
   // Mem bus
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.mem.ar.bits.addr := rAddrReg & ~((busByte - 1).U(rAddrReg.getWidth.W))
+  io.mem.ar.bits.addr := rAddr & ~((busByte - 1).U(rAddr.getWidth.W))
   io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
   io.mem.ar.bits.size := "b010".U
   io.mem.ar.bits.burst := Axi4Burst.warp.U
@@ -292,21 +295,28 @@ class Icache(
   }.elsewhen(io.cached.r.ready) {
     cachedRValidReg := false.B
   }
-  when (abortReg || io.cached.abort) {
+  when(abortReg || io.cached.abort) {
     cachedRValidReg := false.B
   }
 
-  when (io.cached.abort) {
+  when(io.cached.abort) {
     abortReg := true.B
   }
-  when (nextState === sIdle) {
+  when(nextState === sReadCache) {
     abortReg := false.B
   }
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  io.cached.ar.ready := state === sIdle && !cachedRValidReg
-  io.cached.r.valid := !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
+  val rFiredReg = RegInit(false.B)
+  when (io.cached.r.fire) {
+    rFiredReg := true.B
+  }
+  when (io.cached.ar.fire) {
+    rFiredReg := false.B
+  }
+  io.cached.ar.ready := nextState === sReadCache && (rFiredReg || io.cached.r.fire)
+  io.cached.r.valid := io.cached.ar.valid && !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
     state === sReadCache,
     hitData(rAddrLine.dataIdx),
@@ -348,7 +358,7 @@ class Ifu(
     cached.abort := exte.flush
     cached.ar.valid := true.B
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    when (exte.flush) {
+    when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(cached.ar.fire) {
       ifetchAddr := ifetchAddr + 4.U
@@ -402,7 +412,7 @@ class Ifu(
     }
   } else {
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    when (exte.flush) {
+    when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(exte.mem.ar.fire) {
       ifetchAddr := ifetchAddr + 4.U
@@ -446,8 +456,8 @@ class Ifu(
             val allowCsr = Set(
               CsrAddr.mcycle,
               CsrAddr.mcycleh,
-              CsrAddr.mepc, 
-              // CsrAddr.mstatus, 
+              CsrAddr.mepc,
+              // CsrAddr.mstatus,
               CsrAddr.mtvec
             )
             RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
