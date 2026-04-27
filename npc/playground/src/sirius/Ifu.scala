@@ -200,6 +200,15 @@ class Icache(
   val nextState = WireDefault(state)
   state := nextState
 
+  val rFiredReg = RegInit(false.B)
+  when (io.cached.r.fire) {
+    rFiredReg := true.B
+  }
+  when (io.cached.ar.fire) {
+    rFiredReg := false.B
+  }
+  val rFired = io.cached.r.fire || rFiredReg
+
   switch(state) {
     // is(sIdle) {
     //   when(io.cached.ar.fire) {
@@ -207,7 +216,7 @@ class Icache(
     //   }
     // }
     is(sReadCache) {
-      when(io.cached.ar.valid && !(isHit && inWhiteList)) {
+      when(io.cached.ar.valid && rFired && !(isHit && inWhiteList)) {
         nextState := sReq
       }
     }
@@ -227,24 +236,6 @@ class Icache(
       }
     }
   }
-  // val nextState = MuxLookup(state, sIdle)(
-  //   Seq(
-  //     sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
-  //     sReadCache -> Mux(
-  //       isHit && inWhiteList,
-  //       Mux(io.cached.r.fire, sIdle, sReadCache),
-  //       sReq
-  //     ),
-  //     sReq -> Mux(io.mem.ar.fire, sFirstResp, sReq),
-  //     sFirstResp -> Mux(
-  //       io.mem.r.fire,
-  //       Mux(io.mem.r.bits.last, sIdle, sFillCache),
-  //       sFirstResp
-  //     ),
-  //     sFillCache -> Mux(io.mem.r.fire && io.mem.r.bits.last, sIdle, sFillCache)
-  //   )
-  // )
-  // state := nextState
 
   // Update cache
   xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
@@ -308,14 +299,7 @@ class Icache(
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  val rFiredReg = RegInit(false.B)
-  when (io.cached.r.fire) {
-    rFiredReg := true.B
-  }
-  when (io.cached.ar.fire) {
-    rFiredReg := false.B
-  }
-  io.cached.ar.ready := nextState === sReadCache && (rFiredReg || io.cached.r.fire)
+  io.cached.ar.ready := nextState === sReadCache && rFired
   io.cached.r.valid := io.cached.ar.valid && !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
     cachedRValidReg,
