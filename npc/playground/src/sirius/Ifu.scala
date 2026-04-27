@@ -195,7 +195,7 @@ class Icache(
   // FSM
   val abortReg = RegInit(false.B)
   // val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
-  val sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(4)
+  val sReadCache :: sReq :: sFirstResp :: sFillCache :: sWait :: Nil = Enum(5)
   val state = RegInit(sReadCache)
   val nextState = WireDefault(state)
   state := nextState
@@ -204,19 +204,14 @@ class Icache(
   when (io.cached.r.fire || io.cached.abort) {
     rFiredReg := true.B
   }
-  when (io.cached.ar.fire) {
+  when (nextState === sReadCache) {
     rFiredReg := false.B
   }
-  val rFired = io.cached.r.fire || rFiredReg
+  val rFired = io.cached.r.fire || io.cached.abort || rFiredReg
 
   switch(state) {
-    // is(sIdle) {
-    //   when(io.cached.ar.fire) {
-    //     nextState := sReadCache
-    //   }
-    // }
     is(sReadCache) {
-      when(io.cached.ar.valid && rFired && !(isHit && inWhiteList)) {
+      when(io.cached.ar.valid && !(isHit && inWhiteList)) {
         nextState := sReq
       }
     }
@@ -227,11 +222,16 @@ class Icache(
     }
     is(sFirstResp) {
       when(io.mem.r.fire) {
-        nextState := Mux(io.mem.r.bits.last, sReadCache, sFillCache)
+        nextState := Mux(io.mem.r.bits.last, Mux(rFired, sReadCache, sWait), sFillCache)
       }
     }
     is(sFillCache) {
       when(io.mem.r.fire && io.mem.r.bits.last) {
+        nextState := Mux(rFired, sReadCache, sWait)
+      }
+    }
+    is(sWait) {
+      when(io.cached.r.fire) {
         nextState := sReadCache
       }
     }
@@ -299,8 +299,8 @@ class Icache(
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  io.cached.ar.ready := nextState === sReadCache && rFired
-  io.cached.r.valid := io.cached.ar.valid && !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
+  io.cached.ar.ready := nextState === sReadCache
+  io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
     cachedRValidReg,
     cachedRDataReg,
