@@ -240,7 +240,7 @@ class Icache(
   // Update cache
   xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
   // lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
-  cache.io.write := io.mem.r.fire && inWhiteList
+  cache.io.write := !abortReg && io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
   val dataIdx = if (wayByte == busByte) {
@@ -255,12 +255,12 @@ class Icache(
     dataIdxReg
   }
 
-  when(io.mem.r.fire && inWhiteList && !abortReg) {
+  when(io.mem.r.fire && inWhiteList) {
     val line = WireDefault(cache.io.rData(wayIdx))
     line.data(dataIdx) := io.mem.r.bits.data
     line.tag := rAddrLine.tag
     cache.io.wData := line
-    when(io.mem.r.bits.last) {
+    when(io.mem.r.bits.last && !abortReg) {
       valids(setIdx)(wayIdx) := true.B
     }
   }
