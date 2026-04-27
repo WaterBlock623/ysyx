@@ -131,9 +131,9 @@ class Icache(
     val dataIdx = UInt(dataIdxWidth.W)
     val off = UInt(offWidth.W)
   }
-  // val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
-  // val rAddr = Mux(io.cached.ar.fire, io.cached.ar.bits.addr, rAddrReg)
-  val rAddr = io.cached.ar.bits.addr
+  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
+  val rAddr = Mux(io.cached.ar.fire, io.cached.ar.bits.addr, rAddrReg)
+  // val rAddr = io.cached.ar.bits.addr
   val rAddrLine = rAddr.asTypeOf(new AddrLine)
   val inWhiteList = if (whiteList.isDefined) {
     rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
@@ -240,7 +240,7 @@ class Icache(
   // Update cache
   xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
   // lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
-  cache.io.write := !abortReg && io.mem.r.fire && inWhiteList
+  cache.io.write := io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
   val dataIdx = if (wayByte == busByte) {
@@ -260,7 +260,7 @@ class Icache(
     line.data(dataIdx) := io.mem.r.bits.data
     line.tag := rAddrLine.tag
     cache.io.wData := line
-    when(io.mem.r.bits.last && !abortReg) {
+    when(io.mem.r.bits.last) {
       valids(setIdx)(wayIdx) := true.B
     }
   }
