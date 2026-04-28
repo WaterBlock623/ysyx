@@ -201,8 +201,12 @@ class Icache(
 
   switch(state) {
     is(sReadCache) {
-      when(io.cached.ar.valid && !(isHit && inWhiteList)) {
-        nextState := sReq
+      when(io.cached.ar.valid) {
+        when(!(isHit && inWhiteList)) {
+          nextState := sReq
+        }.elsewhen(!io.cached.r.ready) {
+          nextState := sWait
+        }
       }
     }
     is(sReq) {
@@ -221,7 +225,7 @@ class Icache(
       }
     }
     is(sWait) {
-      when(io.cached.r.fire) {
+      when(rFired) {
         nextState := sReadCache
       }
     }
@@ -252,7 +256,7 @@ class Icache(
         cacheTag(s)(w) := rAddrLine.tag
       }
       for (word <- 0 until burstTimes) {
-        when(writeCond && wordMask(word)) {
+        when(writeCond && wordWriteMask(word)) {
           cacheData(s)(w)(word) := io.mem.r.bits.data
         }
       }
@@ -292,7 +296,7 @@ class Icache(
   //   io.cached.r.fire
   // )
   io.cached.ar.ready := state === sReadCache
-  io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg)
+  io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg || state === sWait)
   io.cached.r.bits.data := Mux(
     cachedRValidReg,
     cachedRDataReg,
