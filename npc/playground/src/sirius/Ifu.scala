@@ -191,10 +191,10 @@ class Icache(
   }
 
   val rFiredReg = RegInit(false.B)
-  when (io.cached.r.fire || io.cached.abort) {
+  when(io.cached.r.fire || io.cached.abort) {
     rFiredReg := true.B
   }
-  when (nextState === sReadCache) {
+  when(nextState === sReadCache) {
     rFiredReg := false.B
   }
   val rFired = io.cached.r.fire || io.cached.abort || rFiredReg
@@ -247,12 +247,12 @@ class Icache(
   for (s <- 0 until setNum.toInt) {
     for (w <- 0 until wayNum.toInt) {
       val writeCond = io.mem.r.fire && inWhiteList && (setIdx === s.U) && wayMask(w)
-      when (writeCond && io.mem.r.bits.last) {
+      when(writeCond && io.mem.r.bits.last) {
         cacheValid(s)(w) := true.B
         cacheTag(s)(w) := rAddrLine.tag
       }
       for (word <- 0 until burstTimes) {
-        when (writeCond && wordMask(word)) {
+        when(writeCond && wordMask(word)) {
           cacheData(s)(w)(word) := io.mem.r.bits.data
         }
       }
@@ -286,7 +286,12 @@ class Icache(
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  io.cached.ar.ready := !abortReg && Mux(state =/= sReadCache, nextState === sReadCache, io.cached.r.fire)
+  // io.cached.ar.ready := !abortReg && Mux(
+  //   state =/= sReadCache,
+  //   nextState === sReadCache,
+  //   io.cached.r.fire
+  // )
+  io.cached.ar.ready := state === sReadCache
   io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
     cachedRValidReg,
@@ -345,14 +350,14 @@ class Ifu(
       val icacheState = BoringUtils.tapAndRead(icache.state)
       val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
       val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-      val icacheSIdle = 0.U
-      val icacheSReadCache = 1.U
-      val icacheSReq = 2.U
-      val icacheSFirstResp = 3.U
-      val icacheSFillCache = 4.U
+      val icacheSReadCache = 0.U
+      val icacheSReq = 1.U
+      val icacheSFirstResp = 2.U
+      val icacheSFillCache = 3.U
+      val icacheSWait = 4.U
       PerfWhen(
         "icacheTotalAcc",
-        icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
+        icache.io.cached.ar.fire,
         exte.debugEbreak
       )
       PerfWhen(
@@ -362,7 +367,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheHit",
-        icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+        icache.io.cached.ar.valid && icacheState === icacheSReadCache && icacheNextState === icacheSReadCache,
         exte.debugEbreak
       )
       PerfWhen(
@@ -372,7 +377,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheMissPenalty",
-        icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
+        icacheInWhiteList && (icacheState =/= icacheSReadCache),
         exte.debugEbreak
       )
       PerfWhen(
