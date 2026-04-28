@@ -113,14 +113,14 @@ class IcacheTest extends ModuleWithInitReset {
   })
   IcacheMasterConstraint(io.req)
 
-  // val reqQueue = Module(new Queue(chiselTypeOf(io.req.ar.bits), 16, true, true))
-  // reqQueue.io.enq.valid := io.req.ar.fire
-  // reqQueue.io.enq.bits := io.req.ar.bits
-  // reqQueue.io.deq.ready := io.req.r.fire
+  val reqQueue = Module(new Queue(chiselTypeOf(io.req.ar.bits), 16, true, true))
+  reqQueue.io.enq.valid := io.req.ar.fire
+  reqQueue.io.enq.bits := io.req.ar.bits
+  reqQueue.io.deq.ready := io.req.r.fire
   val refRData = Wire(UInt(32.W))
   dontTouch(refRData)
-  // RefMemConstraint(256, io.mem, reqQueue.io.deq.bits.addr, refRData)
-  RefMemConstraint(256, io.mem, io.req.ar.bits.addr, refRData)
+  RefMemConstraint(256, io.mem, reqQueue.io.deq.bits.addr, refRData)
+  // RefMemConstraint(256, io.mem, io.req.ar.bits.addr, refRData)
 
   val dut = Module(new Icache(setNum = 2, wayNum = 8, wayByte = 8, busByte = 4))
 
