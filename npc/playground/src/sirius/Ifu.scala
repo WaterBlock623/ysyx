@@ -151,7 +151,7 @@ class Icache(
 
   // Cache
   val cacheValid = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Vec(wayNum.toInt, Bool()))))
-  val cacheTag = Reg(Vec(setNum.toInt, Vec(wayNum.toInt, UInt(wayIdxWidth.W))))
+  val cacheTag = Reg(Vec(setNum.toInt, Vec(wayNum.toInt, UInt(tagWidth.W))))
   val cacheData = Reg(
     Vec(setNum.toInt, Vec(wayNum.toInt, Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))))
   )
