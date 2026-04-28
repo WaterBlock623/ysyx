@@ -21,70 +21,6 @@ class Xorshift32 extends Module {
   }
 }
 
-// class CacheLine(
-//   tagWidth:   Int,
-//   burstTimes: Int,
-//   busByte:    BigInt)
-//     extends Bundle {
-//   val tag = UInt(tagWidth.W)
-//   val data = Vec(burstTimes.toInt, UInt((busByte * 8).toInt.W))
-// }
-//
-// class CacheFile(
-//   setNum:      BigInt,
-//   wayNum:      BigInt,
-//   busByte:     BigInt,
-//   tagWidth:    Int,
-//   burstTimes:  Int,
-//   setIdxWidth: Int,
-//   wayIdxWidth: Int)
-//     extends Module {
-//   val io = IO(new Bundle {
-//     val valid = Input(Bool())
-//     val write = Input(Bool())
-//     val setIdx = Input(UInt(setIdxWidth.W))
-//     val wayIdx = Input(UInt(wayIdxWidth.W))
-//     val wData = Input(
-//       new CacheLine(
-//         tagWidth = tagWidth,
-//         burstTimes = burstTimes,
-//         busByte = busByte
-//       )
-//     )
-//     val rData = Output(
-//       Vec(
-//         wayNum.toInt,
-//         new CacheLine(
-//           tagWidth = tagWidth,
-//           burstTimes = burstTimes,
-//           busByte = busByte
-//         )
-//       )
-//     )
-//   })
-//
-//   val cache = Mem(
-//     setNum.toInt,
-//     Vec(
-//       wayNum.toInt,
-//       new CacheLine(
-//         tagWidth = tagWidth,
-//         burstTimes = burstTimes,
-//         busByte = busByte
-//       )
-//     )
-//   )
-//
-//   val wData = VecInit.fill(wayNum.toInt)(io.wData)
-//   io.rData := DontCare
-//   when(io.valid) {
-//     io.rData := cache.read(io.setIdx)
-//     when(io.write) {
-//       cache.write(io.setIdx, wData, UIntToOH(io.wayIdx).asBools)
-//     }
-//   }
-// }
-
 class IcacheIO(
   implicit private val cfg: CoreConfig)
     extends Bundle {
@@ -386,7 +322,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheMissPenalty",
-        icacheInWhiteList && (icacheState =/= icacheSReadCache),
+        icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
         exte.debugEbreak
       )
       PerfWhen(
