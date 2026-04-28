@@ -16,6 +16,7 @@ class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
   val ifu = new Bundle {
     val pc = UInt(cfg.xlen.W)
     val inst = UInt(cfg.xlen.W)
+    // val staticNextPc = UInt(cfg.xlen.W)
   }
 }
 
@@ -85,7 +86,8 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 // 访问外部
 class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
-  val ready = Output(Bool())
+  val update = Output(Bool())
+  val staticNextPc = Output(UInt(cfg.xlen.W))
 }
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {

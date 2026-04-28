@@ -6,8 +6,14 @@ import java.nio.file.{Files, Paths}
 import scala.sys.process._
 
 object Formal {
-  def verify[T <: Module](gen: => T, topName: String, depth: Int, skip: Int = 0, append: Int = 0)
-    : Unit = {
+  def verify[T <: Module](
+    gen:     => T,
+    topName: String,
+    depth:   Int,
+    skip:    Int = 0,
+    append:  Int = 0,
+    engines: Set[String] = Set("smtbmc")
+  ): Unit = {
     // import java.util.UUID
     // val workDir = Paths.get(s"formal_${topName}_${UUID.randomUUID()}")
     val workDir = Paths.get(s"formal_${topName}")
@@ -48,37 +54,41 @@ object Formal {
 
     val sby =
       s"""
-         |[tasks]
-         |basic bmc
-         |basic: default
-         |
-         |[options]
-         |bmc:
-         |mode bmc
-         |vcd off
-         |fst on
-         |depth $depth
-         |append $append
-         |
-         |[engines]
-         |smtbmc boolector
-         |smtbmc boolector -- --noincr
-         |
-         |[script]
-         |read -sv $topName.sv
-         |prep -flatten -nordff -top $topName
-         |chformal -early
-         |
-         |[autotune]
-         |parallel 8
-         |
-         |[files]
-         |$topName.sv
-         |""".stripMargin
+[tasks]
+basic bmc
+basic: default
+
+[options]
+bmc:
+mode bmc
+vcd off
+fst on
+depth $depth
+skip $skip
+append $append
+
+[engines]
+${engines.mkString("\n")}
+
+[script]
+read -sv $topName.sv
+prep -flatten -nordff -top $topName
+chformal -early
+
+[autotune]
+parallel 12
+
+[files]
+$topName.sv
+"""
 
     // |plugin -i slang
     // |read_slang $topName.sv
     // |skip $skip
+    // |presat on
+    // |abc bmc3
+    // |smtbmc boolector
+    // |smtbmc boolector -- --noincr
     val sbyPath = workDir.resolve(s"$topName.sby")
     Files.write(sbyPath, sby.getBytes)
 

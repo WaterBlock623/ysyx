@@ -24,7 +24,6 @@ class Wbu(
   })))
 
   // DecoupledIO
-  DecoupledFsm(false, in)
   in.ready := true.B
   val inBits = in.bits
 
@@ -34,11 +33,13 @@ class Wbu(
   val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
   val csrData = inBits.lsuPayload.exu.csrData
+  // val staticNextPc = inBits.lsuPayload.ifu.staticNextPc
+  val staticNextPc = inBits.lsuPayload.ifu.pc + 4.U
 
   // csr作为跳转地址
   val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
     Seq(
-      JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
+      // JumpTargetSelEnum.mtvec.asUInt -> exte.csr.mtvec,
       JumpTargetSelEnum.mepc.asUInt -> exte.csr.mepc
     )
   )
@@ -48,9 +49,9 @@ class Wbu(
   pcReg.target := Mux(
     inBits.lsuPayload.trap.isTrap,
     exte.csr.mtvec,
-    Mux(ctrl.isFromCsr, csrJumpTarget, normalJumpTarget)
+    Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
   )
-  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isFromCsr || (ctrl.isBranch && aluOut(
+  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
     0
   )) || inBits.lsuPayload.trap.isTrap)
 
@@ -63,9 +64,9 @@ class Wbu(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
       WriteBackSelEnum.imm.asUInt -> imm,
-      WriteBackSelEnum.staticNextPc.asUInt -> (pc + 4.U),
       WriteBackSelEnum.lsu.asUInt -> loadData,
-      WriteBackSelEnum.csr.asUInt -> csrData
+      WriteBackSelEnum.csr.asUInt -> csrData,
+      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
     )
   )
 
@@ -80,6 +81,7 @@ class Wbu(
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
+  // Debug
   if (cfg.formal) {
     implicit val XLEN: Int = cfg.xlen
 

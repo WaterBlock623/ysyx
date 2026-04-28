@@ -227,19 +227,28 @@ extern "C" void sim_close(void) {
   }
 }
 
+// #define WAVE_SKIP_CYC 1904288551
+#define WAVE_SKIP_CYC 0
+
 void single_cycle(void) {
   top->clock = 1;
   top->eval();
   contextp->timeInc(1);
 
 #ifdef CONFIG_NPC_WAVE
-  tfp->dump(contextp->time());
+  static uint64_t cycle_cnt = 0;
+  if (cycle_cnt >= WAVE_SKIP_CYC) {
+    tfp->dump(contextp->time());
+  }
 #endif
   top->clock = 0;
   top->eval();
   contextp->timeInc(1);
 #ifdef CONFIG_NPC_WAVE
-  tfp->dump(contextp->time());
+  if (cycle_cnt >= WAVE_SKIP_CYC) {
+    tfp->dump(contextp->time());
+  }
+  cycle_cnt++;
 #endif
   IFDEF(CONFIG_NVBOARD, nvboard_update());
 }

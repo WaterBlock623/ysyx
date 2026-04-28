@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.BoringUtils
 import scala.collection.immutable.NumericRange
+import chisel3.util.random.MaxPeriodGaloisLFSR
 
 class Xorshift32 extends Module {
   val io = IO(new Bundle {
@@ -84,7 +85,9 @@ class CacheFile(
   }
 }
 
-class IcacheIO(implicit private val cfg: CoreConfig) extends Bundle {
+class IcacheIO(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
   val abort = Bool()
   val fencei = Bool()
   val ar = Decoupled(new Bundle {
@@ -92,7 +95,6 @@ class IcacheIO(implicit private val cfg: CoreConfig) extends Bundle {
   })
   val r = Flipped(Decoupled(new Bundle {
     val data = UInt(cfg.xlen.W)
-    val addr = UInt(cfg.xlen.W)
   }))
 }
 
@@ -101,7 +103,9 @@ class Icache(
   wayNum:    BigInt,
   wayByte:   BigInt,
   busByte:   BigInt,
-  whiteList: Option[NumericRange[BigInt]] = None)
+  whiteList: Option[NumericRange[BigInt]] = None
+)(
+  implicit private val cfg: CoreConfig)
     extends Module {
   require(setNum > 0 && setNum.bitCount == 1)
   require(wayNum > 0 && wayNum.bitCount == 1)
@@ -120,6 +124,9 @@ class Icache(
     val mem = new Axi4IO
   })
 
+  val sReadCache :: sReq :: sFirstResp :: sFillCache :: sWait :: Nil = Enum(5)
+  val state = RegInit(sReadCache)
+
   // Addr
   class AddrLine extends Bundle {
     val tag = UInt(tagWidth.W)
@@ -127,15 +134,20 @@ class Icache(
     val dataIdx = UInt(dataIdxWidth.W)
     val off = UInt(offWidth.W)
   }
-  val rAddrReg = RegEnable(io.cached.ar.bits.addr, io.cached.ar.fire)
-  val rAddrLine = rAddrReg.asTypeOf(new AddrLine)
+  val rAddrReg = RegEnable(io.cached.ar.bits.addr, state === sReadCache)
+  val rAddr = Mux(state === sReadCache, io.cached.ar.bits.addr, rAddrReg)
+  // val rAddr = io.cached.ar.bits.addr
+  val rAddrLine = rAddr.asTypeOf(new AddrLine)
   val inWhiteList = if (whiteList.isDefined) {
-    rAddrReg >= whiteList.get.start.U && rAddrReg < whiteList.get.end.U
+    rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
   } else { true.B }
 
   // Random
   val xorshift32 = Module(new Xorshift32)
   val rand = xorshift32.io.out
+  // val lfsr = Module(new MaxPeriodGaloisLFSR(64))
+  // lfsr.io.seed := DontCare
+  // val rand = lfsr.io.out.asUInt
 
   // Cache
   val cache = Module(
@@ -161,7 +173,7 @@ class Icache(
   }
   val invalidWayIdx = PriorityEncoder(~valids(setIdx).asUInt)
   val isAllValid = valids(setIdx).asUInt.andR
-  val allValidWayIdx = if (wayIdxWidth != 0) { rand(31, 31 - wayIdxWidth + 1) }
+  val allValidWayIdx = if (wayIdxWidth != 0) { rand.head(wayIdxWidth) }
   else { 0.U }
   val wayIdx = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
   cache.io.wayIdx := wayIdx
@@ -185,23 +197,22 @@ class Icache(
 
   // FSM
   val abortReg = RegInit(false.B)
-  val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
-  val state = RegInit(sIdle)
+  // val sIdle :: sReadCache :: sReq :: sFirstResp :: sFillCache :: Nil = Enum(5)
   val nextState = WireDefault(state)
   state := nextState
 
+  val rFiredReg = RegInit(false.B)
+  when (io.cached.r.fire || io.cached.abort) {
+    rFiredReg := true.B
+  }
+  when (nextState === sReadCache) {
+    rFiredReg := false.B
+  }
+  val rFired = io.cached.r.fire || io.cached.abort || rFiredReg
+
   switch(state) {
-    is(sIdle) {
-      when(io.cached.ar.fire) {
-        nextState := sReadCache
-      }
-    }
     is(sReadCache) {
-      when(isHit && inWhiteList) {
-        when(io.cached.r.fire || abortReg) {
-          nextState := sIdle
-        }
-      }.otherwise {
+      when(io.cached.ar.valid && !(isHit && inWhiteList)) {
         nextState := sReq
       }
     }
@@ -212,36 +223,24 @@ class Icache(
     }
     is(sFirstResp) {
       when(io.mem.r.fire) {
-        nextState := Mux(io.mem.r.bits.last, sIdle, sFillCache)
+        nextState := Mux(io.mem.r.bits.last, Mux(rFired, sReadCache, sWait), sFillCache)
       }
     }
     is(sFillCache) {
       when(io.mem.r.fire && io.mem.r.bits.last) {
-        nextState := sIdle
+        nextState := Mux(rFired, sReadCache, sWait)
+      }
+    }
+    is(sWait) {
+      when(io.cached.r.fire) {
+        nextState := sReadCache
       }
     }
   }
-  // val nextState = MuxLookup(state, sIdle)(
-  //   Seq(
-  //     sIdle -> Mux(io.cached.ar.valid, sReadCache, sIdle),
-  //     sReadCache -> Mux(
-  //       isHit && inWhiteList,
-  //       Mux(io.cached.r.fire, sIdle, sReadCache),
-  //       sReq
-  //     ),
-  //     sReq -> Mux(io.mem.ar.fire, sFirstResp, sReq),
-  //     sFirstResp -> Mux(
-  //       io.mem.r.fire,
-  //       Mux(io.mem.r.bits.last, sIdle, sFillCache),
-  //       sFirstResp
-  //     ),
-  //     sFillCache -> Mux(io.mem.r.fire && io.mem.r.bits.last, sIdle, sFillCache)
-  //   )
-  // )
-  // state := nextState
 
   // Update cache
   xorshift32.io.en := state =/= sFirstResp && state =/= sFillCache
+  // lfsr.io.increment := state =/= sFirstResp && state =/= sFillCache
   cache.io.write := io.mem.r.fire && inWhiteList
   cache.io.valid := cache.io.write || state === sReadCache
 
@@ -269,7 +268,7 @@ class Icache(
 
   // Mem bus
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
-  io.mem.ar.bits.addr := rAddrReg & ~((busByte - 1).U(rAddrReg.getWidth.W))
+  io.mem.ar.bits.addr := rAddr & ~((busByte - 1).U(rAddr.getWidth.W))
   io.mem.ar.bits.len := Mux(inWhiteList, (burstTimes - 1).U, 0.U)
   io.mem.ar.bits.size := "b010".U
   io.mem.ar.bits.burst := Axi4Burst.warp.U
@@ -288,26 +287,25 @@ class Icache(
   }.elsewhen(io.cached.r.ready) {
     cachedRValidReg := false.B
   }
-  when (abortReg || io.cached.abort) {
+  when(abortReg || io.cached.abort) {
     cachedRValidReg := false.B
   }
 
-  when (io.cached.abort) {
+  when(io.cached.abort) {
     abortReg := true.B
   }
-  when (nextState === sIdle) {
+  when(nextState === sReadCache) {
     abortReg := false.B
   }
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
   // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  io.cached.ar.ready := state === sIdle && !cachedRValidReg
-  io.cached.r.valid := !abortReg && ((state === sReadCache && isHit) || cachedRValidReg)
-  io.cached.r.bits.addr := rAddrReg
+  io.cached.ar.ready := !abortReg && Mux(state =/= sReadCache, nextState === sReadCache, io.cached.r.fire)
+  io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg)
   io.cached.r.bits.data := Mux(
-    state === sReadCache,
-    hitData(rAddrLine.dataIdx),
-    cachedRDataReg
+    cachedRValidReg,
+    cachedRDataReg,
+    hitData(rAddrLine.dataIdx)
   )
 }
 
@@ -319,40 +317,116 @@ class Ifu(
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
     val flush = Input(Bool())
+    val jumpTarget = Input(UInt(cfg.xlen.W))
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val out = IO(Decoupled(new IfuToIduIO))
   val outBits = out.bits
 
   // icache
-  val icache = Module(
-    new Icache(
-      setNum = 2,
-      wayNum = 8,
-      wayByte = 8,
-      busByte = 4,
-      if (cfg.ysyxsoc) {
-        Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
-      } else { None }
+
+  if (!cfg.formal) {
+    val icache = Module(
+      new Icache(
+        setNum = 2,
+        wayNum = 8,
+        wayByte = 8,
+        busByte = 4,
+        if (cfg.ysyxsoc) {
+          Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+        } else { None }
+      )
     )
-  )
-  exte.mem :<>= icache.io.mem
-  val cached = icache.io.cached
-  cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
-  cached.abort := exte.flush
-  cached.ar.valid := true.B
-  cached.ar.bits.addr := exte.pcReg.pc
-  cached.r.ready := out.ready
+    exte.mem :<>= icache.io.mem
+    val cached = icache.io.cached
+    cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
+    cached.abort := exte.flush
+    cached.ar.valid := true.B
+    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when(exte.flush) {
+      ifetchAddr := exte.jumpTarget
+    }.elsewhen(cached.ar.fire) {
+      ifetchAddr := ifetchAddr + 4.U
+    }
+    cached.ar.bits.addr := ifetchAddr
+    cached.r.ready := out.ready
+
+    exte.pcReg.update := cached.r.fire
+    out.valid := cached.r.valid
+    outBits.ifuPayload.ifu.inst := cached.r.bits.data
+
+    if (cfg.perf) {
+      val icacheState = BoringUtils.tapAndRead(icache.state)
+      val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      val icacheSIdle = 0.U
+      val icacheSReadCache = 1.U
+      val icacheSReq = 2.U
+      val icacheSFirstResp = 3.U
+      val icacheSFillCache = 4.U
+      PerfWhen(
+        "icacheTotalAcc",
+        icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMiss",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheHit",
+        icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheBlackList",
+        icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMissPenalty",
+        icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "instFetch",
+        icache.io.cached.r.fire,
+        exte.debugEbreak
+      )
+    }
+  } else {
+    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when(exte.flush) {
+      ifetchAddr := exte.jumpTarget
+    }.elsewhen(exte.mem.ar.fire) {
+      ifetchAddr := ifetchAddr + 4.U
+    }
+
+    exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
+    exte.mem.ar.valid := true.B
+    exte.mem.ar.bits.addr := ifetchAddr
+    exte.mem.ar.bits.size := "b010".U
+    exte.mem.ar.bits.burst := Axi4Burst.incr.U
+    exte.mem.r.ready := out.ready
+
+    exte.pcReg.update := exte.mem.r.fire
+    out.valid := exte.mem.r.valid
+    outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
+  }
 
   // pc
-  exte.pcReg.ready := cached.ar.fire
+  val staticNextPc = exte.pcReg.pc + 4.U
+  // exte.pcReg.update := cached.r.fire
+  exte.pcReg.staticNextPc := staticNextPc
 
   // out
-  out.valid := cached.r.valid
+  // out.valid := cached.r.valid
   out.bits.ifuPayload.trap.isTrap := false.B
   out.bits.ifuPayload.trap.cause := DontCare
-  outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  outBits.ifuPayload.ifu.pc := cached.r.bits.addr
+  // outBits.ifuPayload.ifu.inst := cached.r.bits.data
+  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
+  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
   if (cfg.formal) {
@@ -367,8 +441,8 @@ class Ifu(
             val allowCsr = Set(
               CsrAddr.mcycle,
               CsrAddr.mcycleh,
-              CsrAddr.mepc, 
-              // CsrAddr.mstatus, 
+              CsrAddr.mepc,
+              // CsrAddr.mstatus,
               CsrAddr.mtvec
             )
             RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
@@ -378,45 +452,6 @@ class Ifu(
   }
 
   if (cfg.perf) {
-    val icacheState = BoringUtils.tapAndRead(icache.state)
-    val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-    val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-    val icacheSIdle = 0.U
-    val icacheSReadCache = 1.U
-    val icacheSReq = 2.U
-    val icacheSFirstResp = 3.U
-    val icacheSFillCache = 4.U
-    PerfWhen(
-      "icacheTotalAcc",
-      icacheState === icacheSIdle && icacheNextState === icacheSReadCache,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMiss",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheHit",
-      icacheState === icacheSReadCache && icacheNextState === icacheSIdle,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheBlackList",
-      icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-      exte.debugEbreak
-    )
-    PerfWhen(
-      "icacheMissPenalty",
-      icacheInWhiteList && (icacheState =/= icacheSIdle && icacheState =/= icacheSReadCache),
-      exte.debugEbreak
-    )
-
-    PerfWhen(
-      "instFetch",
-      icache.io.cached.r.fire,
-      exte.debugEbreak
-    )
     // val isMemBusy = RegInit(false.B)
     // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
     //   isMemBusy := true.B

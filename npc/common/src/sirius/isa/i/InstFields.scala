@@ -52,7 +52,7 @@ object InstFieldsRvI {
     MakeEnumField("writeBackSel", "wb", WriteBackSelEnum, _.writeBackSel),
     MakeBoolField("isBranch", "wb", _.isBranch),
     MakeBoolField("isJump", "wb", _.isJump),
-    MakeBoolField("isFromCsr", "wb", _.isFromCsr),
+    MakeBoolField("isJumpCsr", "wb", _.isJumpCsr),
     MakeBoolField("isEbreak", "wb", _.name == "ebreak"),
     MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
