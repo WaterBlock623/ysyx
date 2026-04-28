@@ -322,7 +322,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheMissPenalty",
-        icacheInWhiteList && (icacheState =/= icacheSReadCache),
+        icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
         exte.debugEbreak
       )
       PerfWhen(
