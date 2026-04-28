@@ -46,48 +46,18 @@ class BasicCore(
       thisIn:  DecoupledIO[T],
       stall:   Bool = false.B,
       flush:   Bool = false.B
-    ): Bool = {
-      val full = RegInit(false.B)
-      val hidden = RegInit(false.B) // Hide out.valid when stall
-
-      thisIn.valid := full && !(hidden && stall)
-      prevOut.ready := !full || thisIn.fire
+    ) = {
+      val ready = thisIn.ready || !thisIn.valid
+      prevOut.ready := ready && !stall
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-
-      when(prevOut.fire) {
-        full := true.B
-      }.elsewhen(thisIn.fire) {
-        full := false.B
+      val valid = RegInit(false.B)
+      thisIn.valid := valid
+      when(ready) {
+        valid := prevOut.valid && !stall
       }
       when(flush) {
-        full := false.B
+        valid := false.B
       }
-
-      when(!stall) {
-        hidden := false.B
-      }.elsewhen(stall && thisIn.fire) {
-        hidden := true.B
-      }
-      when(flush) {
-        hidden := false.B
-      }
-
-      full
-
-      // val valid = RegInit(false.B)
-      // thisIn.valid := valid
-      // val preload = !valid && stall && prevOut.valid
-      //
-      // val ready = thisIn.ready || !thisIn.valid
-      // prevOut.ready := (ready && !stall) || preload
-      //
-      //
-      // when(ready) {
-      //   valid := prevOut.valid && !stall
-      // }
-      // when(flush) {
-      //   valid := false.B
-      // }
     }
 
     val stallIdu = Wire(Bool())
@@ -95,10 +65,10 @@ class BasicCore(
     val flushIfu = Wire(Bool())
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
-    val iduHasData = pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    val exuHasData = pipelineConnect(iduOut, exu.in, stall = stallIdu, flush = flushIdu)
-    val lsuHasData = pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    val wbuHasData = pipelineConnect(lsuOut, wbu.in)
+    pipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    pipelineConnect(iduOut, exu.in, stall = stallIdu, flush = flushIdu)
+    pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    pipelineConnect(lsuOut, wbu.in)
 
     // RAW(GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
@@ -108,17 +78,17 @@ class BasicCore(
     case class StageRd(valid: Bool, isWriteBack: Bool, rd: UInt)
     val stageRds = Seq(
       StageRd(
-        exuHasData,
+        exu.in.valid,
         exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         exu.in.bits.iduPayload.idu.wAddr
       ),
       StageRd(
-        lsuHasData,
+        lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         lsu.in.bits.exuPayload.idu.wAddr
       ),
       StageRd(
-        wbuHasData,
+        wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         wbu.in.bits.lsuPayload.idu.wAddr
       )
@@ -134,14 +104,14 @@ class BasicCore(
     case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: UInt)
     val stageCsrs = Seq(
       StageCsr(
-        lsuHasData,
+        lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         lsu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
         lsu.in.bits.exuPayload.idu.imm,
         lsu.in.bits.exuPayload.idu.csrAddr
       ),
       StageCsr(
-        wbuHasData,
+        wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
         wbu.in.bits.lsuPayload.idu.imm,
@@ -161,22 +131,23 @@ class BasicCore(
     case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
     val stageJumps = Seq(
       StageJump(
-        lsuHasData,
+        lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isJump,
         lsu.in.bits.ctrl.wbuCtrl.isBranch,
         lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        lsu.out.bits.lsuPayload.trap.isTrap
+        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
+          (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
       ),
       StageJump(
-        wbuHasData,
+        wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isJump,
         wbu.in.bits.ctrl.wbuCtrl.isBranch,
         wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        wbu.in.bits.lsuPayload.trap.isTrap
+        wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
       )
     )
     val mayJump = stageJumps
-      .map(s => s.valid && (s.isJump || s.isBranch || s.isJumpCsr || s.isTrap))
+      .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
       .reduce(_ || _)
 
     // Pipeline ctrl
