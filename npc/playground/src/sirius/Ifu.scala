@@ -224,7 +224,7 @@ class Icache(
       when(io.cached.r.fire || abortReg || io.cached.abort) {
         nextState := sReadCache
         abortReg := false.B
-        rFired := false.B
+        rFiredReg := false.B
       }
     }
   }
