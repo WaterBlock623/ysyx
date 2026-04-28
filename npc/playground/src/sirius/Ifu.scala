@@ -188,7 +188,7 @@ class Icache(
   }
 
   val rFiredReg = RegInit(false.B)
-  when(state =/= sReadCache && (io.cached.r.fire || io.cached.abort)) {
+  when(io.cached.r.fire || io.cached.abort) {
     rFiredReg := true.B
   }
   val rFired = io.cached.r.fire || io.cached.abort || rFiredReg
@@ -202,6 +202,7 @@ class Icache(
           nextState := sWait
         }.otherwise {
           abortReg := false.B
+          rFiredReg := false.B
         }
       }
     }
@@ -217,11 +218,17 @@ class Icache(
     }
     is(sFillCache) {
       when(io.mem.r.fire && io.mem.r.bits.last) {
-        nextState := sWait
+        when(rFired) {
+          nextState := sReadCache
+          abortReg := false.B
+          rFiredReg := false.B
+        }.otherwise {
+          nextState := sWait
+        }
       }
     }
     is(sWait) {
-      when(io.cached.r.fire || abortReg || io.cached.abort) {
+      when(rFired) {
         nextState := sReadCache
         abortReg := false.B
         rFiredReg := false.B
