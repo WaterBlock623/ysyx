@@ -371,7 +371,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheHit",
-        icache.io.cached.ar.valid && icacheState === icacheSReadCache && icacheNextState === icacheSReadCache,
+        icache.io.cached.ar.valid && icacheState === icacheSReadCache && (icacheNextState === icacheSReadCache || icacheNextState === icacheSWait),
         exte.debugEbreak
       )
       PerfWhen(
