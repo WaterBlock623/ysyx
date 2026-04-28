@@ -204,7 +204,7 @@ class Icache(
       when(io.cached.ar.valid) {
         when(!(isHit && inWhiteList)) {
           nextState := sReq
-        }.elsewhen(!io.cached.r.ready) {
+        }.elsewhen(!rFired) {
           nextState := sWait
         }
       }
