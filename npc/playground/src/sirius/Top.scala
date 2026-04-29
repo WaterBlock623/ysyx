@@ -129,20 +129,17 @@ class BasicCore(
         )
       )
     )
-    // val rs1Conflict = readRs1 && rs1 =/= 0.U && stageRds.map(s => conflict(s, rs1)).reduce(_ || _)
-    // val rs2Conflict = readRs2 && rs2 =/= 0.U && stageRds.map(s => conflict(s, rs2)).reduce(_ || _)
     def decodeConflict(rs: UInt, readRs: Bool): (Bool, Bool, UInt) = {
       val stages = stageRds.map { s =>
         val conflict = s.conflict(rs) && readRs && rs =/= 0.U
         val (forwardMayValid, forwardData) = s.forward
-        val forwardValid = conflict && forwardMayValid
-        (conflict, forwardValid, forwardData)
+        (conflict, forwardMayValid, forwardData)
       }
       val conflicts = stages.map(_._1)
-      val forwardValids = stages.map(_._2)
+      val forwardMayValids = stages.map(_._2)
       val forwardDatas = stages.map(_._3)
       val conflictStage = PriorityEncoderOH(conflicts)
-      val forwardValid = (VecInit(conflictStage).asUInt & VecInit(forwardValids).asUInt) =/= 0.U
+      val forwardValid = (VecInit(conflictStage).asUInt & VecInit(forwardMayValids).asUInt).orR
       val forwardData = Mux1H(conflictStage, forwardDatas)
       (conflicts.reduce(_ || _), forwardValid, forwardData)
     }
