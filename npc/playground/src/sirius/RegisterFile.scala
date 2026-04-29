@@ -37,23 +37,29 @@ class RegisterFile(
   class RegReg extends HasReadWrite {
     val rf = if (cfg.formal) { RegInit(rvspeccore.checker.ArbitraryRegFile.gen(cfg.xlen)) }
     else { Reg(Vec(cfg.registerNum, UInt(cfg.xlen.W))) }
-    def read(addr:  UInt): UInt = Mux(addr === 0.U, 0.U, rf(addr))
-    def readAll:           Seq[UInt] = Seq(0.U) ++ (1 until cfg.registerNum).map { idx => rf(idx) }
+    def read(addr:  UInt): UInt = rf(addr)
+    def readAll:           Seq[UInt] = (0 until cfg.registerNum).map { idx => rf(idx) }
     def write(addr: UInt, data: UInt) = { rf(addr) := data }
   }
   class RegMem extends HasReadWrite {
     val rf = Mem(cfg.registerNum, UInt(cfg.xlen.W))
-    def read(addr:  UInt): UInt = Mux(addr === 0.U, 0.U, rf(addr))
-    def readAll:           Seq[UInt] = Seq(0.U) ++ (1 until cfg.registerNum).map { idx => rf(idx) }
+    def read(addr:  UInt): UInt = rf(addr)
+    def readAll:           Seq[UInt] = (0 until cfg.registerNum).map { idx => rf(idx) }
     def write(addr: UInt, data: UInt) = { rf(addr) := data }
   }
 
   val regFile = if (cfg.formal) { new RegReg } else { new RegMem }
-  when(wbuIn.wEn) {
+  when(wbuIn.wEn && (wbuIn.wAddr =/= 0.U)) {
     regFile.write(wbuIn.wAddr, wbuIn.wData)
   }
   iduIn.rData(0) := regFile.read(iduIn.rAddr(0))
   iduIn.rData(1) := regFile.read(iduIn.rAddr(1))
+  when(iduIn.rAddr(0) === 0.U) {
+    iduIn.rData(0) := 0.U
+  }
+  when(iduIn.rAddr(1) === 0.U) {
+    iduIn.rData(1) := 0.U
+  }
 
   if (cfg.formal) {
     require(cfg.registerNum == 32)
