@@ -66,8 +66,9 @@ class BasicCore(
     val flushIfu = Wire(Bool())
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
+    val iduForwardBits = WireDefault(iduOut.bits)
     pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    pipelineConnect(iduOut, exu.in, stall = stallIdu, flush = flushIdu)
+    pipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
     pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
     pipelineConnect(lsuOut, wbu.in)
 
@@ -76,30 +77,85 @@ class BasicCore(
     val rs1 = idu.exte.regFile.rAddr(0)
     val readRs2 = globalCtrl.globalCtrl.readRs2
     val rs2 = idu.exte.regFile.rAddr(1)
-    case class StageRd(valid: Bool, isWriteBack: Bool, rd: UInt)
+    MuxLookup
+    case class StageRd(valid: Bool, isWriteBack: Bool, rd: UInt, forwardMap: Seq[(Bool, UInt)]) {
+      require(forwardMap.length > 0)
+      def conflict(rs: UInt): Bool = {
+        valid && isWriteBack && (rd === rs)
+      }
+      def forward: (Bool, UInt) = {
+        val conds = forwardMap.map(_._1)
+        val forwardMayValid = conds.reduce(_ || _)
+        val datas = forwardMap.map(_._2)
+        val data = if (datas.length == 1) datas.head else Mux1H(conds, datas)
+        (forwardMayValid, data)
+      }
+    }
     val stageRds = Seq(
       StageRd(
         exu.in.valid,
         exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-        exu.in.bits.iduPayload.idu.wAddr
+        exu.in.bits.iduPayload.idu.wAddr,
+        Seq(
+          (exu.out.valid &&
+            (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+            exu.out.bits.exuPayload.exu.aluOut
+        )
       ),
       StageRd(
         lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-        lsu.in.bits.exuPayload.idu.wAddr
+        lsu.in.bits.exuPayload.idu.wAddr,
+        Seq(
+          (lsu.in.valid &&
+            (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+            lsu.in.bits.exuPayload.exu.aluOut,
+          (lsu.out.valid &&
+            (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+            lsu.out.bits.lsuPayload.lsu.loadData
+        )
       ),
       StageRd(
         wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-        wbu.in.bits.lsuPayload.idu.wAddr
+        wbu.in.bits.lsuPayload.idu.wAddr,
+        Seq(
+          (wbu.in.valid &&
+            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+            wbu.in.bits.lsuPayload.exu.aluOut,
+          (wbu.in.valid &&
+            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+            wbu.in.bits.lsuPayload.lsu.loadData
+        )
       )
     )
-    def conflict(stageRd: StageRd, rs: UInt): Bool = {
-      stageRd.valid && stageRd.isWriteBack && stageRd.rd === rs
+    def decodeConflict(rs: UInt, readRs: Bool): (Bool, Bool, UInt) = {
+      val stages = stageRds.map { s =>
+        val conflict = s.conflict(rs) && readRs && rs =/= 0.U
+        val (forwardMayValid, forwardData) = s.forward
+        (conflict, forwardMayValid, forwardData)
+      }
+      val conflicts = stages.map(_._1)
+      val forwardMayValids = stages.map(_._2)
+      val forwardDatas = stages.map(_._3)
+      val conflictStage = PriorityEncoderOH(conflicts)
+      val forwardValid = (VecInit(conflictStage).asUInt & VecInit(forwardMayValids).asUInt).orR
+      val forwardData = Mux1H(conflictStage, forwardDatas)
+      (conflicts.reduce(_ || _), forwardValid, forwardData)
     }
-    val rs1Conflict = readRs1 && rs1 =/= 0.U && stageRds.map(s => conflict(s, rs1)).reduce(_ || _)
-    val rs2Conflict = readRs2 && rs2 =/= 0.U && stageRds.map(s => conflict(s, rs2)).reduce(_ || _)
-    val isRawGpr = rs1Conflict || rs2Conflict
+    val (rs1Conflict, rs1ForwardValid, rs1ForwardData) = decodeConflict(rs1, readRs1)
+    val (rs2Conflict, rs2ForwardValid, rs2ForwardData) = decodeConflict(rs2, readRs2)
+    val isRawGpr = (rs1Conflict && !rs1ForwardValid) || (rs2Conflict && !rs2ForwardValid)
+    iduForwardBits.iduPayload.idu.rs1Data := Mux(
+      rs1ForwardValid,
+      rs1ForwardData,
+      iduOut.bits.iduPayload.idu.rs1Data
+    )
+    iduForwardBits.iduPayload.idu.rs2Data := Mux(
+      rs2ForwardValid,
+      rs2ForwardData,
+      iduOut.bits.iduPayload.idu.rs2Data
+    )
 
     // RAW(CSR)
     case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: UInt)
@@ -217,6 +273,50 @@ class BasicCore(
       )
 
       PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
+
+      import rvspeccore.checker._
+      implicit val XLEN = cfg.xlen
+      case class InstTypeCounter(valid: Bool, inst: UInt)
+      val instTypeCounters = Seq(
+        InstTypeCounter(
+          idu.in.valid,
+          idu.in.bits.ifuPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          exu.in.valid,
+          exu.in.bits.iduPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          lsu.in.valid,
+          lsu.in.bits.exuPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          wbu.in.valid,
+          wbu.in.bits.lsuPayload.ifu.inst
+        )
+      )
+      val instTypes = Map(
+        "IRegImm" -> RVI.regImm,
+        "IRegReg" -> RVI.regReg,
+        "IControl" -> RVI.control,
+        "ILoadStore" -> RVI.loadStore,
+        "IOther" -> RVI.other,
+        "ZicsrReg" -> RVZicsr.reg,
+        "ZicsrImm" -> RVZicsr.imm,
+        "Zifenci" -> RVZifencei.fence_i
+      )
+      instTypes.foreach { case (name, fn) =>
+        PerfWhen(
+          s"type${name}",
+          idu.in.fire && fn.apply(idu.in.bits.ifuPayload.ifu.inst),
+          Some(stopFlag)
+        )
+        PerfWhen(
+          s"type${name}Cyc",
+          instTypeCounters.map(s => s.valid && fn.apply(s.inst)).reduce(_ || _),
+          Some(stopFlag)
+        )
+      }
     }
   } else {
     ifu.exte.flush := false.B
