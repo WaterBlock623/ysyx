@@ -66,9 +66,9 @@ class BasicCore(
     val flushIfu = Wire(Bool())
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
-    val iduForwardOut = WireDefault(iduOut)
+    val iduForwardBits = WireDefault(iduOut.bits)
     pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    pipelineConnect(iduForwardOut, exu.in, stall = stallIdu, flush = flushIdu)
+    pipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
     pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
     pipelineConnect(lsuOut, wbu.in)
 
@@ -147,12 +147,12 @@ class BasicCore(
     val (rs1Conflict, rs1ForwardValid, rs1ForwardData) = decodeConflict(rs1, readRs1)
     val (rs2Conflict, rs2ForwardValid, rs2ForwardData) = decodeConflict(rs2, readRs2)
     val isRawGpr = (rs1Conflict && !rs1ForwardValid) || (rs2Conflict && !rs2ForwardValid)
-    iduForwardOut.bits.iduPayload.idu.rs1Data := Mux(
+    iduForwardBits.iduPayload.idu.rs1Data := Mux(
       rs1ForwardValid, 
       rs1ForwardData, 
       iduOut.bits.iduPayload.idu.rs1Data
     )
-    iduForwardOut.bits.iduPayload.idu.rs2Data := Mux(
+    iduForwardBits.iduPayload.idu.rs2Data := Mux(
       rs2ForwardValid, 
       rs2ForwardData, 
       iduOut.bits.iduPayload.idu.rs2Data
