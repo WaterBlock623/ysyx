@@ -63,7 +63,7 @@ class Wbu(
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
-      WriteBackSelEnum.imm.asUInt -> imm,
+      // WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.lsu.asUInt -> loadData,
       WriteBackSelEnum.csr.asUInt -> csrData,
       WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
