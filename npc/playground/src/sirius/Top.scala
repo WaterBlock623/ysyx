@@ -132,7 +132,7 @@ class BasicCore(
     // val rs1Conflict = readRs1 && rs1 =/= 0.U && stageRds.map(s => conflict(s, rs1)).reduce(_ || _)
     // val rs2Conflict = readRs2 && rs2 =/= 0.U && stageRds.map(s => conflict(s, rs2)).reduce(_ || _)
     def decodeConflict(rs: UInt, readRs: Bool): (Bool, Bool, UInt) = {
-      val stages = stageRds.map { s => 
+      val stages = stageRds.map { s =>
         val conflict = s.conflict(rs) && readRs && rs =/= 0.U
         val (forwardMayValid, forwardData) = s.forward
         val forwardValid = conflict && forwardMayValid
@@ -150,13 +150,13 @@ class BasicCore(
     val (rs2Conflict, rs2ForwardValid, rs2ForwardData) = decodeConflict(rs2, readRs2)
     val isRawGpr = (rs1Conflict && !rs1ForwardValid) || (rs2Conflict && !rs2ForwardValid)
     iduForwardBits.iduPayload.idu.rs1Data := Mux(
-      rs1ForwardValid, 
-      rs1ForwardData, 
+      rs1ForwardValid,
+      rs1ForwardData,
       iduOut.bits.iduPayload.idu.rs1Data
     )
     iduForwardBits.iduPayload.idu.rs2Data := Mux(
-      rs2ForwardValid, 
-      rs2ForwardData, 
+      rs2ForwardValid,
+      rs2ForwardData,
       iduOut.bits.iduPayload.idu.rs2Data
     )
 
@@ -276,6 +276,50 @@ class BasicCore(
       )
 
       PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
+
+      import rvspeccore.checker._
+      implicit val XLEN = cfg.xlen
+      case class InstTypeCounter(valid: Bool, inst: UInt)
+      val instTypeCounters = Seq(
+        InstTypeCounter(
+          idu.in.valid,
+          idu.in.bits.ifuPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          exu.in.valid,
+          exu.in.bits.iduPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          lsu.in.valid,
+          lsu.in.bits.exuPayload.ifu.inst
+        ),
+        InstTypeCounter(
+          wbu.in.valid,
+          wbu.in.bits.lsuPayload.ifu.inst
+        )
+      )
+      val instTypes = Map(
+        "IRegImm" -> RVI.regImm,
+        "IRegReg" -> RVI.regReg,
+        "IControl" -> RVI.control,
+        "ILoadStore" -> RVI.loadStore,
+        "IOther" -> RVI.other,
+        "ZicsrReg" -> RVZicsr.reg,
+        "ZicsrImm" -> RVZicsr.imm,
+        "Zifenci" -> RVZifencei.fence_i
+      )
+      instTypes.foreach { case (name, fn) =>
+        PerfWhen(
+          s"type${name}",
+          idu.in.fire && fn.apply(idu.in.bits.ifuPayload.ifu.inst),
+          Some(stopFlag)
+        )
+        PerfWhen(
+          s"type${name}Cyc",
+          instTypeCounters.map(s => s.valid && fn.apply(s.inst)).reduce(_ || _),
+          Some(stopFlag)
+        )
+      }
     }
   } else {
     ifu.exte.flush := false.B
