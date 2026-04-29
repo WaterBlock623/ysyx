@@ -141,8 +141,10 @@ class BasicCore(
       val conflicts = stages.map(_._1)
       val forwardValids = stages.map(_._2)
       val forwardDatas = stages.map(_._3)
-      val forwardData = Mux1H(PriorityEncoderOH(forwardValids), forwardDatas)
-      (conflicts.reduce(_ || _), forwardValids.reduce(_ || _), forwardData)
+      val conflictStage = PriorityEncoderOH(conflicts)
+      val forwardValid = (VecInit(conflictStage).asUInt & VecInit(forwardValids).asUInt) =/= 0.U
+      val forwardData = Mux1H(conflictStage, forwardDatas)
+      (conflicts.reduce(_ || _), forwardValid, forwardData)
     }
     val (rs1Conflict, rs1ForwardValid, rs1ForwardData) = decodeConflict(rs1, readRs1)
     val (rs2Conflict, rs2ForwardValid, rs2ForwardData) = decodeConflict(rs2, readRs2)
