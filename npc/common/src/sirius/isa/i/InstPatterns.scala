@@ -14,8 +14,11 @@ case class InstPatternRvI(
       "lui",
       ExtTypeEnum.I,
       InstTypeEnum.U,
+      aluIn1Sel = AluInSelEnum.imm,
+      aluOp = AluOpEnum.direct1,
+      exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
-      writeBackSel = WriteBackSelEnum.imm
+      writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
       "auipc",
