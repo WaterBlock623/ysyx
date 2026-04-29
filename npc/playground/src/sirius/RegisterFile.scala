@@ -42,7 +42,6 @@ class RegisterFile(
     def write(addr: UInt, data: UInt) = { rf(addr) := data }
   }
   class RegMem extends HasReadWrite {
-    println("RRRRRRREEEEEEEEEEGGGGGGGGMMMMMMMMMEEEEEEEEMMMMMMM")
     val rf = Mem(cfg.registerNum, UInt(cfg.xlen.W))
     def read(addr:  UInt): UInt = Mux(addr === 0.U, 0.U, rf(addr))
     def readAll:           Seq[UInt] = Seq(0.U) ++ (1 until cfg.registerNum).map { idx => rf(idx) }
