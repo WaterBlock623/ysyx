@@ -51,6 +51,7 @@
 
 
 void ftrace(int rd, int rs1, paddr_t pc, paddr_t dnpc);
+void btrace(btrace_data_t btrace_data);
 
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_B, TYPE_R, TYPE_ZICSRR, TYPE_ZICSRI, 
@@ -110,6 +111,16 @@ static int decode_exec(Decode *s) {
 #define MUX_DIV_OVERFLOW(x, y, normal_result, overflow_result) \
 	(SIGN(x) == INT32_MIN && SIGN(y) == -1 ? (overflow_result) : (normal_result))
 								
+#define BRANCH_WHEN(cond) \
+  vaddr_t dnpc = s->pc + imm;\
+  IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
+    .pc = s->pc, \
+    .inst= s->isa.inst, \
+    .inst_type = BTRACE_BRANCH, \
+    .is_taken = (cond), \
+    .target = dnpc \
+  })); \
+  if (cond) s->dnpc = dnpc;
 
   INSTPAT_START();
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, \
@@ -159,22 +170,38 @@ static int decode_exec(Decode *s) {
   INSTPAT("0100000 ????? ????? 101 ????? 00100 11", srai   , I, \
 		  R(rd) = SHIFT_RA(src1, imm)); 
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq    , B, \
-		  if (src1 == src2) s->dnpc = s->pc + imm);
+      BRANCH_WHEN(src1 == src2));
   INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne    , B, \
-		  if (src1 != src2) s->dnpc = s->pc + imm);
+      BRANCH_WHEN(src1 != src2));
   INSTPAT("??????? ????? ????? 101 ????? 11000 11", bge    , B, \
-		  if (SIGN(src1) >= SIGN(src2)) s->dnpc = s->pc + imm); 
+      BRANCH_WHEN(SIGN(src1) >= SIGN(src2)));
   INSTPAT("??????? ????? ????? 111 ????? 11000 11", bgeu   , B, \
-		  if (src1 >= src2) s->dnpc = s->pc + imm); 
+		  BRANCH_WHEN(src1 >= src2));
   INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt    , B, \
-		  if (SIGN(src1) < SIGN(src2)) s->dnpc = s->pc + imm); 
+		  BRANCH_WHEN(SIGN(src1) < SIGN(src2)));
   INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu   , B, \
-		  if (src1 < src2) s->dnpc = s->pc + imm); 
+		  BRANCH_WHEN(src1 < src2));
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->snpc; \
-		  s->dnpc = s->pc + imm; \
+      vaddr_t dnpc = s->pc + imm; \
+		  s->dnpc = dnpc; \
+      IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
+        .pc = s->pc, \
+        .inst= s->isa.inst, \
+        .inst_type = BTRACE_JAL, \
+        .is_taken = true, \
+        .target = dnpc \
+      })); \
       IFDEF(CONFIG_FTRACE, ftrace(rd, rs1, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->snpc; \
-		  s->dnpc = (imm + src1) & ~1lu; \
+      vaddr_t dnpc = (imm + src1) & ~1lu;
+		  s->dnpc = dnpc; \
+      IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
+        .pc = s->pc, \
+        .inst= s->isa.inst, \
+        .inst_type = BTRACE_JALR, \
+        .is_taken = true, \
+        .target = dnpc \
+      })); \
       IFDEF(CONFIG_FTRACE, ftrace(rd, rs1, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? 000 ????? 00000 11", lb     , I, MEM_READ_SEXT(1) );
   INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu    , I, MEM_READ_ZEXT(1) );
