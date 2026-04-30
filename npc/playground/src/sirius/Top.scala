@@ -110,9 +110,9 @@ class BasicCore(
           (lsu.in.valid &&
             (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
             lsu.in.bits.exuPayload.exu.aluOut,
-          (lsu.out.valid &&
-            (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-            lsu.out.bits.lsuPayload.lsu.loadData
+          // (lsu.out.valid &&
+          //   (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+          //   lsu.out.bits.lsuPayload.lsu.loadData
         )
       ),
       StageRd(
