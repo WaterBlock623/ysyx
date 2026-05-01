@@ -9,7 +9,7 @@ AM_SRCS := riscv/npc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
-CFLAGS    += -fdata-sections -ffunction-sections
+CFLAGS    += -fdata-sections -ffunction-sections -falign-functions=8 -falign-loops=8
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDSCRIPTS_MEM += $(AM_HOME)/scripts/linker-mem.ld
 LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
