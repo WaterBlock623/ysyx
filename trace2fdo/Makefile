@@ -19,7 +19,7 @@ SRCS = $(shell find $(SRC_DIR) -name '*.c')
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 CC = gcc
-CFLAGS = -O3 -flto -g -std=gnu11 -lm 
+CFLAGS = -O3 -flto -ggdb3 -std=gnu11 -lm
 
 all: $(BINARY)
 
