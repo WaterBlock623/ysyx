@@ -5,8 +5,11 @@ endif
 ifeq ($(BTRACE),)
 $(error Need BTRACE=<btrace.bin.xz>)
 endif
+ifeq ($(ELF),)
+$(error Need ELF=<binary>)
+endif
 ifeq ($(OUTPUT),)
-$(error Need OUTPUT=<path>)
+$(error Need OUTPUT=<afdo path>)
 endif
 endif
 
@@ -21,10 +24,13 @@ OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 CC = gcc
 CFLAGS = -O3 -flto -ggdb3 -std=gnu11 -lm
 
+TEXT_FILE = $(basename $(OUTPUT)).txt
+
 all: $(BINARY)
 
 run: all
-	$(BINARY) $(PCTRACE) $(BTRACE) $(OUTPUT)
+	$(BINARY) $(PCTRACE) $(BTRACE) $(TEXT_FILE)
+	create_gcov --profiler text --profile $(TEXT_FILE) --gcov $(OUTPUT) --binary $(ELF)
 
 debug: CFLAGS += -O0 -ggdb3 -fsanitize=undefined -fsanitize=leak -fsanitize=address
 debug: $(BINARY)
