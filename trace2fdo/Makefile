@@ -30,7 +30,8 @@ all: $(BINARY)
 
 run: all
 	$(BINARY) $(PCTRACE) $(BTRACE) $(TEXT_FILE)
-	create_gcov --profiler text --profile $(TEXT_FILE) --gcov $(OUTPUT) --binary $(ELF)
+	create_gcov --profiler text --profile $(TEXT_FILE) \
+		--gcov $(OUTPUT) --binary $(ELF) --gcov_version 2
 
 debug: CFLAGS += -O0 -ggdb3 -fsanitize=undefined -fsanitize=leak -fsanitize=address
 debug: $(BINARY)
