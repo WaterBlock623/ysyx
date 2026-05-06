@@ -259,9 +259,8 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val outBits = out.bits
 
-  // icache
-
   if (!cfg.formal) {
+    // icache
     val icache = Module(
       new Icache(
         setNum = 2,
@@ -290,6 +289,8 @@ class Ifu(
     exte.pcReg.update := cached.r.fire
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
+    outBits.ifuPayload.ifu.predTaken := false.B
+    outBits.ifuPayload.ifu.predTarget := DontCare
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -349,6 +350,8 @@ class Ifu(
     exte.pcReg.update := exte.mem.r.fire
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
+    outBits.ifuPayload.ifu.predTaken := false.B
+    outBits.ifuPayload.ifu.predTarget := DontCare
   }
 
   // pc
@@ -388,13 +391,6 @@ class Ifu(
   }
 
   if (cfg.perf) {
-    // val isMemBusy = RegInit(false.B)
-    // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
-    //   isMemBusy := true.B
-    // }
-    // when(isMemBusy && exte.mem.r.valid) {
-    //   isMemBusy := false.B
-    // }
     PerfWhen(
       "waitReadCyc",
       !out.valid && out.ready,

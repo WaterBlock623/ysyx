@@ -17,6 +17,8 @@ class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
     val pc = UInt(cfg.xlen.W)
     val inst = UInt(cfg.xlen.W)
     // val staticNextPc = UInt(cfg.xlen.W)
+    val predTaken = Bool()
+    val predTarget = UInt(cfg.xlen.W)
   }
 }
 
@@ -125,6 +127,11 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val wEn   = Output(Bool())
   val wAddr = Output(UInt(cfg.registerAddrWidth.W))
   val wData = Output(UInt(cfg.xlen.W))
+}
+
+class LsuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val isJump = Output(Bool())
+  val target = Output(UInt(cfg.xlen.W))
 }
 
 class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {

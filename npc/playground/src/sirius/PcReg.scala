@@ -6,6 +6,7 @@ class PcReg(
   implicit private val cfg: CoreConfig)
     extends Module {
   val ifuIn = IO(Flipped(new IfuToPcRegIO))
+  val lsuIn = IO(Flipped(new LsuToPcRegIO))
   val wbuIn = IO(Flipped(new WbuToPcRegIO))
   val debug = Option.when(cfg.isDebug)(IO(new Bundle {
     val pc = Output(UInt(cfg.xlen.W))
@@ -15,8 +16,9 @@ class PcReg(
   when (ifuIn.update) {
     pcReg := ifuIn.staticNextPc
   }
-  when (wbuIn.isJump) {
-    pcReg := wbuIn.target
+  when (wbuIn.isJump || lsuIn.isJump) {
+    assert(!(wbuIn.isJump && lsuIn.isJump))
+    pcReg := Mux(wbuIn.isJump, wbuIn.target, lsuIn.target)
   }
   ifuIn.pc := pcReg
 

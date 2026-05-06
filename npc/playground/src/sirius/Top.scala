@@ -185,36 +185,37 @@ class BasicCore(
       .reduce(_ || _)
 
     // Jump
-    case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
-    val stageJumps = Seq(
-      StageJump(
-        lsu.in.valid,
-        lsu.in.bits.ctrl.wbuCtrl.isJump,
-        lsu.in.bits.ctrl.wbuCtrl.isBranch,
-        lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
-          (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
-      ),
-      StageJump(
-        wbu.in.valid,
-        wbu.in.bits.ctrl.wbuCtrl.isJump,
-        wbu.in.bits.ctrl.wbuCtrl.isBranch,
-        wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
-      )
-    )
-    val mayJump = stageJumps
-      .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
-      .reduce(_ || _)
+    // case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
+    // val stageJumps = Seq(
+    //   StageJump(
+    //     lsu.in.valid,
+    //     lsu.in.bits.ctrl.wbuCtrl.isJump,
+    //     lsu.in.bits.ctrl.wbuCtrl.isBranch,
+    //     lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
+    //     (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
+    //       (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
+    //   ),
+    //   StageJump(
+    //     wbu.in.valid,
+    //     wbu.in.bits.ctrl.wbuCtrl.isJump,
+    //     wbu.in.bits.ctrl.wbuCtrl.isBranch,
+    //     wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
+    //     wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
+    //   )
+    // )
+    // val mayJump = stageJumps
+    //   .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
+    //   .reduce(_ || _)
 
     // Pipeline ctrl
-    flushIfu := pcReg.wbuIn.isJump
-    flushIdu := pcReg.wbuIn.isJump
-    flushExu := pcReg.wbuIn.isJump
-    ifu.exte.flush := pcReg.wbuIn.isJump
+    flushIfu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
+    flushIdu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
+    flushExu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
+    ifu.exte.flush := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
 
     stallIdu := isRawGpr
-    stallExu := rawCsr || mayJump
+    // stallExu := rawCsr || mayJump
+    stallExu := rawCsr
     exu.exte.stall := stallExu
 
     // Debug
@@ -261,7 +262,7 @@ class BasicCore(
         Map(
           "Flush" -> RegNext(pcReg.wbuIn.isJump),
           "RawCsr" -> (rawCsr || RegNext(rawCsr)),
-          "MayJump" -> (mayJump || RegNext(mayJump))
+          // "MayJump" -> (mayJump || RegNext(mayJump))
         )
       )
       perfPipeline(
