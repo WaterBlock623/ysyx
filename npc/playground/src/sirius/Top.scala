@@ -246,14 +246,14 @@ class BasicCore(
         !reset.asBool,
         idu.in.valid,
         idu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump))
       )
       perfPipeline(
         "idu",
         idu.in.valid,
         exu.in.valid,
         exu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump), "RawGpr" -> (isRawGpr || RegNext(isRawGpr)))
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump), "RawGpr" -> (isRawGpr || RegNext(isRawGpr)))
       )
       perfPipeline(
         "exu",
@@ -261,7 +261,7 @@ class BasicCore(
         lsu.in.valid,
         lsu.in.ready,
         Map(
-          "Flush" -> RegNext(pcReg.wbuIn.isJump),
+          "Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump),
           "RawCsr" -> (rawCsr || RegNext(rawCsr)),
           // "MayJump" -> (mayJump || RegNext(mayJump))
         )
@@ -271,10 +271,10 @@ class BasicCore(
         lsu.in.valid,
         wbu.in.valid,
         wbu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump))
       )
 
-      PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
+      PerfWhen("totalJump", pcReg.wbuIn.isJump || pcReg.lsuIn.isJump, Some(stopFlag))
 
       import rvspeccore.checker._
       implicit val XLEN = cfg.xlen
