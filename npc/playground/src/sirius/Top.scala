@@ -39,7 +39,7 @@ class BasicCore(
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
   ifu.exte.globalCtrl := globalCtrl
-  ifu.exte.jumpTarget := wbu.exte.pcReg.target
+  ifu.exte.jumpTarget := Mux(pcReg.wbuIn.isJump, pcReg.wbuIn.target, pcReg.lsuIn.target)
 
   if (cfg.pipeline) {
     def pipelineConnect[T <: Data](
