@@ -85,7 +85,7 @@ typedef struct btrace_data {
 } btrace_data_t;
 
 enum btrace_inst_type {
-  BTRACE_BRANCH, BTRACE_JAL, BTRACE_JALR
+  BTRACE_BRANCH, BTRACE_JAL, BTRACE_JALR, BTRACE_NONE
 };
 
 #endif
