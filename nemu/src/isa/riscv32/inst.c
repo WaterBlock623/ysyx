@@ -113,7 +113,7 @@ static int decode_exec(Decode *s) {
 								
 #define BRANCH_WHEN(cond) \
   vaddr_t dnpc = s->pc + imm;\
-  is_branch = true; \
+  IFDEF(CONFIG_BTRACE, is_branch = true); \
   IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
     .pc = s->pc, \
     .inst= s->isa.inst, \
@@ -123,7 +123,7 @@ static int decode_exec(Decode *s) {
   })); \
   if (cond) s->dnpc = dnpc;
 
-  bool is_branch = false;
+  IFDEF(CONFIG_BTRACE, bool is_branch = false);
 
   INSTPAT_START();
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, \
@@ -186,8 +186,8 @@ static int decode_exec(Decode *s) {
 		  BRANCH_WHEN(src1 < src2));
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->snpc; \
       vaddr_t dnpc = s->pc + imm; \
-      is_branch = true; \
 		  s->dnpc = dnpc; \
+      IFDEF(CONFIG_BTRACE, is_branch = true); \
       IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
         .pc = s->pc, \
         .inst= s->isa.inst, \
@@ -198,8 +198,8 @@ static int decode_exec(Decode *s) {
       IFDEF(CONFIG_FTRACE, ftrace(rd, rs1, s->pc, s->dnpc)));
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->snpc; \
       vaddr_t dnpc = (imm + src1) & ~1lu;
-      is_branch = true; \
 		  s->dnpc = dnpc; \
+      IFDEF(CONFIG_BTRACE, is_branch = true); \
       IFDEF(CONFIG_BTRACE, btrace((btrace_data_t){ \
         .pc = s->pc, \
         .inst= s->isa.inst, \
