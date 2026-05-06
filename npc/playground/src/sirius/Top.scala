@@ -32,6 +32,7 @@ class BasicCore(
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
   pcReg.ifuIn :<>= ifu.exte.pcReg
+  pcReg.lsuIn :<>= lsu.exte.pcReg
   pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
