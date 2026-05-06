@@ -83,6 +83,10 @@ class ExuToLsuIO(implicit private val cfg: CoreConfig) extends Bundle {
 class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
   val lsuPayload = Output(new LsuPayload)
   val ctrl = Output(new WbuCtrl)
+  val debug = Option.when(cfg.isDebug)(Output(new Bundle {
+    val isJump = Bool()
+    val jumpTarget = UInt(cfg.xlen.W)
+  }))
 }
 
 // 访问外部

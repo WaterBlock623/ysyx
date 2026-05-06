@@ -48,6 +48,11 @@ class Lsu(
   val newIn = inValid && (RegNext(!inValid || in.fire))
   exte.pcReg.isJump := newIn && predErr
   exte.pcReg.target := dynamicNextPc
+  if (cfg.isDebug) {
+  val debug = outBits.debug.get
+    debug.isJump := exte.pcReg.isJump
+    debug.jumpTarget := exte.pcReg.target
+  }
 
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
   exte.mem.w.bits.last := true.B

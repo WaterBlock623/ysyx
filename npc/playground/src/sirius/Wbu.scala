@@ -136,8 +136,11 @@ class Wbu(
   if (cfg.isDebug) {
     dontTouch(debug.get)
     debug.get.valid := in.valid
-    debug.get.isJump := pcReg.isJump
-    debug.get.jumpTarget := pcReg.target
+    debug.get.isJump := pcReg.isJump || inBits.debug.get.isJump
+    when (in.valid) {
+      assert(!(pcReg.isJump && inBits.debug.get.isJump))
+    }
+    debug.get.jumpTarget := Mux(pcReg.isJump, pcReg.target, inBits.debug.get.jumpTarget)
   }
 
   PerfWhen(
