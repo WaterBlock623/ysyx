@@ -44,16 +44,18 @@ class Wbu(
     )
   )
 
-  // pc
-  val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
-  pcReg.target := Mux(
-    inBits.lsuPayload.trap.isTrap,
-    exte.csr.mtvec,
-    Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
-  )
-  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
-    0
-  )) || inBits.lsuPayload.trap.isTrap)
+  // Jump ctrl (csr & trap)
+  // val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
+  // pcReg.target := Mux(
+  //   inBits.lsuPayload.trap.isTrap,
+  //   exte.csr.mtvec,
+  //   Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
+  // )
+  // pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
+  //   0
+  // )) || inBits.lsuPayload.trap.isTrap)
+  pcReg.isJump := in.valid && (ctrl.isJumpCsr || inBits.lsuPayload.trap.isTrap)
+  pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, csrJumpTarget)
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr

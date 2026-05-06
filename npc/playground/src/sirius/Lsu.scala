@@ -45,7 +45,8 @@ class Lsu(
   val predErr = predDirectionErr || predTargetErr
   val staticNextPc = inBits.exuPayload.ifu.pc + 4.U
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
-  exte.pcReg.isJump := predErr
+  val newIn = inValid && (RegNext(!inValid || in.fire))
+  exte.pcReg.isJump := newIn && predErr
   exte.pcReg.target := dynamicNextPc
 
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
