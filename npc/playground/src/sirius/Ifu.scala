@@ -304,6 +304,7 @@ class Ifu(
     cached.ar.bits.addr := ifetchAddr
     cached.ar.bits.id.predTaken := exte.bpu.taken
     cached.ar.bits.id.predTarget := exte.bpu.target
+    dontTouch(cached.ar.bits)
     cached.r.ready := out.ready
 
     out.valid := cached.r.valid
