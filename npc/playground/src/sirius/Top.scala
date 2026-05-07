@@ -232,8 +232,7 @@ class BasicCore(
     ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
 
     stallIdu := isRawGpr
-    // stallExu := rawCsr || mayJump
-    stallExu := rawCsr
+    stallExu := rawCsr || lsu.exte.pcReg.isJump
     exu.exte.stall := stallExu
 
     // Debug
