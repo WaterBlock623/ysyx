@@ -93,7 +93,7 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val pc = Input(UInt(cfg.xlen.W))
   val update = Output(Bool())
-  val staticNextPc = Output(UInt(cfg.xlen.W))
+  val nextPc = Output(UInt(cfg.xlen.W))
 }
 
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {

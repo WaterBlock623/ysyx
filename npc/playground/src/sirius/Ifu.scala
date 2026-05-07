@@ -31,6 +31,7 @@ class IcacheIO(
   })
   val r = Flipped(Decoupled(new Bundle {
     val data = UInt(cfg.xlen.W)
+    val addr = UInt(cfg.xlen.W)
   }))
 }
 
@@ -243,6 +244,7 @@ class Icache(
     cachedRDataReg,
     Mux1H(wordMask, hitData)
   )
+  io.cached.r.bits.addr := rAddr
 }
 
 class Ifu(
@@ -288,11 +290,13 @@ class Ifu(
     cached.ar.bits.addr := ifetchAddr
     cached.r.ready := out.ready
 
-    exte.pcReg.update := cached.r.fire
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
     outBits.ifuPayload.ifu.predTaken := false.B
     outBits.ifuPayload.ifu.predTarget := DontCare
+
+    exte.pcReg.update := cached.r.fire
+    exte.pcReg.nextPc := cached.r.bits.addr
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -350,17 +354,26 @@ class Ifu(
     exte.mem.ar.bits.burst := Axi4Burst.incr.U
     exte.mem.r.ready := out.ready
 
-    exte.pcReg.update := exte.mem.r.fire
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
     outBits.ifuPayload.ifu.predTaken := false.B
     outBits.ifuPayload.ifu.predTarget := DontCare
+
+    val addrQueue = Module(new Queue(UInt(cfg.xlen.W), 4, true, true))
+    addrQueue.io.enq.valid := exte.mem.ar.fire
+    when (exte.mem.ar.fire) {
+      assert(exte.mem.ar.ready)
+    }
+    addrQueue.io.enq.bits := exte.mem.ar.bits.addr
+    exte.pcReg.update := exte.mem.r.fire
+    exte.pcReg.nextPc := addrQueue.io.deq.bits
+    addrQueue.io.deq.ready := exte.mem.r.fire
   }
 
   // pc
-  val staticNextPc = exte.pcReg.pc + 4.U
+  // val staticNextPc = exte.pcReg.pc + 4.U
   // exte.pcReg.update := cached.r.fire
-  exte.pcReg.staticNextPc := staticNextPc
+  // exte.pcReg.staticNextPc := staticNextPc
 
   // out
   // out.valid := cached.r.valid
