@@ -283,7 +283,7 @@ class Lsu(
   )
   PerfWhen(
     "bpuTotalTargetErr",
-    newIn && predTargetErr,
+    newIn && !predDirectionErr && predTargetErr,
     exte.debugEbreak
   )
   PerfWhen(
@@ -303,7 +303,7 @@ class Lsu(
   )
   PerfWhen(
     "bpuCtrlInstTargetErr",
-    newIn && exte.bpu.isCtrlInst && predTargetErr,
+    newIn && exte.bpu.isCtrlInst && !predDirectionErr && predTargetErr,
     exte.debugEbreak
   )
 
