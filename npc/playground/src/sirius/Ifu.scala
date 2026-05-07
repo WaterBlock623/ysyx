@@ -24,14 +24,21 @@ class Xorshift32 extends Module {
 class IcacheIO(
   implicit private val cfg: CoreConfig)
     extends Bundle {
+  class Id extends Bundle {
+    val predTaken = Bool()
+    val predTarget = UInt(cfg.xlen.W)
+  }
+
   val abort = Bool()
   val fencei = Bool()
   val ar = Decoupled(new Bundle {
     val addr = UInt(cfg.xlen.W)
+    val id = new Id
   })
   val r = Flipped(Decoupled(new Bundle {
     val data = UInt(cfg.xlen.W)
     val addr = UInt(cfg.xlen.W)
+    val id = new Id
   }))
 }
 
@@ -78,6 +85,10 @@ class Icache(
   val inWhiteList = if (whiteList.isDefined) {
     rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
   } else { true.B }
+
+  // Id
+  val idReg = RegEnable(io.cached.ar.bits.id, state === sReadCache)
+  io.cached.r.bits.id := Mux(state === sReadCache, io.cached.ar.bits.id, idReg)
 
   // Random
   val xorshift32 = Module(new Xorshift32)
@@ -288,13 +299,15 @@ class Ifu(
       ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
     }
     cached.ar.bits.addr := ifetchAddr
+    cached.ar.bits.id.predTaken := exte.bpu.taken
+    cached.ar.bits.id.predTarget := exte.bpu.target
     cached.r.ready := out.ready
 
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
     outBits.ifuPayload.ifu.pc := cached.r.bits.addr
-    outBits.ifuPayload.ifu.predTaken := false.B
-    outBits.ifuPayload.ifu.predTarget := DontCare
+    outBits.ifuPayload.ifu.predTaken := cached.r.bits.id.predTaken
+    outBits.ifuPayload.ifu.predTarget := cached.r.bits.id.predTarget
 
     // exte.pcReg.update := cached.r.fire
     // exte.pcReg.nextPc := cached.r.bits.addr
@@ -357,33 +370,32 @@ class Ifu(
 
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
-    outBits.ifuPayload.ifu.predTaken := false.B
-    outBits.ifuPayload.ifu.predTarget := DontCare
 
-    val addrQueue = Module(new Queue(UInt(cfg.xlen.W), 4, true, true))
-    addrQueue.io.enq.valid := exte.mem.ar.fire
-    when (exte.mem.ar.fire) {
-      assert(exte.mem.ar.ready)
+    val metaQueue = Module(
+      new Queue(
+        new Bundle {
+          val pc = UInt(cfg.xlen.W)
+          val predTaken = Bool()
+          val predTarget = UInt(cfg.xlen.W)
+        },
+        4,
+        true,
+        true
+      )
+    )
+    metaQueue.io.enq.valid := exte.mem.ar.fire
+    when(exte.mem.ar.fire) {
+      assert(metaQueue.io.enq.ready)
     }
-    addrQueue.io.enq.bits := exte.mem.ar.bits.addr
-    // exte.pcReg.update := exte.mem.r.fire
-    // exte.pcReg.nextPc := addrQueue.io.deq.bits
-    outBits.ifuPayload.ifu.pc := addrQueue.io.deq.bits
-    addrQueue.io.deq.ready := exte.mem.r.fire
+    metaQueue.io.enq.bits.pc := exte.mem.ar.bits.addr
+    metaQueue.io.enq.bits.predTaken := exte.bpu.taken
+    metaQueue.io.enq.bits.predTarget := exte.bpu.target
+
+    outBits.ifuPayload.ifu.pc := metaQueue.io.deq.bits.pc
+    outBits.ifuPayload.ifu.predTaken := metaQueue.io.deq.bits.predTaken
+    outBits.ifuPayload.ifu.predTarget := metaQueue.io.deq.bits.predTarget
+    metaQueue.io.deq.ready := exte.mem.r.fire
   }
-
-  // pc
-  // val staticNextPc = exte.pcReg.pc + 4.U
-  // exte.pcReg.update := cached.r.fire
-  // exte.pcReg.staticNextPc := staticNextPc
-
-  // out
-  // out.valid := cached.r.valid
-  out.bits.ifuPayload.trap.isTrap := false.B
-  out.bits.ifuPayload.trap.cause := DontCare
-  // outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  // outBits.ifuPayload.ifu.pc := exte.pcReg.pc
-  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
   if (cfg.formal) {
