@@ -228,7 +228,7 @@ class BasicCore(
     // Pipeline ctrl
     flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
     flushIdu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
-    flushExu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushExu := wbu.exte.pcReg.isJump
     ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
 
     stallIdu := isRawGpr
