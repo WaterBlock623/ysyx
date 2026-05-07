@@ -13,7 +13,7 @@ class BasicCore(
     val axiLsu = new Axi4IO
   })
 
-  val pcReg = Module(new PcReg)
+  // val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
   val ifu = Module(new Ifu)
@@ -31,15 +31,15 @@ class BasicCore(
 
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
-  pcReg.ifuIn :<>= ifu.exte.pcReg
-  pcReg.lsuIn :<>= lsu.exte.pcReg
-  pcReg.wbuIn :<>= wbu.exte.pcReg
+  // pcReg.ifuIn :<>= ifu.exte.pcReg
+  // pcReg.lsuIn :<>= lsu.exte.pcReg
+  // pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
   ifu.exte.globalCtrl := globalCtrl
-  ifu.exte.jumpTarget := Mux(pcReg.wbuIn.isJump, pcReg.wbuIn.target, pcReg.lsuIn.target)
+  ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
 
   if (!cfg.formal) {
     val bpu = Module(
@@ -226,10 +226,10 @@ class BasicCore(
     //   .reduce(_ || _)
 
     // Pipeline ctrl
-    flushIfu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
-    flushIdu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
-    flushExu := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
-    ifu.exte.flush := pcReg.wbuIn.isJump || pcReg.lsuIn.isJump
+    flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushIdu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushExu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
 
     stallIdu := isRawGpr
     // stallExu := rawCsr || mayJump
@@ -263,7 +263,7 @@ class BasicCore(
         !reset.asBool,
         idu.in.valid,
         idu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
       )
       perfPipeline(
         "idu",
@@ -271,7 +271,7 @@ class BasicCore(
         exu.in.valid,
         exu.in.ready,
         Map(
-          "Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump),
+          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
           "RawGpr" -> (isRawGpr || RegNext(isRawGpr))
         )
       )
@@ -281,7 +281,7 @@ class BasicCore(
         lsu.in.valid,
         lsu.in.ready,
         Map(
-          "Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump),
+          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
           "RawCsr" -> (rawCsr || RegNext(rawCsr))
           // "MayJump" -> (mayJump || RegNext(mayJump))
         )
@@ -291,10 +291,10 @@ class BasicCore(
         lsu.in.valid,
         wbu.in.valid,
         wbu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
       )
 
-      PerfWhen("totalJump", pcReg.wbuIn.isJump || pcReg.lsuIn.isJump, Some(stopFlag))
+      PerfWhen("totalJump", wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump, Some(stopFlag))
 
       import rvspeccore.checker._
       implicit val XLEN = cfg.xlen
@@ -405,7 +405,8 @@ class Top(
     val getGprDpiC = Module(new GetGprDpiC)
     debugInfoDpiC.isEbreak := ebreakSignal
     debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
-    debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+    // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+    debugInfoDpiC.pcRaw := cfg.pcInit.U
     // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := wbuIn.bits.lsuPayload.ifu.inst
     debugInfoDpiC.wbuValid := tapAndRead(basicCore.wbu.debug.get.valid)

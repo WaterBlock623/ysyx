@@ -251,7 +251,7 @@ class Ifu(
   implicit private val cfg: CoreConfig)
     extends Module {
   val exte = IO(new Bundle {
-    val pcReg = new IfuToPcRegIO
+    // val pcReg = new IfuToPcRegIO
     val bpu = new IfuToBpuIO
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
@@ -292,11 +292,12 @@ class Ifu(
 
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
+    outBits.ifuPayload.ifu.pc := cached.r.bits.addr
     outBits.ifuPayload.ifu.predTaken := false.B
     outBits.ifuPayload.ifu.predTarget := DontCare
 
-    exte.pcReg.update := cached.r.fire
-    exte.pcReg.nextPc := cached.r.bits.addr
+    // exte.pcReg.update := cached.r.fire
+    // exte.pcReg.nextPc := cached.r.bits.addr
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -365,8 +366,9 @@ class Ifu(
       assert(exte.mem.ar.ready)
     }
     addrQueue.io.enq.bits := exte.mem.ar.bits.addr
-    exte.pcReg.update := exte.mem.r.fire
-    exte.pcReg.nextPc := addrQueue.io.deq.bits
+    // exte.pcReg.update := exte.mem.r.fire
+    // exte.pcReg.nextPc := addrQueue.io.deq.bits
+    outBits.ifuPayload.ifu.pc := addrQueue.io.deq.bits
     addrQueue.io.deq.ready := exte.mem.r.fire
   }
 
@@ -380,7 +382,7 @@ class Ifu(
   out.bits.ifuPayload.trap.isTrap := false.B
   out.bits.ifuPayload.trap.cause := DontCare
   // outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
+  // outBits.ifuPayload.ifu.pc := exte.pcReg.pc
   // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
