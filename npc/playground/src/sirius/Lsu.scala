@@ -51,8 +51,8 @@ class Lsu(
   exte.pcReg.target := dynamicNextPc
   if (cfg.isDebug) {
   val debug = outBits.debug.get
-    debug.isJump := exte.pcReg.isJump
-    debug.jumpTarget := exte.pcReg.target
+    debug.isJump := realTaken
+    debug.jumpTarget := realTarget
   }
 
   // Bpu
