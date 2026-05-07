@@ -13,7 +13,7 @@ class BasicCore(
     val axiLsu = new Axi4IO
   })
 
-  val pcReg = Module(new PcReg)
+  // val pcReg = Module(new PcReg)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
   val ifu = Module(new Ifu)
@@ -31,14 +31,32 @@ class BasicCore(
 
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
-  pcReg.ifuIn :<>= ifu.exte.pcReg
-  pcReg.wbuIn :<>= wbu.exte.pcReg
+  // pcReg.ifuIn :<>= ifu.exte.pcReg
+  // pcReg.lsuIn :<>= lsu.exte.pcReg
+  // pcReg.wbuIn :<>= wbu.exte.pcReg
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
   ifu.exte.globalCtrl := globalCtrl
-  ifu.exte.jumpTarget := wbu.exte.pcReg.target
+  ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
+
+  if (!cfg.formal) {
+    val bpu = Module(
+      new Bpu(
+        btbIndexWidth = 3,
+        btbTagWidth = 2,
+        btbTargetWidth = 14,
+        phtIndexWidth = 5,
+        phtCounterWidth = 2
+      )
+    )
+    bpu.ifuIn :<>= ifu.exte.bpu
+    bpu.lsuIn :<>= lsu.exte.bpu
+  } else {
+    val bpuio = IO(new IfuToBpuIO)
+    bpuio :<>= ifu.exte.bpu
+  }
 
   if (cfg.pipeline) {
     def pipelineConnect[T <: Data](
@@ -109,10 +127,10 @@ class BasicCore(
         Seq(
           (lsu.in.valid &&
             (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-            lsu.in.bits.exuPayload.exu.aluOut,
-          (lsu.out.valid &&
-            (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-            lsu.out.bits.lsuPayload.lsu.loadData
+            lsu.in.bits.exuPayload.exu.aluOut
+            // (lsu.out.valid &&
+            //   (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+            //   lsu.out.bits.lsuPayload.lsu.loadData
         )
       ),
       StageRd(
@@ -185,36 +203,36 @@ class BasicCore(
       .reduce(_ || _)
 
     // Jump
-    case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
-    val stageJumps = Seq(
-      StageJump(
-        lsu.in.valid,
-        lsu.in.bits.ctrl.wbuCtrl.isJump,
-        lsu.in.bits.ctrl.wbuCtrl.isBranch,
-        lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
-          (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
-      ),
-      StageJump(
-        wbu.in.valid,
-        wbu.in.bits.ctrl.wbuCtrl.isJump,
-        wbu.in.bits.ctrl.wbuCtrl.isBranch,
-        wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-        wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
-      )
-    )
-    val mayJump = stageJumps
-      .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
-      .reduce(_ || _)
+    // case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
+    // val stageJumps = Seq(
+    //   StageJump(
+    //     lsu.in.valid,
+    //     lsu.in.bits.ctrl.wbuCtrl.isJump,
+    //     lsu.in.bits.ctrl.wbuCtrl.isBranch,
+    //     lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
+    //     (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
+    //       (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
+    //   ),
+    //   StageJump(
+    //     wbu.in.valid,
+    //     wbu.in.bits.ctrl.wbuCtrl.isJump,
+    //     wbu.in.bits.ctrl.wbuCtrl.isBranch,
+    //     wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
+    //     wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
+    //   )
+    // )
+    // val mayJump = stageJumps
+    //   .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
+    //   .reduce(_ || _)
 
     // Pipeline ctrl
-    flushIfu := pcReg.wbuIn.isJump
-    flushIdu := pcReg.wbuIn.isJump
-    flushExu := pcReg.wbuIn.isJump
-    ifu.exte.flush := pcReg.wbuIn.isJump
+    flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushIdu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushExu := wbu.exte.pcReg.isJump
+    ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
 
     stallIdu := isRawGpr
-    stallExu := rawCsr || mayJump
+    stallExu := rawCsr || lsu.exte.pcReg.isJump
     exu.exte.stall := stallExu
 
     // Debug
@@ -244,14 +262,17 @@ class BasicCore(
         !reset.asBool,
         idu.in.valid,
         idu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
       )
       perfPipeline(
         "idu",
         idu.in.valid,
         exu.in.valid,
         exu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump), "RawGpr" -> (isRawGpr || RegNext(isRawGpr)))
+        Map(
+          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "RawGpr" -> (isRawGpr || RegNext(isRawGpr))
+        )
       )
       perfPipeline(
         "exu",
@@ -259,9 +280,9 @@ class BasicCore(
         lsu.in.valid,
         lsu.in.ready,
         Map(
-          "Flush" -> RegNext(pcReg.wbuIn.isJump),
-          "RawCsr" -> (rawCsr || RegNext(rawCsr)),
-          "MayJump" -> (mayJump || RegNext(mayJump))
+          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "RawCsr" -> (rawCsr || RegNext(rawCsr))
+          // "MayJump" -> (mayJump || RegNext(mayJump))
         )
       )
       perfPipeline(
@@ -269,10 +290,10 @@ class BasicCore(
         lsu.in.valid,
         wbu.in.valid,
         wbu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
       )
 
-      PerfWhen("totalJump", pcReg.wbuIn.isJump, Some(stopFlag))
+      PerfWhen("totalJump", wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump, Some(stopFlag))
 
       import rvspeccore.checker._
       implicit val XLEN = cfg.xlen
@@ -383,7 +404,8 @@ class Top(
     val getGprDpiC = Module(new GetGprDpiC)
     debugInfoDpiC.isEbreak := ebreakSignal
     debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
-    debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+    // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+    debugInfoDpiC.pcRaw := cfg.pcInit.U
     // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
     debugInfoDpiC.inst := wbuIn.bits.lsuPayload.ifu.inst
     debugInfoDpiC.wbuValid := tapAndRead(basicCore.wbu.debug.get.valid)

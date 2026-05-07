@@ -24,13 +24,21 @@ class Xorshift32 extends Module {
 class IcacheIO(
   implicit private val cfg: CoreConfig)
     extends Bundle {
+  class Id extends Bundle {
+    val predTaken = Bool()
+    val predTarget = UInt(cfg.xlen.W)
+  }
+
   val abort = Bool()
   val fencei = Bool()
   val ar = Decoupled(new Bundle {
     val addr = UInt(cfg.xlen.W)
+    val id = new Id
   })
   val r = Flipped(Decoupled(new Bundle {
     val data = UInt(cfg.xlen.W)
+    val addr = UInt(cfg.xlen.W)
+    val id = new Id
   }))
 }
 
@@ -243,13 +251,19 @@ class Icache(
     cachedRDataReg,
     Mux1H(wordMask, hitData)
   )
+  io.cached.r.bits.addr := rAddr
+
+  // Id
+  val idReg = RegEnable(io.cached.ar.bits.id, state === sReadCache)
+  io.cached.r.bits.id := Mux(state === sReadCache, io.cached.ar.bits.id, idReg)
 }
 
 class Ifu(
   implicit private val cfg: CoreConfig)
     extends Module {
   val exte = IO(new Bundle {
-    val pcReg = new IfuToPcRegIO
+    // val pcReg = new IfuToPcRegIO
+    val bpu = new IfuToBpuIO
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
     val flush = Input(Bool())
@@ -259,9 +273,11 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val outBits = out.bits
 
-  // icache
+  outBits.ifuPayload.trap.isTrap := false.B
+  outBits.ifuPayload.trap.cause := DontCare
 
   if (!cfg.formal) {
+    // icache
     val icache = Module(
       new Icache(
         setNum = 2,
@@ -279,17 +295,27 @@ class Ifu(
     cached.abort := exte.flush
     cached.ar.valid := true.B
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    exte.bpu.pc := ifetchAddr
     when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(cached.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
+      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
     }
     cached.ar.bits.addr := ifetchAddr
+    cached.ar.bits.id.predTaken := exte.bpu.taken
+    cached.ar.bits.id.predTarget := exte.bpu.target
+    // dontTouch(cached.ar.bits)
+    // dontTouch(cached.r.bits)
     cached.r.ready := out.ready
 
-    exte.pcReg.update := cached.r.fire
     out.valid := cached.r.valid
     outBits.ifuPayload.ifu.inst := cached.r.bits.data
+    outBits.ifuPayload.ifu.pc := cached.r.bits.addr
+    outBits.ifuPayload.ifu.predTaken := cached.r.bits.id.predTaken
+    outBits.ifuPayload.ifu.predTarget := cached.r.bits.id.predTarget
+
+    // exte.pcReg.update := cached.r.fire
+    // exte.pcReg.nextPc := cached.r.bits.addr
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -333,10 +359,11 @@ class Ifu(
     }
   } else {
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    exte.bpu.pc := ifetchAddr
     when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(exte.mem.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
+      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
     }
 
     exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
@@ -346,23 +373,34 @@ class Ifu(
     exte.mem.ar.bits.burst := Axi4Burst.incr.U
     exte.mem.r.ready := out.ready
 
-    exte.pcReg.update := exte.mem.r.fire
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
+
+    val metaQueue = Module(
+      new Queue(
+        new Bundle {
+          val pc = UInt(cfg.xlen.W)
+          val predTaken = Bool()
+          val predTarget = UInt(cfg.xlen.W)
+        },
+        4,
+        true,
+        true
+      )
+    )
+    metaQueue.io.enq.valid := exte.mem.ar.fire
+    when(exte.mem.ar.fire) {
+      assert(metaQueue.io.enq.ready)
+    }
+    metaQueue.io.enq.bits.pc := exte.mem.ar.bits.addr
+    metaQueue.io.enq.bits.predTaken := exte.bpu.taken
+    metaQueue.io.enq.bits.predTarget := exte.bpu.target
+
+    outBits.ifuPayload.ifu.pc := metaQueue.io.deq.bits.pc
+    outBits.ifuPayload.ifu.predTaken := metaQueue.io.deq.bits.predTaken
+    outBits.ifuPayload.ifu.predTarget := metaQueue.io.deq.bits.predTarget
+    metaQueue.io.deq.ready := exte.mem.r.fire
   }
-
-  // pc
-  val staticNextPc = exte.pcReg.pc + 4.U
-  // exte.pcReg.update := cached.r.fire
-  exte.pcReg.staticNextPc := staticNextPc
-
-  // out
-  // out.valid := cached.r.valid
-  out.bits.ifuPayload.trap.isTrap := false.B
-  out.bits.ifuPayload.trap.cause := DontCare
-  // outBits.ifuPayload.ifu.inst := cached.r.bits.data
-  outBits.ifuPayload.ifu.pc := exte.pcReg.pc
-  // outBits.ifuPayload.ifu.staticNextPc := staticNextPc
 
   // debug
   if (cfg.formal) {
@@ -388,13 +426,6 @@ class Ifu(
   }
 
   if (cfg.perf) {
-    // val isMemBusy = RegInit(false.B)
-    // when(!isMemBusy && exte.mem.ar.valid && !exte.mem.r.valid) {
-    //   isMemBusy := true.B
-    // }
-    // when(isMemBusy && exte.mem.r.valid) {
-    //   isMemBusy := false.B
-    // }
     PerfWhen(
       "waitReadCyc",
       !out.valid && out.ready,

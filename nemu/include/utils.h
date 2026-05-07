@@ -76,4 +76,16 @@ uint64_t get_time();
 
 #define LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
+typedef struct btrace_data {
+  vaddr_t pc; 
+  uint32_t inst; 
+  int inst_type;
+  bool is_taken;
+  vaddr_t target; 
+} btrace_data_t;
+
+enum btrace_inst_type {
+  BTRACE_BRANCH, BTRACE_JAL, BTRACE_JALR, BTRACE_NONE
+};
+
 #endif
