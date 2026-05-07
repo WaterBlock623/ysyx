@@ -14,7 +14,7 @@ class PcReg(
 
   val pcReg = RegInit(cfg.pcInit.U(cfg.xlen.W))
   when (ifuIn.update) {
-    pcReg := ifuIn.staticNextPc
+    pcReg := ifuIn.nextPc
   }
   when (wbuIn.isJump || lsuIn.isJump) {
     assert(!(wbuIn.isJump && lsuIn.isJump))
