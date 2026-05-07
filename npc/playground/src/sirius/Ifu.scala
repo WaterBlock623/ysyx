@@ -86,10 +86,6 @@ class Icache(
     rAddr >= whiteList.get.start.U && rAddr < whiteList.get.end.U
   } else { true.B }
 
-  // Id
-  val idReg = RegEnable(io.cached.ar.bits.id, state === sReadCache)
-  io.cached.r.bits.id := Mux(state === sReadCache, io.cached.ar.bits.id, idReg)
-
   // Random
   val xorshift32 = Module(new Xorshift32)
   val rand = xorshift32.io.out
@@ -256,6 +252,10 @@ class Icache(
     Mux1H(wordMask, hitData)
   )
   io.cached.r.bits.addr := rAddr
+
+  // Id
+  val idReg = RegEnable(io.cached.ar.bits.id, state === sReadCache)
+  io.cached.r.bits.id := Mux(state === sReadCache, io.cached.ar.bits.id, idReg)
 }
 
 class Ifu(
@@ -304,8 +304,8 @@ class Ifu(
     cached.ar.bits.addr := ifetchAddr
     cached.ar.bits.id.predTaken := exte.bpu.taken
     cached.ar.bits.id.predTarget := exte.bpu.target
-    dontTouch(cached.ar.bits)
-    dontTouch(cached.r.bits)
+    // dontTouch(cached.ar.bits)
+    // dontTouch(cached.r.bits)
     cached.r.ready := out.ready
 
     out.valid := cached.r.valid
