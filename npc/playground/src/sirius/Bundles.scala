@@ -105,6 +105,12 @@ class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rData = Input(UInt(cfg.xlen.W))
 }
 
+class IfuToBpuIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val pc = Output(UInt(cfg.xlen.W))
+  val taken = Input(Bool())
+  val target = Input(UInt(cfg.xlen.W))
+}
+
 class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val rAddr = Output(Vec(2, UInt(cfg.registerAddrWidth.W)))
   val rData = Input(Vec(2, UInt(cfg.xlen.W)))
@@ -135,6 +141,15 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
 
 class LsuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isJump = Output(Bool())
+  val target = Output(UInt(cfg.xlen.W))
+}
+
+class LsuToBpuIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val update = Output(Bool())
+  val isCtrlInst = Output(Bool())
+  val realTaken = Output(Bool())
+  val predTaken = Output(Bool())
+  val pc = Output(UInt(cfg.xlen.W))
   val target = Output(UInt(cfg.xlen.W))
 }
 

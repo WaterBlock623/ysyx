@@ -14,6 +14,7 @@ class Lsu(
   val exte = IO(new Bundle {
     val mem = new Axi4IO
     val pcReg = new LsuToPcRegIO
+    val bpu = new LsuToBpuIO
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
   val in = IO(Flipped(Decoupled(new ExuToLsuIO)))
@@ -53,6 +54,14 @@ class Lsu(
     debug.isJump := exte.pcReg.isJump
     debug.jumpTarget := exte.pcReg.target
   }
+
+  // Bpu
+  exte.bpu.update := newIn
+  exte.bpu.pc := in.bits.exuPayload.ifu.pc
+  exte.bpu.isCtrlInst := inBits.ctrl.wbuCtrl.isJump || inBits.ctrl.wbuCtrl.isBranch
+  exte.bpu.predTaken := inBits.exuPayload.ifu.predTaken
+  exte.bpu.realTaken := realTaken
+  exte.bpu.target := realTarget
 
   exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
   exte.mem.w.bits.last := true.B
@@ -257,4 +266,45 @@ class Lsu(
     inValid && ctrl.isStore && !outBits.lsuPayload.trap.isTrap,
     exte.debugEbreak
   )
+  PerfWhen(
+    "bpuTotalReq",
+    newIn,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuTotalErr",
+    newIn && predErr,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuTotalDirectionErr",
+    newIn && predDirectionErr,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuTotalTargetErr",
+    newIn && predTargetErr,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuCtrlInstReq",
+    newIn && exte.bpu.isCtrlInst,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuCtrlInstErr",
+    newIn && exte.bpu.isCtrlInst && predErr,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuCtrlInstDirectionErr",
+    newIn && exte.bpu.isCtrlInst && predDirectionErr,
+    exte.debugEbreak
+  )
+  PerfWhen(
+    "bpuCtrlInstTargetErr",
+    newIn && exte.bpu.isCtrlInst && predTargetErr,
+    exte.debugEbreak
+  )
+
 }

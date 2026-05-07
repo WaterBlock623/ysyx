@@ -250,6 +250,7 @@ class Ifu(
     extends Module {
   val exte = IO(new Bundle {
     val pcReg = new IfuToPcRegIO
+    val bpu = new IfuToBpuIO
     val mem = new Axi4IO
     val globalCtrl = Flipped(new GlobalCtrl)
     val flush = Input(Bool())
@@ -278,10 +279,11 @@ class Ifu(
     cached.abort := exte.flush
     cached.ar.valid := true.B
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    exte.bpu.pc := ifetchAddr
     when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(cached.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
+      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
     }
     cached.ar.bits.addr := ifetchAddr
     cached.r.ready := out.ready
@@ -334,10 +336,11 @@ class Ifu(
     }
   } else {
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    exte.bpu.pc := ifetchAddr
     when(exte.flush) {
       ifetchAddr := exte.jumpTarget
     }.elsewhen(exte.mem.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
+      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
     }
 
     exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))

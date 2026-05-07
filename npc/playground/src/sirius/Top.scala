@@ -41,6 +41,23 @@ class BasicCore(
   ifu.exte.globalCtrl := globalCtrl
   ifu.exte.jumpTarget := Mux(pcReg.wbuIn.isJump, pcReg.wbuIn.target, pcReg.lsuIn.target)
 
+  if (!cfg.formal) {
+    val bpu = Module(
+      new Bpu(
+        btbIndexWidth = 3,
+        btbTagWidth = 2,
+        btbTargetWidth = 14,
+        phtIndexWidth = 5,
+        phtCounterWidth = 2
+      )
+    )
+    bpu.ifuIn :<>= ifu.exte.bpu
+    bpu.lsuIn :<>= lsu.exte.bpu
+  } else {
+    val bpuio = IO(new IfuToBpuIO)
+    bpuio :<>= ifu.exte.bpu
+  }
+
   if (cfg.pipeline) {
     def pipelineConnect[T <: Data](
       prevOut: DecoupledIO[T],
@@ -110,10 +127,10 @@ class BasicCore(
         Seq(
           (lsu.in.valid &&
             (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-            lsu.in.bits.exuPayload.exu.aluOut,
-          // (lsu.out.valid &&
-          //   (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-          //   lsu.out.bits.lsuPayload.lsu.loadData
+            lsu.in.bits.exuPayload.exu.aluOut
+            // (lsu.out.valid &&
+            //   (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+            //   lsu.out.bits.lsuPayload.lsu.loadData
         )
       ),
       StageRd(
@@ -253,7 +270,10 @@ class BasicCore(
         idu.in.valid,
         exu.in.valid,
         exu.in.ready,
-        Map("Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump), "RawGpr" -> (isRawGpr || RegNext(isRawGpr)))
+        Map(
+          "Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump),
+          "RawGpr" -> (isRawGpr || RegNext(isRawGpr))
+        )
       )
       perfPipeline(
         "exu",
@@ -262,7 +282,7 @@ class BasicCore(
         lsu.in.ready,
         Map(
           "Flush" -> RegNext(pcReg.wbuIn.isJump || pcReg.lsuIn.isJump),
-          "RawCsr" -> (rawCsr || RegNext(rawCsr)),
+          "RawCsr" -> (rawCsr || RegNext(rawCsr))
           // "MayJump" -> (mayJump || RegNext(mayJump))
         )
       )
