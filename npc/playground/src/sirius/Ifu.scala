@@ -273,6 +273,9 @@ class Ifu(
   val out = IO(Decoupled(new IfuToIduIO))
   val outBits = out.bits
 
+  outBits.ifuPayload.trap.isTrap := false.B
+  outBits.ifuPayload.trap.cause := DontCare
+
   if (!cfg.formal) {
     // icache
     val icache = Module(
