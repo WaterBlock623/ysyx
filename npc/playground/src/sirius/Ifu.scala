@@ -131,6 +131,11 @@ class Icache(
     abortReg := true.B
   }
 
+  val fenceiReg = RegInit(false.B)
+  when(io.cached.fencei) {
+    abortReg := true.B
+  }
+
   val rFiredReg = RegInit(false.B)
   when(io.cached.r.fire || io.cached.abort) {
     rFiredReg := true.B
@@ -146,6 +151,7 @@ class Icache(
           nextState := sWait
         }.otherwise {
           abortReg := false.B
+          fenceiReg := false.B
           rFiredReg := false.B
         }
       }
@@ -165,6 +171,7 @@ class Icache(
         when(rFired) {
           nextState := sReadCache
           abortReg := false.B
+          fenceiReg := false.B
           rFiredReg := false.B
         }.otherwise {
           nextState := sWait
@@ -175,6 +182,7 @@ class Icache(
       when(rFired) {
         nextState := sReadCache
         abortReg := false.B
+        fenceiReg := false.B
         rFiredReg := false.B
       }
     }
@@ -201,7 +209,7 @@ class Icache(
     for (w <- 0 until wayNum.toInt) {
       val writeCond = io.mem.r.fire && inWhiteList && (setIdx === s.U) && wayMask(w)
       when(writeCond && io.mem.r.bits.last) {
-        cacheValid(s)(w) := true.B
+        cacheValid(s)(w) := !fenceiReg
         cacheTag(s)(w) := rAddrLine.tag
       }
       for (word <- 0 until burstTimes) {
