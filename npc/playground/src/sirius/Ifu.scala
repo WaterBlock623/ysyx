@@ -133,7 +133,7 @@ class Icache(
 
   val fenceiReg = RegInit(false.B)
   when(io.cached.fencei) {
-    abortReg := true.B
+    fenceiReg := true.B
   }
 
   val rFiredReg = RegInit(false.B)
@@ -154,6 +154,10 @@ class Icache(
           fenceiReg := false.B
           rFiredReg := false.B
         }
+      }.otherwise {
+        abortReg := false.B
+        fenceiReg := false.B
+        rFiredReg := false.B
       }
     }
     is(sReq) {
