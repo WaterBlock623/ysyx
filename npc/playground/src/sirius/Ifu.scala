@@ -265,7 +265,7 @@ class Ifu(
     // val pcReg = new IfuToPcRegIO
     val bpu = new IfuToBpuIO
     val mem = new Axi4IO
-    val globalCtrl = Flipped(new GlobalCtrl)
+    val fencei = Input(Bool())
     val flush = Input(Bool())
     val jumpTarget = Input(UInt(cfg.xlen.W))
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
@@ -291,7 +291,7 @@ class Ifu(
     )
     exte.mem :<>= icache.io.mem
     val cached = icache.io.cached
-    cached.fencei := exte.globalCtrl.globalCtrl.isFlushIcache
+    cached.fencei := exte.fencei
     cached.abort := exte.flush
     cached.ar.valid := true.B
     val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))

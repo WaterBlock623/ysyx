@@ -38,8 +38,9 @@ class BasicCore(
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  ifu.exte.globalCtrl := globalCtrl
   ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
+  val fencei = lsu.in.valid && lsu.in.bits.ctrl.lsuCtrl.isFlushIcache
+  ifu.exte.fencei := fencei
 
   if (!cfg.formal) {
     val bpu = Module(
@@ -324,7 +325,7 @@ class BasicCore(
         "IOther" -> RVI.other,
         "ZicsrReg" -> RVZicsr.reg,
         "ZicsrImm" -> RVZicsr.imm,
-        "Zifenci" -> RVZifencei.fence_i
+        "Zifencei" -> RVZifencei.fence_i
       )
       instTypes.foreach { case (name, fn) =>
         PerfWhen(

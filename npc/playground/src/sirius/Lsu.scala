@@ -47,7 +47,7 @@ class Lsu(
   val staticNextPc = inBits.exuPayload.ifu.pc + 4.U
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
   val newIn = inValid && (RegNext(!inValid || in.fire))
-  exte.pcReg.isJump := newIn && predErr
+  exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcahce)
   exte.pcReg.target := dynamicNextPc
   if (cfg.isDebug) {
   val debug = outBits.debug.get
