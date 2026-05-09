@@ -5,6 +5,18 @@
 extern uint64_t g_nr_guest_inst;
 extern bool g_print_step;
 
+#ifdef CONFIG_BTRACE
+void btrace(btrace_data_t btrace_data) {
+  static FILE *bin = NULL;
+  if (bin == NULL) {
+    bin = fopen("btrace.bin", "w");
+    assert(bin);
+  }
+  size_t ret = fwrite(&btrace_data, 1, sizeof(btrace_data_t), bin);
+  assert(ret == sizeof(btrace_data_t));
+}
+#endif
+
 #ifdef CONFIG_PCTRACE
 void pctrace(Decode *s) {
   static FILE *bin = NULL;

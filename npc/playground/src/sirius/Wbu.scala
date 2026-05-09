@@ -44,16 +44,18 @@ class Wbu(
     )
   )
 
-  // pc
-  val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
-  pcReg.target := Mux(
-    inBits.lsuPayload.trap.isTrap,
-    exte.csr.mtvec,
-    Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
-  )
-  pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
-    0
-  )) || inBits.lsuPayload.trap.isTrap)
+  // Jump ctrl (csr & trap)
+  // val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
+  // pcReg.target := Mux(
+  //   inBits.lsuPayload.trap.isTrap,
+  //   exte.csr.mtvec,
+  //   Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
+  // )
+  // pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
+  //   0
+  // )) || inBits.lsuPayload.trap.isTrap)
+  pcReg.isJump := in.valid && (ctrl.isJumpCsr || inBits.lsuPayload.trap.isTrap)
+  pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, csrJumpTarget)
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
@@ -63,7 +65,7 @@ class Wbu(
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
-      WriteBackSelEnum.imm.asUInt -> imm,
+      // WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.lsu.asUInt -> loadData,
       WriteBackSelEnum.csr.asUInt -> csrData,
       WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
@@ -86,7 +88,8 @@ class Wbu(
     implicit val XLEN: Int = cfg.xlen
 
     when(exte.pcReg.isJump) {
-      assume(exte.pcReg.target(1, 0) === 0.U)
+      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(exte.pcReg.target(0) === 0.U)
+      else assume(exte.pcReg.target(1, 0) === 0.U)
     }
 
     import rvspeccore.core.RVConfig
@@ -134,8 +137,11 @@ class Wbu(
   if (cfg.isDebug) {
     dontTouch(debug.get)
     debug.get.valid := in.valid
-    debug.get.isJump := pcReg.isJump
-    debug.get.jumpTarget := pcReg.target
+    debug.get.isJump := pcReg.isJump || inBits.debug.get.isJump
+    when (in.valid) {
+      assert(!(pcReg.isJump && inBits.debug.get.isJump))
+    }
+    debug.get.jumpTarget := Mux(pcReg.isJump, pcReg.target, inBits.debug.get.jumpTarget)
   }
 
   PerfWhen(

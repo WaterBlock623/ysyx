@@ -31,7 +31,7 @@ object JumpTargetSelEnum extends ChiselEnum {
 }
 
 object WriteBackSelEnum extends ChiselEnum {
-  val alu, imm, staticNextPc, lsu, csr = Value
+  val alu, staticNextPc, lsu, csr = Value
 }
 
 object LoadStoreTypeEnum extends ChiselEnum {

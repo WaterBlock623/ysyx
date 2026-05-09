@@ -113,14 +113,14 @@ class IcacheTest extends ModuleWithInitReset {
   })
   IcacheMasterConstraint(io.req)
 
-  // val reqQueue = Module(new Queue(chiselTypeOf(io.req.ar.bits), 16, true, true))
-  // reqQueue.io.enq.valid := io.req.ar.fire
-  // reqQueue.io.enq.bits := io.req.ar.bits
-  // reqQueue.io.deq.ready := io.req.r.fire
+  val reqQueue = Module(new Queue(chiselTypeOf(io.req.ar.bits), 16, true, true))
+  reqQueue.io.enq.valid := io.req.ar.fire
+  reqQueue.io.enq.bits := io.req.ar.bits
+  reqQueue.io.deq.ready := io.req.r.fire
   val refRData = Wire(UInt(32.W))
   dontTouch(refRData)
-  // RefMemConstraint(256, io.mem, reqQueue.io.deq.bits.addr, refRData)
-  RefMemConstraint(256, io.mem, io.req.ar.bits.addr, refRData)
+  RefMemConstraint(256, io.mem, reqQueue.io.deq.bits.addr, refRData)
+  // RefMemConstraint(256, io.mem, io.req.ar.bits.addr, refRData)
 
   val dut = Module(new Icache(setNum = 2, wayNum = 8, wayByte = 8, busByte = 4))
 
@@ -139,6 +139,7 @@ class BasicCoreTest extends ModuleWithInitReset {
   val io = IO(new Bundle {
     val imem = new Axi4IO
     val dmem = new Axi4IO
+    val bpu = new IfuToBpuIO
   })
   AxiSlaveConstraint(io.imem)
   AxiSlaveConstraint(io.dmem)
@@ -148,12 +149,14 @@ class BasicCoreTest extends ModuleWithInitReset {
     isDebug = false,
     perf = false,
     formal = true,
-    rvOpCodesPath = rvOpCodesPath
+    rvOpCodesPath = rvOpCodesPath,
+    registerAddrWidth = 5
   )
   val ucfg = UnitConfig()
   val basicCore = Module(new BasicCore()(cfg, ucfg))
   io.imem :<>= basicCore.io.axiIfu
   io.dmem :<>= basicCore.io.axiLsu
+  io.bpu :<>= basicCore.io.bpu.get
 }
 
 class SiriusSpec extends AnyFlatSpec {
