@@ -42,6 +42,8 @@
          (BITS(i, 12, 9) << 2); \
   printf("%x\n", i); \
   printf("%u\n", *imm); \
+  printf("%llx\n", BITS(i, 7, 8)); \
+  printf("%llx\n", BITS(i, 7, 8) << 6); \
 } while(0)
 #define immCLSW() do { \
   *imm = (BITS(i, 5, 5) << 6) | \
