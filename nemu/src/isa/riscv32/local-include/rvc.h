@@ -40,6 +40,7 @@
 #define immCSWSP() do { \
   *imm = (BITS(i, 7, 8) << 6) | \
          (BITS(i, 12, 9) << 2); \
+  printf("%u\n", *imm); \
 } while(0)
 #define immCLSW() do { \
   *imm = (BITS(i, 5, 5) << 6) | \
