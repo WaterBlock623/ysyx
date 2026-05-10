@@ -13,7 +13,8 @@
 
 #define LIST_IMM_C(WITH, _) \
   _(WITH, CNONE) \
-  _(WITH, CLSWSP) \
+  _(WITH, CLWSP) \
+  _(WITH, CSWSP) \
   _(WITH, CLSW) \
   _(WITH, CJ) \
   _(WITH, CB) \
@@ -31,10 +32,14 @@
 #define GEN_MAP_CASE_C LIST_SRC_C(LIST_IMM_C, WRAP_MAP_CASE_C)
 
 #define immCNONE()
-#define immCLSWSP() do { \
+#define immCLWSP() do { \
   *imm = (BITS(i, 3, 2) << 6) | \
          (BITS(i, 12, 12) << 5) | \
          (BITS(i, 6, 4) << 2); \
+} while(0)
+#define immCSWSP() do { \
+  *imm = (BITS(i, 7, 8) << 6) | \
+         (BITS(i, 12, 9) << 2); \
 } while(0)
 #define immCLSW() do { \
   *imm = (BITS(i, 5, 5) << 6) | \
