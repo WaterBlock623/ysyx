@@ -207,6 +207,11 @@ class Lsu(
 
   // Debug
   if (cfg.formal) {
+    when(realTaken) {
+      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(realTarget(0) === 0.U)
+      else assume(realTarget(1, 0) === 0.U)
+    }
+
     when(inValid) {
       assume(!eLoadStoreAddressMisaligned)
       when(exte.mem.r.valid) {

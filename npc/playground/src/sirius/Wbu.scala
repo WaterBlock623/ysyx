@@ -88,7 +88,8 @@ class Wbu(
     implicit val XLEN: Int = cfg.xlen
 
     when(exte.pcReg.isJump) {
-      assume(exte.pcReg.target(1, 0) === 0.U)
+      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(exte.pcReg.target(0) === 0.U)
+      else assume(exte.pcReg.target(1, 0) === 0.U)
     }
 
     import rvspeccore.core.RVConfig

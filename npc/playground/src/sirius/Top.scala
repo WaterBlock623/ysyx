@@ -11,6 +11,7 @@ class BasicCore(
   val io = IO(new Bundle {
     val axiIfu = new Axi4IO
     val axiLsu = new Axi4IO
+    val bpu = Option.when(cfg.formal)(new IfuToBpuIO)
   })
 
   // val pcReg = Module(new PcReg)
@@ -55,8 +56,7 @@ class BasicCore(
     bpu.ifuIn :<>= ifu.exte.bpu
     bpu.lsuIn :<>= lsu.exte.bpu
   } else {
-    val bpuio = IO(new IfuToBpuIO)
-    bpuio :<>= ifu.exte.bpu
+    io.bpu.get :<>= ifu.exte.bpu
   }
 
   if (cfg.pipeline) {

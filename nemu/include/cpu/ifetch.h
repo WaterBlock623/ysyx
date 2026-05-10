@@ -17,9 +17,13 @@
 
 #include <memory/vaddr.h>
 
-static inline uint32_t inst_fetch(vaddr_t *pc, int len) {
-  uint32_t inst = vaddr_ifetch(*pc, len);
-  (*pc) += len;
+static inline uint32_t inst_fetch(vaddr_t *pc) {
+  uint32_t inst = vaddr_ifetch(*pc, 2);
+  (*pc) += 2;
+  if ((inst & 3u) == 3u) {
+    inst |= vaddr_ifetch(*pc, 2) << 16;
+    (*pc) += 2;
+  }
   return inst;
 }
 

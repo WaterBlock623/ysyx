@@ -395,7 +395,7 @@ class Ifu(
           val predTaken = Bool()
           val predTarget = UInt(cfg.xlen.W)
         },
-        4,
+        32,
         true,
         true
       )
