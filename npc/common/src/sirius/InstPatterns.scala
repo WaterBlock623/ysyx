@@ -8,7 +8,6 @@ import org.chipsalliance.rvdecoderdb
 
 trait DecodePatternBitSet extends DecodePattern {
   def bitSet:          BitSet
-  // override def bitPat: BitPat = throw new IllegalAccessException("Should not access bitPat")
   override def bitPat: BitPat = BitPat.dontCare(bitSet.getWidth)
 }
 
@@ -19,6 +18,10 @@ case class InstPattern(
 
   custom: Boolean = false,
   bs:     Option[BitSet] = None,
+
+  rs1Sel: Data = DontCare,
+  rs2Sel: Data = DontCare,
+  rdSel: Data = DontCare,
 
   aluIn1Sel: Data = DontCare,
   aluIn2Sel: Data = DontCare,

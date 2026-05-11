@@ -8,10 +8,15 @@ object ExtTypeEnum extends ChiselEnum {
 
 object InstTypeEnum extends ChiselEnum {
   val R, I, S, B, U, J, Zicsr = Value
+  val CLWSP, CSWSP, CLSW, CJ, CB, CLIADDI, CLUI, CADDI16SP, CADDI4SPN = Value
 }
 
 object AluInSelEnum extends ChiselEnum {
   val imm, rs, pc, csr = Value
+}
+
+object RegAddrSelEnum extends ChiselEnum {
+  val rd, rs, crs2, crdrs = Value
 }
 
 object AluOpEnum extends ChiselEnum {
