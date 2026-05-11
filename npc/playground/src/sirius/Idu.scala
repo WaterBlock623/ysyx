@@ -55,7 +55,16 @@ class InstDecoder(
 
   val decodeCollector = InstDecodeCollector()
   val decodeTable =
-    new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
+    new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields) {
+      override lazy val table: TruthTable = TruthTable(
+        decodeCollector.allPatterns.map { op =>
+          val fields =
+            decodeCollector.allFields.reverse.map(field => field.genTable(op)).reduce(_ ## _)
+          op.bitSet.terms.map(bitPat => bitPat -> fields)
+        }.flatten,
+        decodeCollector.allFields.reverse.map(_.default).reduce(_ ## _)
+      )
+    }
   val decodeResult = decodeTable.decode(io.inst)
   // 连接输出Bundle
   decodeCollector.allFields.foreach { f =>
