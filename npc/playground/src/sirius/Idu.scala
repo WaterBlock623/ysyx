@@ -44,6 +44,29 @@ class ImmParser(
   )
 }
 
+class DecodeTableBitSet[I <: DecodePatternBitSet](
+  patterns: Seq[I],
+  fields:   Seq[DecodeField[I, _ <: Data]]) {
+  require(
+    patterns.map(_.bitSet.getWidth).distinct.size == 1,
+    "All instructions must have the same width"
+  )
+
+  def bundle: DecodeBundle = new DecodeBundle(fields)
+
+  lazy val table: TruthTable = TruthTable(
+    patterns.map { op =>
+      val result =
+        fields.reverse.map(field => field.genTable(op)).reduce(_ ## _)
+      op.bitSet.terms.map(bitPat => bitPat -> result)
+    }.flatten,
+    fields.reverse.map(_.default).reduce(_ ## _)
+  )
+
+  def decode(input: UInt): DecodeBundle =
+    chisel3.util.experimental.decode.decoder(input, table).asTypeOf(bundle)
+}
+
 // 指令译码
 class InstDecoder(
   implicit private val cfg: CoreConfig)
@@ -55,16 +78,7 @@ class InstDecoder(
 
   val decodeCollector = InstDecodeCollector()
   val decodeTable =
-    new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields) {
-      override lazy val table: TruthTable = TruthTable(
-        decodeCollector.allPatterns.map { op =>
-          val fields =
-            decodeCollector.allFields.reverse.map(field => field.genTable(op)).reduce(_ ## _)
-          op.bitSet.terms.map(bitPat => bitPat -> fields)
-        }.flatten,
-        decodeCollector.allFields.reverse.map(_.default).reduce(_ ## _)
-      )
-    }
+    new DecodeTableBitSet(decodeCollector.allPatterns, decodeCollector.allFields)
   val decodeResult = decodeTable.decode(io.inst)
   // 连接输出Bundle
   decodeCollector.allFields.foreach { f =>

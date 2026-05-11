@@ -8,7 +8,8 @@ import org.chipsalliance.rvdecoderdb
 
 trait DecodePatternBitSet extends DecodePattern {
   def bitSet:          BitSet
-  override def bitPat: BitPat = throw new IllegalAccessException("Should not access bitPat")
+  // override def bitPat: BitPat = throw new IllegalAccessException("Should not access bitPat")
+  override def bitPat: BitPat = BitPat.dontCare(bitSet.getWidth)
 }
 
 case class InstPattern(
