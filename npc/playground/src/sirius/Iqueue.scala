@@ -25,8 +25,8 @@ class Iqueue(
   val hiReg32 = Reg(Vec(entries32, UInt(16.W)))
   val loReg32 = Reg(Vec(entries32, UInt(16.W)))
 
-  val wPtrReg32 = RegInit(0.U(entries32.W))
-  val rPtrReg16 = RegInit(0.U(entries16.W))
+  val wPtrReg32 = RegInit(0.U(log2Ceil(entries32).W))
+  val rPtrReg16 = RegInit(0.U(log2Ceil(entries16).W))
 
   val counter16 = RegInit(0.U((entries16 + 1).W))
   assert(counter16 <= entries16.U)
