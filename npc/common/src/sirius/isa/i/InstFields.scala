@@ -9,12 +9,12 @@ import cpuutil.CanAutoGenSig
 object InstFieldsRvI {
   val fields = Seq(
     MakeBoolField("readRs1", "global", _.rs1Sel match {
-      case DontCare => false
-      case _ => true
+      case _: RegAddrSelEnum.Type => true
+      case _ => false
     }),
     MakeBoolField("readRs2", "global", _.rs2Sel match {
-      case DontCare => false
-      case _ => true
+      case _: RegAddrSelEnum.Type => true
+      case _ => false
     }),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("rs1Sel", "id", RegAddrSelEnum, _.rs1Sel),
