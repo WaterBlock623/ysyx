@@ -16,7 +16,7 @@ object AluInSelEnum extends ChiselEnum {
 }
 
 object RegAddrSelEnum extends ChiselEnum {
-  val rd, rs, crs2, crdrs = Value
+  val rd, rs, crs2, crdrs1, crdrs2 = Value
 }
 
 object AluOpEnum extends ChiselEnum {

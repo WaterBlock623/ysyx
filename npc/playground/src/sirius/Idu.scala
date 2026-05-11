@@ -107,14 +107,6 @@ class Idu(
   outBits.iduPayload.viewAsSupertype(new IfuPayload) := inBits.ifuPayload
 
   val inst = inBits.ifuPayload.ifu.inst
-  // rs1
-  exte.regFile.rAddr(0) := inst(19, 15)
-  outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
-  // rs2
-  exte.regFile.rAddr(1) := inst(24, 20)
-  outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
-  // rd
-  outBits.iduPayload.idu.wAddr := inst(11, 7)
 
   // ctrl
   val instDecoder = Module(new InstDecoder())
@@ -125,6 +117,42 @@ class Idu(
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
   exte.globalCtrl.globalCtrl := ctrl.global
+
+  // Reg
+  val rs1 = inst(19, 15)
+  val rs2 = inst(24, 20)
+  val rd = inst(11, 7)
+  val crs2 = inst(6, 2)
+  val crdrs1p = inst(9, 7)
+  val crdrs2p = inst(4, 2)
+
+  // rs1
+  exte.regFile.rAddr(0) := MuxLookup(ctrl.id.rs1Sel, rs1)(
+    Seq(
+      RegAddrSelEnum.rs.asUInt -> rs1,
+      RegAddrSelEnum.crdrs1.asUInt -> crdrs1p
+    )
+  )
+  outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
+
+  // rs2
+  exte.regFile.rAddr(1) := MuxLookup(ctrl.id.rs2Sel, rs2)(
+    Seq(
+      RegAddrSelEnum.rs.asUInt -> rs2,
+      RegAddrSelEnum.crdrs2.asUInt -> crdrs2p,
+      RegAddrSelEnum.crs2.asUInt -> crs2
+    )
+  )
+  outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
+
+  // rd
+  outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rs2Sel, rs2)(
+    Seq(
+      RegAddrSelEnum.rd.asUInt -> rd,
+      RegAddrSelEnum.crdrs1.asUInt -> crdrs1p,
+      RegAddrSelEnum.crdrs2.asUInt -> crdrs2p
+    )
+  )
 
   when(!inBits.ifuPayload.trap.isTrap) {
     outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall || ctrl.wb.isEbreak
