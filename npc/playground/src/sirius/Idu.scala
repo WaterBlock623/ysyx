@@ -146,7 +146,7 @@ class Idu(
   outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
 
   // rd
-  outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rs2Sel, rs2)(
+  outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rdSel, rd)(
     Seq(
       RegAddrSelEnum.rd.asUInt -> rd,
       RegAddrSelEnum.crdrs1.asUInt -> crdrs1p,
