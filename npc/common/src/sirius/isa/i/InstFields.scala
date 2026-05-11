@@ -8,8 +8,14 @@ import cpuutil.CanAutoGenSig
 
 object InstFieldsRvI {
   val fields = Seq(
-    MakeBoolField("readRs1", "global", p => rvdecoderdb.Utils.readRs1(p.inst.get)),
-    MakeBoolField("readRs2", "global", p => rvdecoderdb.Utils.readRs2(p.inst.get)),
+    MakeBoolField("readRs1", "global", _.rs1Sel match {
+      case DontCare => false
+      case _ => true
+    }),
+    MakeBoolField("readRs2", "global", _.rs2Sel match {
+      case DontCare => false
+      case _ => true
+    }),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
     MakeEnumField("rs1Sel", "id", RegAddrSelEnum, _.rs1Sel),
     MakeEnumField("rs2Sel", "id", RegAddrSelEnum, _.rs2Sel),
