@@ -142,8 +142,8 @@ class Idu(
   val rs2 = inst(24, 20)
   val rd = inst(11, 7)
   val crs2 = inst(6, 2)
-  val crdrs1p = inst(9, 7)
-  val crdrs2p = inst(4, 2)
+  val crdrs1p = 1.U(1.W) ## inst(9, 7)
+  val crdrs2p = 1.U(1.W) ## inst(4, 2)
 
   // rs1
   exte.regFile.rAddr(0) := MuxLookup(ctrl.id.rs1Sel, rs1)(
