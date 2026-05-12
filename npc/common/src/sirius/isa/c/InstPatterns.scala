@@ -324,7 +324,7 @@ case class InstPatternRvC(
       bs = Some(bsMv),
       rs2Sel = RegAddrSelEnum.crs2,
       rdSel = RegAddrSelEnum.rd,
-      aluIn1Sel = AluInSelEnum.rs,
+      aluIn2Sel = AluInSelEnum.rs,
       aluOp = AluOpEnum.direct2,
       exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
