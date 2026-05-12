@@ -11,6 +11,16 @@ trait DecodePatternBitSet extends DecodePattern {
   override def bitPat: BitPat = BitPat.dontCare(bitSet.getWidth)
 }
 
+object GetInstBitPat {
+  def apply(
+    name: String
+  )(
+    implicit insts: Iterable[rvdecoderdb.Instruction]
+  ): BitPat = {
+    BitPat("b" + insts.find(_.name == name).get.encoding.toString)
+  }
+}
+
 case class InstPattern(
   name:     String,
   extType:  ExtTypeEnum.Type,
@@ -21,7 +31,7 @@ case class InstPattern(
 
   rs1Sel: Data = DontCare,
   rs2Sel: Data = DontCare,
-  rdSel: Data = DontCare,
+  rdSel:  Data = DontCare,
 
   aluIn1Sel: Data = DontCare,
   aluIn2Sel: Data = DontCare,
@@ -63,7 +73,7 @@ case class InstPattern(
     }
   }
   def bitSet: BitSet = {
-    bs.getOrElse(BitPat("b" + inst.get.encoding.toString()))
+    bs.getOrElse(GetInstBitPat(name))
   }
 
   def inArgs(field: String): Boolean = {
