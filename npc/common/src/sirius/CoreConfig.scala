@@ -28,7 +28,7 @@ case class CoreConfig(
       ExtTypeEnum.Zifencei,
       ExtTypeEnum.C
     ),
-  val registerAddrWidth:   Int = 4,
+  val registerAddrWidth:   Int = 5,
   val registerReadPortNum: Int = 2,
   val memoryAddrWidth:     Int = 32,
   val pcInit:              BigInt = 0x30000000,
