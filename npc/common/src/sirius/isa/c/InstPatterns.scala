@@ -380,6 +380,7 @@ case class InstPatternRvC(
       loadStoreLength = LoadStoreLengthEnum.w,
     ),
   )
+  println("#################")
   pattern.foreach {p =>
     if (p.bs.exists(bp => bp == BitPat("b????????????????010???????????10"))) {
       println(s"####### ${p.name}")
