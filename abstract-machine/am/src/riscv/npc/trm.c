@@ -18,6 +18,7 @@ void putch(char ch) {
   outb(SERIAL_PORT, ch);
 }
 
+__attribute__((naked))
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : :"r"(code));
   while (1);

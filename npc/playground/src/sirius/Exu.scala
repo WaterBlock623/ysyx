@@ -62,6 +62,7 @@ class AluBase(
   val srlResult = io.src1 >> shiftNum
   val sraResult = (io.src1.asSInt >> shiftNum).asUInt
   val direct1Result = io.src1
+  val direct2Result = io.src2
   val clearResult = io.src2 & ~io.src1 // reversal
 
   io.out := addResult
@@ -90,6 +91,7 @@ class AluBase(
     is(srl.asUInt) {io.out := srlResult}
     is(sra.asUInt) {io.out := sraResult}
     is(direct1.asUInt) {io.out := direct1Result}
+    is(direct2.asUInt) {io.out := direct2Result}
     // is(clear.asUInt) {io.out := clearResult; assert(io.out === (io.src1 & ~io.src2))}
     is(clear.asUInt) {io.out := clearResult}
   }
@@ -126,13 +128,14 @@ class JumpTargetGenerator(
     val jumpTarget = Output(UInt(cfg.xlen.W))
   })
 
-  val pcPlusImm = (io.pc + io.imm) & ~1.U(cfg.xlen.W)
-  io.jumpTarget := MuxLookup(io.jumpTargetSel, pcPlusImm)(
+  val pcPlusImm = io.pc + io.imm
+  val unalignTarget = MuxLookup(io.jumpTargetSel, pcPlusImm)(
     Seq(
       JumpTargetSelEnum.pcPlusImm.asUInt -> pcPlusImm,
       JumpTargetSelEnum.alu.asUInt -> io.aluResult
     )
   )
+  io.jumpTarget := unalignTarget(cfg.xlen - 1, 1) ## 0.U(1.W)
 }
 
 class Exu(

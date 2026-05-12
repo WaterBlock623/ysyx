@@ -8,9 +8,18 @@ import cpuutil.CanAutoGenSig
 
 object InstFieldsRvI {
   val fields = Seq(
-    MakeBoolField("readRs1", "global", p => rvdecoderdb.Utils.readRs1(p.inst.get)),
-    MakeBoolField("readRs2", "global", p => rvdecoderdb.Utils.readRs2(p.inst.get)),
+    MakeBoolField("readRs1", "global", _.rs1Sel match {
+      case _: RegAddrSelEnum.Type => true
+      case _ => false
+    }),
+    MakeBoolField("readRs2", "global", _.rs2Sel match {
+      case _: RegAddrSelEnum.Type => true
+      case _ => false
+    }),
     MakeEnumField("instType", "id", InstTypeEnum, _.instType),
+    MakeEnumField("rs1Sel", "id", RegAddrSelEnum, _.rs1Sel),
+    MakeEnumField("rs2Sel", "id", RegAddrSelEnum, _.rs2Sel),
+    MakeEnumField("rdSel", "id", RegAddrSelEnum, _.rdSel),
     MakeEnumField("aluIn1Sel", "ex", AluInSelEnum, _.aluIn1Sel),
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
@@ -53,7 +62,7 @@ object InstFieldsRvI {
     MakeBoolField("isBranch", "wb", _.isBranch),
     MakeBoolField("isJump", "wb", _.isJump),
     MakeBoolField("isJumpCsr", "wb", _.isJumpCsr),
-    MakeBoolField("isEbreak", "wb", _.name == "ebreak"),
+    MakeBoolField("isEbreak", "wb", p => Set("ebreak", "c.ebreak").contains(p.name)),
     MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
 }

@@ -14,6 +14,7 @@ void putch(char ch) {
   io_write(AM_UART_TX, ch);
 }
 
+__attribute__((naked))
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : :"r"(code));
   while (1);
