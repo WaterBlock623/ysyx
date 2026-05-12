@@ -62,7 +62,7 @@ object InstFieldsRvI {
     MakeBoolField("isBranch", "wb", _.isBranch),
     MakeBoolField("isJump", "wb", _.isJump),
     MakeBoolField("isJumpCsr", "wb", _.isJumpCsr),
-    MakeBoolField("isEbreak", "wb", _.name == "ebreak"),
+    MakeBoolField("isEbreak", "wb", p => Set("ebreak", "c.ebreak").contains(p.name)),
     MakeBoolField("isEcall", "wb", _.name == "ecall"),
   )
 }

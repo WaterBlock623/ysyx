@@ -11,13 +11,33 @@ trait DecodePatternBitSet extends DecodePattern {
   override def bitPat: BitPat = BitPat.dontCare(bitSet.getWidth)
 }
 
+object GetInstInfo {
+  def apply(
+    name: String
+  )(
+    implicit insts: Iterable[rvdecoderdb.Instruction]
+  ): rvdecoderdb.Instruction = {
+    insts.find(_.name == name).get
+  }
+}
+
 object GetInstBitPat {
   def apply(
     name: String
   )(
     implicit insts: Iterable[rvdecoderdb.Instruction]
   ): BitPat = {
-    BitPat("b" + insts.find(_.name == name).get.encoding.toString)
+    BitPat("b" + GetInstInfo(name).encoding.toString)
+  }
+}
+
+object PriorityBitSet {
+  def apply(bitSets: Seq[BitSet]): Seq[BitSet] = {
+    bitSets.zipWithIndex.map { case (bs, idx) =>
+      bitSets.take(idx).foldRight(bs) { (cur, lastResult) =>
+        lastResult.subtract(cur) 
+      }
+    }
   }
 }
 
@@ -64,11 +84,7 @@ case class InstPattern(
       Some(
         insts
           .find(i => i.name == name)
-          .getOrElse(
-            throw new IllegalArgumentException(
-              s"Can not find instruction: $name"
-            )
-          )
+          .getOrElse(throw new IllegalArgumentException(s"Can not find instruction: $name"))
       )
     }
   }
@@ -88,4 +104,5 @@ case class InstPatterns(
   val patternRvI = InstPatternRvI().pattern
   val patternRvZicsr = InstPatternRvZicsr().pattern
   val patternRvZifencei = InstPatternRvZifencei().pattern
+  val patternRvC = InstPatternRvC().pattern
 }

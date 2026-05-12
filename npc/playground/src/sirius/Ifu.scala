@@ -70,6 +70,7 @@ class Ifu(
     outBits.ifuPayload.ifu.pc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    outBits.ifuPayload.ifu.isC := iqueue.io.deq.bits.isC
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -154,6 +155,7 @@ class Ifu(
     outBits.ifuPayload.ifu.predTaken := metaQueue.io.deq.bits.predTaken
     outBits.ifuPayload.ifu.predTarget := metaQueue.io.deq.bits.predTarget
     metaQueue.io.deq.ready := exte.mem.r.fire
+    outBits.ifuPayload.ifu.isC := outBits.ifuPayload.ifu.inst(1, 0) =/= "b11".U
   }
 
   // debug

@@ -130,7 +130,7 @@ class Idu(
   exte.regFile.rAddr(0) := MuxLookup(ctrl.id.rs1Sel, rs1)(
     Seq(
       RegAddrSelEnum.rs.asUInt -> rs1,
-      RegAddrSelEnum.crdrs1.asUInt -> crdrs1p
+      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p
     )
   )
   outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
@@ -139,7 +139,7 @@ class Idu(
   exte.regFile.rAddr(1) := MuxLookup(ctrl.id.rs2Sel, rs2)(
     Seq(
       RegAddrSelEnum.rs.asUInt -> rs2,
-      RegAddrSelEnum.crdrs2.asUInt -> crdrs2p,
+      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
       RegAddrSelEnum.crs2.asUInt -> crs2
     )
   )
@@ -149,8 +149,8 @@ class Idu(
   outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rdSel, rd)(
     Seq(
       RegAddrSelEnum.rd.asUInt -> rd,
-      RegAddrSelEnum.crdrs1.asUInt -> crdrs1p,
-      RegAddrSelEnum.crdrs2.asUInt -> crdrs2p
+      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
+      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p
     )
   )
 
