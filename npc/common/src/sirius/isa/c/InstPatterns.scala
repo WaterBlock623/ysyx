@@ -367,7 +367,7 @@ case class InstPatternRvC(
       writeBackSel = WriteBackSelEnum.alu
     ),
     InstPattern(
-      "c.lwsp",
+      "c.swsp",
       ExtTypeEnum.C,
       InstTypeEnum.CSWSP,
       rs1Sel = RegAddrSelEnum.x2,
@@ -380,10 +380,4 @@ case class InstPatternRvC(
       loadStoreLength = LoadStoreLengthEnum.w,
     ),
   )
-  println("#################")
-  pattern.foreach {p =>
-    if (p.bs.exists(bp => bp == BitPat("b????????????????010???????????10"))) {
-      println(s"####### ${p.name}")
-    }
-  }
 }
