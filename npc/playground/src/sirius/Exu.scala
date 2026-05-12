@@ -128,13 +128,14 @@ class JumpTargetGenerator(
     val jumpTarget = Output(UInt(cfg.xlen.W))
   })
 
-  val pcPlusImm = (io.pc + io.imm) & ~1.U(cfg.xlen.W)
-  io.jumpTarget := MuxLookup(io.jumpTargetSel, pcPlusImm)(
+  val pcPlusImm = io.pc + io.imm
+  val unalignTarget = MuxLookup(io.jumpTargetSel, pcPlusImm)(
     Seq(
       JumpTargetSelEnum.pcPlusImm.asUInt -> pcPlusImm,
       JumpTargetSelEnum.alu.asUInt -> io.aluResult
     )
   )
+  io.jumpTarget := unalignTarget(cfg.xlen - 1, 1) ## 0.U(1.W)
 }
 
 class Exu(
