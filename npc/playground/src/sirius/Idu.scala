@@ -32,6 +32,16 @@ class ImmParser(
     ) ## 0.U(1.W)
   val immTypeZicsr = inst(19, 15).pad(cfg.xlen)
 
+  val immTypeCLWSP = ZeroExt(inst(3, 2) ## inst(12) ## inst(6, 4) ## 0.U(2.W), cfg.xlen)
+  val immTypeCSWSP = ZeroExt(inst(8, 7) ## inst(12, 9) ## 0.U(2.W), cfg.xlen)
+  val immTypeCLSW = ZeroExt(inst(5) ## inst(12, 10) ## inst(6) ## 0.U(2.W), cfg.xlen)
+  val immTypeCJ = SignExt(inst(12) ## inst(8) ## inst(10, 9) ## inst(6) ## inst(7) ## inst(2) ## inst(11) ## inst(5, 3) ## 0.U(1.W), cfg.xlen)
+  val immTypeCB = SignExt(inst(12) ## inst(6, 5) ## inst(2) ## inst(11, 10) ## inst(4, 3) ## 0.U(1.W), cfg.xlen)
+  val immTypeCLIADDI = SignExt(inst(12) ## inst(6, 2), cfg.xlen)
+  val immTypeCLUI = SignExt(inst(12) ## inst(6, 2) ## 0.U(12.W), cfg.xlen)
+  val immTypeCADDI16SP = SignExt(inst(12) ## inst(4, 3) ## inst(5) ## inst(2) ## inst(6) ## 0.U(4.W), cfg.xlen)
+  val immTypeCADDI4SPN = ZeroExt(inst(10, 7) ## inst(12, 11) ## inst(5) ## inst(6) ## 0.U(2.W), cfg.xlen)
+
   io.imm := MuxLookup(io.instType, immTypeI)(
     Seq(
       InstTypeEnum.I.asUInt -> immTypeI,
@@ -39,7 +49,16 @@ class ImmParser(
       InstTypeEnum.B.asUInt -> immTypeB,
       InstTypeEnum.U.asUInt -> immTypeU,
       InstTypeEnum.J.asUInt -> immTypeJ,
-      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr
+      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr,
+      InstTypeEnum.CLWSP.asUInt -> immTypeCLWSP,
+      InstTypeEnum.CSWSP.asUInt -> immTypeCSWSP,
+      InstTypeEnum.CLSW.asUInt -> immTypeCLSW,
+      InstTypeEnum.CJ.asUInt -> immTypeCJ,
+      InstTypeEnum.CB.asUInt -> immTypeCB,
+      InstTypeEnum.CLIADDI.asUInt -> immTypeCLIADDI,
+      InstTypeEnum.CLUI.asUInt -> immTypeCLUI,
+      InstTypeEnum.CADDI16SP.asUInt -> immTypeCADDI16SP,
+      InstTypeEnum.CADDI4SPN.asUInt -> immTypeCADDI4SPN,
     )
   )
 }
@@ -130,7 +149,9 @@ class Idu(
   exte.regFile.rAddr(0) := MuxLookup(ctrl.id.rs1Sel, rs1)(
     Seq(
       RegAddrSelEnum.rs.asUInt -> rs1,
-      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p
+      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
+      RegAddrSelEnum.rd.asUInt -> rd,
+      RegAddrSelEnum.x2.asUInt -> 2.U,
     )
   )
   outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
@@ -140,7 +161,8 @@ class Idu(
     Seq(
       RegAddrSelEnum.rs.asUInt -> rs2,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
-      RegAddrSelEnum.crs2.asUInt -> crs2
+      RegAddrSelEnum.crs2.asUInt -> crs2,
+      RegAddrSelEnum.x0.asUInt -> 0.U
     )
   )
   outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
@@ -150,7 +172,9 @@ class Idu(
     Seq(
       RegAddrSelEnum.rd.asUInt -> rd,
       RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
-      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p
+      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
+      RegAddrSelEnum.x1.asUInt -> 1.U,
+      RegAddrSelEnum.x2.asUInt -> 2.U,
     )
   )
 

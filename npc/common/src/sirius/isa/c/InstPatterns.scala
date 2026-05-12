@@ -322,10 +322,10 @@ case class InstPatternRvC(
       ExtTypeEnum.C,
       DontCare,
       bs = Some(bsMv),
-      rs1Sel = RegAddrSelEnum.crs2,
+      rs2Sel = RegAddrSelEnum.crs2,
       rdSel = RegAddrSelEnum.rd,
       aluIn1Sel = AluInSelEnum.rs,
-      aluOp = AluOpEnum.direct1,
+      aluOp = AluOpEnum.direct2,
       exuOutSel = ExuOutSelEnum.aluBase,
       isWriteBackReg = true,
       writeBackSel = WriteBackSelEnum.alu
