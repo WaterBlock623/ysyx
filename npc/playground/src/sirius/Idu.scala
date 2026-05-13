@@ -159,7 +159,7 @@ class Idu(
   // rs2
   exte.regFile.rAddr(1) := MuxLookup(ctrl.id.rs2Sel, rs2)(
     Seq(
-      RegAddrSelEnum.x0.asUInt -> 0.U
+      RegAddrSelEnum.x0.asUInt -> 0.U,
       RegAddrSelEnum.rs.asUInt -> rs2,
       RegAddrSelEnum.crs2.asUInt -> crs2,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
