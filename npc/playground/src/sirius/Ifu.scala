@@ -29,9 +29,9 @@ class Ifu(
     // icache
     val icache = Module(
       new Icache(
-        setNum = 4,
+        setNum = 8,
         wayNum = 4,
-        wayByte = 8,
+        wayByte = 4,
         busByte = 4,
         if (cfg.ysyxsoc) {
           Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
