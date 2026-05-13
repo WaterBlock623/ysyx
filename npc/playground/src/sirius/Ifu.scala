@@ -56,8 +56,31 @@ class Ifu(
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
 
-    out.valid := iqueue.io.deq.valid
-    iqueue.io.deq.ready := out.ready
+    def pipelineConnect[T <: Data](
+      prevOut: DecoupledIO[T],
+      thisIn:  DecoupledIO[T],
+      stall:   Bool = false.B,
+      flush:   Bool = false.B
+    ) = {
+      val thisInReady = thisIn.ready || !thisIn.valid
+      val valid = RegInit(false.B)
+      when(thisInReady) {
+        valid := prevOut.valid && !stall
+      }
+      when(flush) {
+        valid := false.B
+      }
+
+      prevOut.ready := thisInReady && !stall
+      thisIn.valid := valid
+      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    }
+
+    val pipelineIqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
+    pipelineConnect(iqueue.io.deq, pipelineIqueueDeq, flush = flush)
+
+    out.valid := pipelineIqueueDeq.valid
+    pipelineIqueueDeq.ready := out.ready
     val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     when(flush) {
       pc := flushTarget
@@ -66,11 +89,11 @@ class Ifu(
     }
     exte.bpu.pc := pc
 
-    outBits.ifuPayload.ifu.inst := iqueue.io.deq.bits.inst
     outBits.ifuPayload.ifu.pc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget := exte.bpu.target
-    outBits.ifuPayload.ifu.isC := iqueue.io.deq.bits.isC
+    outBits.ifuPayload.ifu.inst := pipelineIqueueDeq.bits.inst
+    outBits.ifuPayload.ifu.isC := pipelineIqueueDeq.bits.isC
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
