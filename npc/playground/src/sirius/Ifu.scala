@@ -85,7 +85,7 @@ class Ifu(
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
-      pc := pc + Mux(iqueue.io.deq.bits.isC, 2.U, 4.U)
+      pc := pc + Mux(pipelineIqueueDeq.bits.isC, 2.U, 4.U)
     }
     exte.bpu.pc := pc
 
