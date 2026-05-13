@@ -76,25 +76,25 @@ class Ifu(
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
     }
 
-    // val pipelineIqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
-    // pipelineConnect(iqueue.io.deq, pipelineIqueueDeq, flush = flush)
-    val pipelineIqueueDeq = iqueue.io.deq
+    // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
+    // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
+    val iqueueDeq = iqueue.io.deq
 
-    out.valid := pipelineIqueueDeq.valid
-    pipelineIqueueDeq.ready := out.ready
+    out.valid := iqueueDeq.valid
+    iqueueDeq.ready := out.ready
     val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
-      pc := pc + Mux(pipelineIqueueDeq.bits.isC, 2.U, 4.U)
+      pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
     exte.bpu.pc := pc
 
     outBits.ifuPayload.ifu.pc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget := exte.bpu.target
-    outBits.ifuPayload.ifu.inst := pipelineIqueueDeq.bits.inst
-    outBits.ifuPayload.ifu.isC := pipelineIqueueDeq.bits.isC
+    outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
+    outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
