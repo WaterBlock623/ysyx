@@ -32,6 +32,16 @@ class ImmParser(
     ) ## 0.U(1.W)
   val immTypeZicsr = inst(19, 15).pad(cfg.xlen)
 
+  val immTypeCLWSP = ZeroExt(inst(3, 2) ## inst(12) ## inst(6, 4) ## 0.U(2.W), cfg.xlen)
+  val immTypeCSWSP = ZeroExt(inst(8, 7) ## inst(12, 9) ## 0.U(2.W), cfg.xlen)
+  val immTypeCLSW = ZeroExt(inst(5) ## inst(12, 10) ## inst(6) ## 0.U(2.W), cfg.xlen)
+  val immTypeCJ = SignExt(inst(12) ## inst(8) ## inst(10, 9) ## inst(6) ## inst(7) ## inst(2) ## inst(11) ## inst(5, 3) ## 0.U(1.W), cfg.xlen)
+  val immTypeCB = SignExt(inst(12) ## inst(6, 5) ## inst(2) ## inst(11, 10) ## inst(4, 3) ## 0.U(1.W), cfg.xlen)
+  val immTypeCLIADDI = SignExt(inst(12) ## inst(6, 2), cfg.xlen)
+  val immTypeCLUI = SignExt(inst(12) ## inst(6, 2) ## 0.U(12.W), cfg.xlen)
+  val immTypeCADDI16SP = SignExt(inst(12) ## inst(4, 3) ## inst(5) ## inst(2) ## inst(6) ## 0.U(4.W), cfg.xlen)
+  val immTypeCADDI4SPN = ZeroExt(inst(10, 7) ## inst(12, 11) ## inst(5) ## inst(6) ## 0.U(2.W), cfg.xlen)
+
   io.imm := MuxLookup(io.instType, immTypeI)(
     Seq(
       InstTypeEnum.I.asUInt -> immTypeI,
@@ -39,9 +49,41 @@ class ImmParser(
       InstTypeEnum.B.asUInt -> immTypeB,
       InstTypeEnum.U.asUInt -> immTypeU,
       InstTypeEnum.J.asUInt -> immTypeJ,
-      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr
+      InstTypeEnum.Zicsr.asUInt -> immTypeZicsr,
+      InstTypeEnum.CLWSP.asUInt -> immTypeCLWSP,
+      InstTypeEnum.CSWSP.asUInt -> immTypeCSWSP,
+      InstTypeEnum.CLSW.asUInt -> immTypeCLSW,
+      InstTypeEnum.CJ.asUInt -> immTypeCJ,
+      InstTypeEnum.CB.asUInt -> immTypeCB,
+      InstTypeEnum.CLIADDI.asUInt -> immTypeCLIADDI,
+      InstTypeEnum.CLUI.asUInt -> immTypeCLUI,
+      InstTypeEnum.CADDI16SP.asUInt -> immTypeCADDI16SP,
+      InstTypeEnum.CADDI4SPN.asUInt -> immTypeCADDI4SPN,
     )
   )
+}
+
+class DecodeTableBitSet[I <: DecodePatternBitSet](
+  patterns: Seq[I],
+  fields:   Seq[DecodeField[I, _ <: Data]]) {
+  require(
+    patterns.map(_.bitSet.getWidth).distinct.size == 1,
+    "All instructions must have the same width"
+  )
+
+  def bundle: DecodeBundle = new DecodeBundle(fields)
+
+  lazy val table: TruthTable = TruthTable(
+    patterns.map { op =>
+      val result =
+        fields.reverse.map(field => field.genTable(op)).reduce(_ ## _)
+      op.bitSet.terms.map(bitPat => bitPat -> result)
+    }.flatten,
+    fields.reverse.map(_.default).reduce(_ ## _)
+  )
+
+  def decode(input: UInt): DecodeBundle =
+    chisel3.util.experimental.decode.decoder(input, table).asTypeOf(bundle)
 }
 
 // 指令译码
@@ -55,7 +97,7 @@ class InstDecoder(
 
   val decodeCollector = InstDecodeCollector()
   val decodeTable =
-    new DecodeTable(decodeCollector.allPatterns, decodeCollector.allFields)
+    new DecodeTableBitSet(decodeCollector.allPatterns, decodeCollector.allFields)
   val decodeResult = decodeTable.decode(io.inst)
   // 连接输出Bundle
   decodeCollector.allFields.foreach { f =>
@@ -84,14 +126,6 @@ class Idu(
   outBits.iduPayload.viewAsSupertype(new IfuPayload) := inBits.ifuPayload
 
   val inst = inBits.ifuPayload.ifu.inst
-  // rs1
-  exte.regFile.rAddr(0) := inst(19, 15)
-  outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
-  // rs2
-  exte.regFile.rAddr(1) := inst(24, 20)
-  outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
-  // rd
-  outBits.iduPayload.idu.wAddr := inst(11, 7)
 
   // ctrl
   val instDecoder = Module(new InstDecoder())
@@ -102,6 +136,47 @@ class Idu(
   outBits.ctrl.lsuCtrl := ctrl.ls
   outBits.ctrl.wbuCtrl := ctrl.wb
   exte.globalCtrl.globalCtrl := ctrl.global
+
+  // Reg
+  val rs1 = inst(19, 15)
+  val rs2 = inst(24, 20)
+  val rd = inst(11, 7)
+  val crs2 = inst(6, 2)
+  val crdrs1p = 1.U(1.W) ## inst(9, 7)
+  val crdrs2p = 1.U(1.W) ## inst(4, 2)
+
+  // rs1
+  exte.regFile.rAddr(0) := MuxLookup(ctrl.id.rs1Sel, rs1)(
+    Seq(
+      RegAddrSelEnum.rs.asUInt -> rs1,
+      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
+      RegAddrSelEnum.rd.asUInt -> rd,
+      RegAddrSelEnum.x2.asUInt -> 2.U,
+    )
+  )
+  outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
+
+  // rs2
+  exte.regFile.rAddr(1) := MuxLookup(ctrl.id.rs2Sel, rs2)(
+    Seq(
+      RegAddrSelEnum.rs.asUInt -> rs2,
+      RegAddrSelEnum.crs2.asUInt -> crs2,
+      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
+      RegAddrSelEnum.x0.asUInt -> 0.U,
+    )
+  )
+  outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
+
+  // rd
+  outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rdSel, rd)(
+    Seq(
+      RegAddrSelEnum.rd.asUInt -> rd,
+      RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
+      RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
+      RegAddrSelEnum.x1.asUInt -> 1.U,
+      RegAddrSelEnum.x2.asUInt -> 2.U,
+    )
+  )
 
   when(!inBits.ifuPayload.trap.isTrap) {
     outBits.iduPayload.trap.isTrap := ctrl.wb.isEcall || ctrl.wb.isEbreak

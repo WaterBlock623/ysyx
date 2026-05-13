@@ -139,6 +139,7 @@ class BasicCoreTest extends ModuleWithInitReset {
   val io = IO(new Bundle {
     val imem = new Axi4IO
     val dmem = new Axi4IO
+    val bpu = new IfuToBpuIO
   })
   AxiSlaveConstraint(io.imem)
   AxiSlaveConstraint(io.dmem)
@@ -148,12 +149,14 @@ class BasicCoreTest extends ModuleWithInitReset {
     isDebug = false,
     perf = false,
     formal = true,
-    rvOpCodesPath = rvOpCodesPath
+    rvOpCodesPath = rvOpCodesPath,
+    registerAddrWidth = 5
   )
   val ucfg = UnitConfig()
   val basicCore = Module(new BasicCore()(cfg, ucfg))
   io.imem :<>= basicCore.io.axiIfu
   io.dmem :<>= basicCore.io.axiLsu
+  io.bpu :<>= basicCore.io.bpu.get
 }
 
 class SiriusSpec extends AnyFlatSpec {

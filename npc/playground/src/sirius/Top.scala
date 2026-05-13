@@ -11,6 +11,7 @@ class BasicCore(
   val io = IO(new Bundle {
     val axiIfu = new Axi4IO
     val axiLsu = new Axi4IO
+    val bpu = Option.when(cfg.formal)(new IfuToBpuIO)
   })
 
   // val pcReg = Module(new PcReg)
@@ -38,14 +39,15 @@ class BasicCore(
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  ifu.exte.globalCtrl := globalCtrl
   ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
+  val fencei = lsu.in.valid && lsu.in.bits.ctrl.lsuCtrl.isFlushIcache
+  ifu.exte.fencei := fencei
 
   if (!cfg.formal) {
     val bpu = Module(
       new Bpu(
         btbIndexWidth = 3,
-        btbTagWidth = 2,
+        btbTagWidth = 4,
         btbTargetWidth = 14,
         phtIndexWidth = 5,
         phtCounterWidth = 2
@@ -54,8 +56,7 @@ class BasicCore(
     bpu.ifuIn :<>= ifu.exte.bpu
     bpu.lsuIn :<>= lsu.exte.bpu
   } else {
-    val bpuio = IO(new IfuToBpuIO)
-    bpuio :<>= ifu.exte.bpu
+    io.bpu.get :<>= ifu.exte.bpu
   }
 
   if (cfg.pipeline) {
@@ -324,7 +325,7 @@ class BasicCore(
         "IOther" -> RVI.other,
         "ZicsrReg" -> RVZicsr.reg,
         "ZicsrImm" -> RVZicsr.imm,
-        "Zifenci" -> RVZifencei.fence_i
+        "Zifencei" -> RVZifencei.fence_i
       )
       instTypes.foreach { case (name, fn) =>
         PerfWhen(

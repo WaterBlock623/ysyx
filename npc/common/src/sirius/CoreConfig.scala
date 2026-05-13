@@ -25,7 +25,8 @@ case class CoreConfig(
     Set(
       ExtTypeEnum.I,
       ExtTypeEnum.Zicsr,
-      ExtTypeEnum.Zifencei
+      ExtTypeEnum.Zifencei,
+      ExtTypeEnum.C
     ),
   val registerAddrWidth:   Int = 4,
   val registerReadPortNum: Int = 2,
@@ -61,7 +62,8 @@ case class CoreConfig(
       ListMap(
         (Set(ExtTypeEnum.I), Set(32, 64)) -> instPatterns.patternRvI,
         (Set(ExtTypeEnum.Zicsr), Set(32)) -> instPatterns.patternRvZicsr,
-        (Set(ExtTypeEnum.Zifencei), Set(32)) -> instPatterns.patternRvZifencei
+        (Set(ExtTypeEnum.Zifencei), Set(32)) -> instPatterns.patternRvZifencei,
+        (Set(ExtTypeEnum.C), Set(32)) -> instPatterns.patternRvC
       )
     )
 }

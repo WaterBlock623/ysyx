@@ -7,6 +7,6 @@ import cpuutil.CanAutoGenSig
 
 object InstFieldsRvZifencei {
   val fields = Seq(
-    MakeBoolField("isFlushIcache", "global", _.isFlushIcache),
+    MakeBoolField("isFlushIcache", "ls", _.isFlushIcache),
   )
 }

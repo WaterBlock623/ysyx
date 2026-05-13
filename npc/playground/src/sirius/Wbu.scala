@@ -33,8 +33,9 @@ class Wbu(
   val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
   val csrData = inBits.lsuPayload.exu.csrData
-  // val staticNextPc = inBits.lsuPayload.ifu.staticNextPc
-  val staticNextPc = inBits.lsuPayload.ifu.pc + 4.U
+  val staticNextPc = inBits.lsuPayload.ifu.pc + Mux(inBits.lsuPayload.ifu.isC, 2.U, 4.U)
+  // val staticNextPc = 
+  //   Mux(inBits.lsuPayload.ifu.isC, inBits.lsuPayload.ifu.pc + 2.U, inBits.lsuPayload.ifu.pc + 4.U)
 
   // csr作为跳转地址
   val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
@@ -88,13 +89,14 @@ class Wbu(
     implicit val XLEN: Int = cfg.xlen
 
     when(exte.pcReg.isJump) {
-      assume(exte.pcReg.target(1, 0) === 0.U)
+      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(exte.pcReg.target(0) === 0.U)
+      else assume(exte.pcReg.target(1, 0) === 0.U)
     }
 
     import rvspeccore.core.RVConfig
     val rvConfig = RVConfig(
       XLEN = cfg.xlen,
-      extensions = "ZifenceiZicsr",
+      extensions = "CZifenceiZicsr",
       fakeExtensions = "",
       initValue = Map(
         "pc" -> s"h${cfg.pcInit.toString(16)}",
