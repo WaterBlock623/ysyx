@@ -76,8 +76,9 @@ class Ifu(
       thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
     }
 
-    val pipelineIqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
-    pipelineConnect(iqueue.io.deq, pipelineIqueueDeq, flush = flush)
+    // val pipelineIqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
+    // pipelineConnect(iqueue.io.deq, pipelineIqueueDeq, flush = flush)
+    val pipelineIqueueDeq = iqueue.io.deq
 
     out.valid := pipelineIqueueDeq.valid
     pipelineIqueueDeq.ready := out.ready
