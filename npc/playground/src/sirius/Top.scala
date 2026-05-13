@@ -47,7 +47,7 @@ class BasicCore(
     val bpu = Module(
       new Bpu(
         btbIndexWidth = 3,
-        btbTagWidth = 2,
+        btbTagWidth = 4,
         btbTargetWidth = 14,
         phtIndexWidth = 5,
         phtCounterWidth = 2
