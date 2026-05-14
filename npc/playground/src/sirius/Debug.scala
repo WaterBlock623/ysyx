@@ -13,8 +13,7 @@ class AxiSimDevice(memByte: Int = 0x400000)
   }
 
   val mem = Mem(memByte / 4, Vec(4, UInt(8.W)))
-  // loadMemoryFromFileInline(mem, "THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER")
-  loadMemoryFromFileInline(mem, "iverilog_test.hex")
+  loadMemoryFromFileInline(mem, "THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER")
 
   val sWaitReq :: sWaitAw :: sWaitW :: sWaitResp :: Nil = Enum(4)
 
