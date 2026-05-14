@@ -34,11 +34,13 @@ object Elaborate extends App {
     )
   val ucfg = UnitConfig()
   firtoolOptions.foreach(s => println(s))
-  circt.stage.ChiselStage.emitSystemVerilogFile(
-    new sirius.Top()(cfg, ucfg),
-    if (argMap.contains("target-dir")) {
-      Array("--target-dir", argMap("target-dir"))
-    } else { Array("--help") },
-    firtoolOptions
-  )
+  chisel3.withModulePrefix(argMap.getOrElse("prefix", "")) {
+    circt.stage.ChiselStage.emitSystemVerilogFile(
+      new sirius.Top()(cfg, ucfg),
+      if (argMap.contains("target-dir")) {
+        Array("--target-dir", argMap("target-dir"))
+      } else { Array("--help") },
+      firtoolOptions
+    )
+  }
 }

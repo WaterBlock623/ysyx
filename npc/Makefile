@@ -18,7 +18,7 @@ VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 else ifneq ($(findstring syn,$(ARCH)),) # syn
 # Chisel
-SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false --prefix ysyx_26010008
 else ifneq ($(findstring npc,$(ARCH)),) # normal npc
 # CFG
 CFG_DIR = $(NPC_HOME)/config/npc
