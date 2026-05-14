@@ -37,7 +37,7 @@ class AxiSimDevice(memByte: Int = 0x400000)
     assert(inRange(io.ar.bits.addr, cfg.pcInit.U, memByte.U), "Read unknown device: 0x%x", io.ar.bits.addr)
   }
   io.ar.ready := rState === sWaitReq
-  io.r.valid := rState === sWaitReq
+  io.r.valid := rState === sWaitResp
   io.r.bits.data := mem(arBits.addr >> 2).asUInt
   io.r.bits.id := arBits.id
   io.r.bits.last := true.B
