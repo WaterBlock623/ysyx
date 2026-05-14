@@ -11,6 +11,7 @@ case class CoreConfig(
   val isDebug:      Boolean = true,
   val perf:         Boolean = true,
   val ysyxsoc:      Boolean = true,
+  val iverilog:      Boolean = false,
   val modulePrefix: Option[String] = None,
 
   // rvdecoderdb

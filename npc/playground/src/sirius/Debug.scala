@@ -2,6 +2,93 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.loadMemoryFromFileInline
+
+class AxiSimDevice(memByte: Int = 0x400000)
+  (implicit private val cfg: CoreConfig) extends Module {
+  val io = IO(Flipped(new Axi4IO))
+
+  def inRange(addr: UInt, start: UInt, len: UInt) = {
+    (addr >= start) && (addr < (start + len))
+  }
+
+  val mem = Mem(memByte / 4, Vec(4, UInt(8.W)))
+  loadMemoryFromFileInline(mem, "THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER")
+
+  val sWaitReq :: sWaitAw :: sWaitW :: sWaitResp :: Nil = Enum(4)
+
+  // R
+  val rState = RegInit(sWaitReq)
+  switch(rState) {
+    is(sWaitReq) {
+      when(io.ar.fire) {
+        rState := sWaitResp
+      }
+    }
+    is(sWaitResp) {
+      when(io.r.fire) {
+        rState := sWaitReq
+      }
+    }
+  }
+
+  val arBits = RegEnable(io.ar.bits, io.ar.fire)
+  when (io.ar.fire) {
+    assert(inRange(io.ar.bits.addr, cfg.pcInit.U, memByte.U), "Read unknown device: 0x%x", io.ar.bits.addr)
+  }
+  io.ar.ready := rState === sWaitReq
+  io.r.valid := rState === sWaitReq
+  io.r.bits.data := mem(arBits.addr >> 2).asUInt
+  io.r.bits.id := arBits.id
+  io.r.bits.last := true.B
+  io.r.bits.resp := Axi4Resp.okay.U
+
+  // W
+  val wState = RegInit(sWaitReq)
+  switch(wState) {
+    is(sWaitReq) {
+      when(io.aw.fire && io.w.fire) {
+        wState := sWaitResp
+      }.elsewhen(io.aw.fire) {
+        wState := sWaitW
+      }.elsewhen(io.w.fire) {
+        wState := sWaitAw
+      }
+    }
+    is(sWaitAw) {
+      when(io.aw.fire) {
+        wState := sWaitResp
+      }
+    }
+    is(sWaitW) {
+      when(io.w.fire) {
+        wState := sWaitResp
+      }
+    }
+    is(sWaitResp) {
+      when(io.b.fire) {
+        wState := sWaitReq
+      }
+    }
+  }
+  val awBits = RegEnable(io.aw.bits, io.aw.fire)
+  val wBits = RegEnable(io.w.bits, io.w.fire)
+  io.aw.ready := wState === sWaitReq || wState === sWaitAw
+  io.w.ready := wState === sWaitReq || wState === sWaitW
+  io.b.valid := wState === sWaitResp
+  io.b.bits.id := awBits.id
+  io.b.bits.resp := Axi4Resp.okay.U
+  when(io.b.fire) {
+    when(inRange(awBits.addr, cfg.pcInit.U, memByte.U)) {
+      mem.write(awBits.addr >> 2, wBits.data.asTypeOf(Vec(4, UInt(8.W))), wBits.strb.asBools)
+    }.elsewhen(awBits.addr === 0x10000000.U) {
+      assert(awBits.size === 0.U) 
+      printf("%c", wBits.data(7, 0))
+    }.otherwise {
+      assert(false.B, "Write unknown device: 0x%x", awBits.addr)
+    }
+  }
+}
 
 class DebugInfoDpiC(
   implicit private val cfg: CoreConfig)

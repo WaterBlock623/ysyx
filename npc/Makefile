@@ -19,6 +19,9 @@ else ifneq ($(findstring npc,$(ARCH)),) # normal npc
 CFG_DIR = $(NPC_HOME)/config/npc
 SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
 
+else ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
+SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug false --perf false --iverilog true
+
 else ifneq ($(findstring release,$(ARCH)),) # release
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false --prefix ysyx_26010008
 

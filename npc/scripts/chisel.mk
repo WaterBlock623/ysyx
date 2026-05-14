@@ -32,6 +32,10 @@ $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 verilog: $(VSRC_TIMESTAMP)
 ifneq ($(findstring release,$(ARCH)),) # release
 	cat $(VSRC_DIR)/*.sv > $(NPC_HOME)/build/ysyx_26010008.sv
+	sed -i 's/^module .*/\n&/' $(NPC_HOME)/build/ysyx_26010008.sv
+endif
+ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
+	sed -i 's/\"THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER\"/\`IVERILOG_HEX_PATH' $(VSRC_DIR)/*.sv
 endif
 
 

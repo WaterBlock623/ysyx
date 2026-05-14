@@ -28,6 +28,7 @@ object Elaborate extends App {
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
       isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
+      iverilog = argMap.getOrElse("iverilog", "false").toBoolean,
       modulePrefix = argMap.get("prefix"),
       perf = argMap.getOrElse("perf", "false").toBoolean,
       pcInit =
