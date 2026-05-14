@@ -35,7 +35,7 @@ ifneq ($(findstring release,$(ARCH)),) # release
 	sed -i 's/^module .*/\n&/' $(NPC_HOME)/build/ysyx_26010008.sv
 endif
 ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
-	sed -i 's/\"THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER\"/\`IVERILOG_HEX_PATH' $(VSRC_DIR)/*.sv
+	# sed -i 's/\"THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER\"/\`IVERILOG_HEX_PATH/' $(VSRC_DIR)/*.sv
 endif
 
 
