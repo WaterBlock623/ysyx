@@ -26,7 +26,8 @@ class Btb(
   val tagIndexWidth = tagWidth + indexWidth
   val trivialBits = if (cfg.extensions().contains(ExtTypeEnum.C)) 1 else 2
 
-  val tags = Reg(Vec(lineNum, UInt(tagWidth.W)))
+  // val tags = Reg(Vec(lineNum, UInt(tagWidth.W)))
+  val tags = RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
 
   def significantPc(pc: UInt) = pc >> trivialBits

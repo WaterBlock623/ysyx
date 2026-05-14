@@ -7,9 +7,9 @@ $(IVERILOG_HEX):
 
 sim-iverilog: $(IVERILOG_HEX)
 	$(MAKE) -C $(NPC_HOME) verilog ARCH=iverilog
-	iverilog -g2012 -s iverilog_top -o $(BUILD_DIR)/iverilog.vpp \
+	iverilog -g2012 -s iverilog_top -o $(BUILD_DIR)/iverilog.vvp \
 		-D IVERILOG_HEX_PATH="\"$(IVERILOG_HEX)\"" \
 		$(IVERILOG_VSRCS)
-	vpp $(BUILD_DIR)/iverilog.vpp
+	vvp $(BUILD_DIR)/iverilog.vvp
 
 sim-iverilog-netlist: $(IVERILOG_HEX)
