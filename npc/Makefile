@@ -7,23 +7,19 @@ ifeq ($(ARCH),)
 $(error Need ARCH)
 endif
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-# CFG
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
-# Chisel
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
-# Verilator
 VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 else ifneq ($(findstring syn,$(ARCH)),) # syn
-# Chisel
-SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false --prefix ysyx_26010008
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false
 else ifneq ($(findstring npc,$(ARCH)),) # normal npc
-# CFG
 CFG_DIR = $(NPC_HOME)/config/npc
-# Chisel
 SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
+else ifneq ($(findstring syn,$(ARCH)),) # release
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false --prefix ysyx_26010008
 else
 $(error Unknown ARCH)
 endif
