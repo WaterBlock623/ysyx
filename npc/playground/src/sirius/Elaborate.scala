@@ -28,19 +28,18 @@ object Elaborate extends App {
       rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
       isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
+      modulePrefix = argMap.get("prefix"),
       perf = argMap.getOrElse("perf", "false").toBoolean,
       pcInit =
         BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16)
     )
   val ucfg = UnitConfig()
   firtoolOptions.foreach(s => println(s))
-  chisel3.withModulePrefix(argMap.getOrElse("prefix", "")) {
-    circt.stage.ChiselStage.emitSystemVerilogFile(
-      new sirius.Top()(cfg, ucfg),
-      if (argMap.contains("target-dir")) {
-        Array("--target-dir", argMap("target-dir"))
-      } else { Array("--help") },
-      firtoolOptions
-    )
-  }
+  circt.stage.ChiselStage.emitSystemVerilogFile(
+    new sirius.Top()(cfg, ucfg),
+    if (argMap.contains("target-dir")) {
+      Array("--target-dir", argMap("target-dir"))
+    } else { Array("--help") },
+    firtoolOptions
+  )
 }

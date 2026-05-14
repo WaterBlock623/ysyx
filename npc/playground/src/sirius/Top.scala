@@ -354,64 +354,68 @@ class Top(
   implicit private val ucfg: UnitConfig)
     extends Module {
 
-  val basicCore = Module(new BasicCore)
-  val xbar = Module(
-    new Xbar(
-      2,
-      2,
-      Seq(
-        addr => addr < "h02000000".U || addr >= "h02010000".U,
-        addr => addr >= "h02000000".U && addr < "h02010000".U
+  override val desiredName = cfg.modulePrefix.getOrElse(this.getClass.getSimpleName)
+  withModulePrefix(cfg.modulePrefix.getOrElse("")) {
+
+    val basicCore = Module(new BasicCore)
+    val xbar = Module(
+      new Xbar(
+        2,
+        2,
+        Seq(
+          addr => addr < "h02000000".U || addr >= "h02010000".U,
+          addr => addr >= "h02000000".U && addr < "h02010000".U
+        )
       )
     )
-  )
-  val clintDevice = Module(new ClintDevice)
+    val clintDevice = Module(new ClintDevice)
 
-  xbar.io.in(0) :<>= basicCore.io.axiLsu
-  xbar.io.in(1) :<>= basicCore.io.axiIfu
-  clintDevice.in :<>= xbar.io.out(1)
+    xbar.io.in(0) :<>= basicCore.io.axiLsu
+    xbar.io.in(1) :<>= basicCore.io.axiIfu
+    clintDevice.in :<>= xbar.io.out(1)
 
-  if (cfg.ysyxsoc) {
-    val io = IO(new Bundle {
-      val interrupt = Input(Bool())
-      val master = new Axi4FlatIO
-      val slave = Flipped(new Axi4FlatIO)
-    })
-    0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-    io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
-  } else if (cfg.isDebug) {
-    val memDpiC = Module(new MemDpiC)
-    val axi4BurstSpliter = Module(new Axi4BurstSpliter)
-    axi4BurstSpliter.io.in :<>= xbar.io.out(0)
-    memDpiC.axi :<>= axi4BurstSpliter.io.out.viewAs[Axi4FlatIO]
-    memDpiC.clock := clock
-    memDpiC.reset := reset
-  }
+    if (cfg.ysyxsoc) {
+      val io = IO(new Bundle {
+        val interrupt = Input(Bool())
+        val master = new Axi4FlatIO
+        val slave = Flipped(new Axi4FlatIO)
+      })
+      0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
+      io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
+    } else if (cfg.isDebug) {
+      val memDpiC = Module(new MemDpiC)
+      val axi4BurstSpliter = Module(new Axi4BurstSpliter)
+      axi4BurstSpliter.io.in :<>= xbar.io.out(0)
+      memDpiC.axi :<>= axi4BurstSpliter.io.out.viewAs[Axi4FlatIO]
+      memDpiC.clock := clock
+      memDpiC.reset := reset
+    }
 
-  if (cfg.isDebug) {
-    import chisel3.util.experimental.BoringUtils._
-    val ebreaks = Seq(
-      basicCore.ifu.exte.debugEbreak,
-      basicCore.idu.exte.debugEbreak,
-      basicCore.exu.exte.debugEbreak,
-      basicCore.lsu.exte.debugEbreak,
-      basicCore.wbu.exte.debugEbreak
-    )
-    val wbuIn = tapAndRead(basicCore.wbu.in)
-    val ebreakSignal = wbuIn.bits.ctrl.wbuCtrl.isEbreak
-    ebreaks.foreach { e => drive(e.get) := ebreakSignal }
+    if (cfg.isDebug) {
+      import chisel3.util.experimental.BoringUtils._
+      val ebreaks = Seq(
+        basicCore.ifu.exte.debugEbreak,
+        basicCore.idu.exte.debugEbreak,
+        basicCore.exu.exte.debugEbreak,
+        basicCore.lsu.exte.debugEbreak,
+        basicCore.wbu.exte.debugEbreak
+      )
+      val wbuIn = tapAndRead(basicCore.wbu.in)
+      val ebreakSignal = wbuIn.bits.ctrl.wbuCtrl.isEbreak
+      ebreaks.foreach { e => drive(e.get) := ebreakSignal }
 
-    val debugInfoDpiC = Module(new DebugInfoDpiC)
-    val getGprDpiC = Module(new GetGprDpiC)
-    debugInfoDpiC.isEbreak := ebreakSignal
-    debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
-    // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
-    debugInfoDpiC.pcRaw := cfg.pcInit.U
-    // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
-    debugInfoDpiC.inst := wbuIn.bits.lsuPayload.ifu.inst
-    debugInfoDpiC.wbuValid := tapAndRead(basicCore.wbu.debug.get.valid)
-    debugInfoDpiC.isJump := tapAndRead(basicCore.wbu.debug.get.isJump)
-    debugInfoDpiC.jumpTarget := tapAndRead(basicCore.wbu.debug.get.jumpTarget)
-    getGprDpiC.gpr := tapAndRead(basicCore.registerFile.debug.get)
+      val debugInfoDpiC = Module(new DebugInfoDpiC)
+      val getGprDpiC = Module(new GetGprDpiC)
+      debugInfoDpiC.isEbreak := ebreakSignal
+      debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
+      // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
+      debugInfoDpiC.pcRaw := cfg.pcInit.U
+      // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
+      debugInfoDpiC.inst := wbuIn.bits.lsuPayload.ifu.inst
+      debugInfoDpiC.wbuValid := tapAndRead(basicCore.wbu.debug.get.valid)
+      debugInfoDpiC.isJump := tapAndRead(basicCore.wbu.debug.get.isJump)
+      debugInfoDpiC.jumpTarget := tapAndRead(basicCore.wbu.debug.get.jumpTarget)
+      getGprDpiC.gpr := tapAndRead(basicCore.registerFile.debug.get)
+    }
   }
 }

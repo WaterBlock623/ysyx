@@ -30,6 +30,10 @@ $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	touch $@
 
 verilog: $(VSRC_TIMESTAMP)
+ifneq ($(findstring release,$(ARCH)),) # release
+	cat $(VSRC_DIR)/*.sv > $(NPC_HOME)/build/ysyx_26010008.sv
+endif
+
 
 chisel_help:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help
