@@ -3,7 +3,8 @@ IVERILOG_VSRCS = $(BUILD_DIR)/iverilog-vsrc/*.sv $(NPC_HOME)/iverilog/iverilog_t
 
 $(IVERILOG_HEX):
 	mkdir -p $(dir $@)
-	objcopy -I binary -O verilog $(IMG) $@
+	# objcopy -I binary -O verilog $(IMG) $@
+	hexdump -v -e '1/4 "%08x" "\n"' $(IMG) > $@
 
 sim-iverilog: $(IVERILOG_HEX)
 	$(MAKE) -C $(NPC_HOME) verilog ARCH=iverilog
