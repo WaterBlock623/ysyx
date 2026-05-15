@@ -43,4 +43,15 @@ object Elaborate extends App {
     } else { Array("--help") },
     firtoolOptions
   )
+
+  // iverilog
+  if (cfg.iverilog) {
+    circt.stage.ChiselStage.emitSystemVerilogFile(
+      new sirius.AxiSimDevice()(cfg),
+      if (argMap.contains("iverilog-dir")) {
+        Array("--target-dir", argMap("iverilog-dir"))
+      } else { Array("--help") },
+      firtoolOptions
+    )
+  }
 }

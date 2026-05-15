@@ -3,10 +3,22 @@ package sirius
 import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.loadMemoryFromFileInline
+import chisel3.experimental.dataview.DataViewable
 
 class AxiSimDevice(memByte: Int = 0x400000)
   (implicit private val cfg: CoreConfig) extends Module {
-  val io = IO(Flipped(new Axi4IO))
+  val io = IO(new Bundle {
+    val interrupt = Output(Bool())
+    val master = Flipped(new Axi4FlatIO)
+    val slave = new Axi4FlatIO
+  })
+
+  io.slave :<= 0.U.asTypeOf(io.slave)
+  io.interrupt := false.B
+
+  val axi4BurstSpliter = Module(new Axi4BurstSpliter)
+  axi4BurstSpliter.io.in :<>= io.master.viewAs[Axi4IO]
+  val master = axi4BurstSpliter.io.out
 
   def inRange(addr: UInt, start: UInt, len: UInt) = {
     (addr >= start) && (addr < (start + len))
@@ -21,64 +33,64 @@ class AxiSimDevice(memByte: Int = 0x400000)
   val rState = RegInit(sWaitReq)
   switch(rState) {
     is(sWaitReq) {
-      when(io.ar.fire) {
+      when(master.ar.fire) {
         rState := sWaitResp
       }
     }
     is(sWaitResp) {
-      when(io.r.fire) {
+      when(master.r.fire) {
         rState := sWaitReq
       }
     }
   }
 
-  val arBits = RegEnable(io.ar.bits, io.ar.fire)
-  when (io.ar.fire) {
-    assert(inRange(io.ar.bits.addr, cfg.pcInit.U, memByte.U), "Read unknown device: 0x%x", io.ar.bits.addr)
+  val arBits = RegEnable(master.ar.bits, master.ar.fire)
+  when (master.ar.fire) {
+    assert(inRange(master.ar.bits.addr, cfg.pcInit.U, memByte.U), "Read unknown device: 0x%x", master.ar.bits.addr)
   }
-  io.ar.ready := rState === sWaitReq
-  io.r.valid := rState === sWaitResp
-  io.r.bits.data := mem(arBits.addr >> 2).asUInt
-  io.r.bits.id := arBits.id
-  io.r.bits.last := true.B
-  io.r.bits.resp := Axi4Resp.okay.U
+  master.ar.ready := rState === sWaitReq
+  master.r.valid := rState === sWaitResp
+  master.r.bits.data := mem(arBits.addr >> 2).asUInt
+  master.r.bits.id := arBits.id
+  master.r.bits.last := true.B
+  master.r.bits.resp := Axi4Resp.okay.U
 
   // W
   val wState = RegInit(sWaitReq)
   switch(wState) {
     is(sWaitReq) {
-      when(io.aw.fire && io.w.fire) {
+      when(master.aw.fire && master.w.fire) {
         wState := sWaitResp
-      }.elsewhen(io.aw.fire) {
+      }.elsewhen(master.aw.fire) {
         wState := sWaitW
-      }.elsewhen(io.w.fire) {
+      }.elsewhen(master.w.fire) {
         wState := sWaitAw
       }
     }
     is(sWaitAw) {
-      when(io.aw.fire) {
+      when(master.aw.fire) {
         wState := sWaitResp
       }
     }
     is(sWaitW) {
-      when(io.w.fire) {
+      when(master.w.fire) {
         wState := sWaitResp
       }
     }
     is(sWaitResp) {
-      when(io.b.fire) {
+      when(master.b.fire) {
         wState := sWaitReq
       }
     }
   }
-  val awBits = RegEnable(io.aw.bits, io.aw.fire)
-  val wBits = RegEnable(io.w.bits, io.w.fire)
-  io.aw.ready := wState === sWaitReq || wState === sWaitAw
-  io.w.ready := wState === sWaitReq || wState === sWaitW
-  io.b.valid := wState === sWaitResp
-  io.b.bits.id := awBits.id
-  io.b.bits.resp := Axi4Resp.okay.U
-  when(io.b.fire) {
+  val awBits = RegEnable(master.aw.bits, master.aw.fire)
+  val wBits = RegEnable(master.w.bits, master.w.fire)
+  master.aw.ready := wState === sWaitReq || wState === sWaitAw
+  master.w.ready := wState === sWaitReq || wState === sWaitW
+  master.b.valid := wState === sWaitResp
+  master.b.bits.id := awBits.id
+  master.b.bits.resp := Axi4Resp.okay.U
+  when(master.b.fire) {
     when(inRange(awBits.addr, cfg.pcInit.U, memByte.U)) {
       mem.write(awBits.addr >> 2, wBits.data.asTypeOf(Vec(4, UInt(8.W))), wBits.strb.asBools)
     }.elsewhen(awBits.addr === 0x10000000.U) {
