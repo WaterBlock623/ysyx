@@ -2,7 +2,7 @@ remove_quote = $(patsubst "%",%,$(1))
 
 CFG_DIR ?= $(NPC_HOME)/config/npc
 
-ARCH ?= release
+ARCH ?= iverilog
 ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig),)
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
