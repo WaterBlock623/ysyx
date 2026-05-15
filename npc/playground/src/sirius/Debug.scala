@@ -5,7 +5,7 @@ import chisel3.util._
 import chisel3.util.experimental.loadMemoryFromFileInline
 import chisel3.experimental.dataview.DataViewable
 
-class AxiSimDevice(memByte: Int = 0x80000000)
+class AxiSimDevice(memByte: Int = 0x400000)
   (implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
     val master = Flipped(new Axi4FlatIO)
