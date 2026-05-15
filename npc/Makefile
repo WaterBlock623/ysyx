@@ -22,7 +22,7 @@ SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
 else ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
 SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 \
 	--debug false --perf false --iverilog true --prefix ysyx_26010008 \
-	--iverilog-dir $(NPC_HOME)/iverilog
+	--iverilog-dir $(BUILD_DIR)/iverilog
 
 else ifneq ($(findstring release,$(ARCH)),) # release
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 \
