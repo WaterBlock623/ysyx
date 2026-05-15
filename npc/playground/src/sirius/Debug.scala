@@ -8,13 +8,8 @@ import chisel3.experimental.dataview.DataViewable
 class AxiSimDevice(memByte: Int = 0x400000)
   (implicit private val cfg: CoreConfig) extends Module {
   val io = IO(new Bundle {
-    val interrupt = Output(Bool())
     val master = Flipped(new Axi4FlatIO)
-    val slave = new Axi4FlatIO
   })
-
-  io.slave :<= 0.U.asTypeOf(io.slave)
-  io.interrupt := false.B
 
   val axi4BurstSpliter = Module(new Axi4BurstSpliter)
   axi4BurstSpliter.io.in :<>= io.master.viewAs[Axi4IO]
