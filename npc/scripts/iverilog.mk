@@ -2,7 +2,7 @@ IVERILOG_HEX = $(BUILD_DIR)/$(notdir $(basename $(IMG)))_iverilog.hex
 # IVERILOG_VSRCS = $(BUILD_DIR)/iverilog-vsrc/*.sv $(NPC_HOME)/iverilog/iverilog_top.sv
 IVERILOG_VSRCS = $(NPC_HOME)/build/ysyx_26010008.sv
 
-$(IVERILOG_HEX):
+$(IVERILOG_HEX): $(IMG)
 	mkdir -p $(dir $@)
 	# objcopy -I binary -O verilog $(IMG) $@
 	hexdump -v -e '1/4 "%08x" "\n"' $(IMG) > $@
