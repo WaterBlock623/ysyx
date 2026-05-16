@@ -1,8 +1,10 @@
+CONFIG_NPC_PACKAGE_NAME ?= sirius
+CONFIG_NPC_TOP_NAME ?= Top
+CFG_DIR ?= $(NPC_HOME)/config/npc
+ARCH ?= iverilog
+
 remove_quote = $(patsubst "%",%,$(1))
 
-CFG_DIR ?= $(NPC_HOME)/config/npc
-
-ARCH ?= iverilog
 ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig),)
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
@@ -45,8 +47,10 @@ all: build_ar
 
 # Menuconfig
 # include $(NEMU_HOME)/scripts/config.mk
+ifneq ($(MAKECMDGOALS),load-defconfig)
 include $(CFG_DIR)/include/config/auto.conf
 include $(CFG_DIR)/include/config/auto.conf.cmd
+endif
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),menuconfig)
@@ -56,15 +60,6 @@ else
 PACKAGE_NAME = $(call remove_quote,$(CONFIG_NPC_PACKAGE_NAME))
 $(info PACKAGE_NAME is $(PACKAGE_NAME))
 ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
-# EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
-# 			  			grep "new " | \
-# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
-# 			  			sed 's/.*\.//'
-# EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
-# 							tr -d '\n' | \
-# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
-# 			  			sed 's/.*\.//'
-# TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
 TOPNAME = $(call remove_quote,$(CONFIG_NPC_TOP_NAME))
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
@@ -102,7 +97,22 @@ runbatch: all
 clean:
 	-rm -rf $(BUILD_DIR)
 
-menuconfig:
-	$(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk menuconfig
+MENUCONFIG_CMD = $(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk
 
-.PHONY: force all run gdb runbatch clean menuconfig
+menuconfig:
+	$(MENUCONFIG_CMD) $@
+
+savedefconfig:
+	$(MENUCONFIG_CMD) $@
+
+DEFCONFIG = $(CFG_DIR)/configs/_defconfig
+
+load-defconfig:
+	$(MENUCONFIG_CMD) $(DEFCONFIG)
+
+MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
+
+$(MK_INCLUDE): $(DEFCONFIG)
+	$(MAKE)	load-defconfig ARCH=$(ARCH)
+
+.PHONY: force all run gdb runbatch clean menuconfig savedefconfig load-defconfig
