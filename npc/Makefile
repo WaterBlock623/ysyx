@@ -20,7 +20,7 @@ CFG_DIR = $(NPC_HOME)/config/npc
 SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
 
 else ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
-SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 \
+SCALA_FLAGS = --ysyxsoc false --pc-init 0x30000000 \
 	--debug false --perf false --iverilog true --prefix ysyx_26010008 \
 	--iverilog-dir $(BUILD_DIR)/iverilog
 
