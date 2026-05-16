@@ -45,7 +45,7 @@ class AxiSimDevice(
   val arBits = RegEnable(master.ar.bits, master.ar.fire)
   when(master.ar.fire) {
     assert(
-      inRange(master.ar.bits.addr, cfg.pcInit.U, memByte.U),
+      inRange(master.ar.bits.addr, "h80000000".U, memByte.U),
       "Read unknown device: 0x%x",
       master.ar.bits.addr
     )
@@ -111,7 +111,7 @@ class AxiSimDevice(
       printf("%c", wBits.data(7, 0))
     }.otherwise { // MEM
       assert(
-        inRange(awBits.addr, cfg.pcInit.U, memByte.U),
+        inRange(awBits.addr, "h80000000".U, memByte.U),
         "Write unknown device: 0x%x",
         awBits.addr
       )
