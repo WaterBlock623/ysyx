@@ -108,7 +108,7 @@ savedefconfig:
 DEFCONFIG = $(CFG_DIR)/configs/_defconfig
 
 load-defconfig:
-	$(MENUCONFIG_CMD) $(DEFCONFIG)
+	$(MENUCONFIG_CMD) $(notdir $(DEFCONFIG))
 
 MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
 
