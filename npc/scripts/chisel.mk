@@ -2,6 +2,8 @@ MILL = $(NPC_HOME)/mill
 RSYNC = rsync
 PRJ = playground
 
+RELEASE_FILE = $(NPC_HOME)/build/ysyx_26010008.sv
+
 VSRC_TMP_DIR = $(BUILD_DIR)/$(ARCH)-vsrc_tmp
 VSRC_DIR = $(BUILD_DIR)/$(ARCH)-vsrc
 
@@ -30,6 +32,11 @@ $(VSRC_TIMESTAMP): $(MILL_SRCS) $(SEARCH_DIRS)
 	touch $@
 
 verilog: $(VSRC_TIMESTAMP)
+	-cat $(VSRC_DIR)/*.sv > $(RELEASE_FILE)
+	-sed -i '1i\/\/ BUILD MODE: $(ARCH)\n' $(RELEASE_FILE)
+	-sed -i 's/^module .*/\n&/' $(RELEASE_FILE)
+	-sed -i 's/\"THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER\"/\`IVERILOG_HEX_PATH/' \
+		$(BUILD_DIR)/iverilog/*.sv
 
 chisel_help:
 	$(MILL) -i $(PRJ).runMain $(PACKAGE_NAME).Elaborate --help

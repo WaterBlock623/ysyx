@@ -28,7 +28,7 @@ class Iqueue(
   val wPtrReg32 = RegInit(0.U(log2Ceil(entries32).W))
   val rPtrReg16 = RegInit(0.U(log2Ceil(entries16).W))
 
-  val counter16 = RegInit(0.U((entries16 + 1).W))
+  val counter16 = RegInit(0.U(log2Ceil(entries16 + 1).W))
   assert(counter16 <= entries16.U)
 
   val isC = io.deq.bits.inst(1, 0) =/= "b11".U

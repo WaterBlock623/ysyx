@@ -2,28 +2,32 @@ remove_quote = $(patsubst "%",%,$(1))
 
 CFG_DIR ?= $(NPC_HOME)/config/npc
 
+ARCH ?= iverilog
 ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig),)
-ifeq ($(ARCH),)
-$(error Need ARCH)
-endif
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-# CFG
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
-# Chisel
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
-# Verilator
 VSRCS += $(shell find $(abspath $(YSYXSOC_DIR)/perip) -name "*.v")
 VSRCS += $(YSYXSOC_DIR)/build/ysyxSoCFull.v
 VERILATOR_FLAGS += $(addprefix -y , $(YSYXSOC_LIBDIR))
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
+
 else ifneq ($(findstring syn,$(ARCH)),) # syn
-# Chisel
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug false --perf false
+
 else ifneq ($(findstring npc,$(ARCH)),) # normal npc
-# CFG
 CFG_DIR = $(NPC_HOME)/config/npc
-# Chisel
 SCALA_FLAGS = --ysyxsoc false --pc-init 0x80000000 --debug true --perf false
+
+else ifneq ($(findstring iverilog,$(ARCH)),) # iverilog
+SCALA_FLAGS = --ysyxsoc false --pc-init 0x30000000 \
+	--debug false --perf false --iverilog true --prefix ysyx_26010008 \
+	--iverilog-dir $(BUILD_DIR)/iverilog
+
+else ifneq ($(findstring release,$(ARCH)),) # release
+SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 \
+	--debug false --perf false --prefix ysyx_26010008
+
 else
 $(error Unknown ARCH)
 endif
@@ -77,6 +81,9 @@ include $(NPC_HOME)/scripts/verilator.mk
 # Chisel
 include $(NPC_HOME)/scripts/chisel.mk
 
+# iverilog
+include $(NPC_HOME)/scripts/iverilog.mk
+
 # Util
 include $(NPC_HOME)/../Makefile
 
@@ -95,7 +102,15 @@ runbatch: all
 clean:
 	-rm -rf $(BUILD_DIR)
 
+MENUCONFIG_CMD = $(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk $(MAKECMDGOALS)
+
 menuconfig:
-	$(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk menuconfig
+	$(MENUCONFIG_CMD)
+
+savedefconfig:
+	$(MENUCONFIG_CMD)
+
+%defconfig:
+	$(MENUCONFIG_CMD)
 
 .PHONY: force all run gdb runbatch clean menuconfig

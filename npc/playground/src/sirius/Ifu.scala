@@ -29,9 +29,9 @@ class Ifu(
     // icache
     val icache = Module(
       new Icache(
-        setNum = 2,
+        setNum = 1,
         wayNum = 8,
-        wayByte = 8,
+        wayByte = 16,
         busByte = 4,
         if (cfg.ysyxsoc) {
           Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
@@ -56,21 +56,45 @@ class Ifu(
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
 
-    out.valid := iqueue.io.deq.valid
-    iqueue.io.deq.ready := out.ready
+    def pipelineConnect[T <: Data](
+      prevOut: DecoupledIO[T],
+      thisIn:  DecoupledIO[T],
+      stall:   Bool = false.B,
+      flush:   Bool = false.B
+    ) = {
+      val thisInReady = thisIn.ready || !thisIn.valid
+      val valid = RegInit(false.B)
+      when(thisInReady) {
+        valid := prevOut.valid && !stall
+      }
+      when(flush) {
+        valid := false.B
+      }
+
+      prevOut.ready := thisInReady && !stall
+      thisIn.valid := valid
+      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    }
+
+    // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
+    // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
+    val iqueueDeq = iqueue.io.deq
+
+    out.valid := iqueueDeq.valid
+    iqueueDeq.ready := out.ready
     val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
-      pc := pc + Mux(iqueue.io.deq.bits.isC, 2.U, 4.U)
+      pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
     exte.bpu.pc := pc
 
-    outBits.ifuPayload.ifu.inst := iqueue.io.deq.bits.inst
     outBits.ifuPayload.ifu.pc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget := exte.bpu.target
-    outBits.ifuPayload.ifu.isC := iqueue.io.deq.bits.isC
+    outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
+    outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
     if (cfg.perf) {
       val icacheState = BoringUtils.tapAndRead(icache.state)
@@ -113,48 +137,36 @@ class Ifu(
       )
     }
   } else {
-    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    exte.bpu.pc := ifetchAddr
-    when(exte.flush) {
-      ifetchAddr := exte.jumpTarget
-    }.elsewhen(exte.mem.ar.fire) {
-      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
-    }
+    // val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    // when(exte.flush) {
+    //   ifetchAddr := exte.jumpTarget
+    // }.elsewhen(exte.mem.ar.fire) {
+    //   ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
+    // }
 
     exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
     exte.mem.ar.valid := true.B
-    exte.mem.ar.bits.addr := ifetchAddr
+    // exte.mem.ar.bits.addr := ifetchAddr
+    exte.mem.ar.bits.addr := DontCare
     exte.mem.ar.bits.size := "b010".U
     exte.mem.ar.bits.burst := Axi4Burst.incr.U
     exte.mem.r.ready := out.ready
 
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
-
-    val metaQueue = Module(
-      new Queue(
-        new Bundle {
-          val pc = UInt(cfg.xlen.W)
-          val predTaken = Bool()
-          val predTarget = UInt(cfg.xlen.W)
-        },
-        32,
-        true,
-        true
-      )
-    )
-    metaQueue.io.enq.valid := exte.mem.ar.fire
-    when(exte.mem.ar.fire) {
-      assert(metaQueue.io.enq.ready)
+  
+    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when(flush) {
+      pc := flushTarget
+    }.elsewhen(out.fire) {
+      pc := pc + Mux(outBits.ifuPayload.ifu.isC, 2.U, 4.U)
     }
-    metaQueue.io.enq.bits.pc := exte.mem.ar.bits.addr
-    metaQueue.io.enq.bits.predTaken := exte.bpu.taken
-    metaQueue.io.enq.bits.predTarget := exte.bpu.target
 
-    outBits.ifuPayload.ifu.pc := metaQueue.io.deq.bits.pc
-    outBits.ifuPayload.ifu.predTaken := metaQueue.io.deq.bits.predTaken
-    outBits.ifuPayload.ifu.predTarget := metaQueue.io.deq.bits.predTarget
-    metaQueue.io.deq.ready := exte.mem.r.fire
+    exte.bpu.pc := pc
+
+    outBits.ifuPayload.ifu.pc := pc
+    outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
+    outBits.ifuPayload.ifu.predTarget := exte.bpu.target
     outBits.ifuPayload.ifu.isC := outBits.ifuPayload.ifu.inst(1, 0) =/= "b11".U
   }
 
@@ -176,7 +188,8 @@ class Ifu(
               CsrAddr.mtvec
             )
             RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
-          }
+          } ||
+          RVC(inst)
       )
     }
   }

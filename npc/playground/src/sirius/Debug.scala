@@ -2,6 +2,124 @@ package sirius
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.loadMemoryFromFileInline
+import chisel3.experimental.dataview.DataViewable
+
+class AxiSimDevice(
+  memByte: Int = 0x400000
+)(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  val io = IO(new Bundle {
+    val master = Flipped(new Axi4FlatIO)
+  })
+
+  val axi4BurstSpliter = Module(new Axi4BurstSpliter)
+  axi4BurstSpliter.io.in :<>= io.master.viewAs[Axi4IO]
+  val master = axi4BurstSpliter.io.out
+
+  def inRange(addr: UInt, start: UInt, len: UInt) = {
+    (addr >= start) && (addr < (start + len))
+  }
+
+  val mem = Mem(memByte / 4, Vec(4, UInt(8.W)))
+  loadMemoryFromFileInline(mem, "THIS_IS_THE_IVERILOG_HEX_PATH_PLACEHOLDER")
+
+  val sWaitReq :: sWaitAw :: sWaitW :: sWaitResp :: Nil = Enum(4)
+
+  // R
+  val rState = RegInit(sWaitReq)
+  switch(rState) {
+    is(sWaitReq) {
+      when(master.ar.fire) {
+        rState := sWaitResp
+      }
+    }
+    is(sWaitResp) {
+      when(master.r.fire) {
+        rState := sWaitReq
+      }
+    }
+  }
+
+  val arBits = RegEnable(master.ar.bits, master.ar.fire)
+  when(master.ar.fire) {
+    assert(
+      inRange(master.ar.bits.addr, "h80000000".U, memByte.U) ||
+      inRange(master.ar.bits.addr, "h30000000".U, 256.U),
+      "Read unknown device: 0x%x",
+      master.ar.bits.addr
+    )
+  }
+  master.ar.ready := rState === sWaitReq
+  master.r.valid := rState === sWaitResp
+  master.r.bits.id := arBits.id
+  master.r.bits.last := true.B
+  master.r.bits.resp := Axi4Resp.okay.U
+  master.r.bits.data := DontCare
+  when (master.r.valid) {
+    when(inRange(arBits.addr, "h30000000".U, 256.U)) { // 0x30000000 -> 0x80000000
+      when(inRange(arBits.addr, "h30000000".U, 4.U)) {
+        master.r.bits.data := "h50000297".U // auipc t0, 0x50000
+      }.elsewhen(inRange(arBits.addr, "h30000004".U, 4.U)) {
+        master.r.bits.data := "h00028067".U // jr t0
+      }.otherwise {
+        master.r.bits.data := 0.U
+      }
+    } .otherwise { // MEM
+      master.r.bits.data := mem(arBits.addr >> 2).asUInt
+    }
+  }
+
+  // W
+  val wState = RegInit(sWaitReq)
+  switch(wState) {
+    is(sWaitReq) {
+      when(master.aw.fire && master.w.fire) {
+        wState := sWaitResp
+      }.elsewhen(master.aw.fire) {
+        wState := sWaitW
+      }.elsewhen(master.w.fire) {
+        wState := sWaitAw
+      }
+    }
+    is(sWaitAw) {
+      when(master.aw.fire) {
+        wState := sWaitResp
+      }
+    }
+    is(sWaitW) {
+      when(master.w.fire) {
+        wState := sWaitResp
+      }
+    }
+    is(sWaitResp) {
+      when(master.b.fire) {
+        wState := sWaitReq
+      }
+    }
+  }
+  val awBits = RegEnable(master.aw.bits, master.aw.fire)
+  val wBits = RegEnable(master.w.bits, master.w.fire)
+  master.aw.ready := wState === sWaitReq || wState === sWaitAw
+  master.w.ready := wState === sWaitReq || wState === sWaitW
+  master.b.valid := wState === sWaitResp
+  master.b.bits.id := awBits.id
+  master.b.bits.resp := Axi4Resp.okay.U
+  when(master.b.fire) {
+    when(awBits.addr === 0x10000000.U) { // UART
+      assert(awBits.size === 0.U)
+      printf("%c", wBits.data(7, 0))
+    }.otherwise { // MEM
+      assert(
+        inRange(awBits.addr, "h80000000".U, memByte.U),
+        "Write unknown device: 0x%x",
+        awBits.addr
+      )
+      mem.write(awBits.addr >> 2, wBits.data.asTypeOf(Vec(4, UInt(8.W))), wBits.strb.asBools)
+    }
+  }
+}
 
 class DebugInfoDpiC(
   implicit private val cfg: CoreConfig)
@@ -199,7 +317,7 @@ class Axi4BurstSpliter extends Module {
   when(io.in.ar.fire) {
     bitsReg := io.in.ar.bits
   }
-  when (io.in.r.fire) {
+  when(io.in.r.fire) {
     switch(bitsReg.burst) {
       is(Axi4Burst.incr.U) {
         bitsReg.addr := bitsReg.addr + 4.U

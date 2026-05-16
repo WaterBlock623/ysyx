@@ -45,6 +45,7 @@ class Lsu(
   val predTargetErr = realTaken && (inBits.exuPayload.ifu.predTarget =/= realTarget)
   val predErr = predDirectionErr || predTargetErr
   val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
+  // val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
   val newIn = inValid && (RegNext(!inValid || in.fire))
   exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcache)
@@ -207,10 +208,10 @@ class Lsu(
 
   // Debug
   if (cfg.formal) {
-    when(realTaken) {
-      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(realTarget(0) === 0.U)
-      else assume(realTarget(1, 0) === 0.U)
-    }
+    // when(realTaken) {
+    //   if (cfg.extensions().contains(ExtTypeEnum.C)) assume(realTarget(0) === 0.U)
+    //   else assume(realTarget(1, 0) === 0.U)
+    // }
 
     when(inValid) {
       assume(!eLoadStoreAddressMisaligned)
