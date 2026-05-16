@@ -45,7 +45,8 @@ class AxiSimDevice(
   val arBits = RegEnable(master.ar.bits, master.ar.fire)
   when(master.ar.fire) {
     assert(
-      inRange(master.ar.bits.addr, "h80000000".U, memByte.U),
+      inRange(master.ar.bits.addr, "h80000000".U, memByte.U) ||
+      inRange(master.ar.bits.addr, "h30000000".U, 256.U),
       "Read unknown device: 0x%x",
       master.ar.bits.addr
     )
