@@ -5,7 +5,7 @@ ARCH ?= iverilog
 
 remove_quote = $(patsubst "%",%,$(1))
 
-ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig),)
+# ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig savedefconfig),)
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
@@ -33,7 +33,6 @@ SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 \
 else
 $(error Unknown ARCH)
 endif
-endif
 
 
 BUILD_DIR ?= $(NPC_HOME)/build
@@ -47,7 +46,7 @@ all: build_ar
 
 # Menuconfig
 # include $(NEMU_HOME)/scripts/config.mk
-ifneq ($(MAKECMDGOALS),load-defconfig)
+ifeq ($(filter $(MAKECMDGOALS),clean savedefconfig),)
 include $(CFG_DIR)/include/config/auto.conf
 include $(CFG_DIR)/include/config/auto.conf.cmd
 endif
@@ -102,17 +101,15 @@ MENUCONFIG_CMD = $(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk
 menuconfig:
 	$(MENUCONFIG_CMD) $@
 
-savedefconfig:
-	$(MENUCONFIG_CMD) $@
-
 DEFCONFIG = $(CFG_DIR)/configs/_defconfig
 
-load-defconfig:
-	$(MENUCONFIG_CMD) $(notdir $(DEFCONFIG))
+savedefconfig:
+	$(MENUCONFIG_CMD) $@
+	mv $(CFG_DIR)/configs/defconfig $(DEFCONFIG)
 
 MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
 
-$(MK_INCLUDE): $(DEFCONFIG)
-	$(MAKE)	load-defconfig ARCH=$(ARCH)
+$(MK_INCLUDE):
+	$(MENUCONFIG_CMD) $(notdir $(DEFCONFIG))
 
 .PHONY: force all run gdb runbatch clean menuconfig savedefconfig load-defconfig
