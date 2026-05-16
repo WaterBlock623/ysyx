@@ -104,6 +104,7 @@ menuconfig:
 DEFCONFIG = $(CFG_DIR)/configs/_defconfig
 
 savedefconfig:
+	echo $?
 	$(MENUCONFIG_CMD) $@
 	mv $(CFG_DIR)/configs/defconfig $(DEFCONFIG)
 
