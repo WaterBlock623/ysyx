@@ -56,26 +56,6 @@ class Ifu(
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
 
-    def pipelineConnect[T <: Data](
-      prevOut: DecoupledIO[T],
-      thisIn:  DecoupledIO[T],
-      stall:   Bool = false.B,
-      flush:   Bool = false.B
-    ) = {
-      val thisInReady = thisIn.ready || !thisIn.valid
-      val valid = RegInit(false.B)
-      when(thisInReady) {
-        valid := prevOut.valid && !stall
-      }
-      when(flush) {
-        valid := false.B
-      }
-
-      prevOut.ready := thisInReady && !stall
-      thisIn.valid := valid
-      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-    }
-
     // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
     // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
     val iqueueDeq = iqueue.io.deq

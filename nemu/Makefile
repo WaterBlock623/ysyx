@@ -31,6 +31,9 @@ LIBS += $(ADD_LIBS)
 # -include $(NEMU_HOME)/include/config/auto.conf.cmd
 -include $(CFG_DIR)/include/config/auto.conf
 -include $(CFG_DIR)/include/config/auto.conf.cmd
+MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
+
+$(MK_INCLUDE): riscv32-am_defconfig
 
 remove_quote = $(patsubst "%",%,$(1))
 

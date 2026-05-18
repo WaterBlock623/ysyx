@@ -50,8 +50,6 @@ all: build_ar
 -include $(CFG_DIR)/include/config/auto.conf
 -include $(CFG_DIR)/include/config/auto.conf.cmd
 
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(MAKECMDGOALS),menuconfig)
 ifeq ($(CONFIG_NPC_PACKAGE_NAME),)
 $(error PACKAGE_NAME cannot be empty)
 else
@@ -65,8 +63,6 @@ else
 $(info TOPNAME is $(TOPNAME))
 endif # TOPNAME
 endif # PACKAGE_NAME
-endif # menuconfig
-endif # clean
 
 # Verilator
 include $(NPC_HOME)/scripts/verilator.mk
