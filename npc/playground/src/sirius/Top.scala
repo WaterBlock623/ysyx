@@ -382,17 +382,6 @@ class Top(
       })
       0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
       io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
-    } else if (cfg.iverilog) {
-      val io = IO(new Bundle {
-        val stop = Output(Bool())
-        val interrupt = Input(Bool())
-        val master = new Axi4FlatIO
-        val slave = Flipped(new Axi4FlatIO)
-      })
-      0.U.asTypeOf(chiselTypeOf(io.slave)) :>= io.slave
-      val wbuIn = chisel3.util.experimental.BoringUtils.tapAndRead(basicCore.wbu.in)
-      io.stop := wbuIn.bits.ctrl.wbuCtrl.isEbreak
-      io.master :<>= xbar.io.out(0).viewAs[Axi4FlatIO]
     } else if (cfg.isDebug) {
       val memDpiC = Module(new MemDpiC)
       val axi4BurstSpliter = Module(new Axi4BurstSpliter)
