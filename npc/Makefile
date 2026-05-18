@@ -1,3 +1,5 @@
+include $(NPC_HOME)/scripts/init.mk
+
 CONFIG_NPC_PACKAGE_NAME ?= sirius
 CONFIG_NPC_TOP_NAME ?= Top
 CFG_DIR ?= $(NPC_HOME)/config/npc
@@ -45,11 +47,8 @@ all: build_ar
 	$(MAKE) -C $(NEMU_HOME) $(NEMU_MAKE_FLAGS)
 
 # Menuconfig
-# include $(NEMU_HOME)/scripts/config.mk
-ifeq ($(filter $(MAKECMDGOALS),clean savedefconfig),)
-include $(CFG_DIR)/include/config/auto.conf
-include $(CFG_DIR)/include/config/auto.conf.cmd
-endif
+-include $(CFG_DIR)/include/config/auto.conf
+-include $(CFG_DIR)/include/config/auto.conf.cmd
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),menuconfig)
@@ -104,7 +103,6 @@ menuconfig:
 DEFCONFIG = $(CFG_DIR)/configs/_defconfig
 
 savedefconfig:
-	echo $?
 	$(MENUCONFIG_CMD) $@
 	mv $(CFG_DIR)/configs/defconfig $(DEFCONFIG)
 

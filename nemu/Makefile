@@ -18,6 +18,8 @@ ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
   $(error NEMU_HOME=$(NEMU_HOME) is not a NEMU repo)
 endif
 
+include $(NEMU_HOME)/scripts/init.mk
+
 CFG_DIR ?= $(shell pwd)
 BUILD_DIR ?= $(NEMU_HOME)/build
 
