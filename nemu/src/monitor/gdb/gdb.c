@@ -11,16 +11,18 @@
 extern bool g_cpu_stop_flag;
 
 gdb_action_t emu_cont(void *args) {
+  printf("CCCCC\n");
   cpu_exec(-1);
-  // if (nemu_state.state == NEMU_STOP || nemu_state.state == NEMU_ABORT) {
-  //   return ACT_RESUME;
-  // } else {
-  //   return ACT_SHUTDOWN;
-  // }
+  if (nemu_state.state == NEMU_STOP || nemu_state.state == NEMU_ABORT) {
+    return ACT_RESUME;
+  } else {
+    return ACT_SHUTDOWN;
+  }
   return ACT_RESUME;
 }
 
 gdb_action_t emu_stepi(void *args) {
+  printf("SiSiSiSiSi\n");
   cpu_exec(1);
   if (nemu_state.state == NEMU_STOP || nemu_state.state == NEMU_ABORT) {
     return ACT_RESUME;
