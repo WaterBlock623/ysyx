@@ -31,7 +31,7 @@ REG(pc, 32, code_ptr, 32) \
 
 // #define GDB_TARGET MUXDEF(CONFIG_ISA64, TARGET_RV64, TARGET_RV32)
 
-arch_info_t arch_info = { .target_desc = GDB_TARGET,
+arch_info_t arch_info = { .target_desc = (char *)GDB_TARGET,
                           .smp = 1,
                           .reg_num = MUXDEF(CONFIG_RVE, 16, 32)
                         };
