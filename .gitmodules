@@ -13,3 +13,6 @@
 [submodule "npc/ChiRVFormal"]
 	path = npc/ChiRVFormal
 	url = https://github.com/iscas-tis/ChiRVFormal.git
+[submodule "npc/riscv-opcodes"]
+	path = npc/riscv-opcodes
+	url = https://github.com/riscv/riscv-opcodes.git

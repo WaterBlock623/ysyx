@@ -144,7 +144,7 @@ class BasicCoreTest extends ModuleWithInitReset {
   AxiSlaveConstraint(io.imem)
   AxiSlaveConstraint(io.dmem)
   val workSpaceRoot = os.Path(sys.env("WORKSPACE_ROOT_DIR"))
-  val rvOpCodesPath = workSpaceRoot / "rvdecoderdb" / "riscv-opcodes"
+  val rvOpCodesPath = workSpaceRoot / "riscv-opcodes"
   val cfg = CoreConfig.default.copy(
     isDebug = false,
     perf = false,

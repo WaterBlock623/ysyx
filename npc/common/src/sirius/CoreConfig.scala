@@ -15,7 +15,7 @@ case class CoreConfig(
   val modulePrefix: Option[String] = None,
 
   // rvdecoderdb
-  val rvOpCodesPath:     os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
+  val rvOpCodesPath:     os.Path = os.pwd / "riscv-opcodes",
   val curtomOpCodesPath: Iterable[os.Path] = None,
   val OpCodesFilter:     (Iterable[rvdecoderdb.Instruction]) => Iterable[
     rvdecoderdb.Instruction

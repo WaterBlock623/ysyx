@@ -1,5 +1,6 @@
 NAME = conf
-obj := build
+obj := $(shell pwd)/build
+BUILD_DIR = $(obj)
 SRCS += confdata.c expr.c preprocess.c symbol.c util.c
 SRCS += $(obj)/lexer.lex.c $(obj)/parser.tab.c
 CC = gcc

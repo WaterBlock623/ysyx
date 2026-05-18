@@ -25,7 +25,7 @@ object Elaborate extends App {
   val workspacePath = os.Path(rootStr)
   val cfg =
     CoreConfig(
-      rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
+      rvOpCodesPath = workspacePath / "riscv-opcodes",
       isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
       iverilog = argMap.getOrElse("iverilog", "false").toBoolean,

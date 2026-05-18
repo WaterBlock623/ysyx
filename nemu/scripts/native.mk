@@ -27,6 +27,9 @@ override ARGS += $(ARGS_DIFF)
 GDB_SOCKET = $(BUILD_DIR)/gdb-socket
 override ARGS += --gdb-socket=$(GDB_SOCKET)
 override ARGS += $(ADD_ARGS)
+ifeq ($(CONFIG_TAKE_RUN_AS_RUNBATCH),y)
+override ARGS += -b
+endif
 
 $(info NEMU BUILD_DIR $(BUILD_DIR))
 
@@ -67,16 +70,12 @@ run: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "run NEMU")
 	$(NEMU_EXEC)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile/profile.vlt >/dev/null 2>&1
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 gdb: SHELL := /bin/bash
 gdb: run-env
 	-@mkdir -p $(BUILD_DIR)/profile/
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(_NEMU_EXEC_RAW)
-	-@mv -f $(NEMU_HOME)/profile.vlt $(BUILD_DIR)/profile/profile.vlt >/dev/null 2>&1
-	-@mv -f $(NEMU_HOME)/profile_exec.dat $(BUILD_DIR)/profile/profile_exec.dat >/dev/null 2>&1
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):

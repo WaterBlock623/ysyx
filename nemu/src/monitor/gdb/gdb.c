@@ -6,8 +6,6 @@
 #include <macro.h>
 #include <memory/paddr.h>
 
-#define REG_SIZE MUXDEF(CONFIG_ISA64, 8, 4)
-
 extern bool g_cpu_stop_flag;
 
 gdb_action_t emu_cont(void *args) {

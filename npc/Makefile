@@ -1,9 +1,13 @@
+include $(NPC_HOME)/scripts/init.mk
+
+CONFIG_NPC_PACKAGE_NAME ?= sirius
+CONFIG_NPC_TOP_NAME ?= Top
+CFG_DIR ?= $(NPC_HOME)/config/npc
+ARCH ?= iverilog
+
 remove_quote = $(patsubst "%",%,$(1))
 
-CFG_DIR ?= $(NPC_HOME)/config/npc
-
-ARCH ?= iverilog
-ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig),)
+# ifneq ($(filter $(MAKECMDGOALS),verilog run gdb runbatch menuconfig savedefconfig),)
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
 CFG_DIR = $(NPC_HOME)/config/ysyxsoc
 SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 --debug true --perf true
@@ -31,7 +35,6 @@ SCALA_FLAGS = --ysyxsoc true --pc-init 0x30000000 \
 else
 $(error Unknown ARCH)
 endif
-endif
 
 
 BUILD_DIR ?= $(NPC_HOME)/build
@@ -44,27 +47,15 @@ all: build_ar
 	$(MAKE) -C $(NEMU_HOME) $(NEMU_MAKE_FLAGS)
 
 # Menuconfig
-# include $(NEMU_HOME)/scripts/config.mk
-include $(CFG_DIR)/include/config/auto.conf
-include $(CFG_DIR)/include/config/auto.conf.cmd
+-include $(CFG_DIR)/include/config/auto.conf
+-include $(CFG_DIR)/include/config/auto.conf.cmd
 
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(MAKECMDGOALS),menuconfig)
 ifeq ($(CONFIG_NPC_PACKAGE_NAME),)
 $(error PACKAGE_NAME cannot be empty)
 else
 PACKAGE_NAME = $(call remove_quote,$(CONFIG_NPC_PACKAGE_NAME))
 $(info PACKAGE_NAME is $(PACKAGE_NAME))
 ELABORATE_SCALA = ./playground/src/$(PACKAGE_NAME)/Elaborate.scala
-# EXT_TOP_CMD = grep "emitSystemVerilogFile" $(ELABORATE_SCALA) | \
-# 			  			grep "new " | \
-# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
-# 			  			sed 's/.*\.//'
-# EXT_TOP_CMD = cat $(ELABORATE_SCALA) | \
-# 							tr -d '\n' | \
-# 			  			sed -E 's/.*new +([^ (,]+).*/\1/' | \
-# 			  			sed 's/.*\.//'
-# TOPNAME = $(strip $(shell $(EXT_TOP_CMD)))
 TOPNAME = $(call remove_quote,$(CONFIG_NPC_TOP_NAME))
 ifeq ($(TOPNAME),)
 $(error TOPNAME cannot be empty)
@@ -72,8 +63,6 @@ else
 $(info TOPNAME is $(TOPNAME))
 endif # TOPNAME
 endif # PACKAGE_NAME
-endif # menuconfig
-endif # clean
 
 # Verilator
 include $(NPC_HOME)/scripts/verilator.mk
@@ -102,15 +91,20 @@ runbatch: all
 clean:
 	-rm -rf $(BUILD_DIR)
 
-MENUCONFIG_CMD = $(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk $(MAKECMDGOALS)
+MENUCONFIG_CMD = $(MAKE) -C $(CFG_DIR) -f $(NEMU_HOME)/scripts/config.mk
 
 menuconfig:
-	$(MENUCONFIG_CMD)
+	$(MENUCONFIG_CMD) $@
+
+DEFCONFIG = $(CFG_DIR)/configs/_defconfig
 
 savedefconfig:
-	$(MENUCONFIG_CMD)
+	$(MENUCONFIG_CMD) $@
+	mv $(CFG_DIR)/configs/defconfig $(DEFCONFIG)
 
-%defconfig:
-	$(MENUCONFIG_CMD)
+MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
 
-.PHONY: force all run gdb runbatch clean menuconfig
+$(MK_INCLUDE):
+	$(MENUCONFIG_CMD) $(notdir $(DEFCONFIG))
+
+.PHONY: force all run gdb runbatch clean menuconfig savedefconfig load-defconfig
