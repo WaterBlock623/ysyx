@@ -27,7 +27,7 @@ static uint8_t keycode_ext[256] = {
 
 static void get_keybrd(AM_INPUT_KEYBRD_T *kbd) {
   uint8_t scan_code = inb(KBD_ADDR);
-  if (scan_code) printf("# 0x%x\n", scan_code);
+  // if (scan_code) printf("# 0x%x\n", scan_code);
   static bool is_ext = false;
   static bool is_down = true;
   switch (scan_code) {
