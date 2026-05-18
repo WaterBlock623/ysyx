@@ -354,7 +354,7 @@ class Top(
   implicit private val ucfg: UnitConfig)
     extends Module {
 
-  override val desiredName = cfg.modulePrefix.getOrElse(this.getClass.getSimpleName)
+  override val desiredName = "ysyx_26010008"
   withModulePrefix(cfg.modulePrefix.getOrElse("")) {
 
     val basicCore = Module(new BasicCore)
