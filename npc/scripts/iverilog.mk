@@ -10,7 +10,7 @@ $(IVERILOG_HEX): $(IMG)
 sim-iverilog-base: $(IVERILOG_HEX)
 	$(MAKE) -C $(NPC_HOME) verilog ARCH=iverilog
 	iverilog -g2012 -s iverilog_top -o $(BUILD_DIR)/iverilog.vvp \
-		-D IVERILOG_HEX_PATH="\"$(IVERILOG_HEX)\"" \
+		-gassertions=haltsim -D IVERILOG_HEX_PATH="\"$(IVERILOG_HEX)\"" \
 		$(IVERILOG_VSRCS)
 	vvp $(BUILD_DIR)/iverilog.vvp
 
