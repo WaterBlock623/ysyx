@@ -27,7 +27,7 @@ override ARGS += $(ARGS_DIFF)
 GDB_SOCKET = $(BUILD_DIR)/gdb-socket
 override ARGS += --gdb-socket=$(GDB_SOCKET)
 override ARGS += $(ADD_ARGS)
-ifeq ($(CONFIGS_TAKE_RUN_AS_RUNBATCH),y)
+ifeq ($(CONFIG_TAKE_RUN_AS_RUNBATCH),y)
 override ARGS += -b
 endif
 
