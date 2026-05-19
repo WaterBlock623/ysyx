@@ -15,6 +15,7 @@
 !*.py
 !*.txt
 !**/configs/_defconfig
+!Kconfig
 build/
 **/include/config/
 **/include/generated/
