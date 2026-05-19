@@ -3,7 +3,7 @@ ENTRY(_start)
 /* PHDRS { text PT_LOAD; data PT_LOAD; } */
 
 SECTIONS {
-  .xiptext : {
+  .xiptext : ALIGN_WITH_INPUT SUBALIGN(4) {
     *(entry)
     *(.fsbl)
   } >ROM AT>ROM
@@ -11,7 +11,7 @@ SECTIONS {
   /* Fast RAM load start */
   _fastram_load_start = LOADADDR(.fasttext);
   _fastram_start = ADDR(.fasttext);
-  .fasttext : ALIGN_WITH_INPUT {
+  .fasttext : ALIGN_WITH_INPUT SUBALIGN(4) {
     *(.ssbl)
   } >FASTRAM AT>ROM
   _fastram_end = .;
