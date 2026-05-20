@@ -16,6 +16,7 @@
 !*.txt
 !**/configs/_defconfig
 !Kconfig
+!iverilog/*.sv
 build/
 **/include/config/
 **/include/generated/
