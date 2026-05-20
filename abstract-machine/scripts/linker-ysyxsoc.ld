@@ -21,20 +21,20 @@ SECTIONS {
   /* Load start */
   _data_load_start = LOADADDR(.text);
   _data_start = ADDR(.text);
-  .text : ALIGN_WITH_INPUT {
+  .text : ALIGN_WITH_INPUT SUBALIGN(4) {
     *(.text*)
   } >RAM AT>ROM
 
-  .rodata : ALIGN_WITH_INPUT {
+  .rodata : ALIGN_WITH_INPUT SUBALIGN(4) {
     *(.rodata*)
     *(.srodata*)
   } >RAM AT>ROM
 
-  .data : ALIGN_WITH_INPUT {
+  .data : ALIGN_WITH_INPUT SUBALIGN(4) {
     *(.data*)
   } >RAM AT>ROM
 
-  .sdata : ALIGN_WITH_INPUT {
+  .sdata : ALIGN_WITH_INPUT SUBALIGN(4) {
     . = ALIGN(16);
     /* __global_pointer$ = . + 0x800; */
     *(.sdata*)
@@ -45,12 +45,12 @@ SECTIONS {
 
   /* Clear start */
 	_bss_start = ADDR(.sbss);
-  .sbss : {
+  .sbss : SUBALIGN(4) {
     *(.sbss*)
     *(.scommon)
   } >RAM
 
-  .bss : {
+  .bss : SUBALIGN(4) {
     *(.bss*)
     *(COMMON)
   } >RAM
