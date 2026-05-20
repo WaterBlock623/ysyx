@@ -3,7 +3,8 @@ ENTRY(_start)
 /* PHDRS { text PT_LOAD; data PT_LOAD; } */
 
 SECTIONS {
-  .xiptext : ALIGN(4) {
+  .xiptext : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.xiptext));
     *(entry)
     *(.fsbl)
   } >ROM AT>ROM
@@ -11,7 +12,8 @@ SECTIONS {
   /* Fast RAM load start */
   _fastram_load_start = LOADADDR(.fasttext);
   _fastram_start = ADDR(.fasttext);
-  .fasttext : ALIGN(4) {
+  .fasttext : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.fasttext));
     *(.ssbl)
   } >FASTRAM AT>ROM
   _fastram_end = .;
@@ -21,20 +23,24 @@ SECTIONS {
   /* Load start */
   _data_load_start = LOADADDR(.text);
   _data_start = ADDR(.text);
-  .text : ALIGN(4) {
+  .text : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.text));
     *(.text*)
   } >RAM AT>ROM
 
-  .rodata : ALIGN(4) {
+  .rodata : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.rodata));
     *(.rodata*)
     *(.srodata*)
   } >RAM AT>ROM
 
-  .data : ALIGN(4) {
+  .data : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.data));
     *(.data*)
   } >RAM AT>ROM
 
-  .sdata : ALIGN(4) {
+  .sdata : ALIGN_WITH_INPUT SUBALIGN(4) {
+    . = ALIGN(ALIGNOF(.sdata));
     . = ALIGN(16);
     /* __global_pointer$ = . + 0x800; */
     *(.sdata*)
