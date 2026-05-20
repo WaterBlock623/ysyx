@@ -70,8 +70,6 @@ CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(C
 CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(CONFIG_FTRACE_COND)),true)
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 
-# RTT
-CFLAGS_BUILD += -Wno-error=stringop-overread -Wno-nonnull-compare -Wno-error=stringop-overflow
 # NVBOARD
 ifeq ($(CONFIG_NVBOARD),y)
 CXXFLAGS += -Wno-error=unused-variable -Wno-error=delete-non-virtual-dtor -Wno-error=sign-compare
