@@ -19,6 +19,7 @@
 build/
 **/include/config/
 **/include/generated/
+sbt/
 
 # mill
 !*.mill

@@ -98,7 +98,7 @@ NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 
 make_ysyxsoc:
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-	$(MAKE) -C $(YSYXSOC_DIR) verilog
+	-$(MAKE) -C $(YSYXSOC_DIR) verilog
 endif
 
 lint:
