@@ -1,3 +1,11 @@
+ifeq ($(shell command -v espresso),)
+$(info Init espresso...)
+$(shell mkdir -p $(NPC_HOME)/espresso/)
+$(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -O $(NPC_HOME)/espresso/espresso > /dev/null 2>&1)
+$(shell chmod u+x $(NPC_HOME)/espresso/espresso)
+$(shell export PATH=$(NPC_HOME)/espresso:$$PATH)
+endif
+
 ifeq ($(wildcard $(NPC_HOME)/sbt/bin/sbt),)
 $(info Init sbt...)
 $(shell wget -q -O - https\://github.com/sbt/sbt/releases/download/v1.12.11/sbt-1.12.11.tgz | tar -zxvf - > /dev/null 2>&1)
@@ -18,11 +26,3 @@ ifeq ($(wildcard $(NPC_HOME)/riscv-opcodes/.git),)
 $(info Init riscv-opcodes...)
 $(shell git submodule update --init $(NPC_HOME)/riscv-opcodes)
 endif
-
-ifeq ($(shell command -v espresso),)
-$(info Init espresso...)
-$(shell mkdir -p $(NPC_HOME)/espresso)
-$(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -O $(NPC_HOME)/espresso > /dev/null 2>&1)
-$(shell export PATH=$(NPC_HOME)/espresso:$$PATH)
-endif
-
