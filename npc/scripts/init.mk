@@ -1,6 +1,10 @@
-ifeq ($(wildcard $(NPC_HOME)/ChiRVFormal/.git),)
-$(info Init ChiRVFormal...)
+ifeq ($(wildcard $(NPC_HOME)/sbt/bin/sbt),)
+$(info Init sbt...)
 $(shell wget -q -O - https\://github.com/sbt/sbt/releases/download/v1.12.11/sbt-1.12.11.tgz | tar -zxvf - > /dev/null 2>&1)
+endif
+
+ifeq ($(wildcard ~/.ivy2/local/cn.ac.ios.tis/riscvspeccore_2.13/1.3-chisel7.11.0-7e43b32-SNAPSHOT/jars/riscvspeccore_2.13.jar),)
+$(info Init ChiRVFormal...)
 $(shell git submodule update --init $(NPC_HOME)/ChiRVFormal)
 $(shell cd $(NPC_HOME)/ChiRVFormal; ../sbt/bin/sbt publishLocal -DHashId=true -DChiselVersion=7.11.0 -DScalaVersion=2.13.18 > /dev/null 2>&1)
 endif
