@@ -95,7 +95,10 @@ CXXFLAGS += $(INCFLAGS) \
 
 NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
-									 ADD_LIBS="-llz4 -lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
+									 ADD_LIBS=" \
+									   -lz \
+									   $(if $(CONFIG_NPC_WAVE),-llz4,) \
+									   $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
 make_ysyxsoc:
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
