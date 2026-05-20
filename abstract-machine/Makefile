@@ -89,11 +89,11 @@ CFLAGS   += -O3 -MMD -Wall -Werror -nostdlib -nostartfiles $(INCFLAGS) \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 # CFLAGS += -O0
-CFLAGS += -Os
+# CFLAGS += -Os
 # CFLAGS += -save-temps
 CFLAGS += -ggdb3
 ifeq ($(ENA_LTO),y)
-# CFLAGS += -flto
+CFLAGS += -flto
 endif
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 ASFLAGS  += -MMD $(INCFLAGS)
