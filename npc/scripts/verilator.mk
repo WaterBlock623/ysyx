@@ -25,7 +25,7 @@ endif
 
 VSRCS += $(shell find $(abspath $(VSRC_DIR)) -name "*.sv" -o -name "*.v")
 VERILATOR_BUILDFLAGS += -MMD --cc --build -j 16 --autoflush \
-				-O3 --x-assign fast --x-initial fast --noassert --threads 1
+				-O3 --x-assign fast --x-initial fast --noassert --threads 4
 
 # VERILATOR_CFLAGS += -MMD --cc --build -j 16 \
 # 				-O3 --x-assign fast --x-initial fast --noassert --threads 4 \
