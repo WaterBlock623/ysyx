@@ -22,6 +22,7 @@ endif
 ifeq ($(shell command -v espresso),)
 $(info Init espresso...)
 $(shell mkdir -p $(NPC_HOME)/espresso)
-$(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -o $(NPC_HOME)/espresso > /dev/null 2>&1)
+$(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -O $(NPC_HOME)/espresso > /dev/null 2>&1)
 $(shell export PATH=$(NPC_HOME)/espresso:$$PATH)
 endif
+
