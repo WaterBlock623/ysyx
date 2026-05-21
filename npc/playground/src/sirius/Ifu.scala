@@ -31,7 +31,7 @@ class Ifu(
       new Icache(
         setNum = 1,
         wayNum = 8,
-        wayByte = 16,
+        wayByte = 8,
         busByte = 4,
         if (cfg.ysyxsoc) {
           Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
