@@ -46,10 +46,10 @@ class BasicCore(
   if (!cfg.formal) {
     val bpu = Module(
       new Bpu(
-        btbIndexWidth = 3,
+        btbIndexWidth = 2,
         btbTagWidth = 4,
-        btbTargetWidth = 14,
-        phtIndexWidth = 5,
+        btbTargetWidth = 10,
+        phtIndexWidth = 4,
         phtCounterWidth = 2
       )
     )
@@ -111,16 +111,16 @@ class BasicCore(
       }
     }
     val stageRds = Seq(
-      // StageRd(
-      //   exu.in.valid,
-      //   exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-      //   exu.in.bits.iduPayload.idu.wAddr,
-      //   Seq(
-      //     (exu.out.valid &&
-      //       (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-      //       exu.out.bits.exuPayload.exu.aluOut
-      //   )
-      // ),
+      StageRd(
+        exu.in.valid,
+        exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
+        exu.in.bits.iduPayload.idu.wAddr,
+        Seq(
+          (exu.out.valid &&
+            (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+            exu.out.bits.exuPayload.exu.aluOut
+        )
+      ),
       StageRd(
         lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
