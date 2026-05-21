@@ -28,7 +28,7 @@ case class CoreConfig(
       ExtTypeEnum.I,
       ExtTypeEnum.Zicsr,
       ExtTypeEnum.Zifencei,
-      ExtTypeEnum.C
+      // ExtTypeEnum.C
     ),
   val registerAddrWidth:   Int = 4,
   val registerReadPortNum: Int = 2,
