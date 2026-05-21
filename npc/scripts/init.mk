@@ -8,7 +8,7 @@ endif
 ifneq ($(GITHUB_PATH),)
 $(info Found GITHUB_PATH: $(GITHUB_PATH))
 ifeq ($(shell command -v espresso),)
-$(shell echo "$(NPC_HOME)/espresso" >> $$GITHUB_PATH)
+$(shell echo "$(NPC_HOME)/espresso" >> $(GITHUB_PATH))
 endif
 endif
 
