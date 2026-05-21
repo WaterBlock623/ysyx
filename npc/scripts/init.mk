@@ -1,9 +1,19 @@
-ifeq ($(shell command -v espresso),)
+ifeq ($(wildcard $(NPC_HOME)/espresso/espresso),)
 $(info Init espresso...)
 $(shell mkdir -p $(NPC_HOME)/espresso/)
 $(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -O $(NPC_HOME)/espresso/espresso > /dev/null 2>&1)
 $(shell chmod u+x $(NPC_HOME)/espresso/espresso)
-$(shell export PATH=$(NPC_HOME)/espresso:$$PATH)
+endif
+
+ifneq ($(GITHUB_PATH),)
+$(info Found GITHUB_PATH: $(GITHUB_PATH))
+ifeq ($(shell command -v espresso),)
+$(shell echo "$(NPC_HOME)/espresso" >> $$GITHUB_PATH)
+endif
+endif
+
+ifeq ($(shell command -v espresso),) # Check
+$(error Can not find espresso)
 endif
 
 ifeq ($(wildcard $(NPC_HOME)/sbt/bin/sbt),)
