@@ -121,10 +121,11 @@ class Exu(
   val out = IO(Decoupled(new ExuToLsuIO))
 
   // DecoupledIO
-  val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
-  val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
+  // val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
+  // val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
   in.ready := out.fire
-  out.valid := in.valid && csrValid
+  // out.valid := in.valid && csrValid
+  out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
 
@@ -138,18 +139,16 @@ class Exu(
 
   // csr
   exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
-  val csrData = RegNext(exte.csr.rData)
+  // val csrData = RegNext(exte.csr.rData)
+  val csrData = exte.csr.rData
   outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
-  // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
-  //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
-  //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
-  // }.to(ListMap)
-  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
-    case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) =>
-      (outSel -> Module(alu()))
-  }
+  // val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
+  //   case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) =>
+  //     (outSel -> Module(alu()))
+  // }
+  val alu = Module(new AluBase)
 
   // 连接Alu输入
   val src1 = MuxLookup(ctrl.aluIn1Sel, rs1Data)(
@@ -171,16 +170,18 @@ class Exu(
   aluIn.aluOp := ctrl.aluOp
   aluIn.src1 := src1
   aluIn.src2 := src2
-  alus.foreach(alu => alu._2.io :<= aluIn)
+  // alus.foreach(alu => alu._2.io :<= aluIn)
+  alu.io :<= aluIn
 
   // 根据扩展选择输出
-  val outTable: Seq[(UInt, UInt)] =
-    alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
-      outSel.asUInt -> alu.io.out
-    }.toSeq
-  val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
-    outTable
-  )
+  // val outTable: Seq[(UInt, UInt)] =
+  //   alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
+  //     outSel.asUInt -> alu.io.out
+  //   }.toSeq
+  // val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+  //   outTable
+  // )
+  val aluOut = alu.io.out
   outBits.exuPayload.exu.aluOut := aluOut
 
   // 计算跳转地址
