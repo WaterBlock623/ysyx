@@ -65,16 +65,21 @@ class AluBase(
   val direct2Result = io.src2
   val clearResult = io.src2 & ~io.src1 // reversal
 
-  io.out := addResult
+  io.out := direct1Result
   switch(io.aluOp) {
-    is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
-    is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
     is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
     is(neq.asUInt) {io.out := neqResult; assert(io.out === (io.src1 =/= io.src2))}
     is(lt.asUInt) {io.out := ltResult; assert(io.out === (io.src1.asSInt < io.src2.asSInt))}
     is(ltu.asUInt) {io.out := ltuResult; assert(io.out === (io.src1 < io.src2))}
     is(ge.asUInt) {io.out := geResult; assert(io.out === (io.src1.asSInt >= io.src2.asSInt))}
     is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
+    is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
+    is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
+    is(sll.asUInt) {io.out := sllResult}
+    is(srl.asUInt) {io.out := srlResult}
+    is(sra.asUInt) {io.out := sraResult}
+    // is(clear.asUInt) {io.out := clearResult; assert(io.out === (io.src1 & ~io.src2))}
+    is(clear.asUInt) {io.out := clearResult}
     // is(and.asUInt) {io.out := andResult; assert(io.out === (io.src1 & io.src2))}
     // is(add.asUInt) {io.out := addResult}
     // is(sub.asUInt) {io.out := subResult}
@@ -87,13 +92,8 @@ class AluBase(
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
     is(xor.asUInt) {io.out := xorResult}
-    is(sll.asUInt) {io.out := sllResult}
-    is(srl.asUInt) {io.out := srlResult}
-    is(sra.asUInt) {io.out := sraResult}
     is(direct1.asUInt) {io.out := direct1Result}
     is(direct2.asUInt) {io.out := direct2Result}
-    // is(clear.asUInt) {io.out := clearResult; assert(io.out === (io.src1 & ~io.src2))}
-    is(clear.asUInt) {io.out := clearResult}
   }
   // io.out := MuxLookup(io.aluOp, addResult)(
   //   Seq(
