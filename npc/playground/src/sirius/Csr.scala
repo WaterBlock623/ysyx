@@ -110,20 +110,15 @@ class CsrMepc(
 class CsrMcause(
   implicit private val cfg: CoreConfig)
     extends CsrParent {
-  val causeNum = IO(Input(UInt(cfg.mxlen.W)))
+  val causeNum = IO(Input(UInt(5.W)))
   val isTrap = IO(Input(Bool()))
 
-  val mcauseReg = if (cfg.formal) {
-    RegInit(0.U.asTypeOf(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W))))
-  } else { Reg(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W))) }
+  val mcauseReg = if (cfg.formal) RegInit(0.U(5.W)) else Reg(UInt(5.W))
+
   when(csrIO.wEn || isTrap) {
-    mcauseReg := Mux(
-      isTrap,
-      causeNum.asTypeOf(chiselTypeOf(mcauseReg)),
-      csrIO.wData.asTypeOf(chiselTypeOf(mcauseReg))
-    )
+    mcauseReg := Mux(isTrap, causeNum, csrIO.wData)
   }
-  csrIO.rData := mcauseReg.asUInt
+  csrIO.rData := mcauseReg
 }
 
 class CsrMstatus(
