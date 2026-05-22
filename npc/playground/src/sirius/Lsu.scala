@@ -182,8 +182,15 @@ class Lsu(
 
   // Store data
   val regData = inBits.exuPayload.idu.rs2Data
-  val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
-  val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
+  // val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
+  val sb = MuxLookup(rem, regData(7, 0))(Seq(
+    0.U -> regData(7, 0),
+    1.U -> regData(7, 0) ## 0.U(8.W),
+    2.U -> regData(7, 0) ## 0.U(16.W),
+    3.U -> regData(7, 0) ## 0.U(24.W),
+  )).pad(cfg.xlen)
+  // val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
+  val sh = Mux(rem(1), regData(15, 0) ## 0.U(16.W), regData(15, 0)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)
 
   exte.mem.w.bits.data := MuxLookup(ctrl.loadStoreLength, sw)(
