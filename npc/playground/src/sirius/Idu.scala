@@ -199,21 +199,7 @@ class Idu(
   outBits.iduPayload.idu.imm := immParser.io.imm
 
   // csr
-  val csrAddr = VecInit.fill(12)(false.B)
-  val supportedCsr = Seq(
-    CsrAddr.marchid,
-    CsrAddr.mcause,
-    CsrAddr.mepc,
-    CsrAddr.mstatus,
-    CsrAddr.mtvec,
-    CsrAddr.mvendorid
-  )
-  val csrUsedBits = supportedCsr.reduce(_ | _).toBinaryString
-  csrAddr.zipWithIndex.foreach { case (bit, idx) =>
-    if (csrUsedBits(idx) == '1') bit := inst(idx + 20)
-  }
-  // outBits.iduPayload.idu.csrAddr := inst(31, 20)
-  outBits.iduPayload.idu.csrAddr := csrAddr.asUInt
+  outBits.iduPayload.idu.csrAddr := inst(31, 20)
 
   // InstTypeEnum.allWithNames.foreach { case (typ, name) =>
   //   PerfWhen(
