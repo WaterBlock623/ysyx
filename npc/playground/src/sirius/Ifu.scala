@@ -62,17 +62,18 @@ class Ifu(
 
     out.valid := iqueueDeq.valid
     iqueueDeq.ready := out.ready
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    val pc = RegInit(cfg.pcInit.U.asTypeOf(MixedVec(UInt(1.W), UInt((cfg.xlen - 1).W))))
     when(flush) {
-      pc := flushTarget
+      pc(1) := flushTarget.asTypeOf(chiselTypeOf(pc))(1)
     }.elsewhen(out.fire) {
-      pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
+      pc(1) := pc(1) + Mux(iqueueDeq.bits.isC, 1.U, 2.U)
     }
-    exte.bpu.pc := pc
+    pc(0) := 0.U
+    exte.bpu.pc := pc.asUInt
 
-    outBits.ifuPayload.ifu.pc := pc
+    outBits.ifuPayload.ifu.pc := pc.asUInt
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
-    outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    outBits.ifuPayload.ifu.predTarget := exte.bpu.target(exte.bpu.getWidth - 1, 1) ## 0.U(1.W)
     outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
     outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
