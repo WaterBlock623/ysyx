@@ -27,7 +27,7 @@ case class UnitConfig(
       )
     ),
   val csr32Map: ListMap[(Int, Int), CoreConfig => CsrParent32] = ListMap(
-    (CsrAddr.mcycleh, CsrAddr.mcycle) -> (cfg => new CsrMcycle32()(cfg))
+    // (CsrAddr.mcycleh, CsrAddr.mcycle) -> (cfg => new CsrMcycle32()(cfg))
   ),
   val csrMap: ListMap[Int, CoreConfig => CsrParent] = ListMap(
     CsrAddr.mvendorid -> (cfg => new CsrMvendorid()(cfg)),
