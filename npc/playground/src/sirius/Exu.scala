@@ -121,10 +121,11 @@ class Exu(
   val out = IO(Decoupled(new ExuToLsuIO))
 
   // DecoupledIO
-  val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
-  val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
+  // val isCsrInst = in.bits.ctrl.wbuCtrl.isWriteBackCsr
+  // val csrValid = !isCsrInst || RegNext(in.valid && !exte.stall && !in.fire)
   in.ready := out.fire
-  out.valid := in.valid && csrValid
+  // out.valid := in.valid && csrValid
+  out.valid := in.valid
   val inBits = in.bits
   val outBits = out.bits
 
@@ -138,7 +139,8 @@ class Exu(
 
   // csr
   exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
-  val csrData = RegNext(exte.csr.rData)
+  // val csrData = RegNext(exte.csr.rData)
+  val csrData = exte.csr.rData
   outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
