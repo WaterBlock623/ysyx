@@ -129,11 +129,12 @@ class CsrMcause(
 class CsrMstatus(
   implicit private val cfg: CoreConfig)
     extends CsrParent {
-  val mstatusReg = RegInit(0x1800.U(cfg.mxlen.W))
-  when(csrIO.wEn) {
-    mstatusReg := csrIO.wData
-  }
-  csrIO.rData := mstatusReg
+  // val mstatusReg = RegInit(0x1800.U(cfg.mxlen.W))
+  // when(csrIO.wEn) {
+  //   mstatusReg := csrIO.wData
+  // }
+  // csrIO.rData := mstatusReg
+  csrIO.rData := "h1800".U
 }
 
 class Csr(
