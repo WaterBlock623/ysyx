@@ -73,7 +73,8 @@ class Ifu(
 
     outBits.ifuPayload.ifu.pc := pc.asUInt
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
-    outBits.ifuPayload.ifu.predTarget := exte.bpu.target(exte.bpu.getWidth - 1, 1) ## 0.U(1.W)
+    outBits.ifuPayload.ifu.predTarget := 
+      exte.bpu.target(exte.bpu.target.getWidth - 1, 1) ## 0.U(1.W)
     outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
     outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
