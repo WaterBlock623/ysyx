@@ -78,43 +78,13 @@ class AluBase(
     is(sll.asUInt) {io.out := sllResult}
     is(srl.asUInt) {io.out := srlResult}
     is(sra.asUInt) {io.out := sraResult}
-    // is(clear.asUInt) {io.out := clearResult; assert(io.out === (io.src1 & ~io.src2))}
     is(clear.asUInt) {io.out := clearResult}
-    // is(and.asUInt) {io.out := andResult; assert(io.out === (io.src1 & io.src2))}
-    // is(add.asUInt) {io.out := addResult}
-    // is(sub.asUInt) {io.out := subResult}
-    // is(eql.asUInt) {io.out := eqlResult}
-    // is(neq.asUInt) {io.out := neqResult}
-    // is(lt.asUInt) {io.out := ltResult}
-    // is(ltu.asUInt) {io.out := ltuResult}
-    // is(ge.asUInt) {io.out := geResult}
-    // is(geu.asUInt) {io.out := geuResult}
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
     is(xor.asUInt) {io.out := xorResult}
     is(direct1.asUInt) {io.out := direct1Result}
     is(direct2.asUInt) {io.out := direct2Result}
   }
-  // io.out := MuxLookup(io.aluOp, addResult)(
-  //   Seq(
-  //     add.asUInt -> addResult,
-  //     sub.asUInt -> subResult,
-  //     eql.asUInt -> eqlResult,
-  //     neq.asUInt -> neqResult,
-  //     lt.asUInt -> ltResult,
-  //     ltu.asUInt -> ltuResult,
-  //     ge.asUInt -> geResult,
-  //     geu.asUInt -> geuResult,
-  //     and.asUInt -> andResult,
-  //     or.asUInt -> orResult,
-  //     xor.asUInt -> xorResult,
-  //     sll.asUInt -> sllResult,
-  //     srl.asUInt -> srlResult,
-  //     sra.asUInt -> sraResult,
-  //     direct1.asUInt -> direct1Result,
-  //     clear.asUInt -> clearResult,
-  //   )
-  // )
 }
 
 class JumpTargetGenerator(
@@ -172,14 +142,11 @@ class Exu(
   outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
-  // val alus: ListMap[ExtTypeEnum.Type, AluParent] = cfg.extensions().collect {
-  //   case ExtTypeEnum.I => ExtTypeEnum.I -> Module(new AluBase)
-  //   case t => throw new IllegalArgumentException(s"Unsupported extension: $t")
-  // }.to(ListMap)
-  val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
-    case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) =>
-      (outSel -> Module(alu()))
-  }
+  // val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {
+  //   case (outSel: ExuOutSelEnum.Type, alu: (() => AluParent)) =>
+  //     (outSel -> Module(alu()))
+  // }
+  val alu = Module(new AluBase)
 
   // 连接Alu输入
   val src1 = MuxLookup(ctrl.aluIn1Sel, rs1Data)(
@@ -201,16 +168,18 @@ class Exu(
   aluIn.aluOp := ctrl.aluOp
   aluIn.src1 := src1
   aluIn.src2 := src2
-  alus.foreach(alu => alu._2.io :<= aluIn)
+  // alus.foreach(alu => alu._2.io :<= aluIn)
+  alu.io :<= aluIn
 
   // 根据扩展选择输出
-  val outTable: Seq[(UInt, UInt)] =
-    alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
-      outSel.asUInt -> alu.io.out
-    }.toSeq
-  val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
-    outTable
-  )
+  // val outTable: Seq[(UInt, UInt)] =
+  //   alus.map { case (outSel: ExuOutSelEnum.Type, alu: AluParent) =>
+  //     outSel.asUInt -> alu.io.out
+  //   }.toSeq
+  // val aluOut = MuxLookup(ctrl.exuOutSel, outTable.head._2)(
+  //   outTable
+  // )
+  val aluOut = alu.io.out
   outBits.exuPayload.exu.aluOut := aluOut
 
   // 计算跳转地址
