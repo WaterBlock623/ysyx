@@ -7,7 +7,8 @@ import chisel3.experimental.dataview._
 // Trap
 class TrapIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isTrap = Output(Bool())
-  val cause = Output(UInt(cfg.mxlen.W))
+  // val cause = Output(UInt(cfg.mxlen.W))
+  val cause = Output(UInt(5.W))
 }
 
 // 数据载荷
