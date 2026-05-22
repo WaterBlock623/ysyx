@@ -23,7 +23,7 @@ object InstFieldsRvI {
     MakeEnumField("aluIn1Sel", "ex", AluInSelEnum, _.aluIn1Sel),
     MakeEnumField("aluIn2Sel", "ex", AluInSelEnum, _.aluIn2Sel),
     MakeEnumField("aluOp", "ex", AluOpEnum, _.aluOp),
-    MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
+    // MakeEnumField("exuOutSel", "ex", ExuOutSelEnum, _.exuOutSel),
     MakeBoolField(
       "isLoad",
       "ls",
