@@ -29,8 +29,8 @@ class Ifu(
     // icache
     val icache = Module(
       new Icache(
-        setNum = 2,
-        wayNum = 2,
+        setNum = 8,
+        wayNum = 1,
         wayByte = 8,
         busByte = 4,
         if (cfg.ysyxsoc) {
