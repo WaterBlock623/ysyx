@@ -28,32 +28,32 @@ class AluBase(
     extends AluParent {
   import AluOpEnum._
 
-  // val useSub = Seq(sub, eql, neq, lt, ltu, ge, geu, clear)
-  //   .map(io.aluOp === _.asUInt)
-  //   .reduce(_ || _)
-  // val xorSrc2 = io.src2 ^ Fill(io.src2.getWidth, useSub)
-  // val addSub = io.src1 +& xorSrc2 + useSub.asUInt
-  // val addSubResult = addSub.tail(1)
-  // val addResult = addSubResult
-  // val subResult = addSubResult
-  // val eqlResult = addSubResult === 0.U
-  // val overflow = io.src1.head(1) === xorSrc2.head(1) && io.src1.head(1) =/= addSubResult.head(1)
-  // val ltResult = addSubResult.head(1) ^ overflow
-  // val geResult = !ltResult
-  // val geuResult = addSub.head(1)
-  // val ltuResult = !geuResult
+  val useSub = Seq(sub, eql, neq, lt, ltu, ge, geu, clear)
+    .map(io.aluOp === _.asUInt)
+    .reduce(_ || _)
+  val xorSrc2 = io.src2 ^ Fill(io.src2.getWidth, useSub)
+  val addSub = io.src1 +& xorSrc2 + useSub.asUInt
+  val addSubResult = addSub.tail(1)
+  val addResult = addSubResult
+  val subResult = addSubResult
+  val eqlResult = addSubResult === 0.U
+  val overflow = io.src1.head(1) === xorSrc2.head(1) && io.src1.head(1) =/= addSubResult.head(1)
+  val ltResult = addSubResult.head(1) ^ overflow
+  val geResult = !ltResult
+  val geuResult = addSub.head(1)
+  val ltuResult = !geuResult
   // val andClearResult = io.src1 & xorSrc2
   // val andResult = andClearResult
   // val clearResult = andClearResult
 
-  val addResult = io.src1 + io.src2
-  val subResult = io.src1 - io.src2
-  val eqlResult = io.src1 === io.src2
+  // val addResult = io.src1 + io.src2
+  // val subResult = io.src1 - io.src2
+  // val eqlResult = io.src1 === io.src2
   val neqResult = !eqlResult
-  val ltResult = io.src1.asSInt < io.src2.asSInt
-  val ltuResult = io.src1 < io.src2
-  val geResult = !ltResult
-  val geuResult = !ltuResult
+  // val ltResult = io.src1.asSInt < io.src2.asSInt
+  // val ltuResult = io.src1 < io.src2
+  // val geResult = !ltResult
+  // val geuResult = !ltuResult
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
@@ -67,23 +67,23 @@ class AluBase(
 
   io.out := addResult
   switch(io.aluOp) {
-    // is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
-    // is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
-    // is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
-    // is(neq.asUInt) {io.out := neqResult; assert(io.out === (io.src1 =/= io.src2))}
-    // is(lt.asUInt) {io.out := ltResult; assert(io.out === (io.src1.asSInt < io.src2.asSInt))}
-    // is(ltu.asUInt) {io.out := ltuResult; assert(io.out === (io.src1 < io.src2))}
-    // is(ge.asUInt) {io.out := geResult; assert(io.out === (io.src1.asSInt >= io.src2.asSInt))}
-    // is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
+    is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
+    is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
+    is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
+    is(neq.asUInt) {io.out := neqResult; assert(io.out === (io.src1 =/= io.src2))}
+    is(lt.asUInt) {io.out := ltResult; assert(io.out === (io.src1.asSInt < io.src2.asSInt))}
+    is(ltu.asUInt) {io.out := ltuResult; assert(io.out === (io.src1 < io.src2))}
+    is(ge.asUInt) {io.out := geResult; assert(io.out === (io.src1.asSInt >= io.src2.asSInt))}
+    is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
     // is(and.asUInt) {io.out := andResult; assert(io.out === (io.src1 & io.src2))}
-    is(add.asUInt) {io.out := addResult}
-    is(sub.asUInt) {io.out := subResult}
-    is(eql.asUInt) {io.out := eqlResult}
-    is(neq.asUInt) {io.out := neqResult}
-    is(lt.asUInt) {io.out := ltResult}
-    is(ltu.asUInt) {io.out := ltuResult}
-    is(ge.asUInt) {io.out := geResult}
-    is(geu.asUInt) {io.out := geuResult}
+    // is(add.asUInt) {io.out := addResult}
+    // is(sub.asUInt) {io.out := subResult}
+    // is(eql.asUInt) {io.out := eqlResult}
+    // is(neq.asUInt) {io.out := neqResult}
+    // is(lt.asUInt) {io.out := ltResult}
+    // is(ltu.asUInt) {io.out := ltuResult}
+    // is(ge.asUInt) {io.out := geResult}
+    // is(geu.asUInt) {io.out := geuResult}
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
     is(xor.asUInt) {io.out := xorResult}

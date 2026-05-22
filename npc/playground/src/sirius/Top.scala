@@ -46,10 +46,10 @@ class BasicCore(
   if (!cfg.formal) {
     val bpu = Module(
       new Bpu(
-        btbIndexWidth = 3,
+        btbIndexWidth = 2,
         btbTagWidth = 4,
-        btbTargetWidth = 14,
-        phtIndexWidth = 5,
+        btbTargetWidth = 10,
+        phtIndexWidth = 4,
         phtCounterWidth = 2
       )
     )

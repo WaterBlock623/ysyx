@@ -47,7 +47,8 @@ class RegisterFile(
   //   def write(addr: UInt, data: UInt) = { rf(addr) := data }
   // }
   //
-  // val regFile = if (cfg.formal) { new RegReg } else { new RegMem }
+  // // val regFile = if (cfg.formal) { new RegReg } else { new RegMem }
+  // val regFile = new RegMem
   // when(wbuIn.wEn && (wbuIn.wAddr =/= 0.U)) {
   //   regFile.write(wbuIn.wAddr, wbuIn.wData)
   // }

@@ -39,10 +39,7 @@ class ClintDevice extends Module {
 
   0.U.asTypeOf(chiselTypeOf(in)) :>= in
   in.r.bits.last := true.B
-  val idReg = Reg(chiselTypeOf(in.ar.bits.id))
-  when(in.ar.fire) {
-    idReg := in.ar.bits.id
-  }
+  val idReg = RegEnable(in.ar.bits.id, in.ar.fire)
   in.r.bits.id := idReg
 
   val sIdle :: sMtimeLo :: sMtimeHi :: Nil = Enum(3)
