@@ -177,7 +177,7 @@ class BasicCore(
     )
 
     // RAW(CSR)
-    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: UInt)
+    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: CsrEnum.Type)
     val stageCsrs = Seq(
       StageCsr(
         lsu.in.valid,
