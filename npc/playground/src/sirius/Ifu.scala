@@ -161,13 +161,13 @@ class Ifu(
           RVZifencei(inst) ||
           {
             val allowCsr = Set(
-              CsrAddr.mcycle,
-              CsrAddr.mcycleh,
+              // CsrAddr.mcycle,
+              // CsrAddr.mcycleh,
               CsrAddr.mepc,
               // CsrAddr.mstatus,
               CsrAddr.mtvec
             )
-            RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
+            RVZicsr(inst) && allowCsr.map(_ === inst(31, 20)).reduce(_ || _)
           } ||
           RVC(inst)
       )
