@@ -60,25 +60,25 @@ class BasicCore(
   }
 
   if (cfg.pipeline) {
-    def pipelineConnect[T <: Data](
-      prevOut: DecoupledIO[T],
-      thisIn:  DecoupledIO[T],
-      stall:   Bool = false.B,
-      flush:   Bool = false.B
-    ) = {
-      val thisInReady = thisIn.ready || !thisIn.valid
-      val valid = RegInit(false.B)
-      when(thisInReady) {
-        valid := prevOut.valid && !stall
-      }
-      when(flush) {
-        valid := false.B
-      }
-
-      prevOut.ready := thisInReady && !stall
-      thisIn.valid := valid
-      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-    }
+    // def pipelineConnect[T <: Data](
+    //   prevOut: DecoupledIO[T],
+    //   thisIn:  DecoupledIO[T],
+    //   stall:   Bool = false.B,
+    //   flush:   Bool = false.B
+    // ) = {
+    //   val thisInReady = thisIn.ready || !thisIn.valid
+    //   val valid = RegInit(false.B)
+    //   when(thisInReady) {
+    //     valid := prevOut.valid && !stall
+    //   }
+    //   when(flush) {
+    //     valid := false.B
+    //   }
+    //
+    //   prevOut.ready := thisInReady && !stall
+    //   thisIn.valid := valid
+    //   thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    // }
 
     val stallIdu = Wire(Bool())
     val stallExu = Wire(Bool())
@@ -86,10 +86,14 @@ class BasicCore(
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
     val iduForwardBits = WireDefault(iduOut.bits)
-    pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    pipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    pipelineConnect(lsuOut, wbu.in)
+    // val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    // val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    // val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    // val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
+    val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
+    val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
 
     // RAW(GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
