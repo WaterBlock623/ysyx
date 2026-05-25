@@ -198,8 +198,7 @@ class Idu(
   immParser.io.instType := ctrl.id.instType
   outBits.iduPayload.idu.imm := immParser.io.imm
 
-  // csr
-  // outBits.iduPayload.idu.csrAddr := inst(31, 20)
+  // csr encode
   outBits.iduPayload.idu.csrAddr := MuxLookup(inst(31, 20), CsrEnum.all.head)(CsrAddr.getAllMap)
 
   // InstTypeEnum.allWithNames.foreach { case (typ, name) =>

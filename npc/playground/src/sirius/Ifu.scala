@@ -161,8 +161,8 @@ class Ifu(
           RVZifencei(inst) ||
           {
             val allowCsr = Set(
-              CsrAddr.mcycle,
-              CsrAddr.mcycleh,
+              // CsrAddr.mcycle,
+              // CsrAddr.mcycleh,
               CsrAddr.mepc,
               // CsrAddr.mstatus,
               CsrAddr.mtvec
