@@ -143,12 +143,16 @@ class BasicCore(
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         wbu.in.bits.lsuPayload.idu.wAddr,
         Seq(
+          // (wbu.in.valid &&
+          //   (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+          //   wbu.in.bits.lsuPayload.exu.aluOut,
+          // (wbu.in.valid &&
+          //   (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+          //   wbu.in.bits.lsuPayload.lsu.loadData
           (wbu.in.valid &&
-            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-            wbu.in.bits.lsuPayload.exu.aluOut,
-          (wbu.in.valid &&
-            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-            wbu.in.bits.lsuPayload.lsu.loadData
+            ((wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt) ||
+            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt))) ->
+            wbu.in.bits.lsuPayload.lsu.regWData
         )
       )
     )
