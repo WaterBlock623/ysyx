@@ -185,26 +185,26 @@ class BasicCore(
     )
 
     // RAW(CSR)
-    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: CsrEnum.Type)
+    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, immNotZero: Bool, addr: CsrEnum.Type)
     val stageCsrs = Seq(
       StageCsr(
         lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         lsu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-        lsu.in.bits.exuPayload.idu.imm,
+        lsu.in.bits.exuPayload.idu.immNotZero,
         lsu.in.bits.exuPayload.idu.csrAddr
       ),
       StageCsr(
         wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-        wbu.in.bits.lsuPayload.idu.imm,
+        wbu.in.bits.lsuPayload.idu.immNotZero,
         wbu.in.bits.lsuPayload.idu.csrAddr
       )
     )
     val rawCsr = stageCsrs.map { s =>
       val isZicsr = s.valid && s.isWriteBackCsr
-      val stageWillWrite = isZicsr && !(s.check && s.imm === 0.U)
+      val stageWillWrite = isZicsr && (!s.check || s.immNotZero)
       val exuWillRead = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
       val exuReadAddr = exu.in.bits.iduPayload.idu.csrAddr
       stageWillWrite && exuWillRead && s.addr === exuReadAddr
