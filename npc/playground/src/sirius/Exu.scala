@@ -72,7 +72,7 @@ class AluBase(
     if (shamt.getWidth == 1) {
       Mux(shamt(0), rightShiftN(data, 1, fillBit), data)
     } else {
-      val lastStage = rightShiftDynamic(data, shamt(shamt.getWidth - 2, 0), fillBit)
+      val lastStage = rightShiftDynamic(data, shamt.tail(1), fillBit)
       Mux(shamt.head(1).asBool, rightShiftN(lastStage, 1 << (shamt.getWidth - 1), fillBit), lastStage)
     }
   }
@@ -98,7 +98,7 @@ class AluBase(
     // is(sll.asUInt) {io.out := sllResult}
     // is(srl.asUInt) {io.out := srlResult}
     // is(sra.asUInt) {io.out := sraResult}
-    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt))}
+    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt), "%x != %x", io.out, io.src1 << shamt)}
     is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
     is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(clear.asUInt) {io.out := clearResult}
