@@ -98,7 +98,7 @@ class AluBase(
     // is(sll.asUInt) {io.out := sllResult}
     // is(srl.asUInt) {io.out := srlResult}
     // is(sra.asUInt) {io.out := sraResult}
-    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt), "%x != %x", io.out, io.src1 << shamt)}
+    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
     is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
     is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(clear.asUInt) {io.out := clearResult}
