@@ -63,7 +63,7 @@ class AluBase(
 
   // Shift
   def rightShiftN(data: UInt, n: Int, fillBit: Bool): UInt = {
-    require(n >= 0)
+    require(n > 0)
     val dataWidth = data.getWidth
     Fill(n, fillBit) ## data(dataWidth - 1, n)
   }
