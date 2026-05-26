@@ -161,6 +161,9 @@ class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(CsrEnum()) 
+  val rData = Input(UInt(cfg.mxlen.W))
+
   val wEn = Output(Bool())
   val wAddr = Output(CsrEnum()) 
   val wData = Output(UInt(cfg.mxlen.W))

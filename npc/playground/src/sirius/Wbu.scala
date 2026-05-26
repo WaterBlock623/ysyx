@@ -32,7 +32,7 @@ class Wbu(
   val regFile = exte.regFlie
   val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
-  val csrData = inBits.lsuPayload.exu.csrData
+  // val csrData = inBits.lsuPayload.exu.csrData
   val staticNextPc = inBits.lsuPayload.ifu.pc + Mux(inBits.lsuPayload.ifu.isC, 2.U, 4.U)
   // val staticNextPc = 
   //   Mux(inBits.lsuPayload.ifu.isC, inBits.lsuPayload.ifu.pc + 2.U, inBits.lsuPayload.ifu.pc + 4.U)
@@ -46,17 +46,22 @@ class Wbu(
   )
 
   // Jump ctrl (csr & trap)
-  // val normalJumpTarget = inBits.lsuPayload.exu.jumpTarget
-  // pcReg.target := Mux(
-  //   inBits.lsuPayload.trap.isTrap,
-  //   exte.csr.mtvec,
-  //   Mux(ctrl.isJumpCsr, csrJumpTarget, normalJumpTarget)
-  // )
-  // pcReg.isJump := in.valid && (ctrl.isJump || ctrl.isJumpCsr || (ctrl.isBranch && aluOut(
-  //   0
-  // )) || inBits.lsuPayload.trap.isTrap)
   pcReg.isJump := in.valid && (ctrl.isJumpCsr || inBits.lsuPayload.trap.isTrap)
   pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, csrJumpTarget)
+
+  // csr
+  val csr = exte.csr
+  csr.rAddr := inBits.lsuPayload.idu.csrAddr
+  val csrRData = csr.rData
+
+  csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr &&
+    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid && !inBits.lsuPayload.trap.isTrap
+  csr.wAddr := inBits.lsuPayload.idu.csrAddr
+  csr.wData := inBits.lsuPayload.exu.aluOut
+
+  csr.pc := pc
+  csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
+  csr.causeNum := inBits.lsuPayload.trap.cause
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
@@ -66,23 +71,11 @@ class Wbu(
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
     Seq(
       WriteBackSelEnum.alu.asUInt -> aluOut,
-      // WriteBackSelEnum.imm.asUInt -> imm,
       WriteBackSelEnum.lsu.asUInt -> loadData,
-      WriteBackSelEnum.csr.asUInt -> csrData,
+      WriteBackSelEnum.csr.asUInt -> csrRData,
       WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
     )
   )
-
-  // csr
-  val csr = exte.csr
-  csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr &&
-    (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid && !inBits.lsuPayload.trap.isTrap
-  csr.wAddr := inBits.lsuPayload.idu.csrAddr
-  csr.wData := inBits.lsuPayload.exu.aluOut
-
-  csr.pc := pc
-  csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
-  csr.causeNum := inBits.lsuPayload.trap.cause
 
   // Debug
   if (cfg.formal) {
