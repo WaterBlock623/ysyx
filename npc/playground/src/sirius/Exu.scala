@@ -191,6 +191,8 @@ class Exu(
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
+  outBits.exuPayload.exu.predTargetMayErr := 
+    inBits.iduPayload.ifu.predTarget =/= jumpTargetGenerator.io.jumpTarget
 
   PerfWhen(
     "calcFinish",

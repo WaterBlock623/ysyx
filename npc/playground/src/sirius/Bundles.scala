@@ -40,6 +40,7 @@ class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
     val aluOut  = UInt(cfg.xlen.W)
     // val csrData = UInt(cfg.mxlen.W)
     val jumpTarget = UInt(cfg.xlen.W)
+    val predTargetMayErr = Bool()
   }
 }
 
