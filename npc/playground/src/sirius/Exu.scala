@@ -62,14 +62,10 @@ class AluBase(
   val clearResult = io.src2 & ~io.src1 // reversal
 
   // Shift
-  // val sllResult = io.src1 << shiftNum
-  // val srlResult = io.src1 >> shiftNum
-  // val sraResult = (io.src1.asSInt >> shiftNum).asUInt
-
   def rightShiftN(data: UInt, n: Int, fillBit: Bool): UInt = {
     require(n >= 0)
     val dataWidth = data.getWidth
-    Fill(dataWidth - n, fillBit) ## data(dataWidth - 1, n)
+    Fill(n, fillBit) ## data(dataWidth - 1, n)
   }
 
   def rightShiftDynamic(data: UInt, shamt: UInt, fillBit: Bool): UInt = {
@@ -77,14 +73,14 @@ class AluBase(
       Mux(shamt(0), rightShiftN(data, 1, fillBit), data)
     } else {
       val lastStage = rightShiftDynamic(data, shamt.tail(1), fillBit)
-      Mux(shamt.head(1).asBool, rightShiftN(lastStage, shamt.getWidth, fillBit), lastStage)
+      Mux(shamt.head(1).asBool, rightShiftN(lastStage, 1 << (shamt.getWidth - 1), fillBit), lastStage)
     }
   }
 
   val shamt = io.src2(log2Ceil(cfg.xlen) - 1, 0)
   val isLeftShift = io.aluOp === AluOpEnum.sll.asUInt
   val shiftData = Mux(isLeftShift, Reverse(io.src1), io.src1)
-  val shiftFillBit = Mux(io.aluOp === AluOpEnum.sra.asUInt, io.src1.head(1).asBool, false.B)
+  val shiftFillBit = Mux(io.aluOp === AluOpEnum.sra.asUInt, io.src1(io.src1.getWidth - 1), false.B)
   val rawShiftResult = rightShiftDynamic(shiftData, shamt, shiftFillBit)
   val shiftResult = Mux(isLeftShift, Reverse(rawShiftResult), rawShiftResult)
 
