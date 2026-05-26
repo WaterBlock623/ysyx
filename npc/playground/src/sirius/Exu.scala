@@ -63,7 +63,7 @@ class AluBase(
 
   // Shift
   def rightShiftN(data: UInt, n: Int, fillBit: Bool): UInt = {
-    require(n > 0)
+    require(n >= 0)
     val dataWidth = data.getWidth
     Fill(n, fillBit) ## data(dataWidth - 1, n)
   }
@@ -72,7 +72,7 @@ class AluBase(
     if (shamt.getWidth == 1) {
       Mux(shamt(0), rightShiftN(data, 1, fillBit), data)
     } else {
-      val lastStage = rightShiftDynamic(data, shamt.tail(1), fillBit)
+      val lastStage = rightShiftDynamic(data, shamt(shamt.getWidth - 2, 0), fillBit)
       Mux(shamt.head(1).asBool, rightShiftN(lastStage, 1 << (shamt.getWidth - 1), fillBit), lastStage)
     }
   }
