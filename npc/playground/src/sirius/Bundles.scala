@@ -31,6 +31,7 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
     val csrAddr = CsrEnum()
+    val immNotZero = Bool()
   }
 }
 

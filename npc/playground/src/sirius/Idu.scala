@@ -197,6 +197,7 @@ class Idu(
   immParser.io.inst := inst
   immParser.io.instType := ctrl.id.instType
   outBits.iduPayload.idu.imm := immParser.io.imm
+  outBits.iduPayload.idu.immNotZero := immParser.io.imm.orR
 
   // csr encode
   outBits.iduPayload.idu.csrAddr := MuxLookup(inst(31, 20), CsrEnum.all.head)(CsrAddr.getAllMap)
