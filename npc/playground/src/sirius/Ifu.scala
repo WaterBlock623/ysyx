@@ -29,7 +29,7 @@ class Ifu(
     // icache
     val icache = Module(
       new Icache(
-        setNum = 8,
+        setNum = 4,
         wayNum = 1,
         wayByte = 8,
         busByte = 4,
