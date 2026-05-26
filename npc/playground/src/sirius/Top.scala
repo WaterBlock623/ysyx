@@ -60,25 +60,25 @@ class BasicCore(
   }
 
   if (cfg.pipeline) {
-    def pipelineConnect[T <: Data](
-      prevOut: DecoupledIO[T],
-      thisIn:  DecoupledIO[T],
-      stall:   Bool = false.B,
-      flush:   Bool = false.B
-    ) = {
-      val thisInReady = thisIn.ready || !thisIn.valid
-      val valid = RegInit(false.B)
-      when(thisInReady) {
-        valid := prevOut.valid && !stall
-      }
-      when(flush) {
-        valid := false.B
-      }
-
-      prevOut.ready := thisInReady && !stall
-      thisIn.valid := valid
-      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-    }
+    // def pipelineConnect[T <: Data](
+    //   prevOut: DecoupledIO[T],
+    //   thisIn:  DecoupledIO[T],
+    //   stall:   Bool = false.B,
+    //   flush:   Bool = false.B
+    // ) = {
+    //   val thisInReady = thisIn.ready || !thisIn.valid
+    //   val valid = RegInit(false.B)
+    //   when(thisInReady) {
+    //     valid := prevOut.valid && !stall
+    //   }
+    //   when(flush) {
+    //     valid := false.B
+    //   }
+    //
+    //   prevOut.ready := thisInReady && !stall
+    //   thisIn.valid := valid
+    //   thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    // }
 
     val stallIdu = Wire(Bool())
     val stallExu = Wire(Bool())
@@ -86,10 +86,14 @@ class BasicCore(
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
     val iduForwardBits = WireDefault(iduOut.bits)
-    pipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    pipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    pipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    pipelineConnect(lsuOut, wbu.in)
+    // val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    // val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    // val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    // val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
+    val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
+    val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
 
     // RAW(GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
@@ -139,12 +143,16 @@ class BasicCore(
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
         wbu.in.bits.lsuPayload.idu.wAddr,
         Seq(
+          // (wbu.in.valid &&
+          //   (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
+          //   wbu.in.bits.lsuPayload.exu.aluOut,
+          // (wbu.in.valid &&
+          //   (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
+          //   wbu.in.bits.lsuPayload.lsu.loadData
           (wbu.in.valid &&
-            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-            wbu.in.bits.lsuPayload.exu.aluOut,
-          (wbu.in.valid &&
-            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-            wbu.in.bits.lsuPayload.lsu.loadData
+            ((wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt) ||
+            (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt))) ->
+            wbu.in.bits.lsuPayload.lsu.regWData
         )
       )
     )
@@ -177,26 +185,26 @@ class BasicCore(
     )
 
     // RAW(CSR)
-    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, imm: UInt, addr: CsrEnum.Type)
+    case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, immNotZero: Bool, addr: CsrEnum.Type)
     val stageCsrs = Seq(
       StageCsr(
         lsu.in.valid,
         lsu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         lsu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-        lsu.in.bits.exuPayload.idu.imm,
+        lsu.in.bits.exuPayload.idu.immNotZero,
         lsu.in.bits.exuPayload.idu.csrAddr
       ),
       StageCsr(
         wbu.in.valid,
         wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
         wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-        wbu.in.bits.lsuPayload.idu.imm,
+        wbu.in.bits.lsuPayload.idu.immNotZero,
         wbu.in.bits.lsuPayload.idu.csrAddr
       )
     )
     val rawCsr = stageCsrs.map { s =>
       val isZicsr = s.valid && s.isWriteBackCsr
-      val stageWillWrite = isZicsr && !(s.check && s.imm === 0.U)
+      val stageWillWrite = isZicsr && (!s.check || s.immNotZero)
       val exuWillRead = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
       val exuReadAddr = exu.in.bits.iduPayload.idu.csrAddr
       stageWillWrite && exuWillRead && s.addr === exuReadAddr

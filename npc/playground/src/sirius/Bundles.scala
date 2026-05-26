@@ -31,20 +31,22 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
     val csrAddr = CsrEnum()
+    val immNotZero = Bool()
   }
 }
 
 class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
+    // val csrData = UInt(cfg.mxlen.W)
     val jumpTarget = UInt(cfg.xlen.W)
-    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
 class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   val lsu = new Bundle {
-    val loadData = UInt(cfg.xlen.W)
+    // val loadData = UInt(cfg.xlen.W)
+    val regWData = UInt(cfg.xlen.W)
     val formal = Option.when(cfg.formal)(new rvspeccore.core.MemIO()(cfg.xlen))
   }
 }
@@ -161,6 +163,9 @@ class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(CsrEnum()) 
+  val rData = Input(UInt(cfg.mxlen.W))
+
   val wEn = Output(Bool())
   val wAddr = Output(CsrEnum()) 
   val wData = Output(UInt(cfg.mxlen.W))

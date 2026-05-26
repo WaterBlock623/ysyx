@@ -151,6 +151,7 @@ class Csr(
   }.toSeq
 
   exuIn.rData := MuxLookup(exuIn.rAddr, readMap.head._2)(readMap)
+  wbuIn.rData := MuxLookup(wbuIn.rAddr, readMap.head._2)(readMap)
 
   // WriteRaw Set Clear
   // val wData = MuxLookup(io.wOpCode, io.wOperand)(Seq(
@@ -187,20 +188,4 @@ class Csr(
     mcause.causeNum := wbuIn.causeNum
     mcause.isTrap := wbuIn.isTrap
   }
-
-  // csrs.get(CsrAddr.mtvec).foreach { mod =>
-  //   val mtvecMod = mod.asInstanceOf[CsrMtvec]
-  //   wbuIn.mtvec := mtvecMod.csrIO.rData
-  // }
-  // csrs.get(CsrAddr.mepc).foreach { mod =>
-  //   val mepcMod = mod.asInstanceOf[CsrMepc]
-  //   mepcMod.pc := wbuIn.pc
-  //   mepcMod.isTrap := wbuIn.isTrap
-  //   wbuIn.mepc := mepcMod.csrIO.rData
-  // }
-  // csrs.get(CsrAddr.mcause).foreach { mod =>
-  //   val mcauseMod = mod.asInstanceOf[CsrMcause]
-  //   mcauseMod.causeNum := wbuIn.causeNum
-  //   mcauseMod.isTrap := wbuIn.isTrap
-  // }
 }

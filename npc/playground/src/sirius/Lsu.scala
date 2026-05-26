@@ -172,7 +172,7 @@ class Lsu(
 
   val lwData = rData
 
-  outBits.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(
+  val loadData = MuxLookup(ctrl.loadStoreLength, lwData)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> lwData,
       LoadStoreLengthEnum.h.asUInt -> lhData,
@@ -213,13 +213,15 @@ class Lsu(
     )
   )
 
+  // Output
+  outBits.lsuPayload.lsu.regWData := 
+    MuxLookup(inBits.ctrl.wbuCtrl.writeBackSel, inBits.exuPayload.exu.aluOut)(Seq(
+      WriteBackSelEnum.lsu.asUInt -> loadData,
+      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc
+    ))
+
   // Debug
   if (cfg.formal) {
-    // when(realTaken) {
-    //   if (cfg.extensions().contains(ExtTypeEnum.C)) assume(realTarget(0) === 0.U)
-    //   else assume(realTarget(1, 0) === 0.U)
-    // }
-
     when(inValid) {
       assume(!eLoadStoreAddressMisaligned)
       when(exte.mem.r.valid) {
