@@ -57,14 +57,34 @@ class AluBase(
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
-  val shiftNum = io.src2(log2Ceil(cfg.xlen) - 1, 0)
-  val sllResult = io.src1 << shiftNum
-  val srlResult = io.src1 >> shiftNum
-  val sraResult = (io.src1.asSInt >> shiftNum).asUInt
   val direct1Result = io.src1
   val direct2Result = io.src2
   val clearResult = io.src2 & ~io.src1 // reversal
 
+  // Shift
+  def rightShiftN(data: UInt, n: Int, fillBit: Bool): UInt = {
+    require(n >= 0)
+    val dataWidth = data.getWidth
+    Fill(n, fillBit) ## data(dataWidth - 1, n)
+  }
+
+  def rightShiftDynamic(data: UInt, shamt: UInt, fillBit: Bool): UInt = {
+    if (shamt.getWidth == 1) {
+      Mux(shamt(0), rightShiftN(data, 1, fillBit), data)
+    } else {
+      val lastStage = rightShiftDynamic(data, shamt.tail(1), fillBit)
+      Mux(shamt.head(1).asBool, rightShiftN(lastStage, 1 << (shamt.getWidth - 1), fillBit), lastStage)
+    }
+  }
+
+  val shamt = io.src2(log2Ceil(cfg.xlen) - 1, 0)
+  val isLeftShift = io.aluOp === AluOpEnum.sll.asUInt
+  val shiftData = Mux(isLeftShift, Reverse(io.src1), io.src1)
+  val shiftFillBit = Mux(io.aluOp === AluOpEnum.sra.asUInt, io.src1(io.src1.getWidth - 1), false.B)
+  val rawShiftResult = rightShiftDynamic(shiftData, shamt, shiftFillBit)
+  val shiftResult = Mux(isLeftShift, Reverse(rawShiftResult), rawShiftResult)
+
+  // Output sel
   io.out := direct1Result
   switch(io.aluOp) {
     is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
@@ -75,9 +95,12 @@ class AluBase(
     is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
     is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
     is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
-    is(sll.asUInt) {io.out := sllResult}
-    is(srl.asUInt) {io.out := srlResult}
-    is(sra.asUInt) {io.out := sraResult}
+    // is(sll.asUInt) {io.out := sllResult}
+    // is(srl.asUInt) {io.out := srlResult}
+    // is(sra.asUInt) {io.out := sraResult}
+    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
+    is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
+    is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(clear.asUInt) {io.out := clearResult}
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
