@@ -58,7 +58,7 @@ class Wbu(
   csr.wEn := inBits.ctrl.wbuCtrl.isWriteBackCsr &&
     (imm.orR || !inBits.ctrl.wbuCtrl.isCsrWriteCheck) && in.valid && !inBits.lsuPayload.trap.isTrap
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
-  csr.wData := inBits.lsuPayload.exu.aluOut
+  csr.wData := inBits.lsuPayload.lsu.regWData
 
   csr.pc := pc
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
@@ -66,15 +66,19 @@ class Wbu(
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
-  val loadData = inBits.lsuPayload.lsu.loadData
   regFile.wEn := ctrl.isWriteBackReg && in.valid && !inBits.lsuPayload.trap.isTrap
-  regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
-    Seq(
-      WriteBackSelEnum.alu.asUInt -> aluOut,
-      WriteBackSelEnum.lsu.asUInt -> loadData,
-      WriteBackSelEnum.csr.asUInt -> csrRData,
-      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
-    )
+  // regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
+  //   Seq(
+  //     WriteBackSelEnum.alu.asUInt -> aluOut,
+  //     WriteBackSelEnum.lsu.asUInt -> loadData,
+  //     WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc,
+  //     WriteBackSelEnum.csr.asUInt -> csrRData,
+  //   )
+  // )
+  regFile.wData := Mux(
+    ctrl.writeBackSel === WriteBackSelEnum.csr.asUInt,
+    csrRData,
+    inBits.lsuPayload.lsu.regWData
   )
 
   // Debug

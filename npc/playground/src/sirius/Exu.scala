@@ -141,7 +141,7 @@ class Exu(
   exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
   // val csrData = RegNext(exte.csr.rData)
   val csrData = exte.csr.rData
-  outBits.exuPayload.exu.csrData := csrData
+  // outBits.exuPayload.exu.csrData := csrData
 
   // 根据扩展实例化Alu
   // val alus: ListMap[ExuOutSelEnum.Type, AluParent] = ucfg.aluMap().flatten.map {

@@ -37,14 +37,15 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
 class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
+    // val csrData = UInt(cfg.mxlen.W)
     val jumpTarget = UInt(cfg.xlen.W)
-    val csrData = UInt(cfg.mxlen.W)
   }
 }
 
 class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   val lsu = new Bundle {
-    val loadData = UInt(cfg.xlen.W)
+    // val loadData = UInt(cfg.xlen.W)
+    val regWData = UInt(cfg.xlen.W)
     val formal = Option.when(cfg.formal)(new rvspeccore.core.MemIO()(cfg.xlen))
   }
 }
