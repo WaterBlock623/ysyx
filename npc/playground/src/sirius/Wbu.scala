@@ -29,6 +29,7 @@ class Wbu(
 
   val ctrl = inBits.ctrl.wbuCtrl
   val pcReg = exte.pcReg
+  val pc = inBits.lsuPayload.ifu.pc
   val regFile = exte.regFlie
   val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
@@ -65,7 +66,6 @@ class Wbu(
 
   // gpr
   regFile.wAddr := inBits.lsuPayload.idu.wAddr
-  val pc = inBits.lsuPayload.ifu.pc
   val loadData = inBits.lsuPayload.lsu.loadData
   regFile.wEn := ctrl.isWriteBackReg && in.valid && !inBits.lsuPayload.trap.isTrap
   regFile.wData := MuxLookup(ctrl.writeBackSel, aluOut)(
