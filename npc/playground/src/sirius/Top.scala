@@ -250,7 +250,7 @@ class BasicCore(
       wbConflictRs2 -> !wbForwardValid
     ))
 
-    iduForwardBits.iduPayload.idu.rs1Data := MuxCase(iduOut.bits.iduPayload.idu.rs2Data, Seq(
+    iduForwardBits.iduPayload.idu.rs2Data := MuxCase(iduOut.bits.iduPayload.idu.rs2Data, Seq(
       exConflictRs2 -> exForwardData,
       lsConflictRs2 -> lsForwardData,
       wbConflictRs2 -> wbForwardData
