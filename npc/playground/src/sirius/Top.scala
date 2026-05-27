@@ -244,10 +244,11 @@ class BasicCore(
     val wbCsrWrite = wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr &&
                      (!wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck || wbu.in.bits.lsuPayload.idu.immNotZero)
 
-    val rawCsr = exuWillReadCsr && (
-      (lsCsrWrite && (lsu.in.bits.exuPayload.idu.csrAddr === exuReadAddr)) ||
-      (wbCsrWrite && (wbu.in.bits.lsuPayload.idu.csrAddr === exuReadAddr))
-    )
+    // val rawCsr = exuWillReadCsr && (
+    //   (lsCsrWrite && (lsu.in.bits.exuPayload.idu.csrAddr === exuReadAddr)) ||
+    //   (wbCsrWrite && (wbu.in.bits.lsuPayload.idu.csrAddr === exuReadAddr))
+    // )
+    val rawCsr = exuWillReadCsr && (lsCsrWrite || wbCsrWrite)
 
     // Jump
     // case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
