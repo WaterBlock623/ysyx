@@ -197,40 +197,40 @@ class BasicCore(
     val rs2NeedRead = readRs2 && rs2 =/= 0.U
 
     // EX
-    val exFwdValid = exu.out.valid && (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)
-    val exFwdData  = exu.out.bits.exuPayload.exu.aluOut
+    val exForwardValid = exu.out.valid && (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)
+    val exForwardData  = exu.out.bits.exuPayload.exu.aluOut
 
     // LS
-    val lsFwdValid = lsu.in.valid && (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)
-    val lsFwdData  = lsu.in.bits.exuPayload.exu.aluOut
+    val lsForwardValid = lsu.in.valid && (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)
+    val lsForwardData  = lsu.in.bits.exuPayload.exu.aluOut
 
     // WB
-    val wbFwdValid = wbu.in.valid && ((wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt) || (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt))
-    val wbFwdData  = wbu.in.bits.lsuPayload.lsu.regWData
+    val wbForwardValid = wbu.in.valid && ((wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt) || (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt))
+    val wbForwardData  = wbu.in.bits.lsuPayload.lsu.regWData
 
     val exConflictRs1 = rs1NeedRead && exu.in.valid && exu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (exu.in.bits.iduPayload.idu.wAddr === rs1)
     val lsConflictRs1 = rs1NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs1)
     val wbConflictRs1 = rs1NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs1)
 
-    val rs1Stall = Mux(exConflictRs1, !exFwdValid,
-                     Mux(lsConflictRs1, !lsFwdValid,
-                       Mux(wbConflictRs1, !wbFwdValid, false.B)))
+    val rs1Stall = Mux(exConflictRs1, !exForwardValid,
+                     Mux(lsConflictRs1, !lsForwardValid,
+                       Mux(wbConflictRs1, !wbForwardValid, false.B)))
 
-    iduForwardBits.iduPayload.idu.rs1Data := Mux(exConflictRs1, exFwdData,
-                                               Mux(lsConflictRs1, lsFwdData,
-                                                 Mux(wbConflictRs1, wbFwdData, iduOut.bits.iduPayload.idu.rs1Data)))
+    iduForwardBits.iduPayload.idu.rs1Data := Mux(exConflictRs1, exForwardData,
+                                               Mux(lsConflictRs1, lsForwardData,
+                                                 Mux(wbConflictRs1, wbForwardData, iduOut.bits.iduPayload.idu.rs1Data)))
 
     val exConflictRs2 = rs2NeedRead && exu.in.valid && exu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (exu.in.bits.iduPayload.idu.wAddr === rs2)
     val lsConflictRs2 = rs2NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs2)
     val wbConflictRs2 = rs2NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs2)
 
-    val rs2Stall = Mux(exConflictRs2, !exFwdValid,
-                     Mux(lsConflictRs2, !lsFwdValid,
-                       Mux(wbConflictRs2, !wbFwdValid, false.B)))
+    val rs2Stall = Mux(exConflictRs2, !exForwardValid,
+                     Mux(lsConflictRs2, !lsForwardValid,
+                       Mux(wbConflictRs2, !wbForwardValid, false.B)))
 
-    iduForwardBits.iduPayload.idu.rs2Data := Mux(exConflictRs2, exFwdData,
-                                               Mux(lsConflictRs2, lsFwdData,
-                                                 Mux(wbConflictRs2, wbFwdData, iduOut.bits.iduPayload.idu.rs2Data)))
+    iduForwardBits.iduPayload.idu.rs2Data := Mux(exConflictRs2, exForwardData,
+                                               Mux(lsConflictRs2, lsForwardData,
+                                                 Mux(wbConflictRs2, wbForwardData, iduOut.bits.iduPayload.idu.rs2Data)))
 
     val isRawGpr = rs1Stall || rs2Stall
 
