@@ -75,119 +75,7 @@ class BasicCore(
     val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
     val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
 
-    // // RAW(GPR)
-    // val readRs1 = globalCtrl.globalCtrl.readRs1
-    // val rs1 = idu.exte.regFile.rAddr(0)
-    // val readRs2 = globalCtrl.globalCtrl.readRs2
-    // val rs2 = idu.exte.regFile.rAddr(1)
-    //
-    // case class StageRd(valid: Bool, isWriteBack: Bool, rd: UInt, forwardMap: Seq[(Bool, UInt)]) {
-    //   require(forwardMap.length > 0)
-    //   def conflict(rs: UInt): Bool = {
-    //     valid && isWriteBack && (rd === rs)
-    //   }
-    //   def forward: (Bool, UInt) = {
-    //     val conds = forwardMap.map(_._1)
-    //     val forwardMayValid = conds.reduce(_ || _)
-    //     val datas = forwardMap.map(_._2)
-    //     val data = if (datas.length == 1) datas.head else Mux1H(conds, datas)
-    //     (forwardMayValid, data)
-    //   }
-    // }
-    //
-    // val stageRds = Seq(
-    //   StageRd(
-    //     exu.in.valid,
-    //     exu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-    //     exu.in.bits.iduPayload.idu.wAddr,
-    //     Seq(
-    //       (exu.out.valid &&
-    //         (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-    //         exu.out.bits.exuPayload.exu.aluOut
-    //     )
-    //   ),
-    //   StageRd(
-    //     lsu.in.valid,
-    //     lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-    //     lsu.in.bits.exuPayload.idu.wAddr,
-    //     Seq(
-    //       (lsu.in.valid &&
-    //         (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)) ->
-    //         lsu.in.bits.exuPayload.exu.aluOut
-    //         // (lsu.out.valid &&
-    //         //   (lsu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt)) ->
-    //         //   lsu.out.bits.lsuPayload.lsu.loadData
-    //     )
-    //   ),
-    //   StageRd(
-    //     wbu.in.valid,
-    //     wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg,
-    //     wbu.in.bits.lsuPayload.idu.wAddr,
-    //     Seq(
-    //       (wbu.in.valid &&
-    //         ((wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt) ||
-    //         (wbu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.lsu.asUInt))) ->
-    //         wbu.in.bits.lsuPayload.lsu.regWData
-    //     )
-    //   )
-    // )
-    //
-    // def decodeConflict(rs: UInt, readRs: Bool): (Bool, Bool, UInt) = {
-    //   val stages = stageRds.map { s =>
-    //     val conflict = s.conflict(rs) && readRs && rs =/= 0.U
-    //     val (forwardMayValid, forwardData) = s.forward
-    //     (conflict, forwardMayValid, forwardData)
-    //   }
-    //   val conflicts = stages.map(_._1)
-    //   val forwardMayValids = stages.map(_._2)
-    //   val forwardDatas = stages.map(_._3)
-    //   val conflictStage = PriorityEncoderOH(conflicts)
-    //   val forwardValid = (VecInit(conflictStage).asUInt & VecInit(forwardMayValids).asUInt).orR
-    //   val forwardData = Mux1H(conflictStage, forwardDatas)
-    //   (conflicts.reduce(_ || _), forwardValid, forwardData)
-    // }
-    //
-    // val (rs1Conflict, rs1ForwardValid, rs1ForwardData) = decodeConflict(rs1, readRs1)
-    // val (rs2Conflict, rs2ForwardValid, rs2ForwardData) = decodeConflict(rs2, readRs2)
-    // val isRawGpr = (rs1Conflict && !rs1ForwardValid) || (rs2Conflict && !rs2ForwardValid)
-    // iduForwardBits.iduPayload.idu.rs1Data := Mux(
-    //   rs1ForwardValid,
-    //   rs1ForwardData,
-    //   iduOut.bits.iduPayload.idu.rs1Data
-    // )
-    // iduForwardBits.iduPayload.idu.rs2Data := Mux(
-    //   rs2ForwardValid,
-    //   rs2ForwardData,
-    //   iduOut.bits.iduPayload.idu.rs2Data
-    // )
-    //
-    // // RAW(CSR)
-    // case class StageCsr(valid: Bool, isWriteBackCsr: Bool, check: Bool, immNotZero: Bool, addr: CsrEnum.Type)
-    // val stageCsrs = Seq(
-    //   StageCsr(
-    //     lsu.in.valid,
-    //     lsu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
-    //     lsu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-    //     lsu.in.bits.exuPayload.idu.immNotZero,
-    //     lsu.in.bits.exuPayload.idu.csrAddr
-    //   ),
-    //   StageCsr(
-    //     wbu.in.valid,
-    //     wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr,
-    //     wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck,
-    //     wbu.in.bits.lsuPayload.idu.immNotZero,
-    //     wbu.in.bits.lsuPayload.idu.csrAddr
-    //   )
-    // )
-    // val rawCsr = stageCsrs.map { s =>
-    //   val isZicsr = s.valid && s.isWriteBackCsr
-    //   val stageWillWrite = isZicsr && (!s.check || s.immNotZero)
-    //   val exuWillRead = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
-    //   val exuReadAddr = exu.in.bits.iduPayload.idu.csrAddr
-    //   stageWillWrite && exuWillRead && s.addr === exuReadAddr
-    // }
-    //   .reduce(_ || _)
-
+    // RAW (GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
     val rs1 = idu.exte.regFile.rAddr(0)
     val rs1NeedRead = readRs1 && rs1 =/= 0.U 
@@ -196,6 +84,7 @@ class BasicCore(
     val rs2 = idu.exte.regFile.rAddr(1)
     val rs2NeedRead = readRs2 && rs2 =/= 0.U
 
+    // Forward
     // EX
     val exForwardValid = exu.out.valid && (exu.in.bits.ctrl.wbuCtrl.writeBackSel === WriteBackSelEnum.alu.asUInt)
     val exForwardData  = exu.out.bits.exuPayload.exu.aluOut
@@ -211,14 +100,6 @@ class BasicCore(
     val exConflictRs1 = rs1NeedRead && exu.in.valid && exu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (exu.in.bits.iduPayload.idu.wAddr === rs1)
     val lsConflictRs1 = rs1NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs1)
     val wbConflictRs1 = rs1NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs1)
-
-    // val rs1Stall = Mux(exConflictRs1, !exForwardValid,
-    //                  Mux(lsConflictRs1, !lsForwardValid,
-    //                    Mux(wbConflictRs1, !wbForwardValid, false.B)))
-    //
-    // iduForwardBits.iduPayload.idu.rs1Data := Mux(exConflictRs1, exForwardData,
-    //                                            Mux(lsConflictRs1, lsForwardData,
-    //                                              Mux(wbConflictRs1, wbForwardData, iduOut.bits.iduPayload.idu.rs1Data)))
 
     val rs1Stall = MuxCase(false.B, Seq(
       exConflictRs1 -> !exForwardValid,
@@ -236,14 +117,6 @@ class BasicCore(
     val lsConflictRs2 = rs2NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs2)
     val wbConflictRs2 = rs2NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs2)
 
-    // val rs2Stall = Mux(exConflictRs2, !exForwardValid,
-    //                  Mux(lsConflictRs2, !lsForwardValid,
-    //                    Mux(wbConflictRs2, !wbForwardValid, false.B)))
-    //
-    // iduForwardBits.iduPayload.idu.rs2Data := Mux(exConflictRs2, exForwardData,
-    //                                            Mux(lsConflictRs2, lsForwardData,
-    //                                              Mux(wbConflictRs2, wbForwardData, iduOut.bits.iduPayload.idu.rs2Data)))
-
     val rs2Stall = MuxCase(false.B, Seq(
       exConflictRs2 -> !exForwardValid,
       lsConflictRs2 -> !lsForwardValid,
@@ -258,7 +131,7 @@ class BasicCore(
 
     val isRawGpr = rs1Stall || rs2Stall
 
-
+    // RAW (CSR)
     val exuWillReadCsr = exu.in.bits.ctrl.wbuCtrl.isWriteBackCsr
     val exuReadAddr    = exu.in.bits.iduPayload.idu.csrAddr
 
@@ -272,29 +145,6 @@ class BasicCore(
       (lsCsrWrite && (lsu.in.bits.exuPayload.idu.csrAddr === exuReadAddr)) ||
       (wbCsrWrite && (wbu.in.bits.lsuPayload.idu.csrAddr === exuReadAddr))
     )
-
-    // Jump
-    // case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
-    // val stageJumps = Seq(
-    //   StageJump(
-    //     lsu.in.valid,
-    //     lsu.in.bits.ctrl.wbuCtrl.isJump,
-    //     lsu.in.bits.ctrl.wbuCtrl.isBranch,
-    //     lsu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-    //     (lsu.in.valid && lsu.in.bits.exuPayload.trap.isTrap) ||
-    //       (lsu.out.valid && lsu.out.bits.lsuPayload.trap.isTrap)
-    //   ),
-    //   StageJump(
-    //     wbu.in.valid,
-    //     wbu.in.bits.ctrl.wbuCtrl.isJump,
-    //     wbu.in.bits.ctrl.wbuCtrl.isBranch,
-    //     wbu.in.bits.ctrl.wbuCtrl.isJumpCsr,
-    //     wbu.in.valid && wbu.in.bits.lsuPayload.trap.isTrap
-    //   )
-    // )
-    // val mayJump = stageJumps
-    //   .map(s => s.isTrap || (s.valid && (s.isJump || s.isBranch || s.isJumpCsr)))
-    //   .reduce(_ || _)
 
     // Pipeline ctrl
     flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
