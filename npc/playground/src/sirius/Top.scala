@@ -212,25 +212,49 @@ class BasicCore(
     val lsConflictRs1 = rs1NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs1)
     val wbConflictRs1 = rs1NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs1)
 
-    val rs1Stall = Mux(exConflictRs1, !exForwardValid,
-                     Mux(lsConflictRs1, !lsForwardValid,
-                       Mux(wbConflictRs1, !wbForwardValid, false.B)))
+    // val rs1Stall = Mux(exConflictRs1, !exForwardValid,
+    //                  Mux(lsConflictRs1, !lsForwardValid,
+    //                    Mux(wbConflictRs1, !wbForwardValid, false.B)))
+    //
+    // iduForwardBits.iduPayload.idu.rs1Data := Mux(exConflictRs1, exForwardData,
+    //                                            Mux(lsConflictRs1, lsForwardData,
+    //                                              Mux(wbConflictRs1, wbForwardData, iduOut.bits.iduPayload.idu.rs1Data)))
 
-    iduForwardBits.iduPayload.idu.rs1Data := Mux(exConflictRs1, exForwardData,
-                                               Mux(lsConflictRs1, lsForwardData,
-                                                 Mux(wbConflictRs1, wbForwardData, iduOut.bits.iduPayload.idu.rs1Data)))
+    val rs1Stall = MuxCase(false.B, Seq(
+      exConflictRs1 -> !exForwardValid,
+      lsConflictRs1 -> !lsForwardValid,
+      wbConflictRs1 -> !wbForwardValid
+    ))
+
+    iduForwardBits.iduPayload.idu.rs1Data := MuxCase(iduOut.bits.iduPayload.idu.rs1Data, Seq(
+      exConflictRs1 -> exForwardData,
+      lsConflictRs1 -> lsForwardData,
+      wbConflictRs1 -> wbForwardData
+    ))
 
     val exConflictRs2 = rs2NeedRead && exu.in.valid && exu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (exu.in.bits.iduPayload.idu.wAddr === rs2)
     val lsConflictRs2 = rs2NeedRead && lsu.in.valid && lsu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (lsu.in.bits.exuPayload.idu.wAddr === rs2)
     val wbConflictRs2 = rs2NeedRead && wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackReg && (wbu.in.bits.lsuPayload.idu.wAddr === rs2)
 
-    val rs2Stall = Mux(exConflictRs2, !exForwardValid,
-                     Mux(lsConflictRs2, !lsForwardValid,
-                       Mux(wbConflictRs2, !wbForwardValid, false.B)))
+    // val rs2Stall = Mux(exConflictRs2, !exForwardValid,
+    //                  Mux(lsConflictRs2, !lsForwardValid,
+    //                    Mux(wbConflictRs2, !wbForwardValid, false.B)))
+    //
+    // iduForwardBits.iduPayload.idu.rs2Data := Mux(exConflictRs2, exForwardData,
+    //                                            Mux(lsConflictRs2, lsForwardData,
+    //                                              Mux(wbConflictRs2, wbForwardData, iduOut.bits.iduPayload.idu.rs2Data)))
 
-    iduForwardBits.iduPayload.idu.rs2Data := Mux(exConflictRs2, exForwardData,
-                                               Mux(lsConflictRs2, lsForwardData,
-                                                 Mux(wbConflictRs2, wbForwardData, iduOut.bits.iduPayload.idu.rs2Data)))
+    val rs2Stall = MuxCase(false.B, Seq(
+      exConflictRs2 -> !exForwardValid,
+      lsConflictRs2 -> !lsForwardValid,
+      wbConflictRs2 -> !wbForwardValid
+    ))
+
+    iduForwardBits.iduPayload.idu.rs1Data := MuxCase(iduOut.bits.iduPayload.idu.rs2Data, Seq(
+      exConflictRs2 -> exForwardData,
+      lsConflictRs2 -> lsForwardData,
+      wbConflictRs2 -> wbForwardData
+    ))
 
     val isRawGpr = rs1Stall || rs2Stall
 
@@ -244,11 +268,10 @@ class BasicCore(
     val wbCsrWrite = wbu.in.valid && wbu.in.bits.ctrl.wbuCtrl.isWriteBackCsr &&
                      (!wbu.in.bits.ctrl.wbuCtrl.isCsrWriteCheck || wbu.in.bits.lsuPayload.idu.immNotZero)
 
-    // val rawCsr = exuWillReadCsr && (
-    //   (lsCsrWrite && (lsu.in.bits.exuPayload.idu.csrAddr === exuReadAddr)) ||
-    //   (wbCsrWrite && (wbu.in.bits.lsuPayload.idu.csrAddr === exuReadAddr))
-    // )
-    val rawCsr = exuWillReadCsr && (lsCsrWrite || wbCsrWrite)
+    val rawCsr = exuWillReadCsr && (
+      (lsCsrWrite && (lsu.in.bits.exuPayload.idu.csrAddr === exuReadAddr)) ||
+      (wbCsrWrite && (wbu.in.bits.lsuPayload.idu.csrAddr === exuReadAddr))
+    )
 
     // Jump
     // case class StageJump(valid: Bool, isJump: Bool, isBranch: Bool, isJumpCsr: Bool, isTrap: Bool)
