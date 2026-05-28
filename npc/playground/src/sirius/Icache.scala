@@ -319,9 +319,7 @@ class SimpleIcache(
   val dataReg = 
     RegEnable(Mux(state === sReadCache, hitData, io.mem.r.bits.data), newData && io.cached.r.ready)
 
-  when(io.cached.abort) {
-    dataState := sAbort
-  }.elsewhen(io.cached.r.fire) {
+  when(io.cached.r.fire) {
     dataState := sInvalid
   }
 
@@ -358,6 +356,10 @@ class SimpleIcache(
         addrReg := addrReg + 1.U
       }
     }
+  }
+
+  when(io.cached.abort) {
+    dataState := sAbort
   }
 
   when(io.mem.r.fire && inWhiteList && (dataState =/= sAbort)) {
