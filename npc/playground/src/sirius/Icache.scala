@@ -360,9 +360,9 @@ class SimpleIcache(
     }
   }
 
-  when(io.mem.r.fire && inWhiteList) {
+  when(io.mem.r.fire && inWhiteList && (dataState =/= sAbort)) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
-    when((state === sFillCache) && (dataState =/= sAbort)) {
+    when(state === sFillCache) {
       setTag := addrLine.tag
       setValid := true.B
     }
