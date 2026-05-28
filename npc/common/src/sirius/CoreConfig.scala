@@ -36,7 +36,7 @@ case class CoreConfig(
   val memoryAddrWidth:     Int = 32,
   val pcInit:              BigInt = 0x30000000,
   val pipeline:            Boolean = true,
-  val predTargetWidth:     Int = 15,
+  val predTargetWidth:     Int = 10,
 
   // CsrID
   val mvendorid: Int = 0x79737978,
