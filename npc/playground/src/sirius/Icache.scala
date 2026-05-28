@@ -91,9 +91,13 @@ class Icache(
   )
 
   val setIdx = if (setIdxWidth != 0) rAddrLine.setIdx else 0.U
-  val setValid = cacheValid(setIdx)
-  val setTag = cacheTag(setIdx)
-  val setData = cacheData(setIdx)
+  val setIdxOH = UIntToOH(setIdx)
+  // val setValid = cacheValid(setIdx)
+  // val setTag = cacheTag(setIdx)
+  // val setData = cacheData(setIdx)
+  val setValid = Mux1H(setIdxOH, cacheValid)
+  val setTag = Mux1H(setIdxOH, cacheTag)
+  val setData = Mux1H(setIdxOH, cacheData)
 
   when(io.cached.fencei) {
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
