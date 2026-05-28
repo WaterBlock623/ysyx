@@ -343,7 +343,7 @@ class SimpleIcache(
     is(sFirstResp) {
       when(io.mem.r.fire) {
         state := Mux(io.mem.r.bits.last, sWaitConsume, sFillCache)
-        when(dataState =/= sAbort) { dataState := sValid }
+        when(dataState =/= sAbort && !io.cached.abort) { dataState := sValid }
       }
     }
     is(sFillCache) {
