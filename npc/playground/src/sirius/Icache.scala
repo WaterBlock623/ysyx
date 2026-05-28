@@ -315,40 +315,47 @@ class SimpleIcache(
   val sInvalid :: sValid :: sAbort :: Nil = Enum(3)
   val dataState = RegInit(sInvalid)
   val newData =
-    ((state === sReadCache) && hit && inWhiteList) || ((state === sFirstResp) && io.mem.r.fire)
+    ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire)
   val dataReg = RegEnable(Mux(state === sReadCache, hitData, io.mem.r.bits.data), newData)
 
-  switch(dataState) {
-    is(sInvalid) {
-      when(io.cached.abort) {
-        dataState := sAbort
-      }.elsewhen(newData) {
-        dataState := sValid
-      }
-    }
-    is(sValid) {
-      when(io.cached.abort) {
-        dataState := sAbort
-      }.elsewhen(io.cached.r.fire) {
-        dataState := sInvalid
-      }
-    }
+  // switch(dataState) {
+  //   is(sInvalid) {
+  //     when(io.cached.abort) {
+  //       dataState := sAbort
+  //     }.elsewhen(newData) {
+  //       dataState := sValid
+  //     }
+  //   }
+  //   is(sValid) {
+  //     when(io.cached.abort) {
+  //       dataState := sAbort
+  //     }.elsewhen(io.cached.r.fire) {
+  //       dataState := sInvalid
+  //     }
+  //   }
+  // }
+  when(io.cached.abort) {
+    dataState := sAbort
   }
 
   switch(state) {
     is(sReadCache) {
-      dataState := sInvalid
       when(!(hit && inWhiteList)) {
         state := sReqMem
+        dataState := sInvalid
       }.otherwise {
         addrReg := addrReg + 1.U
+        dataState := sValid
       }
     }
     is(sReqMem) {
       when(io.mem.ar.fire) { state := sFirstResp }
     }
     is(sFirstResp) {
-      when(io.mem.r.fire) { state := Mux(io.mem.r.bits.last, sWaitConsume, sFillCache) }
+      when(io.mem.r.fire) {
+        state := Mux(io.mem.r.bits.last, sWaitConsume, sFillCache)
+        when(dataState =/= sAbort) { dataState := sValid }
+      }
     }
     is(sFillCache) {
       when(io.mem.r.fire) { state := sWaitConsume }
