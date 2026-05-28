@@ -345,6 +345,9 @@ class SimpleIcache(
       when(!(hit && inWhiteList)) {
         state := sReqMem
         dataState := sInvalid
+      }.elsewhen(!io.cached.r.ready) {
+        state := sWaitConsume
+        dataState := sValid
       }.otherwise {
         addrReg := addrReg + 1.U
         dataState := sValid
