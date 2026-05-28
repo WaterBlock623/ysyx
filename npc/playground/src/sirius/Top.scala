@@ -48,7 +48,7 @@ class BasicCore(
       new Bpu(
         btbIndexWidth = 2,
         btbTagWidth = 4,
-        btbTargetWidth = 10,
+        btbTargetWidth = cfg.predTargetWidth,
         phtIndexWidth = 4,
         phtCounterWidth = 2
       )

@@ -156,20 +156,29 @@ class Lsu(
   exte.mem.aw.bits.size := axSize
 
   // Load data
-  val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
-  val lbu = byteData(rem)
-  val lbData = Mux(
-    ctrl.isUnsignedLoad,
-    0.U((cfg.xlen - 8).W),
-    Fill(cfg.xlen - 8, lbu(7))
-  ) ## lbu
+  // val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
+  // val lbu = byteData(rem)
+  // val lbData = Mux(
+  //   ctrl.isUnsignedLoad,
+  //   0.U((cfg.xlen - 8).W),
+  //   Fill(cfg.xlen - 8, lbu(7))
+  // ) ## lbu
+  val lbRaw = MuxLookup(rem, rData(7, 0))(Seq(
+    0.U -> rData(7, 0),
+    1.U -> rData(15, 8),
+    2.U -> rData(23, 16),
+    3.U -> rData(31, 24)
+  ))
+  val lbData = Mux(ctrl.isUnsignedLoad, ZeroExt(lbRaw, cfg.xlen), SignExt(lbRaw, cfg.xlen))
 
-  val lhu = Mux(rem(1), rData(31, 16), rData(15, 0))
-  val lhData = Mux(
-    ctrl.isUnsignedLoad,
-    0.U((cfg.xlen - 16).W),
-    Fill(cfg.xlen - 16, lhu(15))
-  ) ## lhu
+  // val lhu = Mux(rem(1), rData(31, 16), rData(15, 0))
+  // val lhData = Mux(
+  //   ctrl.isUnsignedLoad,
+  //   0.U((cfg.xlen - 16).W),
+  //   Fill(cfg.xlen - 16, lhu(15))
+  // ) ## lhu
+  val lhRaw = Mux(rem(1), rData(31, 16), rData(15, 0))
+  val lhData = Mux(ctrl.isUnsignedLoad, ZeroExt(lhRaw, cfg.xlen), SignExt(lhRaw, cfg.xlen))
 
   val lwData = rData
 
@@ -183,14 +192,12 @@ class Lsu(
 
   // Store data
   val regData = inBits.exuPayload.idu.rs2Data
-  // val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
   val sb = MuxLookup(rem, regData(7, 0))(Seq(
     0.U -> regData(7, 0),
     1.U -> regData(7, 0) ## 0.U(8.W),
     2.U -> regData(7, 0) ## 0.U(16.W),
     3.U -> regData(7, 0) ## 0.U(24.W),
   )).pad(cfg.xlen)
-  // val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
   val sh = Mux(rem(1), regData(15, 0) ## 0.U(16.W), regData(15, 0)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)
 
