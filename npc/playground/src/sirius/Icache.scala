@@ -91,13 +91,9 @@ class Icache(
   )
 
   val setIdx = if (setIdxWidth != 0) rAddrLine.setIdx else 0.U
-  val setIdxOH = UIntToOH(setIdx)
-  // val setValid = cacheValid(setIdx)
-  // val setTag = cacheTag(setIdx)
-  // val setData = cacheData(setIdx)
-  val setValid = Mux1H(setIdxOH, cacheValid)
-  val setTag = Mux1H(setIdxOH, cacheTag)
-  val setData = Mux1H(setIdxOH, cacheData)
+  val setValid = cacheValid(setIdx)
+  val setTag = cacheTag(setIdx)
+  val setData = cacheData(setIdx)
 
   when(io.cached.fencei) {
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
@@ -244,12 +240,6 @@ class Icache(
   }
 
   0.U.asTypeOf(chiselTypeOf(io.cached)) :>= io.cached
-  // io.cached.ar.ready := state === sIdle && (!cachedRValidReg || io.cached.r.fire)
-  // io.cached.ar.ready := !abortReg && Mux(
-  //   state =/= sReadCache,
-  //   nextState === sReadCache,
-  //   io.cached.r.fire
-  // )
   io.cached.ar.ready := state === sReadCache
   io.cached.r.valid := !abortReg && ((io.cached.ar.valid && state === sReadCache && isHit) || cachedRValidReg || state === sWait)
   io.cached.r.bits.data := Mux(
