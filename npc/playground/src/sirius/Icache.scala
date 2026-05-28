@@ -366,6 +366,8 @@ class SimpleIcache(
       when(dataState =/= sValid) {
         state := sReadCache
         dataState := sInvalid
+      }
+      when(dataState === sInvalid) {
         addrReg := addrReg + 1.U
       }
     }
