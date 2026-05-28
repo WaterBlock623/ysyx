@@ -336,6 +336,8 @@ class SimpleIcache(
   // }
   when(io.cached.abort) {
     dataState := sAbort
+  }.elsewhen(io.cached.r.fire) {
+    dataReg := sInvalid
   }
 
   switch(state) {
