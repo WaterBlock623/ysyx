@@ -249,3 +249,149 @@ class Icache(
   )
 }
 
+class SimpleIcacheIO(
+  implicit private val cfg: CoreConfig)
+    extends Bundle {
+  val fencei = Bool()
+
+  val abort = Bool()
+  val newAddr = UInt(cfg.xlen.W)
+
+  val r = Flipped(Decoupled(new Bundle {
+    val data = UInt(cfg.xlen.W)
+  }))
+}
+
+class SimpleIcache(
+  setNum: BigInt,
+  // wayNum:    BigInt = 1,
+  // wayByte:   BigInt = 8,
+  // busByte:   BigInt = 4,
+  whiteList: Option[NumericRange[BigInt]] = None
+)(
+  implicit private val cfg: CoreConfig)
+    extends Module {
+  require(setNum > 0 && setNum.bitCount == 1)
+
+  val io = IO(new Bundle {
+    val cached = Flipped(new SimpleIcacheIO)
+    val mem = new Axi4IO
+  })
+
+  val offWidth = 2
+  val wordIdxWidth = 1
+  val setIdxWidth = log2Ceil(setNum).toInt
+  val tagWidth = 32 - offWidth - wordIdxWidth - setIdxWidth
+
+  class AddrLine extends Bundle {
+    val tag = UInt(tagWidth.W)
+    val setIdx = UInt(setIdxWidth.W)
+    val wordIdx = UInt(wordIdxWidth.W)
+    val off = UInt(offWidth.W)
+  }
+
+  val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
+  val addr = addrReg ## 0.U(offWidth.W)
+  val addrLine = addr.asTypeOf(new AddrLine)
+  val setIdx = addrLine.setIdx
+  val inWhiteList = if (whiteList.isDefined) {
+    addr >= whiteList.get.start.U && addr < whiteList.get.end.U
+  } else { true.B }
+
+  val cacheValid = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Bool())))
+  val cacheTag = Reg(Vec(setNum.toInt, UInt(tagWidth.W)))
+  val cacheData = Reg(Vec(setNum.toInt, Vec(2, UInt(32.W))))
+
+  val setValid = cacheValid(setIdx)
+  val setTag = cacheTag(setIdx)
+  val setData = cacheData(setIdx)
+
+  val hit = setValid && (setTag === addrLine.tag)
+  val hitData = setData(addrLine.wordIdx)
+
+  val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: sWaitConsume :: Nil = Enum(5)
+  val state = RegInit(sReadCache)
+
+  val sInvalid :: sValid :: sAbort :: Nil = Enum(3)
+  val dataState = RegInit(sInvalid)
+  val newData =
+    ((state === sReadCache) && hit && inWhiteList) || ((state === sFirstResp) && io.mem.r.fire)
+  val dataReg = RegEnable(Mux(state === sReadCache, hitData, io.mem.r.bits.data), newData)
+
+  switch(dataState) {
+    is(sInvalid) {
+      when(io.cached.abort) {
+        dataState := sAbort
+      }.elsewhen(newData) {
+        dataState := sValid
+      }
+    }
+    is(sValid) {
+      when(io.cached.abort) {
+        dataState := sAbort
+      }.elsewhen(io.cached.r.fire) {
+        dataState := sInvalid
+      }
+    }
+  }
+
+  switch(state) {
+    is(sReadCache) {
+      dataState := sInvalid
+      when(!(hit && inWhiteList)) {
+        state := sReqMem
+      }.otherwise {
+        addrReg := addrReg + 1.U
+      }
+    }
+    is(sReqMem) {
+      when(io.mem.ar.fire) { state := sFirstResp }
+    }
+    is(sFirstResp) {
+      when(io.mem.r.fire) { state := Mux(io.mem.r.bits.last, sWaitConsume, sFillCache) }
+    }
+    is(sFillCache) {
+      when(io.mem.r.fire) { state := sWaitConsume }
+    }
+    is(sWaitConsume) {
+      when(dataState =/= sValid) {
+        state := sReadCache
+        dataState := sInvalid
+        addrReg := addrReg + 1.U
+      }
+    }
+  }
+
+  when(io.mem.r.fire && inWhiteList) {
+    setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
+    when((state === sFillCache) && (dataState =/= sAbort)) {
+      setTag := addrLine.tag
+      setValid := true.B
+    }
+  }
+
+  when(io.cached.abort) {
+    addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
+    when(state =/= sReadCache) {
+      setValid := false.B
+    }
+  }
+
+  when(io.cached.fencei) {
+    cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
+  }
+
+  io.cached.r.valid := dataState === sValid
+  io.cached.r.bits.data := dataReg
+
+  io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
+  io.mem.ar.bits.addr := addr
+  io.mem.ar.bits.len := Mux(inWhiteList, 1.U, 0.U) // Mux(cond, 2 beats, 1 beat)
+  io.mem.ar.bits.size := "b010".U // 4B
+  io.mem.ar.bits.burst := Axi4Burst.warp.U
+  io.mem.ar.valid := state === sReqMem
+  io.mem.r.ready := true.B
+  when(io.mem.r.valid) {
+    assert(io.mem.r.bits.resp === Axi4Resp.okay.U)
+  }
+}

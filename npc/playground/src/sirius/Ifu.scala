@@ -27,12 +27,33 @@ class Ifu(
 
   if (!cfg.formal) {
     // icache
+    // val icache = Module(
+    //   new Icache(
+    //     setNum = 4,
+    //     wayNum = 1,
+    //     wayByte = 8,
+    //     busByte = 4,
+    //     if (cfg.ysyxsoc) {
+    //       Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+    //     } else { None }
+    //   )
+    // )
+    // exte.mem :<>= icache.io.mem
+    // val cached = icache.io.cached
+    // cached.fencei := exte.fencei
+    // cached.abort := flush
+    // cached.ar.valid := true.B
+    // val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    // when(flush) {
+    //   ifetchAddr := flushTarget
+    // }.elsewhen(cached.ar.fire) {
+    //   ifetchAddr := ifetchAddr + 4.U
+    // }
+    // cached.ar.bits.addr := ifetchAddr
+
     val icache = Module(
-      new Icache(
+      new SimpleIcache(
         setNum = 4,
-        wayNum = 1,
-        wayByte = 8,
-        busByte = 4,
         if (cfg.ysyxsoc) {
           Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
         } else { None }
@@ -42,14 +63,6 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.ar.valid := true.B
-    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    when(flush) {
-      ifetchAddr := flushTarget
-    }.elsewhen(cached.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
-    }
-    cached.ar.bits.addr := ifetchAddr
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
@@ -77,39 +90,39 @@ class Ifu(
     outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
     if (cfg.perf) {
-      val icacheState = BoringUtils.tapAndRead(icache.state)
-      val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
-      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
-      val icacheSReadCache = 0.U
-      val icacheSReq = 1.U
-      val icacheSFirstResp = 2.U
-      val icacheSFillCache = 3.U
-      val icacheSWait = 4.U
-      PerfWhen(
-        "icacheTotalAcc",
-        icache.io.cached.ar.fire,
-        exte.debugEbreak
-      )
-      PerfWhen(
-        "icacheMiss",
-        icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
-        exte.debugEbreak
-      )
-      PerfWhen(
-        "icacheHit",
-        icache.io.cached.ar.valid && icacheState === icacheSReadCache && (icacheNextState === icacheSReadCache || icacheNextState === icacheSWait),
-        exte.debugEbreak
-      )
-      PerfWhen(
-        "icacheBlackList",
-        icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
-        exte.debugEbreak
-      )
-      PerfWhen(
-        "icacheMissPenalty",
-        icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
-        exte.debugEbreak
-      )
+      // val icacheState = BoringUtils.tapAndRead(icache.state)
+      // val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      // val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      // val icacheSReadCache = 0.U
+      // val icacheSReq = 1.U
+      // val icacheSFirstResp = 2.U
+      // val icacheSFillCache = 3.U
+      // val icacheSWait = 4.U
+      // PerfWhen(
+      //   "icacheTotalAcc",
+      //   icache.io.cached.ar.fire,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheMiss",
+      //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheHit",
+      //   icache.io.cached.ar.valid && icacheState === icacheSReadCache && (icacheNextState === icacheSReadCache || icacheNextState === icacheSWait),
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheBlackList",
+      //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheMissPenalty",
+      //   icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
+      //   exte.debugEbreak
+      // )
       PerfWhen(
         "instFetch",
         icache.io.cached.r.fire,
