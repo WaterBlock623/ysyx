@@ -314,6 +314,7 @@ class SimpleIcache(
   val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: Nil = Enum(4)
   val state = RegInit(sReadCache)
   val abortReg = RegInit(false.B)
+  val abort = abortReg || io.cached.abort
 
   when(io.mem.r.fire && io.mem.r.bits.last) {
     abortReg := false.B
@@ -340,7 +341,7 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         when(io.mem.r.bits.last) {
           state := sReadCache
-          addrReg := Mux(abortReg, newAddr, staticNextAddrReg)
+          addrReg := Mux(abort, newAddr, staticNextAddrReg)
         }.otherwise {
           state := sFillCache
         }
@@ -349,7 +350,7 @@ class SimpleIcache(
     is(sFillCache) {
       when(io.mem.r.fire) {
         state := sReadCache
-        addrReg := Mux(abortReg, newAddr, staticNextAddrReg)
+        addrReg := Mux(abort, newAddr, staticNextAddrReg)
       }
     }
   }
