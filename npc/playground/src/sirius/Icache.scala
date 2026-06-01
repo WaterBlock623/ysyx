@@ -327,8 +327,11 @@ class SimpleIcache(
         when(!(hit && inWhiteList)) {
           state := sReqMem
         }.otherwise {
-          addrReg := staticNextAddrReg
+          addrReg := nextAddrReg
         }
+      }
+      when(io.cached.abort) {
+        addrReg := nextAddrReg
       }
     }
     is(sReqMem) {
