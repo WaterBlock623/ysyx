@@ -214,12 +214,13 @@ class Exu(
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
+  val trivialBits = if(cfg.hasC) 1 else 2
   val predTarget = 
-    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth - (if(cfg.hasC) 1 else 2)) ## 
+    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth - trivialBits) ## 
     inBits.iduPayload.ifu.predTarget ## 
-    (if (cfg.hasC) 0.U(1.W) else 0.U(2.W))
+    0.U(trivialBits.W)
   outBits.exuPayload.exu.predTargetMayErr := 
-    predTarget =/= jumpTargetGenerator.io.jumpTarget
+    predTarget(cfg.xlen - 1, trivialBits) =/= jumpTargetGenerator.io.jumpTarget(cfg.xlen - 1, trivialBits)
 
   PerfWhen(
     "calcFinish",
