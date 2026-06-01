@@ -290,6 +290,7 @@ class SimpleIcache(
     val off = UInt(offWidth.W)
   }
 
+  val newAddr = io.cached.newAddr(cfg.xlen - 1, offWidth)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
   val addr = addrReg ## 0.U(offWidth.W)
@@ -313,6 +314,7 @@ class SimpleIcache(
   val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: Nil = Enum(4)
   val state = RegInit(sReadCache)
   val abortReg = RegInit(false.B)
+  val abort = abortReg || io.cached.abort
 
   when(io.mem.r.fire && io.mem.r.bits.last) {
     abortReg := false.B
@@ -320,14 +322,18 @@ class SimpleIcache(
     abortReg := true.B
   }
 
+  when(state === sReadCache && io.cached.abort) {
+    addrReg := newAddr
+  }.elsewhen(state === sReadCache && hit && inWhiteList) {
+    addrReg := staticNextAddrReg
+  }.elsewhen(io.mem.r.fire && io.mem.r.bits.last) {
+    addrReg := Mux(abort, newAddr, staticNextAddrReg)
+  }
+
   switch(state) {
     is(sReadCache) {
-      when(io.cached.r.ready) {
-        when(!(hit && inWhiteList)) {
-          state := sReqMem
-        }.otherwise {
-          addrReg := staticNextAddrReg
-        }
+      when(io.cached.r.ready && !(hit && inWhiteList)) {
+        state := sReqMem
       }
     }
     is(sReqMem) {
@@ -335,27 +341,17 @@ class SimpleIcache(
     }
     is(sFirstResp) {
       when(io.mem.r.fire) {
-        when(io.mem.r.bits.last) {
-          state := sReadCache
-          when(!abortReg) {
-            addrReg := staticNextAddrReg
-          }
-        }.otherwise {
-          state := sFillCache
-        }
+        state := Mux(io.mem.r.bits.last, sReadCache, sFillCache)
       }
     }
     is(sFillCache) {
       when(io.mem.r.fire) {
         state := sReadCache
-        when(!abortReg) {
-          addrReg := staticNextAddrReg
-        }
       }
     }
   }
 
-  when(io.mem.r.fire && inWhiteList && !abortReg) {
+  when(io.mem.r.fire && inWhiteList) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
     when(state === sFillCache) {
       setTag := addrLine.tag
@@ -363,12 +359,9 @@ class SimpleIcache(
     }
   }
 
-  when(io.cached.abort) {
-    addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
-    when(state =/= sReadCache) {
-      setValid := false.B
-    }
-  }
+  // when(io.cached.abort) {
+  //   addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
+  // }
 
   when(io.cached.fencei) {
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
