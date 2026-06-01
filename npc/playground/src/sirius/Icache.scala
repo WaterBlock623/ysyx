@@ -310,7 +310,6 @@ class SimpleIcache(
   val setTag = cacheTag(setIdx)
   val setData = cacheData(setIdx)
 
-  // val hit = setValid && (setTag === addrLine.tag) && inWhiteList
   val hit = setValid && (setTag === addrLine.tag)
   val hitData = setData(addrLine.wordIdx)
 
@@ -325,10 +324,11 @@ class SimpleIcache(
 
   switch(state) {
     is(sReadCache) {
-      when(!hit && io.cached.r.ready) {
+      val cacheHit = hit && inWhiteList
+      when(!cacheHit && io.cached.r.ready) {
         state := sReqMem
       }
-      when(io.cached.abort || (hit && io.cached.r.ready)) {
+      when(io.cached.abort || (cacheHit && io.cached.r.ready)) {
         addrReg := nextAddrReg
       }
     }
