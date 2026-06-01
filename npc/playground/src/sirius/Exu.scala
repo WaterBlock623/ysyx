@@ -77,9 +77,6 @@ class AluBase(
   // Output sel
   io.out := direct1Result
   switch(io.aluOp) {
-    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
-    is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
-    is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
     is(neq.asUInt) {io.out := neqResult; assert(io.out === (io.src1 =/= io.src2))}
     is(lt.asUInt) {io.out := ltResult; assert(io.out === (io.src1.asSInt < io.src2.asSInt))}
@@ -88,6 +85,9 @@ class AluBase(
     is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
     is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
     is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
+    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
+    is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
+    is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(clear.asUInt) {io.out := clearResult}
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
