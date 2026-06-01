@@ -293,7 +293,6 @@ class SimpleIcache(
   val newAddr = io.cached.newAddr(cfg.xlen - 1, offWidth)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
-  dontTouch(staticNextAddrReg)
   val addr = addrReg ## 0.U(offWidth.W)
   val addrLine = addr.asTypeOf(new AddrLine)
   val setIdx = addrLine.setIdx
@@ -302,8 +301,10 @@ class SimpleIcache(
   } else { true.B }
 
   val cacheValid = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Bool())))
-  val cacheTag = Reg(Vec(setNum.toInt, UInt(tagWidth.W)))
-  val cacheData = Reg(Vec(setNum.toInt, Vec(2, UInt(32.W))))
+  // val cacheTag = Reg(Vec(setNum.toInt, UInt(tagWidth.W)))
+  // val cacheData = Reg(Vec(setNum.toInt, Vec(2, UInt(32.W))))
+  val cacheTag = Mem(setNum.toInt, UInt(tagWidth.W))
+  val cacheData = Mem(setNum.toInt, Vec(2, UInt(32.W)))
 
   val setValid = cacheValid(setIdx)
   val setTag = cacheTag(setIdx)
