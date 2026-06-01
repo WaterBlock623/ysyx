@@ -71,6 +71,7 @@ class Ifu(
     iqueue.io.flush := flush
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
+    // PipelineConnect()
 
     // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
     // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
