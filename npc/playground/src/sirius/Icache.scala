@@ -324,7 +324,7 @@ class SimpleIcache(
   switch(state) {
     is(sReadCache) {
       when(io.cached.abort) {
-        addrReg := io.cached.newAddr
+        addrReg := newAddr
       }.elsewhen(io.cached.r.ready) {
         when(!(hit && inWhiteList)) {
           state := sReqMem
