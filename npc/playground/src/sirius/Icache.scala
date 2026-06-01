@@ -309,18 +309,14 @@ class SimpleIcache(
   val hit = setValid && (setTag === addrLine.tag)
   val hitData = setData(addrLine.wordIdx)
 
-  val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: sWaitConsume :: Nil = Enum(5)
+  val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: Nil = Enum(4)
   val state = RegInit(sReadCache)
+  val abortReg = RegInit(false.B)
 
-  val sInvalid :: sValid :: sAbort :: Nil = Enum(3)
-  val dataState = RegInit(sInvalid)
-  val newData =
-    ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire)
-  val dataReg = 
-    RegEnable(Mux(state === sReadCache, hitData, io.mem.r.bits.data), newData && io.cached.r.ready)
-
-  when(io.cached.r.fire) {
-    dataState := sInvalid
+  when(io.mem.r.fire && io.mem.r.bits.last) {
+    abortReg := false.B
+  }.elsewhen(state =/= sReadCache && io.cached.abort) {
+    abortReg := true.B
   }
 
   switch(state) {
@@ -328,10 +324,8 @@ class SimpleIcache(
       when(io.cached.r.ready) {
         when(!(hit && inWhiteList)) {
           state := sReqMem
-          dataState := sInvalid
         }.otherwise {
           addrReg := addrReg + 1.U
-          dataState := sValid
         }
       }
     }
@@ -339,30 +333,14 @@ class SimpleIcache(
       when(io.mem.ar.fire) { state := sFirstResp }
     }
     is(sFirstResp) {
-      when(io.mem.r.fire) {
-        state := Mux(io.mem.r.bits.last, sWaitConsume, sFillCache)
-        when(dataState =/= sAbort && !io.cached.abort) { dataState := sValid }
-      }
+      when(io.mem.r.fire) { state := Mux(io.mem.r.bits.last, sReadCache, sFillCache) }
     }
     is(sFillCache) {
-      when(io.mem.r.fire) { state := sWaitConsume }
-    }
-    is(sWaitConsume) {
-      when(dataState =/= sValid) {
-        state := sReadCache
-        dataState := sInvalid
-      }
-      when(dataState === sInvalid) {
-        addrReg := addrReg + 1.U
-      }
+      when(io.mem.r.fire) { state := sReadCache }
     }
   }
 
-  when(io.cached.abort) {
-    dataState := sAbort
-  }
-
-  when(io.mem.r.fire && inWhiteList && (dataState =/= sAbort)) {
+  when(io.mem.r.fire && inWhiteList && !abortReg) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
     when(state === sFillCache) {
       setTag := addrLine.tag
@@ -381,8 +359,12 @@ class SimpleIcache(
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
   }
 
-  io.cached.r.valid := dataState === sValid
-  io.cached.r.bits.data := dataReg
+  io.cached.r.valid := 
+    ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire && !abortReg)
+  io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
+  when(state =/= sReadCache && io.cached.r.valid) {
+    assert(io.cached.r.ready)
+  }
 
   io.mem :<= 0.U.asTypeOf(chiselTypeOf(io.mem))
   io.mem.ar.bits.addr := addr
