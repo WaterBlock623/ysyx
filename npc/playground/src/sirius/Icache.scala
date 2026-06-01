@@ -336,7 +336,9 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         when(io.mem.r.bits.last) {
           state := sReadCache
-          addrReg := addrReg + 1.U
+          when(!abortReg) {
+            addrReg := addrReg + 1.U
+          }
         }.otherwise {
           state := sFillCache
         }
@@ -345,7 +347,9 @@ class SimpleIcache(
     is(sFillCache) {
       when(io.mem.r.fire) {
         state := sReadCache
-        addrReg := addrReg + 1.U
+        when(!abortReg) {
+          addrReg := addrReg + 1.U
+        }
       }
     }
   }
