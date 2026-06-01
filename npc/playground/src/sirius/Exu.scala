@@ -215,7 +215,7 @@ class Exu(
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
   val predTarget = 
-    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth) ## 
+    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth - (if(cfg.hasC) 1 else 2)) ## 
     inBits.iduPayload.ifu.predTarget ## 
     (if (cfg.hasC) 0.U(1.W) else 0.U(2.W))
   outBits.exuPayload.exu.predTargetMayErr := 
