@@ -24,7 +24,7 @@ case class UnitConfig(
     CsrEnum.mtvec -> (cfg => new CsrMtvec()(cfg)),
     CsrEnum.mepc -> (cfg => new CsrMepc()(cfg)),
     CsrEnum.mcause -> (cfg => new CsrMcause()(cfg)),
-    // CsrEnum.mstatus -> (cfg => new CsrMstatus()(cfg)),
+    CsrEnum.mstatus -> (cfg => new CsrMstatus()(cfg)),
   )) {
 }
 object UnitConfig {
