@@ -333,10 +333,20 @@ class SimpleIcache(
       when(io.mem.ar.fire) { state := sFirstResp }
     }
     is(sFirstResp) {
-      when(io.mem.r.fire) { state := Mux(io.mem.r.bits.last, sReadCache, sFillCache) }
+      when(io.mem.r.fire) {
+        when(io.mem.r.bits.last) {
+          state := sReadCache
+          addrReg := addrReg + 1.U
+        }.otherwise {
+          state := sFillCache
+        }
+      }
     }
     is(sFillCache) {
-      when(io.mem.r.fire) { state := sReadCache }
+      when(io.mem.r.fire) {
+        state := sReadCache
+        addrReg := addrReg + 1.U
+      }
     }
   }
 
