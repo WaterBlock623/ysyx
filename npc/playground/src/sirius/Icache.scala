@@ -327,7 +327,7 @@ class SimpleIcache(
         when(!(hit && inWhiteList)) {
           state := sReqMem
         }.otherwise {
-          addrReg := nextAddrReg
+          addrReg := staticNextAddrReg
         }
       }
     }
