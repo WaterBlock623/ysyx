@@ -42,18 +42,8 @@ class AluBase(
   val geResult = !ltResult
   val geuResult = addSub.head(1)
   val ltuResult = !geuResult
-  // val andClearResult = io.src1 & xorSrc2
-  // val andResult = andClearResult
-  // val clearResult = andClearResult
 
-  // val addResult = io.src1 + io.src2
-  // val subResult = io.src1 - io.src2
-  // val eqlResult = io.src1 === io.src2
   val neqResult = !eqlResult
-  // val ltResult = io.src1.asSInt < io.src2.asSInt
-  // val ltuResult = io.src1 < io.src2
-  // val geResult = !ltResult
-  // val geuResult = !ltuResult
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
@@ -87,6 +77,9 @@ class AluBase(
   // Output sel
   io.out := direct1Result
   switch(io.aluOp) {
+    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
+    is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
+    is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(eql.asUInt) {io.out := eqlResult; assert(io.out === (io.src1 === io.src2))}
     is(neq.asUInt) {io.out := neqResult; assert(io.out === (io.src1 =/= io.src2))}
     is(lt.asUInt) {io.out := ltResult; assert(io.out === (io.src1.asSInt < io.src2.asSInt))}
@@ -95,12 +88,6 @@ class AluBase(
     is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
     is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
     is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
-    // is(sll.asUInt) {io.out := sllResult}
-    // is(srl.asUInt) {io.out := srlResult}
-    // is(sra.asUInt) {io.out := sraResult}
-    is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
-    is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
-    is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
     is(clear.asUInt) {io.out := clearResult}
     is(and.asUInt) {io.out := andResult}
     is(or.asUInt) {io.out := orResult}
@@ -220,7 +207,7 @@ class Exu(
     inBits.iduPayload.ifu.predTarget ## 
     0.U(trivialBits.W)
   outBits.exuPayload.exu.predTargetMayErr := 
-    predTarget(cfg.xlen - 1, trivialBits) =/= jumpTargetGenerator.io.jumpTarget(cfg.xlen - 1, trivialBits)
+    predTarget =/= jumpTargetGenerator.io.jumpTarget
 
   PerfWhen(
     "calcFinish",
