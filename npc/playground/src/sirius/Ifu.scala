@@ -51,6 +51,7 @@ class Ifu(
     // }
     // cached.ar.bits.addr := ifetchAddr
 
+    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     val icache = Module(
       new SimpleIcache(
         setNum = 4,
@@ -63,7 +64,8 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.newAddr := flushTarget
+    // cached.newAddr := flushTarget
+    cached.newAddr := Mux(cached.abort, flushTarget, pc)
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
@@ -73,15 +75,15 @@ class Ifu(
     // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
     // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
     val iqueueDeq = iqueue.io.deq
-
     out.valid := iqueueDeq.valid
     iqueueDeq.ready := out.ready
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
       pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
+
     exte.bpu.pc := pc
 
     outBits.ifuPayload.ifu.pc := pc

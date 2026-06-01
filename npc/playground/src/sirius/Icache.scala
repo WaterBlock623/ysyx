@@ -322,7 +322,9 @@ class SimpleIcache(
 
   switch(state) {
     is(sReadCache) {
-      when(io.cached.r.ready) {
+      when(io.cached.abort) {
+        addrReg := io.cached.newAddr
+      }.elsewhen(io.cached.r.ready) {
         when(!(hit && inWhiteList)) {
           state := sReqMem
         }.otherwise {
@@ -337,9 +339,7 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         when(io.mem.r.bits.last) {
           state := sReadCache
-          when(!abortReg) {
-            addrReg := staticNextAddrReg
-          }
+          addrReg := Mux(abortReg, io.cached.newAddr, staticNextAddrReg)
         }.otherwise {
           state := sFillCache
         }
@@ -348,14 +348,12 @@ class SimpleIcache(
     is(sFillCache) {
       when(io.mem.r.fire) {
         state := sReadCache
-        when(!abortReg) {
-          addrReg := staticNextAddrReg
-        }
+        addrReg := Mux(abortReg, io.cached.newAddr, staticNextAddrReg)
       }
     }
   }
 
-  when(io.mem.r.fire && inWhiteList && !abortReg) {
+  when(io.mem.r.fire && inWhiteList) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
     when(state === sFillCache) {
       setTag := addrLine.tag
@@ -363,12 +361,9 @@ class SimpleIcache(
     }
   }
 
-  when(io.cached.abort) {
-    addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
-    when(state =/= sReadCache) {
-      setValid := false.B
-    }
-  }
+  // when(io.cached.abort) {
+  //   addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
+  // }
 
   when(io.cached.fencei) {
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
