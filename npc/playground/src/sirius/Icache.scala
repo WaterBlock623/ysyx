@@ -291,6 +291,7 @@ class SimpleIcache(
   }
 
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
+  val staticNextAddrReg = addrReg + 1.U
   val addr = addrReg ## 0.U(offWidth.W)
   val addrLine = addr.asTypeOf(new AddrLine)
   val setIdx = addrLine.setIdx
@@ -325,7 +326,7 @@ class SimpleIcache(
         when(!(hit && inWhiteList)) {
           state := sReqMem
         }.otherwise {
-          addrReg := addrReg + 1.U
+          addrReg := staticNextAddrReg
         }
       }
     }
@@ -337,7 +338,7 @@ class SimpleIcache(
         when(io.mem.r.bits.last) {
           state := sReadCache
           when(!abortReg) {
-            addrReg := addrReg + 1.U
+            addrReg := staticNextAddrReg
           }
         }.otherwise {
           state := sFillCache
@@ -348,7 +349,7 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         state := sReadCache
         when(!abortReg) {
-          addrReg := addrReg + 1.U
+          addrReg := staticNextAddrReg
         }
       }
     }
