@@ -290,8 +290,10 @@ class SimpleIcache(
     val off = UInt(offWidth.W)
   }
 
+  val abortReg = RegInit(false.B)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
+  val nextAddrReg = Mux(io.cached.abort || abortReg, io.cached.newAddr, staticNextAddrReg)
   val addr = addrReg ## 0.U(offWidth.W)
   val addrLine = addr.asTypeOf(new AddrLine)
   val setIdx = addrLine.setIdx
@@ -312,7 +314,6 @@ class SimpleIcache(
 
   val sReadCache :: sReqMem :: sFirstResp :: sFillCache :: Nil = Enum(4)
   val state = RegInit(sReadCache)
-  val abortReg = RegInit(false.B)
 
   when(io.mem.r.fire && io.mem.r.bits.last) {
     abortReg := false.B
@@ -326,7 +327,7 @@ class SimpleIcache(
         when(!(hit && inWhiteList)) {
           state := sReqMem
         }.otherwise {
-          addrReg := staticNextAddrReg
+          addrReg := nextAddrReg
         }
       }
     }
@@ -338,7 +339,7 @@ class SimpleIcache(
         when(io.mem.r.bits.last) {
           state := sReadCache
           when(!abortReg) {
-            addrReg := staticNextAddrReg
+            addrReg := nextAddrReg
           }
         }.otherwise {
           state := sFillCache
@@ -349,7 +350,7 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         state := sReadCache
         when(!abortReg) {
-          addrReg := staticNextAddrReg
+          addrReg := nextAddrReg
         }
       }
     }
