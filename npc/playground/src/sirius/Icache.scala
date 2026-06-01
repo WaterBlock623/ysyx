@@ -301,10 +301,8 @@ class SimpleIcache(
   } else { true.B }
 
   val cacheValid = RegInit(0.U.asTypeOf(Vec(setNum.toInt, Bool())))
-  // val cacheTag = Reg(Vec(setNum.toInt, UInt(tagWidth.W)))
-  // val cacheData = Reg(Vec(setNum.toInt, Vec(2, UInt(32.W))))
-  val cacheTag = Mem(setNum.toInt, UInt(tagWidth.W))
-  val cacheData = Mem(setNum.toInt, Vec(2, UInt(32.W)))
+  val cacheTag = Reg(Vec(setNum.toInt, UInt(tagWidth.W)))
+  val cacheData = Reg(Vec(setNum.toInt, Vec(2, UInt(32.W))))
 
   val setValid = cacheValid(setIdx)
   val setTag = cacheTag(setIdx)
