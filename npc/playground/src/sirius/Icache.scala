@@ -293,7 +293,8 @@ class SimpleIcache(
   val abortReg = RegInit(false.B)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
-  val nextAddrReg = Mux(io.cached.abort || abortReg, io.cached.newAddr, staticNextAddrReg)
+  val nextAddrReg = 
+    Mux(io.cached.abort || abortReg, io.cached.newAddr(cfg.xlen - 1, offWidth), staticNextAddrReg)
   val addr = addrReg ## 0.U(offWidth.W)
   val addrLine = addr.asTypeOf(new AddrLine)
   val setIdx = addrLine.setIdx
