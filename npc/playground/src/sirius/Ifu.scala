@@ -128,8 +128,42 @@ class Ifu(
       //   icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
       //   exte.debugEbreak
       // )
+
+
+      val icacheState = BoringUtils.tapAndRead(icache.state)
+      val icacheLastState = RegNext(icacheState)
+      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      val icacheSReadCache = 0.U
+      val icacheSReqMem = 1.U
+      val icacheSFirstResp = 2.U
+      val icacheSFillCache = 3.U
       PerfWhen(
-        "instFetch",
+        "icacheTotalAcc",
+        RegNext(icache.io.cached.r.ready) && (icacheLastState === icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMiss",
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheHit",
+        RegNext(icache.io.cached.r.ready) && icacheLastState === icacheSReadCache && icacheState === icacheSReadCache,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheBlackList",
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && !icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMissPenalty",
+        icacheInWhiteList && (icacheState =/= icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheOutput",
         icache.io.cached.r.fire,
         exte.debugEbreak
       )
