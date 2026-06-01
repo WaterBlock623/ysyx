@@ -65,8 +65,8 @@ class Ifu(
     cached.fencei := exte.fencei
     cached.abort := flush
     // cached.newAddr := flushTarget
-    // cached.newAddr := Mux(cached.abort, flushTarget, pc)
-    cached.newAddr := pc
+    cached.newAddr := Mux(cached.abort, flushTarget, pc)
+    // cached.newAddr := pc
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
