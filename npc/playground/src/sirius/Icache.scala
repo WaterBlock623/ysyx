@@ -355,7 +355,7 @@ class SimpleIcache(
     }
   }
 
-  when(io.mem.r.fire && inWhiteList && !abortReg) {
+  when(io.mem.r.fire && inWhiteList) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
     when(state === sFillCache) {
       setTag := addrLine.tag
@@ -363,12 +363,12 @@ class SimpleIcache(
     }
   }
 
-  when(io.cached.abort) {
-    addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
-    when(state =/= sReadCache) {
-      setValid := false.B
-    }
-  }
+  // when(io.cached.abort) {
+  //   addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
+  //   when(state =/= sReadCache) {
+  //     setValid := false.B
+  //   }
+  // }
 
   when(io.cached.fencei) {
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
