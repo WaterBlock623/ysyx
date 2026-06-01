@@ -341,11 +341,7 @@ class SimpleIcache(
     }
     is(sFirstResp) {
       when(io.mem.r.fire) {
-        when(io.mem.r.bits.last) {
-          state := sReadCache
-        }.otherwise {
-          state := sFillCache
-        }
+        state := Mux(io.mem.r.bits.last, sReadCache, sFillCache)
       }
     }
     is(sFillCache) {
