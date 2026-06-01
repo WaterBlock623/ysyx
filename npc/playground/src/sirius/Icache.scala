@@ -322,16 +322,18 @@ class SimpleIcache(
     abortReg := true.B
   }
 
+  when(state === sReadCache && io.cached.abort) {
+    addrReg := newAddr
+  }.elsewhen(state === sReadCache && hit && inWhiteList) {
+    addrReg := staticNextAddrReg
+  }.elsewhen(io.mem.r.fire && io.mem.r.bits.last) {
+    addrReg := Mux(abort, newAddr, staticNextAddrReg)
+  }
+
   switch(state) {
     is(sReadCache) {
-      when(io.cached.abort) {
-        addrReg := newAddr
-      }.elsewhen(io.cached.r.ready) {
-        when(!(hit && inWhiteList)) {
-          state := sReqMem
-        }.otherwise {
-          addrReg := staticNextAddrReg
-        }
+      when(io.cached.r.ready && !(hit && inWhiteList)) {
+        state := sReqMem
       }
     }
     is(sReqMem) {
@@ -341,7 +343,6 @@ class SimpleIcache(
       when(io.mem.r.fire) {
         when(io.mem.r.bits.last) {
           state := sReadCache
-          addrReg := Mux(abort, newAddr, staticNextAddrReg)
         }.otherwise {
           state := sFillCache
         }
@@ -350,7 +351,6 @@ class SimpleIcache(
     is(sFillCache) {
       when(io.mem.r.fire) {
         state := sReadCache
-        addrReg := Mux(abort, newAddr, staticNextAddrReg)
       }
     }
   }
