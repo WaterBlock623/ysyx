@@ -158,7 +158,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheHitTest",
-        icacheState === icacheSReadCache && icache.io.cached.r.valid,
+        icacheState === icacheSReadCache && icache.io.cached.r.valid && !flush,
         exte.debugEbreak
       )
       PerfWhen(
