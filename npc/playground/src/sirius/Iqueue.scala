@@ -32,7 +32,8 @@ class Iqueue(
   assert(counter16 <= entries16.U)
 
   val isC = io.deq.bits.inst(1, 0) =/= "b11".U
-  val full = counter16 > (entries16 - 2).U
+  // val full = counter16 > (entries16 - 2).U
+  val full = counter16 === 2.U
   val empty = (counter16 === 0.U) || ((counter16 === 1.U) && !isC)
 
   io.enq.ready := !full
