@@ -109,7 +109,7 @@ class Icache(
   // Replace sel
   val invalidWayIdx = PriorityEncoderOH(~setValid.asUInt)
   val isAllValid = setValid.asUInt.andR
-  val allValidWayIdx = if (wayIdxWidth != 0) UIntToOH(rand.head(wayIdxWidth)) else 0.U
+  val allValidWayIdx = if (wayIdxWidth != 0) UIntToOH(rand.head(wayIdxWidth)) else 1.U
   val wayMask = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
 
   // FSM
