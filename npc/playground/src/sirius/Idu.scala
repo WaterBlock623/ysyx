@@ -168,10 +168,10 @@ class Idu(
   // rs2
   exte.regFile.rAddr(1) := MuxLookup(ctrl.id.rs2Sel, rs2)(
     Seq(
-      RegAddrSelEnum.x0.asUInt -> 0.U,
       RegAddrSelEnum.rs.asUInt -> rs2,
       RegAddrSelEnum.crs2.asUInt -> crs2,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
+      RegAddrSelEnum.x0.asUInt -> 0.U
     )
   )
   outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
@@ -179,11 +179,11 @@ class Idu(
   // rd
   outBits.iduPayload.idu.wAddr := MuxLookup(ctrl.id.rdSel, rd)(
     Seq(
-      RegAddrSelEnum.x1.asUInt -> 1.U,
-      RegAddrSelEnum.x2.asUInt -> 2.U,
       RegAddrSelEnum.rd.asUInt -> rd,
       RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
+      RegAddrSelEnum.x1.asUInt -> 1.U,
+      RegAddrSelEnum.x2.asUInt -> 2.U
     )
   )
 
@@ -201,17 +201,4 @@ class Idu(
 
   // csr encode
   outBits.iduPayload.idu.csrAddr := MuxLookup(inst(31, 20), CsrEnum.all.head)(CsrAddr.getAllMap)
-
-  // InstTypeEnum.allWithNames.foreach { case (typ, name) =>
-  //   PerfWhen(
-  //     "type" + name,
-  //     (ctrl.id.instType === typ.asUInt) && out.fire,
-  //     exte.debugEbreak
-  //   )
-  //   PerfWhen(
-  //     "type" + name + "Cyc",
-  //     (ctrl.id.instType === typ.asUInt) && in.valid,
-  //     exte.debugEbreak
-  //   )
-  // }
 }
