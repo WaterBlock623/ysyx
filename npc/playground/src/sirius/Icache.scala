@@ -326,7 +326,7 @@ class SimpleIcache(
     is(sReadCache) {
       val cacheHit = hit && inWhiteList
       when(io.cached.r.ready) {
-        when(!cacheHit && !io.cached.abort) {
+        when(!(cacheHit || io.cached.abort)) {
           state := sReqMem
         }.otherwise {
           addrReg := nextAddrReg
