@@ -157,6 +157,11 @@ class Ifu(
         exte.debugEbreak
       )
       PerfWhen(
+        "icacheHitTest",
+        icacheState === icacheSReadCache && icache.io.cached.r.valid,
+        exte.debugEbreak
+      )
+      PerfWhen(
         "icacheBlackList",
         icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && !icacheInWhiteList,
         exte.debugEbreak
