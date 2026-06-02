@@ -42,18 +42,8 @@ class AluBase(
   val geResult = !ltResult
   val geuResult = addSub.head(1)
   val ltuResult = !geuResult
-  // val andClearResult = io.src1 & xorSrc2
-  // val andResult = andClearResult
-  // val clearResult = andClearResult
 
-  // val addResult = io.src1 + io.src2
-  // val subResult = io.src1 - io.src2
-  // val eqlResult = io.src1 === io.src2
   val neqResult = !eqlResult
-  // val ltResult = io.src1.asSInt < io.src2.asSInt
-  // val ltuResult = io.src1 < io.src2
-  // val geResult = !ltResult
-  // val geuResult = !ltuResult
   val andResult = io.src1 & io.src2
   val orResult = io.src1 | io.src2
   val xorResult = io.src1 ^ io.src2
@@ -95,9 +85,6 @@ class AluBase(
     is(geu.asUInt) {io.out := geuResult; assert(io.out === (io.src1 >= io.src2))}
     is(add.asUInt) {io.out := addResult; assert(io.out === (io.src1 + io.src2))}
     is(sub.asUInt) {io.out := subResult; assert(io.out === (io.src1 - io.src2))}
-    // is(sll.asUInt) {io.out := sllResult}
-    // is(srl.asUInt) {io.out := srlResult}
-    // is(sra.asUInt) {io.out := sraResult}
     is(sll.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 << shamt)(io.out.getWidth - 1, 0))}
     is(srl.asUInt) {io.out := shiftResult; assert(io.out === (io.src1 >> shamt))}
     is(sra.asUInt) {io.out := shiftResult; assert(io.out === (io.src1.asSInt >> shamt).asUInt)}
@@ -214,10 +201,11 @@ class Exu(
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
+  val trivialBits = if(cfg.hasC) 1 else 2
   val predTarget = 
-    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth) ## 
+    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth - trivialBits) ## 
     inBits.iduPayload.ifu.predTarget ## 
-    (if (cfg.hasC) 0.U(1.W) else 0.U(2.W))
+    0.U(trivialBits.W)
   outBits.exuPayload.exu.predTargetMayErr := 
     predTarget =/= jumpTargetGenerator.io.jumpTarget
 

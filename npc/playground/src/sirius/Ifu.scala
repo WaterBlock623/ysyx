@@ -51,6 +51,7 @@ class Ifu(
     // }
     // cached.ar.bits.addr := ifetchAddr
 
+    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     val icache = Module(
       new SimpleIcache(
         setNum = 4,
@@ -63,25 +64,28 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.newAddr := flushTarget
+    // cached.newAddr := flushTarget
+    cached.newAddr := Mux(cached.abort, flushTarget, pc)
+    // cached.newAddr := pc
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
+    // PipelineConnect(cached.r.map(_.data), iqueue.io.enq, flush = flush)
 
     // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
     // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
     val iqueueDeq = iqueue.io.deq
-
     out.valid := iqueueDeq.valid
     iqueueDeq.ready := out.ready
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
       pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
+
     exte.bpu.pc := pc
 
     outBits.ifuPayload.ifu.pc := pc
@@ -128,8 +132,42 @@ class Ifu(
       //   icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
       //   exte.debugEbreak
       // )
+
+
+      val icacheState = BoringUtils.tapAndRead(icache.state)
+      val icacheLastState = RegNext(icacheState)
+      val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      val icacheSReadCache = 0.U
+      val icacheSReqMem = 1.U
+      val icacheSFirstResp = 2.U
+      val icacheSFillCache = 3.U
       PerfWhen(
-        "instFetch",
+        "icacheTotalAcc",
+        RegNext(icache.io.cached.r.ready) && (icacheLastState === icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMiss",
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheHit",
+        RegNext(icache.io.cached.r.ready) && icacheLastState === icacheSReadCache && icacheState === icacheSReadCache,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheBlackList",
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && !icacheInWhiteList,
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheMissPenalty",
+        icacheInWhiteList && (icacheState =/= icacheSReadCache),
+        exte.debugEbreak
+      )
+      PerfWhen(
+        "icacheOutput",
         icache.io.cached.r.fire,
         exte.debugEbreak
       )

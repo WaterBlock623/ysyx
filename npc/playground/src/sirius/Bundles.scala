@@ -20,9 +20,7 @@ class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
     // val staticNextPc = UInt(cfg.xlen.W)
     val predTaken = Bool()
     // val predTarget = UInt(cfg.xlen.W)
-    val predTarget = 
-      if (cfg.hasC) UInt((cfg.predTargetWidth - 1).W)
-      else UInt((cfg.predTargetWidth - 2).W)
+    val predTarget = UInt(cfg.predTargetWidth.W)
     val isC = Bool()
   }
 }

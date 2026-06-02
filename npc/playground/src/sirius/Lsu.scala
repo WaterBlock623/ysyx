@@ -21,7 +21,8 @@ class Lsu(
   val out = IO(Decoupled(new LsuToWbuIO))
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
-  val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
+  // val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
+  val waitFlushFinish = RegNext(out.fire && willJump)
   val inValid = in.valid && !waitFlushFinish
 
   val inBits = in.bits
@@ -74,10 +75,12 @@ class Lsu(
       (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
   val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
   val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
-  val eLoadAccessFault = ctrl.isLoad &&
-    !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
-  val eStoreAccessFault = ctrl.isStore &&
-    !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+  // val eLoadAccessFault = ctrl.isLoad &&
+  //   !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
+  // val eStoreAccessFault = ctrl.isStore &&
+  //   !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+  val eLoadAccessFault = ctrl.isLoad && (exte.mem.r.bits.resp =/= Axi4Resp.okay.U)
+  val eStoreAccessFault = ctrl.isStore && (exte.mem.b.bits.resp =/= Axi4Resp.okay.U)
 
   val eCause = MuxCase(
     0.U,
