@@ -325,7 +325,7 @@ class SimpleIcache(
   switch(state) {
     is(sReadCache) {
       val cacheHit = hit && inWhiteList
-      when(!cacheHit && io.cached.r.ready) {
+      when(io.cached.r.ready && !(cacheHit || io.cached.abort)) {
         state := sReqMem
       }
       when(io.cached.abort || (cacheHit && io.cached.r.ready)) {

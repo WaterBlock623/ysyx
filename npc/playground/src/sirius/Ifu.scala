@@ -143,7 +143,7 @@ class Ifu(
       val icacheSFillCache = 3.U
       PerfWhen(
         "icacheTotalAcc",
-        RegNext(icache.io.cached.r.ready) && (icacheLastState === icacheSReadCache),
+        RegNext(icache.io.cached.r.ready && !icache.io.cached.abort) && (icacheLastState === icacheSReadCache),
         exte.debugEbreak
       )
       PerfWhen(
@@ -153,7 +153,7 @@ class Ifu(
       )
       PerfWhen(
         "icacheHit",
-        RegNext(icache.io.cached.r.ready) && icacheLastState === icacheSReadCache && icacheState === icacheSReadCache,
+        RegNext(icache.io.cached.r.ready && !icache.io.cached.abort) && icacheLastState === icacheSReadCache && icacheState === icacheSReadCache,
         exte.debugEbreak
       )
       PerfWhen(
