@@ -21,7 +21,8 @@ class Lsu(
   val out = IO(Decoupled(new LsuToWbuIO))
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
-  val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
+  // val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
+  val waitFlushFinish = RegNext(out.fire && willJump)
   val inValid = in.valid && !waitFlushFinish
 
   val inBits = in.bits
