@@ -37,21 +37,14 @@ class Btb(
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
 
   def significantPc(pc: UInt) = pc >> trivialBits
-  def hashTagIndex(pc: UInt) = {
-    significantPc(pc)(tagIndexWidth - 1, 0) ^
-      significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
-  }
-  // def hash(data: UInt): UInt = {
-  //   require(data.getWidth % 2 == 0)
-  //   val halfWidth = data.getWidth / 2
-  //   data(halfWidth - 1, 0) ^ data(data.getWidth - 1, halfWidth)
-  // }
   // def hashTagIndex(pc: UInt) = {
-  //   val sigPc = significantPc(pc)
-  //   val hashIdx = hash(sigPc(indexWidth * 2 - 1, 0))
-  //   val hashTag = hash(sigPc(indexWidth * 2 + tagWidth * 2 - 1, indexWidth * 2))
-  //   hashTag ## hashIdx
+  //   significantPc(pc)(tagIndexWidth - 1, 0) ^
+  //     significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
   // }
+  def hashTagIndex(pc: UInt) = {
+    val sigPc = significantPc(pc)
+    sigPc(tagIndexWidth - 1, 0) ^ sigPc(2 * tagIndexWidth - 1, tagIndexWidth)
+  }
   def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
   def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
 
