@@ -361,11 +361,11 @@ class SimpleIcache(
   //   }
   // }
   val dataBuf = Reg(UInt(32.W))
-  when(io.mem.r.fire) {
+  when(io.mem.r.fire && inWhiteList) {
     when(state === sFirstResp) {
       dataBuf := io.mem.r.bits.data
     }
-    when(state === sFillCache && inWhiteList && !(abortReg || io.cached.abort)) {
+    when(state === sFillCache && !(abortReg || io.cached.abort)) {
       setData := Mux(
         addrReg(0),
         dataBuf ## io.mem.r.bits.data,
@@ -389,8 +389,7 @@ class SimpleIcache(
 
   io.cached.r.valid :=
     ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire && !abortReg)
-  // io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
-  io.cached.r.bits.data := Mux(state === sReadCache, hitData, dataBuf)
+  io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
   when(state =/= sReadCache && io.cached.r.valid) {
     assert(io.cached.r.ready)
   }
