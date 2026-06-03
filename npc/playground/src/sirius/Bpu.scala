@@ -79,11 +79,11 @@ class Pht(
   })
 
   val cntNum = 1 << indexWidth
-  val cnts = Reg(Vec(cntNum, UInt(2.W)))
+  // val cnts = Reg(Vec(cntNum, UInt(2.W)))
   // val cnts =
   //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
   //   else Reg(Vec(cntNum, UInt(2.W)))
-  // val cnts = RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
+  val cnts = RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
 
   def significantPc(pc: UInt): UInt = if (cfg.extensions().contains(ExtTypeEnum.C)) { pc >> 1 }
   else { pc >> 2 }
