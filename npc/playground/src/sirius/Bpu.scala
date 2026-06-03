@@ -60,7 +60,7 @@ class Btb(
 
   // Read
   val readIdx = idx(io.read.pc)
-  dontTouch(readIdx)
+  // dontTouch(readIdx)
   val readTag = tag(io.read.pc)
   io.read.hit := tags(readIdx) === readTag
   val pcHi = io.read.pc.head(io.read.pc.getWidth - targetWidth - trivialBits)
@@ -109,7 +109,7 @@ class Pht(
 
   // Read
   val readIdx = idx(io.read.pc)
-  dontTouch(readIdx)
+  // dontTouch(readIdx)
   io.read.taken := cnts(readIdx) >= ((1 << counterWidth) / 2).U
 
   // Write
