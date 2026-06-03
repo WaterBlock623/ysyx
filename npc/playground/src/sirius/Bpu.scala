@@ -55,20 +55,27 @@ class Btb(
     val tagIdx2 = tagIdx.tag2 ## tagIdx.idx2
     tagIdx1 ^ tagIdx2
   }
-  def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
-  def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
+  // def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
+  // def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
+  def idx(tagIdx: UInt) = tagIdx(indexWidth - 1, 0)
+  def tag(tagIdx: UInt) = tagIdx(tagIndexWidth - 1, indexWidth)
 
   // Read
-  val readIdx = idx(io.read.pc)
-  // dontTouch(readIdx)
-  val readTag = tag(io.read.pc)
+  // val readIdx = idx(io.read.pc)
+  // val readTag = tag(io.read.pc)
+  val readTagIdx = hashTagIndex(io.read.pc)
+  val readIdx = idx(readTagIdx)
+  val readTag = tag(readTagIdx)
   io.read.hit := tags(readIdx) === readTag
   val pcHi = io.read.pc.head(io.read.pc.getWidth - targetWidth - trivialBits)
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
   // Write
-  val writeIdx = idx(io.write.pc)
-  val writeTag = tag(io.write.pc)
+  // val writeIdx = idx(io.write.pc)
+  // val writeTag = tag(io.write.pc)
+  val writeTagIdx = hashTagIndex(io.write.pc)
+  val writeIdx = idx(writeTagIdx)
+  val writeTag = tag(writeTagIdx)
   when(io.write.update) {
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
