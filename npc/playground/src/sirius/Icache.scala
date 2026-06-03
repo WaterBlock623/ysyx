@@ -353,9 +353,18 @@ class SimpleIcache(
     }
   }
 
+  // when(io.mem.r.fire && inWhiteList) {
+  //   setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
+  //   when(state === sFillCache) {
+  //     setTag := addrLine.tag
+  //     setValid := true.B
+  //   }
+  // }
+  val dataBuf = Reg(Vec(2, UInt(32.W)))
   when(io.mem.r.fire && inWhiteList) {
-    setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
-    when(state === sFillCache) {
+    dataBuf((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
+    when(state === sFillCache && !(abortReg || io.cached.abort)) {
+      setData := dataBuf
       setTag := addrLine.tag
       setValid := true.B
     }
