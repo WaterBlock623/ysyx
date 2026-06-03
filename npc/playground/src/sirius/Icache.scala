@@ -389,7 +389,8 @@ class SimpleIcache(
 
   io.cached.r.valid :=
     ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire && !abortReg)
-  io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
+  // io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
+  io.cached.r.bits.data := Mux(state === sReadCache, hitData, dataBuf)
   when(state =/= sReadCache && io.cached.r.valid) {
     assert(io.cached.r.ready)
   }
