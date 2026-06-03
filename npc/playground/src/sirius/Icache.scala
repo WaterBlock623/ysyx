@@ -353,28 +353,28 @@ class SimpleIcache(
     }
   }
 
-  when(io.mem.r.fire && inWhiteList) {
-    setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
-    when(state === sFillCache) {
-      setTag := addrLine.tag
-      setValid := true.B
-    }
-  }
-  // val dataBuf = Reg(UInt(32.W))
   // when(io.mem.r.fire && inWhiteList) {
-  //   when(state === sFirstResp) {
-  //     dataBuf := io.mem.r.bits.data
-  //   }
-  //   when(state === sFillCache && !(abortReg || io.cached.abort)) {
-  //     setData := Mux(
-  //       addrReg(0),
-  //       dataBuf ## io.mem.r.bits.data,
-  //       io.mem.r.bits.data ## dataBuf
-  //     ).asTypeOf(chiselTypeOf(setData))
+  //   setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
+  //   when(state === sFillCache) {
   //     setTag := addrLine.tag
   //     setValid := true.B
   //   }
   // }
+  val dataBuf = Reg(UInt(32.W))
+  when(io.mem.r.fire) {
+    when(state === sFirstResp) {
+      dataBuf := io.mem.r.bits.data
+    }
+    when(state === sFillCache && inWhiteList && !(abortReg || io.cached.abort)) {
+      setData := Mux(
+        addrReg(0),
+        dataBuf ## io.mem.r.bits.data,
+        io.mem.r.bits.data ## dataBuf
+      ).asTypeOf(chiselTypeOf(setData))
+      setTag := addrLine.tag
+      setValid := true.B
+    }
+  }
 
   // when(io.cached.abort) {
   //   addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
