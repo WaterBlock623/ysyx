@@ -27,9 +27,10 @@ class Btb(
   val trivialBits = if (cfg.extensions().contains(ExtTypeEnum.C)) 1 else 2
 
   // val tags = Reg(Vec(lineNum, UInt(tagWidth.W)))
-  val tags =
-    if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
-    else Reg(Vec(lineNum, UInt(tagWidth.W)))
+  // val tags =
+  //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
+  //   else Reg(Vec(lineNum, UInt(tagWidth.W)))
+  val tags = RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
   // val targets = 
   //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
   //   else Reg(Vec(lineNum, UInt(targetWidth.W)))
