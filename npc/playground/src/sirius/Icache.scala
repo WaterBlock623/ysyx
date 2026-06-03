@@ -291,7 +291,7 @@ class SimpleIcache(
   }
 
   val abortReg = RegInit(false.B)
-  val disableOverrideReg = RegInit(false.B)
+  // val disableOverrideReg = RegInit(false.B)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
   val nextAddrReg =
@@ -323,11 +323,11 @@ class SimpleIcache(
     abortReg := true.B
   }
 
-  when(io.mem.r.fire && io.mem.r.bits.last) {
-    disableOverrideReg := false.B
-  }.elsewhen((state === sReqMem || (state === sFirstResp && !io.mem.r.fire)) && io.cached.abort) {
-    disableOverrideReg := true.B
-  }
+  // when(io.mem.r.fire && io.mem.r.bits.last) {
+  //   disableOverrideReg := false.B
+  // }.elsewhen((state === sReqMem || (state === sFirstResp && !io.mem.r.fire)) && io.cached.abort) {
+  //   disableOverrideReg := true.B
+  // }
 
   switch(state) {
     is(sReadCache) {
@@ -360,21 +360,21 @@ class SimpleIcache(
     }
   }
 
-  // when(io.mem.r.fire && inWhiteList) {
-  //   setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
-  //   when(state === sFillCache) {
-  //     setTag := addrLine.tag
-  //     setValid := true.B
-  //   }
-  // }
-
-  when(io.mem.r.fire && inWhiteList && !disableOverrideReg) {
+  when(io.mem.r.fire && inWhiteList) {
     setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
     when(state === sFillCache) {
       setTag := addrLine.tag
       setValid := true.B
     }
   }
+
+  // when(io.mem.r.fire && inWhiteList && !disableOverrideReg) {
+  //   setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
+  //   when(state === sFillCache) {
+  //     setTag := addrLine.tag
+  //     setValid := true.B
+  //   }
+  // }
 
   // val dataBuf = Reg(UInt(32.W))
   // when(io.mem.r.fire && inWhiteList) {
