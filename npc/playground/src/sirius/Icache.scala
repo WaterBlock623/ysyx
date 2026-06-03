@@ -319,12 +319,13 @@ class SimpleIcache(
 
   when(io.mem.r.fire && io.mem.r.bits.last) {
     abortReg := false.B
-    disableOverrideReg := false.B
   }.elsewhen(state =/= sReadCache && io.cached.abort) {
     abortReg := true.B
   }
 
-  when(state === sReqMem && io.cached.abort) {
+  when(io.mem.r.fire && io.mem.r.bits.last) {
+    disableOverrideReg := false.B
+  }.elsewhen(state === sReqMem && io.cached.abort) {
     disableOverrideReg := true.B
   }
 
