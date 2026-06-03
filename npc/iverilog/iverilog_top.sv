@@ -137,10 +137,10 @@ module iverilog_top;
     .io_master_rid     (axi_rid)
   );
 
-  initial begin
-    $dumpfile("iverilog.vcd");
-    $dumpvars(0, cpu);
-  end
+  // initial begin
+  //   $dumpfile("iverilog.vcd");
+  //   $dumpvars(0, cpu);
+  // end
 
   // always @(posedge stop) begin
   //   if (!reset) begin
