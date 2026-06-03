@@ -34,8 +34,7 @@ class Btb(
   // val targets = 
   //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
   //   else Reg(Vec(lineNum, UInt(targetWidth.W)))
-  // val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
-  val targets = RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
+  val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
 
   def significantPc(pc: UInt) = pc >> trivialBits
   def hashTagIndex(pc: UInt) = {
