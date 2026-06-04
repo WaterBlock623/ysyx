@@ -72,15 +72,15 @@ class Btb(
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
   // Write
-  val writeIdx = RegNext(idx(io.write.pc))
-  val writeTag = RegNext(tag(io.write.pc))
+  val writeIdx = idx(io.write.pc)
+  val writeTag = tag(io.write.pc)
   // val writeTagIdx = hashTagIndex(io.write.pc)
   // val writeIdx = idx(writeTagIdx)
   // val writeTag = tag(writeTagIdx)
-  when(RegNext(io.write.update)) {
+  when(io.write.update) {
     valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
-    targets(writeIdx) := RegNext(io.write.target(targetWidth + trivialBits - 1, trivialBits))
+    targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
   }
 }
 
@@ -122,13 +122,12 @@ class Pht(
   io.read.taken := cnts(readIdx) >= ((1 << counterWidth) / 2).U
 
   // Write
-  val writeIdx = RegNext(idx(io.write.pc))
-  val writeTaken = RegNext(io.write.taken)
-  when(RegNext(io.write.update)) {
+  val writeIdx = idx(io.write.pc)
+  when(io.write.update) {
     val cnt = cnts(writeIdx)
-    when(writeTaken && (cnt < ((1 << counterWidth) - 1).U)) {
+    when(io.write.taken && (cnt < ((1 << counterWidth) - 1).U)) {
       cnt := cnt + 1.U
-    }.elsewhen(!writeTaken && cnt > 0.U) {
+    }.elsewhen(!io.write.taken && cnt > 0.U) {
       cnt := cnt - 1.U
     }
   }
