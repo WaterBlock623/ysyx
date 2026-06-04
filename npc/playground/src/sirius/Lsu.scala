@@ -53,7 +53,7 @@ class Lsu(
   exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcache)
   exte.pcReg.target := dynamicNextPc
   if (cfg.isDebug) {
-  val debug = outBits.debug.get
+    val debug = outBits.debug.get
     debug.isJump := realTaken
     debug.jumpTarget := realTarget
   }
@@ -70,11 +70,12 @@ class Lsu(
   exte.mem.w.bits.last := true.B
 
   // 异常
-  val eLoadStoreAddressMisaligned = isMemAcc &&
-    ((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
-      (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
-  val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
-  val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
+  val eLoadStoreAddressMayMisaligned = 
+    (ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+    (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U)
+  val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMayMisaligned
+  val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMayMisaligned
+  val eLoadStoreAddressMisaligned = eLoadAddressMisaligned || eStoreAddressMisaligned
   // val eLoadAccessFault = ctrl.isLoad &&
   //   !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
   // val eStoreAccessFault = ctrl.isStore &&
