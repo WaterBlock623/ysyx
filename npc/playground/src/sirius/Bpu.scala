@@ -72,11 +72,11 @@ class Btb(
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
   // Write
-  // val writeIdx = idx(io.write.pc)
-  // val writeTag = tag(io.write.pc)
-  val writeTagIdx = hashTagIndex(io.write.pc)
-  val writeIdx = idx(writeTagIdx)
-  val writeTag = tag(writeTagIdx)
+  val writeIdx = idx(io.write.pc)
+  val writeTag = tag(io.write.pc)
+  // val writeTagIdx = hashTagIndex(io.write.pc)
+  // val writeIdx = idx(writeTagIdx)
+  // val writeTag = tag(writeTagIdx)
   when(io.write.update) {
     valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
