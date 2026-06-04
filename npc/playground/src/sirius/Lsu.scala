@@ -97,8 +97,8 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
-  val axiCanValid = inValid && isMemAcc && !(inBits.exuPayload.trap.isTrap || 
-    (ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
+  val axiCanValid = inValid && isMemAcc && !inBits.exuPayload.trap.isTrap && 
+    !((ctrl.loadStoreLength === LoadStoreLengthEnum.h.asUInt && addr(0) =/= 0.U) ||
     (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
 
   // FSM
