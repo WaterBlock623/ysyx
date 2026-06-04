@@ -122,12 +122,13 @@ class Pht(
   io.read.taken := cnts(readIdx) >= ((1 << counterWidth) / 2).U
 
   // Write
-  val writeIdx = idx(io.write.pc)
-  when(io.write.update) {
+  val writeIdx = RegNext(idx(io.write.pc))
+  val writeTaken = RegNext(io.write.taken)
+  when(RegNext(io.write.update)) {
     val cnt = cnts(writeIdx)
-    when(io.write.taken && (cnt < ((1 << counterWidth) - 1).U)) {
+    when(writeTaken && (cnt < ((1 << counterWidth) - 1).U)) {
       cnt := cnt + 1.U
-    }.elsewhen(!io.write.taken && cnt > 0.U) {
+    }.elsewhen(!writeTaken && cnt > 0.U) {
       cnt := cnt - 1.U
     }
   }
