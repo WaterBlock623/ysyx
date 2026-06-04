@@ -134,13 +134,22 @@ class Lsu(
       }
     }
     is(sWaitAddrReady) {
-      state := Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady)
+      when(exte.mem.aw.ready) {
+        state := sWaitResp
+      }
+      // state := Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady)
     }
     is(sWaitDataReady) {
-      state := Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady)
+      when(exte.mem.w.ready) {
+        state := sWaitResp
+      }
+      // state := Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady)
     }
     is(sWaitResp) {
-      state := Mux(out.fire, sIdle, sWaitResp)
+      when(out.fire) {
+        state := sIdle
+      }
+      // state := Mux(out.fire, sIdle, sWaitResp)
     }
   }
 
