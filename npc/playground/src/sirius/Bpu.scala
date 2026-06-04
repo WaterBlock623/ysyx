@@ -35,6 +35,7 @@ class Btb(
   //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
   //   else Reg(Vec(lineNum, UInt(targetWidth.W)))
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
+  val valids = RegInit(VecInit.fill(lineNum)(false.B))
 
   def significantPc(pc: UInt) = pc >> trivialBits
   // def hashTagIndex(pc: UInt) = {
@@ -66,7 +67,7 @@ class Btb(
   val readTagIdx = hashTagIndex(io.read.pc)
   val readIdx = idx(readTagIdx)
   val readTag = tag(readTagIdx)
-  io.read.hit := tags(readIdx) === readTag
+  io.read.hit := tags(readIdx) === readTag && valids(readIdx)
   val pcHi = io.read.pc.head(io.read.pc.getWidth - targetWidth - trivialBits)
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
@@ -77,6 +78,7 @@ class Btb(
   val writeIdx = idx(writeTagIdx)
   val writeTag = tag(writeTagIdx)
   when(io.write.update) {
+    valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
   }
