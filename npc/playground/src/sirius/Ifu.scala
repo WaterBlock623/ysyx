@@ -87,7 +87,7 @@ class Ifu(
     }
 
     val trivialBits = if (cfg.hasC) 1 else 2
-    val sigPc = pc(cfg.xlen - 1 - trivialBits, trivialBits) ## 0.U(trivialBits.W)
+    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
     exte.bpu.pc := sigPc
 
     outBits.ifuPayload.ifu.pc := sigPc
@@ -199,7 +199,7 @@ class Ifu(
     }
 
     val trivialBits = if (cfg.hasC) 1 else 2
-    val sigPc = pc(cfg.xlen - 1 - trivialBits, trivialBits) ## 0.U(trivialBits.W)
+    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
     exte.bpu.pc := sigPc
 
     outBits.ifuPayload.ifu.pc := sigPc
