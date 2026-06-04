@@ -127,10 +127,8 @@ class Lsu(
 
   // Handshake
   val isBypass = inValid && !axiCanValid
-  // val rValid = ctrl.isLoad && exte.mem.r.valid
-  // val bValid = ctrl.isStore && exte.mem.b.valid
-  val rValid = exte.mem.r.valid
-  val bValid = exte.mem.b.valid
+  val rValid = ctrl.isLoad && exte.mem.r.valid
+  val bValid = ctrl.isStore && exte.mem.b.valid
   val isMemDone = state === sWaitResp && (rValid || bValid)
 
   out.valid := isBypass || isMemDone
@@ -161,13 +159,6 @@ class Lsu(
   exte.mem.aw.bits.size := axSize
 
   // Load data
-  // val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
-  // val lbu = byteData(rem)
-  // val lbData = Mux(
-  //   ctrl.isUnsignedLoad,
-  //   0.U((cfg.xlen - 8).W),
-  //   Fill(cfg.xlen - 8, lbu(7))
-  // ) ## lbu
   val lbRaw = MuxLookup(rem, rData(7, 0))(Seq(
     0.U -> rData(7, 0),
     1.U -> rData(15, 8),
@@ -176,12 +167,6 @@ class Lsu(
   ))
   val lbData = Mux(ctrl.isUnsignedLoad, ZeroExt(lbRaw, cfg.xlen), SignExt(lbRaw, cfg.xlen))
 
-  // val lhu = Mux(rem(1), rData(31, 16), rData(15, 0))
-  // val lhData = Mux(
-  //   ctrl.isUnsignedLoad,
-  //   0.U((cfg.xlen - 16).W),
-  //   Fill(cfg.xlen - 16, lhu(15))
-  // ) ## lhu
   val lhRaw = Mux(rem(1), rData(31, 16), rData(15, 0))
   val lhData = Mux(ctrl.isUnsignedLoad, ZeroExt(lhRaw, cfg.xlen), SignExt(lhRaw, cfg.xlen))
 
