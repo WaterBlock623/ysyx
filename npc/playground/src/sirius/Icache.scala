@@ -291,7 +291,6 @@ class SimpleIcache(
   }
 
   val abortReg = RegInit(false.B)
-  // val disableOverrideReg = RegInit(false.B)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
   val nextAddrReg =
@@ -367,30 +366,6 @@ class SimpleIcache(
       setValid := true.B
     }
   }
-
-  // when(io.mem.r.fire && inWhiteList && !disableOverrideReg) {
-  //   setData((state === sFillCache).asUInt ^ addrReg(0).asUInt) := io.mem.r.bits.data
-  //   when(state === sFillCache) {
-  //     setTag := addrLine.tag
-  //     setValid := true.B
-  //   }
-  // }
-
-  // val dataBuf = Reg(UInt(32.W))
-  // when(io.mem.r.fire && inWhiteList) {
-  //   when(state === sFirstResp) {
-  //     dataBuf := io.mem.r.bits.data
-  //   }
-  //   when(state === sFillCache && !(abortReg || io.cached.abort)) {
-  //     setData := Mux(
-  //       addrReg(0),
-  //       dataBuf ## io.mem.r.bits.data,
-  //       io.mem.r.bits.data ## dataBuf
-  //     ).asTypeOf(chiselTypeOf(setData))
-  //     setTag := addrLine.tag
-  //     setValid := true.B
-  //   }
-  // }
 
   // when(io.cached.abort) {
   //   addrReg := io.cached.newAddr(cfg.xlen - 1, offWidth)
