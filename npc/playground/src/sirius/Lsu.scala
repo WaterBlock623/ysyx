@@ -97,8 +97,7 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
-  val axiCanValid = RegNext(RegNext(!reset.asBool)) && inValid && isMemAcc &&
-    !inTrap && !eLoadStoreAddressMisaligned
+  val axiCanValid = inValid && isMemAcc && !inTrap && !eLoadStoreAddressMisaligned
 
   // FSM
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
