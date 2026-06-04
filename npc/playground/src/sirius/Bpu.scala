@@ -38,24 +38,24 @@ class Btb(
   val valids = RegInit(VecInit.fill(lineNum)(false.B))
 
   def significantPc(pc: UInt) = pc >> trivialBits
-  // def hashTagIndex(pc: UInt) = {
-  //   significantPc(pc)(tagIndexWidth - 1, 0) ^
-  //     significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
-  // }
   def hashTagIndex(pc: UInt) = {
-    class TagIdxBundle extends Bundle {
-      val tag2 = UInt(tagWidth.W)
-      val tag1 = UInt(tagWidth.W)
-      val idx2 = UInt(indexWidth.W)
-      val idx1 = UInt(indexWidth.W)
-    }
-
-    val sigPc = significantPc(pc)
-    val tagIdx = sigPc(2 * tagIndexWidth - 1, 0).asTypeOf(new TagIdxBundle)
-    val tagIdx1 = tagIdx.tag1 ## tagIdx.idx1
-    val tagIdx2 = tagIdx.tag2 ## tagIdx.idx2
-    tagIdx1 ^ tagIdx2
+    significantPc(pc)(tagIndexWidth - 1, 0) ^
+      significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
   }
+  // def hashTagIndex(pc: UInt) = {
+  //   class TagIdxBundle extends Bundle {
+  //     val tag2 = UInt(tagWidth.W)
+  //     val tag1 = UInt(tagWidth.W)
+  //     val idx2 = UInt(indexWidth.W)
+  //     val idx1 = UInt(indexWidth.W)
+  //   }
+  //
+  //   val sigPc = significantPc(pc)
+  //   val tagIdx = sigPc(2 * tagIndexWidth - 1, 0).asTypeOf(new TagIdxBundle)
+  //   val tagIdx1 = tagIdx.tag1 ## tagIdx.idx1
+  //   val tagIdx2 = tagIdx.tag2 ## tagIdx.idx2
+  //   tagIdx1 ^ tagIdx2
+  // }
   // def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
   // def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
   def idx(tagIdx: UInt) = tagIdx(indexWidth - 1, 0)
