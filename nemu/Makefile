@@ -33,7 +33,10 @@ LIBS += $(ADD_LIBS)
 -include $(CFG_DIR)/include/config/auto.conf.cmd
 MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
 
-$(MK_INCLUDE): riscv32-am_defconfig
+ifeq ($(filter %defconfig,$(MAKECMDGOALS)),)
+$(MK_INCLUDE):
+	make -C $(NEMU_HOME) riscv32-am_defconfig
+endif
 
 remove_quote = $(patsubst "%",%,$(1))
 

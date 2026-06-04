@@ -67,9 +67,8 @@ Context* __am_irq_handle(Context *c) {
       if (user_handler) {
         ev.event = EVENT_ERROR; break;
       } else {
-        // Disable for CI
-        // printf("Unknown trap: mcause=%u\n", c->mcause); 
-        // assert(0);
+        printf("Unknown trap: mcause=%u\n", c->mcause); 
+        assert(0);
       }
   }
 
