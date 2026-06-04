@@ -127,8 +127,8 @@ class Lsu(
   switch(state) {
     is(sIdle) {
       when(axiCanValid) {
-        when(exte.mem.ar.ready && ctrl.isLoad) {state := sWaitResp}
-        .elsewhen(exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) {state := sWaitResp}
+        when((exte.mem.ar.ready && ctrl.isLoad) || (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore)) {state := sWaitResp}
+        // .elsewhen(exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) {state := sWaitResp}
         .elsewhen(exte.mem.aw.ready && ctrl.isStore) {sWaitDataReady}
         .elsewhen(exte.mem.w.ready && ctrl.isStore) {sWaitAddrReady}
       }
