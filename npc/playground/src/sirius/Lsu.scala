@@ -22,8 +22,8 @@ class Lsu(
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
   // val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
-  val waitFlushFinish = RegNext(!(out.fire && willJump))
-  val inValid = in.valid && waitFlushFinish
+  val waitFlushFinish = RegNext(out.fire && willJump)
+  val inValid = in.valid && !waitFlushFinish
 
   val inBits = in.bits
   val outBits = out.bits
@@ -97,7 +97,7 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
-  val axiCanValid = RegNext(RegNext(!reset.asBool)) && inValid && isMemAcc &&
+  val axiCanValid = inValid && isMemAcc &&
     !inTrap && !eLoadStoreAddressMisaligned
 
   // FSM
