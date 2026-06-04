@@ -85,10 +85,10 @@ class Lsu(
   val eCause = MuxCase(
     0.U,
     Seq(
+      eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
+      eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U,
       eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
       eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
-      eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
-      eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
     )
   )
 
