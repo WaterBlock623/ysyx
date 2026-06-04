@@ -85,10 +85,10 @@ class Lsu(
   val eCause = MuxCase(
     0.U,
     Seq(
-      eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
-      eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U,
       eStoreAccessFault -> McauseEnum.StoreOrAmoAccessFault.U,
       eLoadAccessFault -> McauseEnum.LoadAccessFault.U,
+      eStoreAddressMisaligned -> McauseEnum.StoreOrAmoAddressMisaligned.U,
+      eLoadAddressMisaligned -> McauseEnum.LoadAddressMisaligned.U
     )
   )
 
@@ -127,8 +127,10 @@ class Lsu(
 
   // Handshake
   val isBypass = inValid && !axiCanValid
-  val rValid = ctrl.isLoad && exte.mem.r.valid
-  val bValid = ctrl.isStore && exte.mem.b.valid
+  // val rValid = ctrl.isLoad && exte.mem.r.valid
+  // val bValid = ctrl.isStore && exte.mem.b.valid
+  val rValid = exte.mem.r.valid
+  val bValid = exte.mem.b.valid
   val isMemDone = state === sWaitResp && (rValid || bValid)
 
   out.valid := isBypass || isMemDone
