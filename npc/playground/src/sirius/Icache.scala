@@ -109,7 +109,7 @@ class Icache(
   // Replace sel
   val invalidWayIdx = PriorityEncoderOH(~setValid.asUInt)
   val isAllValid = setValid.asUInt.andR
-  val allValidWayIdx = if (wayIdxWidth != 0) UIntToOH(rand.head(wayIdxWidth)) else 0.U
+  val allValidWayIdx = if (wayIdxWidth != 0) UIntToOH(rand.head(wayIdxWidth)) else 1.U
   val wayMask = Mux(isAllValid, allValidWayIdx, invalidWayIdx)
 
   // FSM
@@ -293,7 +293,7 @@ class SimpleIcache(
   val abortReg = RegInit(false.B)
   val addrReg = RegInit((cfg.pcInit >> offWidth).U((cfg.xlen - offWidth).W))
   val staticNextAddrReg = addrReg + 1.U
-  val nextAddrReg = 
+  val nextAddrReg =
     Mux(io.cached.abort || abortReg, io.cached.newAddr(cfg.xlen - 1, offWidth), staticNextAddrReg)
   val addr = addrReg ## 0.U(offWidth.W)
   val addrLine = addr.asTypeOf(new AddrLine)
@@ -321,6 +321,12 @@ class SimpleIcache(
   }.elsewhen(state =/= sReadCache && io.cached.abort) {
     abortReg := true.B
   }
+
+  // when(io.mem.r.fire && io.mem.r.bits.last) {
+  //   disableOverrideReg := false.B
+  // }.elsewhen((state === sReqMem || (state === sFirstResp && !io.mem.r.fire)) && io.cached.abort) {
+  //   disableOverrideReg := true.B
+  // }
 
   switch(state) {
     is(sReadCache) {
@@ -372,7 +378,7 @@ class SimpleIcache(
     cacheValid := 0.U.asTypeOf(chiselTypeOf(cacheValid))
   }
 
-  io.cached.r.valid := 
+  io.cached.r.valid :=
     ((state === sReadCache) && hit) || ((state === sFirstResp) && io.mem.r.fire && !abortReg)
   io.cached.r.bits.data := Mux(state === sReadCache, hitData, io.mem.r.bits.data)
   when(state =/= sReadCache && io.cached.r.valid) {
