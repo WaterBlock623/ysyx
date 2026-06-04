@@ -1,6 +1,7 @@
 package sirius
 
 import chisel3._
+import chisel3.util._
 
 class Btb(
   indexWidth:  Int,
@@ -35,7 +36,7 @@ class Btb(
   //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
   //   else Reg(Vec(lineNum, UInt(targetWidth.W)))
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
-  val valids = RegInit(VecInit.fill(lineNum)(false.B))
+  // val valids = RegInit(VecInit.fill(lineNum)(false.B))
 
   def significantPc(pc: UInt) = pc >> trivialBits
   def hashTagIndex(pc: UInt) = {
@@ -61,9 +62,17 @@ class Btb(
   // def idx(tagIdx: UInt) = tagIdx(indexWidth - 1, 0)
   // def tag(tagIdx: UInt) = tagIdx(tagIndexWidth - 1, indexWidth)
 
-  // Read
   val readIdx = idx(io.read.pc)
   val readTag = tag(io.read.pc)
+  val writeIdx = idx(io.write.pc)
+  val writeTag = tag(io.write.pc)
+
+  val writeIdxOH = UIntToOH(writeIdx)
+  val valids = Wire(UInt(lineNum.W))
+  val validsReg = RegEnable(writeIdxOH | valids, 0.U(lineNum.W), io.write.update)
+  valids := validsReg
+
+  // Read
   // val readTagIdx = hashTagIndex(io.read.pc)
   // val readIdx = idx(readTagIdx)
   // val readTag = tag(readTagIdx)
@@ -72,13 +81,11 @@ class Btb(
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
   // Write
-  val writeIdx = idx(io.write.pc)
-  val writeTag = tag(io.write.pc)
   // val writeTagIdx = hashTagIndex(io.write.pc)
   // val writeIdx = idx(writeTagIdx)
   // val writeTag = tag(writeTagIdx)
   when(io.write.update) {
-    valids(writeIdx) := true.B
+    // valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
   }
