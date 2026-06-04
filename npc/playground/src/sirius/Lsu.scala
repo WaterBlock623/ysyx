@@ -104,26 +104,45 @@ class Lsu(
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
 
-  state := MuxLookup(state, sIdle)(
-    Seq(
-      sIdle -> Mux(
-        axiCanValid,
-        MuxCase(
-          sIdle,
-          Seq(
-            (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
-            (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
-            (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady,
-            (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
-          )
-        ),
-        sIdle
-      ),
-      sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
-      sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
-      sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
-    )
-  )
+  // state := MuxLookup(state, sIdle)(
+  //   Seq(
+  //     sIdle -> Mux(
+  //       axiCanValid,
+  //       MuxCase(
+  //         sIdle,
+  //         Seq(
+  //           (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
+  //           (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
+  //           (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
+  //           (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
+  //         )
+  //       ),
+  //       sIdle
+  //     ),
+  //     sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
+  //     sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
+  //     sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
+  //   )
+  // )
+  switch(state) {
+    is(sIdle) {
+      when(axiCanValid) {
+        when(exte.mem.ar.ready && ctrl.isLoad) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && ctrl.isStore) {sWaitDataReady}
+        .elsewhen(exte.mem.w.ready && ctrl.isStore) {sWaitAddrReady}
+      }
+    }
+    is(sWaitAddrReady) {
+      state := Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady)
+    }
+    is(sWaitDataReady) {
+      state := Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady)
+    }
+    is(sWaitResp) {
+      state := Mux(out.fire, sIdle, sWaitResp)
+    }
+  }
 
   // Handshake
   val isBypass = inValid && !axiCanValid
