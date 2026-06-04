@@ -157,6 +157,10 @@ class BasicCoreTest extends ModuleWithInitReset {
   io.imem :<>= basicCore.io.axiIfu
   io.dmem :<>= basicCore.io.axiLsu
   io.bpu :<>= basicCore.io.bpu.get
+
+  val trivialBits = if (cfg.hasC) 1 else 2
+  def pcHi(data: UInt): UInt = data.head(cfg.xlen - cfg.predTargetWidth - trivialBits)
+  assume(pcHi(io.bpu.target) === pcHi(io.bpu.pc))
 }
 
 class SiriusSpec extends AnyFlatSpec {

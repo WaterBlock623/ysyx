@@ -86,15 +86,15 @@ class Ifu(
       pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
 
-    exte.bpu.pc := pc
+    val trivialBits = if (cfg.hasC) 1 else 2
+    val sigPc = pc(cfg.xlen - 1 - trivialBits, trivialBits) ## 0.U(trivialBits.W)
+    exte.bpu.pc := sigPc
 
-    outBits.ifuPayload.ifu.pc := pc
+    outBits.ifuPayload.ifu.pc := sigPc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget := 
-      {
-        if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
-        else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2)
-      }
+        (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
+        else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2))
     outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
     outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
@@ -198,11 +198,16 @@ class Ifu(
       pc := pc + Mux(outBits.ifuPayload.ifu.isC, 2.U, 4.U)
     }
 
-    exte.bpu.pc := pc
+    val trivialBits = if (cfg.hasC) 1 else 2
+    val sigPc = pc(cfg.xlen - 1 - trivialBits, trivialBits) ## 0.U(trivialBits.W)
+    exte.bpu.pc := sigPc
 
-    outBits.ifuPayload.ifu.pc := pc
+    outBits.ifuPayload.ifu.pc := sigPc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
-    outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    // outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    outBits.ifuPayload.ifu.predTarget := 
+        (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
+        else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2))
     outBits.ifuPayload.ifu.isC := outBits.ifuPayload.ifu.inst(1, 0) =/= "b11".U
   }
 
@@ -214,18 +219,18 @@ class Ifu(
       val inst = out.bits.ifuPayload.ifu.inst
       assume(
         RVI(inst) ||
-          RVZifencei(inst) ||
-          {
-            val allowCsr = Set(
-              // CsrAddr.mcycle,
-              // CsrAddr.mcycleh,
-              CsrAddr.mepc,
-              // CsrAddr.mstatus,
-              CsrAddr.mtvec
-            )
-            RVZicsr(inst) && allowCsr.map(_ === inst(31, 20)).reduce(_ || _)
-          } ||
-          RVC(inst)
+        RVZifencei(inst) ||
+        {
+          val allowCsr = Set(
+            // CsrAddr.mcycle,
+            // CsrAddr.mcycleh,
+            CsrAddr.mepc,
+            // CsrAddr.mstatus,
+            CsrAddr.mtvec
+          )
+          RVZicsr(inst) && allowCsr.map(_ === inst(31, 20)).reduce(_ || _)
+        } ||
+        RVC(inst)
       )
     }
   }
