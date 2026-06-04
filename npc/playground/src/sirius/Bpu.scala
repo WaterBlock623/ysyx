@@ -78,11 +78,9 @@ class Btb(
   // val writeIdx = idx(writeTagIdx)
   // val writeTag = tag(writeTagIdx)
   when(io.write.update) {
+    valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
-  }
-  when(io.write.update) {
-    valids(writeIdx) := true.B
   }
 }
 
