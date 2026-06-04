@@ -111,10 +111,10 @@ class Lsu(
         MuxCase(
           sIdle,
           Seq(
-            (exte.mem.ar.ready) -> sWaitResp,
-            (exte.mem.aw.ready && exte.mem.w.ready) -> sWaitResp,
-            (exte.mem.aw.ready) -> sWaitDataReady,
-            (exte.mem.w.ready) -> sWaitAddrReady
+            (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
+            (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
+            (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
+            (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
           )
         ),
         sIdle
