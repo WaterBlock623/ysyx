@@ -18,6 +18,8 @@ ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
   $(error NEMU_HOME=$(NEMU_HOME) is not a NEMU repo)
 endif
 
+include $(NEMU_HOME)/scripts/init.mk
+
 CFG_DIR ?= $(shell pwd)
 BUILD_DIR ?= $(NEMU_HOME)/build
 
@@ -29,6 +31,12 @@ LIBS += $(ADD_LIBS)
 # -include $(NEMU_HOME)/include/config/auto.conf.cmd
 -include $(CFG_DIR)/include/config/auto.conf
 -include $(CFG_DIR)/include/config/auto.conf.cmd
+MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.conf.cmd
+
+ifeq ($(filter %defconfig,$(MAKECMDGOALS)),)
+$(MK_INCLUDE):
+	make -C $(NEMU_HOME) riscv32-am_defconfig
+endif
 
 remove_quote = $(patsubst "%",%,$(1))
 

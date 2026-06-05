@@ -25,9 +25,11 @@ object Elaborate extends App {
   val workspacePath = os.Path(rootStr)
   val cfg =
     CoreConfig(
-      rvOpCodesPath = workspacePath / "rvdecoderdb" / "riscv-opcodes",
+      rvOpCodesPath = workspacePath / "riscv-opcodes",
       isDebug = argMap.getOrElse("debug", "true").toBoolean,
       ysyxsoc = argMap.getOrElse("ysyxsoc", "false").toBoolean,
+      iverilog = argMap.getOrElse("iverilog", "false").toBoolean,
+      modulePrefix = argMap.get("prefix"),
       perf = argMap.getOrElse("perf", "false").toBoolean,
       pcInit =
         BigInt(argMap.getOrElse("pc-init", "0x30000000").stripPrefix("0x"), 16)
@@ -41,4 +43,15 @@ object Elaborate extends App {
     } else { Array("--help") },
     firtoolOptions
   )
+
+  // iverilog
+  if (cfg.iverilog) {
+    circt.stage.ChiselStage.emitSystemVerilogFile(
+      new sirius.AxiSimDevice()(cfg),
+      if (argMap.contains("iverilog-dir")) {
+        Array("--target-dir", argMap("iverilog-dir"))
+      } else { Array("--help") },
+      firtoolOptions
+    )
+  }
 }

@@ -8,12 +8,15 @@ import org.chipsalliance.rvdecoderdb
 
 case class CoreConfig(
   // Debug
-  val isDebug: Boolean = true,
-  val perf:    Boolean = true,
-  val ysyxsoc: Boolean = true,
+  val isDebug:      Boolean = true,
+  val perf:         Boolean = true,
+  val ysyxsoc:      Boolean = true,
+  val iverilog:     Boolean = false,
+  val formal:       Boolean = false,
+  val modulePrefix: Option[String] = None,
 
   // rvdecoderdb
-  val rvOpCodesPath:     os.Path = os.pwd / "rvdecoderdb" / "riscv-opcodes",
+  val rvOpCodesPath:     os.Path = os.pwd / "riscv-opcodes",
   val curtomOpCodesPath: Iterable[os.Path] = None,
   val OpCodesFilter:     (Iterable[rvdecoderdb.Instruction]) => Iterable[
     rvdecoderdb.Instruction
@@ -33,7 +36,7 @@ case class CoreConfig(
   val memoryAddrWidth:     Int = 32,
   val pcInit:              BigInt = 0x30000000,
   val pipeline:            Boolean = true,
-  val formal:              Boolean = false,
+  val predTargetWidth:     Int = 7,
 
   // CsrID
   val mvendorid: Int = 0x79737978,
@@ -42,6 +45,8 @@ case class CoreConfig(
   val mxlen:       Int = xlen
   val registerNum: Int = 1 << registerAddrWidth
   require(memoryAddrWidth <= 32)
+
+  def hasC: Boolean = extensions().contains(ExtTypeEnum.C)
 
   // 根据配置映射解码Pattern和Field
   def fieldMap: CfgMap[

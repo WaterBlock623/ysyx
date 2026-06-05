@@ -27,12 +27,34 @@ class Ifu(
 
   if (!cfg.formal) {
     // icache
+    // val icache = Module(
+    //   new Icache(
+    //     setNum = 4,
+    //     wayNum = 1,
+    //     wayByte = 8,
+    //     busByte = 4,
+    //     if (cfg.ysyxsoc) {
+    //       Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
+    //     } else { None }
+    //   )
+    // )
+    // exte.mem :<>= icache.io.mem
+    // val cached = icache.io.cached
+    // cached.fencei := exte.fencei
+    // cached.abort := flush
+    // cached.ar.valid := true.B
+    // val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    // when(flush) {
+    //   ifetchAddr := flushTarget
+    // }.elsewhen(cached.ar.fire) {
+    //   ifetchAddr := ifetchAddr + 4.U
+    // }
+    // cached.ar.bits.addr := ifetchAddr
+
+    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
     val icache = Module(
-      new Icache(
-        setNum = 1,
-        wayNum = 8,
-        wayByte = 16,
-        busByte = 4,
+      new SimpleIcache(
+        setNum = 4,
         if (cfg.ysyxsoc) {
           Some(BigInt("a0000000", 16) until BigInt("c0000000", 16))
         } else { None }
@@ -42,143 +64,148 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.ar.valid := true.B
-    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    when(flush) {
-      ifetchAddr := flushTarget
-    }.elsewhen(cached.ar.fire) {
-      ifetchAddr := ifetchAddr + 4.U
-    }
-    cached.ar.bits.addr := ifetchAddr
+    cached.newAddr := Mux(cached.abort, flushTarget, pc)
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
     iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
-
-    def pipelineConnect[T <: Data](
-      prevOut: DecoupledIO[T],
-      thisIn:  DecoupledIO[T],
-      stall:   Bool = false.B,
-      flush:   Bool = false.B
-    ) = {
-      val thisInReady = thisIn.ready || !thisIn.valid
-      val valid = RegInit(false.B)
-      when(thisInReady) {
-        valid := prevOut.valid && !stall
-      }
-      when(flush) {
-        valid := false.B
-      }
-
-      prevOut.ready := thisInReady && !stall
-      thisIn.valid := valid
-      thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-    }
+    // PipelineConnect(cached.r.map(_.data), iqueue.io.enq, flush = flush)
 
     // val iqueueDeq = Wire(Flipped(chiselTypeOf(iqueue.io.deq)))
     // pipelineConnect(iqueue.io.deq, iqueueDeq, flush = flush)
     val iqueueDeq = iqueue.io.deq
-
     out.valid := iqueueDeq.valid
     iqueueDeq.ready := out.ready
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+
     when(flush) {
       pc := flushTarget
     }.elsewhen(out.fire) {
       pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
     }
-    exte.bpu.pc := pc
 
-    outBits.ifuPayload.ifu.pc := pc
+    val trivialBits = if (cfg.hasC) 1 else 2
+    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
+    exte.bpu.pc := sigPc
+
+    outBits.ifuPayload.ifu.pc := sigPc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
-    outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    outBits.ifuPayload.ifu.predTarget :=
+        (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
+        else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2))
     outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst
     outBits.ifuPayload.ifu.isC := iqueueDeq.bits.isC
 
     if (cfg.perf) {
+      // val icacheState = BoringUtils.tapAndRead(icache.state)
+      // val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      // val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
+      // val icacheSReadCache = 0.U
+      // val icacheSReq = 1.U
+      // val icacheSFirstResp = 2.U
+      // val icacheSFillCache = 3.U
+      // val icacheSWait = 4.U
+      // PerfWhen(
+      //   "icacheTotalAcc",
+      //   icache.io.cached.ar.fire,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheMiss",
+      //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheHit",
+      //   icache.io.cached.ar.valid && icacheState === icacheSReadCache && (icacheNextState === icacheSReadCache || icacheNextState === icacheSWait),
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheBlackList",
+      //   icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+      //   exte.debugEbreak
+      // )
+      // PerfWhen(
+      //   "icacheMissPenalty",
+      //   icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
+      //   exte.debugEbreak
+      // )
+
+
       val icacheState = BoringUtils.tapAndRead(icache.state)
-      val icacheNextState = BoringUtils.tapAndRead(icache.nextState)
+      val icacheLastState = RegNext(icacheState)
       val icacheInWhiteList = BoringUtils.tapAndRead(icache.inWhiteList)
       val icacheSReadCache = 0.U
-      val icacheSReq = 1.U
+      val icacheSReqMem = 1.U
       val icacheSFirstResp = 2.U
       val icacheSFillCache = 3.U
-      val icacheSWait = 4.U
       PerfWhen(
         "icacheTotalAcc",
-        icache.io.cached.ar.fire,
+        RegNext(icache.io.cached.r.ready && !icache.io.cached.abort) && (icacheLastState === icacheSReadCache),
         exte.debugEbreak
       )
       PerfWhen(
         "icacheMiss",
-        icacheState === icacheSReadCache && icacheNextState === icacheSReq && icacheInWhiteList,
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && icacheInWhiteList,
         exte.debugEbreak
       )
       PerfWhen(
         "icacheHit",
-        icache.io.cached.ar.valid && icacheState === icacheSReadCache && (icacheNextState === icacheSReadCache || icacheNextState === icacheSWait),
+        RegNext(icache.io.cached.r.ready && !icache.io.cached.abort) && icacheLastState === icacheSReadCache && icacheState === icacheSReadCache,
         exte.debugEbreak
       )
       PerfWhen(
         "icacheBlackList",
-        icacheState === icacheSReadCache && icacheNextState === icacheSReq && !icacheInWhiteList,
+        icacheLastState === icacheSReadCache && icacheState === icacheSReqMem && !icacheInWhiteList,
         exte.debugEbreak
       )
       PerfWhen(
         "icacheMissPenalty",
-        icacheInWhiteList && (icacheState =/= icacheSReadCache) && (icacheState =/= icacheSWait),
+        icacheInWhiteList && (icacheState =/= icacheSReadCache),
         exte.debugEbreak
       )
       PerfWhen(
-        "instFetch",
+        "icacheOutput",
         icache.io.cached.r.fire,
         exte.debugEbreak
       )
     }
   } else {
-    val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
-    exte.bpu.pc := ifetchAddr
-    when(exte.flush) {
-      ifetchAddr := exte.jumpTarget
-    }.elsewhen(exte.mem.ar.fire) {
-      ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
-    }
+    // val ifetchAddr = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    // when(exte.flush) {
+    //   ifetchAddr := exte.jumpTarget
+    // }.elsewhen(exte.mem.ar.fire) {
+    //   ifetchAddr := Mux(exte.bpu.taken, exte.bpu.target, ifetchAddr + 4.U)
+    // }
 
     exte.mem :<= 0.U.asTypeOf(chiselTypeOf(exte.mem))
     exte.mem.ar.valid := true.B
-    exte.mem.ar.bits.addr := ifetchAddr
+    // exte.mem.ar.bits.addr := ifetchAddr
+    exte.mem.ar.bits.addr := DontCare
     exte.mem.ar.bits.size := "b010".U
     exte.mem.ar.bits.burst := Axi4Burst.incr.U
     exte.mem.r.ready := out.ready
 
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
-
-    val metaQueue = Module(
-      new Queue(
-        new Bundle {
-          val pc = UInt(cfg.xlen.W)
-          val predTaken = Bool()
-          val predTarget = UInt(cfg.xlen.W)
-        },
-        32,
-        true,
-        true
-      )
-    )
-    metaQueue.io.enq.valid := exte.mem.ar.fire
-    when(exte.mem.ar.fire) {
-      assert(metaQueue.io.enq.ready)
+  
+    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    when(flush) {
+      pc := flushTarget
+    }.elsewhen(out.fire) {
+      pc := pc + Mux(outBits.ifuPayload.ifu.isC, 2.U, 4.U)
     }
-    metaQueue.io.enq.bits.pc := exte.mem.ar.bits.addr
-    metaQueue.io.enq.bits.predTaken := exte.bpu.taken
-    metaQueue.io.enq.bits.predTarget := exte.bpu.target
 
-    outBits.ifuPayload.ifu.pc := metaQueue.io.deq.bits.pc
-    outBits.ifuPayload.ifu.predTaken := metaQueue.io.deq.bits.predTaken
-    outBits.ifuPayload.ifu.predTarget := metaQueue.io.deq.bits.predTarget
-    metaQueue.io.deq.ready := exte.mem.r.fire
+    val trivialBits = if (cfg.hasC) 1 else 2
+    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
+    exte.bpu.pc := sigPc
+
+    outBits.ifuPayload.ifu.pc := sigPc
+    outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
+    // outBits.ifuPayload.ifu.predTarget := exte.bpu.target
+    outBits.ifuPayload.ifu.predTarget := 
+        (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
+        else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2))
     outBits.ifuPayload.ifu.isC := outBits.ifuPayload.ifu.inst(1, 0) =/= "b11".U
   }
 
@@ -190,17 +217,18 @@ class Ifu(
       val inst = out.bits.ifuPayload.ifu.inst
       assume(
         RVI(inst) ||
-          RVZifencei(inst) ||
-          {
-            val allowCsr = Set(
-              CsrAddr.mcycle,
-              CsrAddr.mcycleh,
-              CsrAddr.mepc,
-              // CsrAddr.mstatus,
-              CsrAddr.mtvec
-            )
-            RVZicsr(inst) && allowCsr.map(_.U === inst(31, 20)).reduce(_ || _)
-          }
+        RVZifencei(inst) ||
+        {
+          val allowCsr = Set(
+            // CsrAddr.mcycle,
+            // CsrAddr.mcycleh,
+            CsrAddr.mepc,
+            // CsrAddr.mstatus,
+            CsrAddr.mtvec
+          )
+          RVZicsr(inst) && allowCsr.map(_ === inst(31, 20)).reduce(_ || _)
+        } ||
+        RVC(inst)
       )
     }
   }

@@ -262,7 +262,8 @@ int isa_exec_once(Decode *s) {
   }
   s->isa.inst = npc_inst.inst;
   bool is_c = (s->isa.inst & 3u) != 3u;
-  s->snpc = s->pc + (is_c ? 2 : 4);
+  // s->snpc = s->pc + (is_c ? 2 : 4);
+  s->snpc = npc_pc + (is_c ? 2 : 4);
   s->dnpc = npc_is_jump ? npc_jump_target : s->snpc;
 #ifdef CONFIG_ITRACE
   if (g_print_step) {

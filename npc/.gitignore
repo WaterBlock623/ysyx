@@ -14,13 +14,18 @@
 !*.nxdc
 !*.py
 !*.txt
+!**/configs/_defconfig
+!Kconfig
+!iverilog/*.sv
 build/
 **/include/config/
 **/include/generated/
+sbt/
 
 # mill
 !*.mill
 !.mill-version
+!/mill
 out/
 .bsp/
 .idea/

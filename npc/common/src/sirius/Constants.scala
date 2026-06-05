@@ -48,7 +48,27 @@ object LoadStoreLengthEnum extends ChiselEnum {
 }
 
 object CsrEnum extends ChiselEnum {
-  val mcycle, mcycleh, mvendorid, marchid = Value
+  val mvendorid, marchid, mtvec, mepc, mcause, mstatus = Value
+}
+
+object CsrAddr {
+  val mvendorid = "hF11".U
+  val marchid = "hF12".U
+  val mtvec = "h305".U
+  val mepc = "h341".U
+  val mcause = "h342".U
+  val mstatus = "h300".U
+  // val mcycle = "hB00".U
+  // val mcycleh = "hB80".U
+
+  def getAllMap: Seq[(UInt, CsrEnum.Type)] = Seq(
+    mvendorid -> CsrEnum.mvendorid,
+    marchid -> CsrEnum.marchid,
+    mtvec -> CsrEnum.mtvec,
+    mepc -> CsrEnum.mepc,
+    mcause -> CsrEnum.mcause,
+    mstatus -> CsrEnum.mstatus
+  )
 }
 
 object CsrWOpCode extends ChiselEnum {

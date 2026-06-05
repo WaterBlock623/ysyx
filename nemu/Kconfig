@@ -153,6 +153,10 @@ config DEBUGER_GDB
   bool "GDB"
 endchoice
 
+config TAKE_RUN_AS_RUNBATCH
+  bool "Take run as runbatch"
+  default n
+
 config SIM_SOC
   depends on !NPC
   bool "Make nemu be like soc"

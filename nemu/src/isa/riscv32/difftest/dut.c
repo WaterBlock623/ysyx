@@ -47,6 +47,10 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
       is_pass = false;
     }
   }
+
+  if (!is_pass) {
+    printf("FAIL @" FMT_WORD "\n", pc);
+  }
   
   return is_pass;
 }

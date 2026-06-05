@@ -90,7 +90,7 @@ CFLAGS   += -O3 -MMD -Wall -Werror -nostdlib -nostartfiles $(INCFLAGS) \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 # CFLAGS += -O0
 # CFLAGS += -Os
-CFLAGS += -save-temps
+# CFLAGS += -save-temps
 CFLAGS += -ggdb3
 ifeq ($(ENA_LTO),y)
 CFLAGS += -flto

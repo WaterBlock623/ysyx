@@ -28,6 +28,7 @@ class Btb(
 
   val tags = Reg(Vec(lineNum, UInt(tagWidth.W)))
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
+  val valids = RegInit(VecInit.fill(lineNum)(false.B))
 
   def significantPc(pc: UInt) = pc >> trivialBits
   def hashTagIndex(pc: UInt) = {
@@ -40,7 +41,7 @@ class Btb(
   // Read
   val readIdx = idx(io.read.pc)
   val readTag = tag(io.read.pc)
-  io.read.hit := tags(readIdx) === readTag
+  io.read.hit := tags(readIdx) === readTag && valids(readIdx)
   val pcHi = io.read.pc.head(io.read.pc.getWidth - targetWidth - trivialBits)
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
@@ -48,6 +49,7 @@ class Btb(
   val writeIdx = idx(io.write.pc)
   val writeTag = tag(io.write.pc)
   when(io.write.update) {
+    valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
   }
@@ -72,7 +74,7 @@ class Pht(
   })
 
   val cntNum = 1 << indexWidth
-  val cnts = Reg(Vec(cntNum, UInt(2.W)))
+  val cnts = RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
 
   def significantPc(pc: UInt): UInt = if (cfg.extensions().contains(ExtTypeEnum.C)) { pc >> 1 }
   else { pc >> 2 }

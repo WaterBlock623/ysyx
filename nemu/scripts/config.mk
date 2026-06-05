@@ -21,7 +21,7 @@ $(warning $(COLOR_RED)Warning: .config does not exist!$(COLOR_END))
 $(warning $(COLOR_RED)To build the project, first run 'make menuconfig'.$(COLOR_END))
 endif
 
-Q            := @
+# Q            := @
 KCONFIG_PATH := $(NEMU_HOME)/tools/kconfig
 FIXDEP_PATH  := $(NEMU_HOME)/tools/fixdep
 Kconfig      := $(NEMU_HOME)/Kconfig

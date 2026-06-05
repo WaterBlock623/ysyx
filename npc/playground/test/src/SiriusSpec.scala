@@ -144,7 +144,7 @@ class BasicCoreTest extends ModuleWithInitReset {
   AxiSlaveConstraint(io.imem)
   AxiSlaveConstraint(io.dmem)
   val workSpaceRoot = os.Path(sys.env("WORKSPACE_ROOT_DIR"))
-  val rvOpCodesPath = workSpaceRoot / "rvdecoderdb" / "riscv-opcodes"
+  val rvOpCodesPath = workSpaceRoot / "riscv-opcodes"
   val cfg = CoreConfig.default.copy(
     isDebug = false,
     perf = false,
@@ -157,6 +157,10 @@ class BasicCoreTest extends ModuleWithInitReset {
   io.imem :<>= basicCore.io.axiIfu
   io.dmem :<>= basicCore.io.axiLsu
   io.bpu :<>= basicCore.io.bpu.get
+
+  val trivialBits = if (cfg.hasC) 1 else 2
+  def pcHi(data: UInt): UInt = data.head(cfg.xlen - cfg.predTargetWidth - trivialBits)
+  assume(pcHi(io.bpu.target) === pcHi(io.bpu.pc))
 }
 
 class SiriusSpec extends AnyFlatSpec {

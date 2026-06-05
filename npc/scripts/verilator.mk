@@ -54,7 +54,8 @@ CC = $(call remove_quote,$(CONFIG_CC))
 endif
 
 
-CFLAGS_BUILD += -Wall -Werror -Wno-error=stringop-overread
+CFLAGS_BUILD += -Wall -Werror 
+CFLAGS_BUILD += -Wno-error=stringop-overread -Wno-nonnull-compare -Wno-error=stringop-overflow
 CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-O0 -ggdb3,)
@@ -62,22 +63,17 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG_ONLY_G),-g,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_UBSAN),-fsanitize=undefined,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_LKSAN),-fsanitize=leak,)
-# CFLAGS_BUILD += -fprofile-dir=$(BUILD_DIR)/../profile/ \
-# 								-Wno-error=coverage-mismatch -Wno-error=missing-profile
-# PROFILE_DATA = $(wildcard *.gcda)
-# ifeq ($(PROFILE_DATA),)
-#     CFLAGS_BUILD += -fprofile-generate
-#     $(info Profiling generation enabled)
-# else
-#     CFLAGS_BUILD += -fprofile-use -fprofile-correction
-#     $(info Optimization with Profile-use enabled)
-# endif
 
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS_TRACE += -DDTRACE_COND=$(if $(CONFIG_DTRACE_COND),$(call remove_quote,$(CONFIG_DTRACE_COND)),true)
 CFLAGS_TRACE += -DMTRACE_COND=$(if $(CONFIG_MTRACE_COND),$(call remove_quote,$(CONFIG_MTRACE_COND)),true)
 CFLAGS_TRACE += -DFTRACE_COND=$(if $(CONFIG_FTRACE_COND),$(call remove_quote,$(CONFIG_FTRACE_COND)),true)
 CXXFLAGS += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
+
+# NVBOARD
+ifeq ($(CONFIG_NVBOARD),y)
+CXXFLAGS += -Wno-error=unused-variable -Wno-error=delete-non-virtual-dtor -Wno-error=sign-compare
+endif
 
 INC_PATH := $(NPC_HOME)/csrc/$(GUEST_ISA)/include \
 						$(CFG_DIR)/include $(NEMU_HOME)/include \
@@ -95,11 +91,14 @@ CXXFLAGS += $(INCFLAGS) \
 
 NEMU_MAKE_FLAGS += CFG_DIR="$(CFG_DIR)" \
 									 ADD_ARCHIVES="$(ARCHIVES)" \
-									 ADD_LIBS="-lz $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
+									 ADD_LIBS=" \
+									   -lz \
+									   $(if $(CONFIG_NPC_WAVE),-llz4,) \
+									   $(if $(CONFIG_NVBOARD),$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf),)"
 
 make_ysyxsoc:
 ifneq ($(findstring ysyxsoc,$(ARCH)),) # ysyxsoc
-	$(MAKE) -C $(YSYXSOC_DIR) verilog
+	-$(MAKE) -C $(YSYXSOC_DIR) verilog
 endif
 
 lint:

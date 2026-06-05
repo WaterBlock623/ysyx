@@ -35,12 +35,21 @@ class ImmParser(
   val immTypeCLWSP = ZeroExt(inst(3, 2) ## inst(12) ## inst(6, 4) ## 0.U(2.W), cfg.xlen)
   val immTypeCSWSP = ZeroExt(inst(8, 7) ## inst(12, 9) ## 0.U(2.W), cfg.xlen)
   val immTypeCLSW = ZeroExt(inst(5) ## inst(12, 10) ## inst(6) ## 0.U(2.W), cfg.xlen)
-  val immTypeCJ = SignExt(inst(12) ## inst(8) ## inst(10, 9) ## inst(6) ## inst(7) ## inst(2) ## inst(11) ## inst(5, 3) ## 0.U(1.W), cfg.xlen)
-  val immTypeCB = SignExt(inst(12) ## inst(6, 5) ## inst(2) ## inst(11, 10) ## inst(4, 3) ## 0.U(1.W), cfg.xlen)
+  val immTypeCJ = SignExt(
+    inst(12) ## inst(8) ## inst(10, 9) ## inst(6) ## inst(7) ## inst(2) ## inst(11) ## inst(
+      5,
+      3
+    ) ## 0.U(1.W),
+    cfg.xlen
+  )
+  val immTypeCB =
+    SignExt(inst(12) ## inst(6, 5) ## inst(2) ## inst(11, 10) ## inst(4, 3) ## 0.U(1.W), cfg.xlen)
   val immTypeCLIADDI = SignExt(inst(12) ## inst(6, 2), cfg.xlen)
   val immTypeCLUI = SignExt(inst(12) ## inst(6, 2) ## 0.U(12.W), cfg.xlen)
-  val immTypeCADDI16SP = SignExt(inst(12) ## inst(4, 3) ## inst(5) ## inst(2) ## inst(6) ## 0.U(4.W), cfg.xlen)
-  val immTypeCADDI4SPN = ZeroExt(inst(10, 7) ## inst(12, 11) ## inst(5) ## inst(6) ## 0.U(2.W), cfg.xlen)
+  val immTypeCADDI16SP =
+    SignExt(inst(12) ## inst(4, 3) ## inst(5) ## inst(2) ## inst(6) ## 0.U(4.W), cfg.xlen)
+  val immTypeCADDI4SPN =
+    ZeroExt(inst(10, 7) ## inst(12, 11) ## inst(5) ## inst(6) ## 0.U(2.W), cfg.xlen)
 
   io.imm := MuxLookup(io.instType, immTypeI)(
     Seq(
@@ -58,7 +67,7 @@ class ImmParser(
       InstTypeEnum.CLIADDI.asUInt -> immTypeCLIADDI,
       InstTypeEnum.CLUI.asUInt -> immTypeCLUI,
       InstTypeEnum.CADDI16SP.asUInt -> immTypeCADDI16SP,
-      InstTypeEnum.CADDI4SPN.asUInt -> immTypeCADDI4SPN,
+      InstTypeEnum.CADDI4SPN.asUInt -> immTypeCADDI4SPN
     )
   )
 }
@@ -151,7 +160,7 @@ class Idu(
       RegAddrSelEnum.rs.asUInt -> rs1,
       RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
       RegAddrSelEnum.rd.asUInt -> rd,
-      RegAddrSelEnum.x2.asUInt -> 2.U,
+      RegAddrSelEnum.x2.asUInt -> 2.U
     )
   )
   outBits.iduPayload.idu.rs1Data := exte.regFile.rData(0)
@@ -162,7 +171,7 @@ class Idu(
       RegAddrSelEnum.rs.asUInt -> rs2,
       RegAddrSelEnum.crs2.asUInt -> crs2,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
-      RegAddrSelEnum.x0.asUInt -> 0.U,
+      RegAddrSelEnum.x0.asUInt -> 0.U
     )
   )
   outBits.iduPayload.idu.rs2Data := exte.regFile.rData(1)
@@ -174,7 +183,7 @@ class Idu(
       RegAddrSelEnum.crdrs1p.asUInt -> crdrs1p,
       RegAddrSelEnum.crdrs2p.asUInt -> crdrs2p,
       RegAddrSelEnum.x1.asUInt -> 1.U,
-      RegAddrSelEnum.x2.asUInt -> 2.U,
+      RegAddrSelEnum.x2.asUInt -> 2.U
     )
   )
 
@@ -188,20 +197,8 @@ class Idu(
   immParser.io.inst := inst
   immParser.io.instType := ctrl.id.instType
   outBits.iduPayload.idu.imm := immParser.io.imm
+  outBits.iduPayload.idu.immNotZero := immParser.io.imm.orR
 
-  // csr
-  outBits.iduPayload.idu.csrAddr := inst(31, 20)
-
-  // InstTypeEnum.allWithNames.foreach { case (typ, name) =>
-  //   PerfWhen(
-  //     "type" + name,
-  //     (ctrl.id.instType === typ.asUInt) && out.fire,
-  //     exte.debugEbreak
-  //   )
-  //   PerfWhen(
-  //     "type" + name + "Cyc",
-  //     (ctrl.id.instType === typ.asUInt) && in.valid,
-  //     exte.debugEbreak
-  //   )
-  // }
+  // csr encode
+  outBits.iduPayload.idu.csrAddr := MuxLookup(inst(31, 20), CsrEnum.all.head)(CsrAddr.getAllMap)
 }

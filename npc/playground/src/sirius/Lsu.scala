@@ -21,7 +21,7 @@ class Lsu(
   val out = IO(Decoupled(new LsuToWbuIO))
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
-  val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
+  val waitFlushFinish = RegNext(out.fire && willJump)
   val inValid = in.valid && !waitFlushFinish
 
   val inBits = in.bits
@@ -42,12 +42,12 @@ class Lsu(
     inBits.ctrl.wbuCtrl.isJump || (inBits.ctrl.wbuCtrl.isBranch && inBits.exuPayload.exu.aluOut(0))
   val realTarget = inBits.exuPayload.exu.jumpTarget
   val predDirectionErr = inBits.exuPayload.ifu.predTaken =/= realTaken
-  val predTargetErr = realTaken && (inBits.exuPayload.ifu.predTarget =/= realTarget)
+  val predTargetErr = realTaken && inBits.exuPayload.exu.predTargetMayErr
   val predErr = predDirectionErr || predTargetErr
-  val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
-  // val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
+  // val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
+  val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
-  val newIn = inValid && (RegNext(!inValid || in.fire))
+  val newIn = inValid && (RegNext(!inValid) || RegNext(in.fire))
   exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcache)
   exte.pcReg.target := dynamicNextPc
   if (cfg.isDebug) {
@@ -73,10 +73,12 @@ class Lsu(
       (ctrl.loadStoreLength === LoadStoreLengthEnum.w.asUInt && rem =/= 0.U))
   val eLoadAddressMisaligned = ctrl.isLoad && eLoadStoreAddressMisaligned
   val eStoreAddressMisaligned = ctrl.isStore && eLoadStoreAddressMisaligned
-  val eLoadAccessFault = ctrl.isLoad &&
-    !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
-  val eStoreAccessFault = ctrl.isStore &&
-    !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+  // val eLoadAccessFault = ctrl.isLoad &&
+  //   !(exte.mem.r.bits.resp === Axi4Resp.okay.U || exte.mem.r.bits.resp === Axi4Resp.exokay.U)
+  // val eStoreAccessFault = ctrl.isStore &&
+  //   !(exte.mem.b.bits.resp === Axi4Resp.okay.U || exte.mem.b.bits.resp === Axi4Resp.exokay.U)
+  val eLoadAccessFault = ctrl.isLoad && (exte.mem.r.bits.resp =/= Axi4Resp.okay.U)
+  val eStoreAccessFault = ctrl.isStore && (exte.mem.b.bits.resp =/= Axi4Resp.okay.U)
 
   val eCause = MuxCase(
     0.U,
@@ -93,38 +95,59 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
-  val axiCanValid = RegNext(RegNext(!reset.asBool)) && inValid && isMemAcc &&
+  val axiCanValid = inValid && isMemAcc &&
     !inTrap && !eLoadStoreAddressMisaligned
 
   // FSM
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
 
-  state := MuxLookup(state, sIdle)(
-    Seq(
-      sIdle -> Mux(
-        axiCanValid,
-        MuxCase(
-          sIdle,
-          Seq(
-            (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
-            (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
-            (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
-            (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
-          )
-        ),
-        sIdle
-      ),
-      sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
-      sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
-      sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
-    )
-  )
+  // state := MuxLookup(state, sIdle)(
+  //   Seq(
+  //     sIdle -> Mux(
+  //       axiCanValid,
+  //       MuxCase(
+  //         sIdle,
+  //         Seq(
+  //           (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
+  //           (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
+  //           (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
+  //           (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
+  //         )
+  //       ),
+  //       sIdle
+  //     ),
+  //     sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
+  //     sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
+  //     sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
+  //   )
+  // )
+  switch(state) {
+    is(sIdle) {
+      when(axiCanValid) {
+        when(exte.mem.ar.ready && ctrl.isLoad) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && ctrl.isStore) {sWaitDataReady}
+        .elsewhen(exte.mem.w.ready && ctrl.isStore) {sWaitAddrReady}
+      }
+    }
+    is(sWaitAddrReady) {
+      when(exte.mem.aw.ready) {state := sWaitResp}
+    }
+    is(sWaitDataReady) {
+      when(exte.mem.w.ready) {state := sWaitResp}
+    }
+    is(sWaitResp) {
+      when(out.fire) {state := sIdle}
+    }
+  }
 
   // Handshake
   val isBypass = inValid && !axiCanValid
-  val rValid = ctrl.isLoad && exte.mem.r.valid
-  val bValid = ctrl.isStore && exte.mem.b.valid
+  // val rValid = ctrl.isLoad && exte.mem.r.valid
+  // val bValid = ctrl.isStore && exte.mem.b.valid
+  val rValid = exte.mem.r.valid
+  val bValid = exte.mem.b.valid
   val isMemDone = state === sWaitResp && (rValid || bValid)
 
   out.valid := isBypass || isMemDone
@@ -155,24 +178,20 @@ class Lsu(
   exte.mem.aw.bits.size := axSize
 
   // Load data
-  val byteData = rData.asTypeOf(Vec(cfg.xlen >> 3, UInt(8.W)))
-  val lbu = byteData(rem)
-  val lbData = Mux(
-    ctrl.isUnsignedLoad,
-    0.U((cfg.xlen - 8).W),
-    Fill(cfg.xlen - 8, lbu(7))
-  ) ## lbu
+  val lbRaw = MuxLookup(rem, rData(7, 0))(Seq(
+    0.U -> rData(7, 0),
+    1.U -> rData(15, 8),
+    2.U -> rData(23, 16),
+    3.U -> rData(31, 24)
+  ))
+  val lbData = Mux(ctrl.isUnsignedLoad, ZeroExt(lbRaw, cfg.xlen), SignExt(lbRaw, cfg.xlen))
 
-  val lhu = Mux(rem(1), rData(31, 16), rData(15, 0))
-  val lhData = Mux(
-    ctrl.isUnsignedLoad,
-    0.U((cfg.xlen - 16).W),
-    Fill(cfg.xlen - 16, lhu(15))
-  ) ## lhu
+  val lhRaw = Mux(rem(1), rData(31, 16), rData(15, 0))
+  val lhData = Mux(ctrl.isUnsignedLoad, ZeroExt(lhRaw, cfg.xlen), SignExt(lhRaw, cfg.xlen))
 
   val lwData = rData
 
-  outBits.lsuPayload.lsu.loadData := MuxLookup(ctrl.loadStoreLength, lwData)(
+  val loadData = MuxLookup(ctrl.loadStoreLength, lwData)(
     Seq(
       LoadStoreLengthEnum.w.asUInt -> lwData,
       LoadStoreLengthEnum.h.asUInt -> lhData,
@@ -182,8 +201,13 @@ class Lsu(
 
   // Store data
   val regData = inBits.exuPayload.idu.rs2Data
-  val sb = (regData(7, 0) << (rem * 8.U)).pad(cfg.xlen)
-  val sh = (regData(15, 0) << (rem(1) * 16.U)).pad(cfg.xlen)
+  val sb = MuxLookup(rem, regData(7, 0))(Seq(
+    0.U -> regData(7, 0),
+    1.U -> regData(7, 0) ## 0.U(8.W),
+    2.U -> regData(7, 0) ## 0.U(16.W),
+    3.U -> regData(7, 0) ## 0.U(24.W),
+  )).pad(cfg.xlen)
+  val sh = Mux(rem(1), regData(15, 0) ## 0.U(16.W), regData(15, 0)).pad(cfg.xlen)
   val sw = regData(31, 0).pad(cfg.xlen)
 
   exte.mem.w.bits.data := MuxLookup(ctrl.loadStoreLength, sw)(
@@ -206,13 +230,15 @@ class Lsu(
     )
   )
 
+  // Output
+  outBits.lsuPayload.lsu.regWData := 
+    MuxLookup(inBits.ctrl.wbuCtrl.writeBackSel, inBits.exuPayload.exu.aluOut)(Seq(
+      WriteBackSelEnum.lsu.asUInt -> loadData,
+      WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc
+    ))
+
   // Debug
   if (cfg.formal) {
-    when(realTaken) {
-      if (cfg.extensions().contains(ExtTypeEnum.C)) assume(realTarget(0) === 0.U)
-      else assume(realTarget(1, 0) === 0.U)
-    }
-
     when(inValid) {
       assume(!eLoadStoreAddressMisaligned)
       when(exte.mem.r.valid) {

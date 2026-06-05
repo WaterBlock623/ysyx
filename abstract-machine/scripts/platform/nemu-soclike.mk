@@ -11,12 +11,13 @@ AM_SRCS := riscv/npc-ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
-CFLAGS    += -fdata-sections -ffunction-sections -mrelax
+CFLAGS    += -fdata-sections -ffunction-sections -mno-relax #-mrelax
 # CFLAGS += -falign-functions=8 -falign-loops=8
 CFLAGS += $(if $(AFDO),-fauto-profile=$(AFDO),)
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
 LDSCRIPTS_MEM += $(AM_HOME)/scripts/linker-ysyxsoc-mem.ld
-LDFLAGS   += --gc-sections -e _start -Map=$(IMAGE).map -mrelax
+LDFLAGS   += --gc-sections -e _start -Map=$(IMAGE).map -mno-relax #-mrelax
+ASFLAGS += -mno-relax
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here

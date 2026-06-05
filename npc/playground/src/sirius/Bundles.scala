@@ -7,7 +7,8 @@ import chisel3.experimental.dataview._
 // Trap
 class TrapIO(implicit private val cfg: CoreConfig) extends Bundle {
   val isTrap = Output(Bool())
-  val cause = Output(UInt(cfg.mxlen.W))
+  // val cause = Output(UInt(cfg.mxlen.W))
+  val cause = Output(UInt(5.W))
 }
 
 // 数据载荷
@@ -18,7 +19,8 @@ class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
     val inst = UInt(cfg.xlen.W)
     // val staticNextPc = UInt(cfg.xlen.W)
     val predTaken = Bool()
-    val predTarget = UInt(cfg.xlen.W)
+    // val predTarget = UInt(cfg.xlen.W)
+    val predTarget = UInt(cfg.predTargetWidth.W)
     val isC = Bool()
   }
 }
@@ -29,21 +31,24 @@ class IduPayload(implicit private val cfg: CoreConfig) extends IfuPayload {
     val rs2Data = UInt(cfg.xlen.W)
     val wAddr = UInt(cfg.registerAddrWidth.W)
     val imm = UInt(cfg.xlen.W)
-    val csrAddr = UInt(12.W)
+    val csrAddr = CsrEnum()
+    val immNotZero = Bool()
   }
 }
 
 class ExuPayload(implicit private val cfg: CoreConfig) extends IduPayload {
   val exu = new Bundle {
     val aluOut  = UInt(cfg.xlen.W)
+    // val csrData = UInt(cfg.mxlen.W)
     val jumpTarget = UInt(cfg.xlen.W)
-    val csrData = UInt(cfg.mxlen.W)
+    val predTargetMayErr = Bool()
   }
 }
 
 class LsuPayload(implicit private val cfg: CoreConfig) extends ExuPayload {
   val lsu = new Bundle {
-    val loadData = UInt(cfg.xlen.W)
+    // val loadData = UInt(cfg.xlen.W)
+    val regWData = UInt(cfg.xlen.W)
     val formal = Option.when(cfg.formal)(new rvspeccore.core.MemIO()(cfg.xlen))
   }
 }
@@ -118,7 +123,7 @@ class IduToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class ExuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val rAddr = Output(UInt(12.W)) 
+  val rAddr = Output(CsrEnum()) 
   val rData = Input(UInt(cfg.mxlen.W))
 }
 
@@ -160,8 +165,11 @@ class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val rAddr = Output(CsrEnum()) 
+  val rData = Input(UInt(cfg.mxlen.W))
+
   val wEn = Output(Bool())
-  val wAddr = Output(UInt(12.W)) 
+  val wAddr = Output(CsrEnum()) 
   val wData = Output(UInt(cfg.mxlen.W))
   val pc = Output(UInt(cfg.xlen.W))
   val isTrap = Output(Bool())

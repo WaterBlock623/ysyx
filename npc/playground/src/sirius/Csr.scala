@@ -90,7 +90,7 @@ class CsrMepc(
     RegInit(MixedVecInit(0.U(1.W), 0.U(1.W), 0.U((cfg.mxlen - 2).W)))
   } else { Reg(MixedVec(UInt(1.W), UInt(1.W), UInt((cfg.mxlen - 2).W))) }
 
-  when (csrIO.wEn || isTrap) {
+  when(csrIO.wEn || isTrap) {
     mepcReg := Mux(isTrap, pc, csrIO.wData).asTypeOf(chiselTypeOf(mepcReg))
   }
   // when(csrIO.wEn) {
@@ -110,30 +110,26 @@ class CsrMepc(
 class CsrMcause(
   implicit private val cfg: CoreConfig)
     extends CsrParent {
-  val causeNum = IO(Input(UInt(cfg.mxlen.W)))
+  val causeNum = IO(Input(UInt(5.W)))
   val isTrap = IO(Input(Bool()))
 
-  val mcauseReg = if (cfg.formal) {
-    RegInit(0.U.asTypeOf(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W))))
-  } else { Reg(MixedVec(UInt((cfg.mxlen - 1).W), UInt(1.W))) }
+  val mcauseReg = if (cfg.formal) RegInit(0.U(5.W)) else Reg(UInt(5.W))
+
   when(csrIO.wEn || isTrap) {
-    mcauseReg := Mux(
-      isTrap,
-      causeNum.asTypeOf(chiselTypeOf(mcauseReg)),
-      csrIO.wData.asTypeOf(chiselTypeOf(mcauseReg))
-    )
+    mcauseReg := Mux(isTrap, causeNum, csrIO.wData)
   }
-  csrIO.rData := mcauseReg.asUInt
+  csrIO.rData := mcauseReg
 }
 
 class CsrMstatus(
   implicit private val cfg: CoreConfig)
     extends CsrParent {
-  val mstatusReg = RegInit(0x1800.U(cfg.mxlen.W))
-  when(csrIO.wEn) {
-    mstatusReg := csrIO.wData
-  }
-  csrIO.rData := mstatusReg
+  // val mstatusReg = RegInit(0x1800.U(cfg.mxlen.W))
+  // when(csrIO.wEn) {
+  //   mstatusReg := csrIO.wData
+  // }
+  // csrIO.rData := mstatusReg
+  csrIO.rData := "h1800".U
 }
 
 class Csr(
@@ -149,12 +145,13 @@ class Csr(
 
   // 读数据Lut
   val readMap = csrs.map { case (addr, mod) =>
-    addr.U -> mod.csrIO.rData
+    addr -> mod.csrIO.rData
   }.toSeq ++ csrs32.flatMap { case ((hi, lo), mod) =>
-    Seq(hi.U -> mod.csrIOHi.rData, lo.U -> mod.csrIOLo.rData)
+    Seq(hi -> mod.csrIOHi.rData, lo -> mod.csrIOLo.rData)
   }.toSeq
 
-  exuIn.rData := MuxLookup(exuIn.rAddr, 0.U)(readMap)
+  exuIn.rData := MuxLookup(exuIn.rAddr, readMap.head._2)(readMap)
+  wbuIn.rData := MuxLookup(wbuIn.rAddr, readMap.head._2)(readMap)
 
   // WriteRaw Set Clear
   // val wData = MuxLookup(io.wOpCode, io.wOperand)(Seq(
@@ -165,31 +162,30 @@ class Csr(
 
   // 写使能 写数据
   csrs.foreach { case (addr, mod) =>
-    mod.csrIO.wEn := wbuIn.wEn && (wbuIn.wAddr === addr.U)
+    mod.csrIO.wEn := wbuIn.wEn && (wbuIn.wAddr === addr)
     mod.csrIO.wData := wbuIn.wData
   }
 
   csrs32.foreach { case ((hi, lo), mod) =>
-    mod.csrIOHi.wEn := wbuIn.wEn && (wbuIn.wAddr === hi.U)
+    mod.csrIOHi.wEn := wbuIn.wEn && (wbuIn.wAddr === hi)
     mod.csrIOHi.wData := wbuIn.wData
 
-    mod.csrIOLo.wEn := wbuIn.wEn && (wbuIn.wAddr === lo.U)
+    mod.csrIOLo.wEn := wbuIn.wEn && (wbuIn.wAddr === lo)
     mod.csrIOLo.wData := wbuIn.wData
   }
 
-  csrs.get(CsrAddr.mtvec).foreach { mod =>
-    val mtvecMod = mod.asInstanceOf[CsrMtvec]
-    wbuIn.mtvec := mtvecMod.csrIO.rData
+  def csrForeach[T <: CsrParent](key: CsrEnum.Type)(f: T => Unit) = {
+    csrs.get(key).foreach(csr => f(csr.asInstanceOf[T]))
   }
-  csrs.get(CsrAddr.mepc).foreach { mod =>
-    val mepcMod = mod.asInstanceOf[CsrMepc]
-    mepcMod.pc := wbuIn.pc
-    mepcMod.isTrap := wbuIn.isTrap
-    wbuIn.mepc := mepcMod.csrIO.rData
+
+  csrForeach[CsrMtvec](CsrEnum.mtvec) { wbuIn.mtvec := _.csrIO.rData }
+  csrForeach[CsrMepc](CsrEnum.mepc) { mepc =>
+    mepc.pc := wbuIn.pc
+    mepc.isTrap := wbuIn.isTrap
+    wbuIn.mepc := mepc.csrIO.rData
   }
-  csrs.get(CsrAddr.mcause).foreach { mod =>
-    val mcauseMod = mod.asInstanceOf[CsrMcause]
-    mcauseMod.causeNum := wbuIn.causeNum
-    mcauseMod.isTrap := wbuIn.isTrap
+  csrForeach[CsrMcause](CsrEnum.mcause) { mcause =>
+    mcause.causeNum := wbuIn.causeNum
+    mcause.isTrap := wbuIn.isTrap
   }
 }
