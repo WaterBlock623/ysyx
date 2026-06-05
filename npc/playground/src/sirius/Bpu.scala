@@ -27,56 +27,29 @@ class Btb(
   val trivialBits = if (cfg.extensions().contains(ExtTypeEnum.C)) 1 else 2
 
   val tags = Reg(Vec(lineNum, UInt(tagWidth.W)))
-  // val tags =
-  //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
-  //   else Reg(Vec(lineNum, UInt(tagWidth.W)))
-  // val tags = RegInit(0.U.asTypeOf(Vec(lineNum, UInt(tagWidth.W))))
-  // val targets = 
-  //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(lineNum, UInt(targetWidth.W))))
-  //   else Reg(Vec(lineNum, UInt(targetWidth.W)))
   val targets = Reg(Vec(lineNum, UInt(targetWidth.W)))
+  val valids = RegInit(VecInit.fill(lineNum)(false.B))
 
   def significantPc(pc: UInt) = pc >> trivialBits
-  // def hashTagIndex(pc: UInt) = {
-  //   significantPc(pc)(tagIndexWidth - 1, 0) ^
-  //     significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
-  // }
   def hashTagIndex(pc: UInt) = {
-    class TagIdxBundle extends Bundle {
-      val tag2 = UInt(tagWidth.W)
-      val tag1 = UInt(tagWidth.W)
-      val idx2 = UInt(indexWidth.W)
-      val idx1 = UInt(indexWidth.W)
-    }
-
-    val sigPc = significantPc(pc)
-    val tagIdx = sigPc(2 * tagIndexWidth - 1, 0).asTypeOf(new TagIdxBundle)
-    val tagIdx1 = tagIdx.tag1 ## tagIdx.idx1
-    val tagIdx2 = tagIdx.tag2 ## tagIdx.idx2
-    tagIdx1 ^ tagIdx2
+    significantPc(pc)(tagIndexWidth - 1, 0) ^
+      significantPc(pc)(2 * tagIndexWidth - 1, tagIndexWidth)
   }
-  // def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
-  // def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
-  def idx(tagIdx: UInt) = tagIdx(indexWidth - 1, 0)
-  def tag(tagIdx: UInt) = tagIdx(tagIndexWidth - 1, indexWidth)
+  def idx(pc: UInt) = hashTagIndex(pc)(indexWidth - 1, 0)
+  def tag(pc: UInt) = hashTagIndex(pc)(tagIndexWidth - 1, indexWidth)
 
   // Read
-  // val readIdx = idx(io.read.pc)
-  // val readTag = tag(io.read.pc)
-  val readTagIdx = hashTagIndex(io.read.pc)
-  val readIdx = idx(readTagIdx)
-  val readTag = tag(readTagIdx)
-  io.read.hit := tags(readIdx) === readTag
+  val readIdx = idx(io.read.pc)
+  val readTag = tag(io.read.pc)
+  io.read.hit := tags(readIdx) === readTag && valids(readIdx)
   val pcHi = io.read.pc.head(io.read.pc.getWidth - targetWidth - trivialBits)
   io.read.target := pcHi ## targets(readIdx) ## 0.U(trivialBits.W)
 
   // Write
-  // val writeIdx = idx(io.write.pc)
-  // val writeTag = tag(io.write.pc)
-  val writeTagIdx = hashTagIndex(io.write.pc)
-  val writeIdx = idx(writeTagIdx)
-  val writeTag = tag(writeTagIdx)
+  val writeIdx = idx(io.write.pc)
+  val writeTag = tag(io.write.pc)
   when(io.write.update) {
+    valids(writeIdx) := true.B
     tags(writeIdx) := writeTag
     targets(writeIdx) := io.write.target(targetWidth + trivialBits - 1, trivialBits)
   }
@@ -101,10 +74,6 @@ class Pht(
   })
 
   val cntNum = 1 << indexWidth
-  // val cnts = Reg(Vec(cntNum, UInt(2.W)))
-  // val cnts =
-  //   if (cfg.iverilog) RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
-  //   else Reg(Vec(cntNum, UInt(2.W)))
   val cnts = RegInit(0.U.asTypeOf(Vec(cntNum, UInt(2.W))))
 
   def significantPc(pc: UInt): UInt = if (cfg.extensions().contains(ExtTypeEnum.C)) { pc >> 1 }
@@ -116,7 +85,6 @@ class Pht(
 
   // Read
   val readIdx = idx(io.read.pc)
-  // dontTouch(readIdx)
   io.read.taken := cnts(readIdx) >= ((1 << counterWidth) / 2).U
 
   // Write
