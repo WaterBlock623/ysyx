@@ -40,6 +40,7 @@ image: image-dep
 	cat $(IMAGE).map
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
+	base64 $(IMAGE).bin
 
 run: insert-arg
 	$(MAKE) -C $(NPC_HOME) run 
