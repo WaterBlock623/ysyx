@@ -35,7 +35,7 @@ MK_INCLUDE = $(CFG_DIR)/include/config/auto.conf $(CFG_DIR)/include/config/auto.
 
 ifeq ($(filter %defconfig,$(MAKECMDGOALS)),)
 $(MK_INCLUDE):
-	make -C $(NEMU_HOME) riscv32-am_defconfig
+	make -C $(CFG_DIR) riscv32-am_defconfig
 endif
 
 remove_quote = $(patsubst "%",%,$(1))

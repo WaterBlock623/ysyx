@@ -64,9 +64,7 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    // cached.newAddr := flushTarget
     cached.newAddr := Mux(cached.abort, flushTarget, pc)
-    // cached.newAddr := pc
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
@@ -92,7 +90,7 @@ class Ifu(
 
     outBits.ifuPayload.ifu.pc := sigPc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
-    outBits.ifuPayload.ifu.predTarget := 
+    outBits.ifuPayload.ifu.predTarget :=
         (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
         else exte.bpu.target(cfg.predTargetWidth - 1 + 2, 2))
     outBits.ifuPayload.ifu.inst := iqueueDeq.bits.inst

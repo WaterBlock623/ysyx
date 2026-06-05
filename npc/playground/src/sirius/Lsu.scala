@@ -21,7 +21,6 @@ class Lsu(
   val out = IO(Decoupled(new LsuToWbuIO))
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
-  // val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
   val waitFlushFinish = RegNext(out.fire && willJump)
   val inValid = in.valid && !waitFlushFinish
 
@@ -43,7 +42,6 @@ class Lsu(
     inBits.ctrl.wbuCtrl.isJump || (inBits.ctrl.wbuCtrl.isBranch && inBits.exuPayload.exu.aluOut(0))
   val realTarget = inBits.exuPayload.exu.jumpTarget
   val predDirectionErr = inBits.exuPayload.ifu.predTaken =/= realTaken
-  // val predTargetErr = realTaken && (inBits.exuPayload.ifu.predTarget =/= realTarget)
   val predTargetErr = realTaken && inBits.exuPayload.exu.predTargetMayErr
   val predErr = predDirectionErr || predTargetErr
   // val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)

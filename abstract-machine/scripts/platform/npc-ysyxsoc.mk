@@ -33,9 +33,14 @@ insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) $(MAINARGS_PLACEHOLDER) "$(mainargs)"
 
 image: image-dep
+	$(CC) --version
+	$(OBJDUMP) -h $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
+	cat $(IMAGE).txt
+	cat $(IMAGE).map
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
+	base64 $(IMAGE).bin
 
 run: insert-arg
 	$(MAKE) -C $(NPC_HOME) run 
