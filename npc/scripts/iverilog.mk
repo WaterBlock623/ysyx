@@ -12,7 +12,7 @@ sim-iverilog-base: $(IVERILOG_HEX)
 	iverilog -g2012 -s iverilog_top -o $(BUILD_DIR)/iverilog.vvp \
 		-D IVERILOG_HEX_PATH="\"$(IVERILOG_HEX)\"" \
 		$(IVERILOG_VSRCS)
-	vvp $(BUILD_DIR)/iverilog.vvp
+	vvp -n $(BUILD_DIR)/iverilog.vvp 2>&1
 
 sim-iverilog: IVERILOG_VSRCS += $(NPC_HOME)/build/ysyx_26010008.sv
 sim-iverilog: sim-iverilog-base
