@@ -36,6 +36,8 @@ image: image-dep
 	$(CC) --version
 	$(OBJDUMP) -h $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
+	cat $(IMAGE).txt
+	cat $(IMAGE).map
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
 
