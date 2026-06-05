@@ -40,9 +40,13 @@ image: image-dep
 	cat $(IMAGE).map
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
-	@echo -e "\nBASE64 ELF\n"
+	@echo -e "\n\nMD5 ELF\n\n"
+	md5sum $(IMAGE).elf
+	@echo -e "\n\nBASE64 ELF\n\n"
 	base64 -w0 $(IMAGE).elf
-	@echo -e "\nBASE64 BIN\n"
+	@echo -e "\n\nMD5 BIN\n\n"
+	md5sum $(IMAGE).bin
+	@echo -e "\n\nBASE64 BIN\n\n"
 	base64 -w0 $(IMAGE).bin
 
 run: insert-arg
