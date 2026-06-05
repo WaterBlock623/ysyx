@@ -43,11 +43,13 @@ image: image-dep
 	@echo -e "\n\nMD5 ELF\n\n"
 	md5sum $(IMAGE).elf
 	@echo -e "\n\nBASE64 ELF\n\n"
-	base64 -w0 $(IMAGE).elf
+	base64 -w0 $(IMAGE).elf > $(IMAGE).elf.base64
+	cat $(IMAGE).elf.base64
 	@echo -e "\n\nMD5 BIN\n\n"
 	md5sum $(IMAGE).bin
 	@echo -e "\n\nBASE64 BIN\n\n"
-	base64 -w0 $(IMAGE).bin
+	base64 -w0 $(IMAGE).bin > $(IMAGE).bin.base64
+	cat $(IMAGE).bin.base64
 
 run: insert-arg
 	$(MAKE) -C $(NPC_HOME) run 
