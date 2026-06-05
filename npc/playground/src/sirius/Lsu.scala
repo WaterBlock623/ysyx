@@ -21,7 +21,6 @@ class Lsu(
   val out = IO(Decoupled(new LsuToWbuIO))
 
   val willJump = out.bits.ctrl.wbuCtrl.isJumpCsr || out.bits.lsuPayload.trap.isTrap
-  // val waitFlushFinish = ShiftRegisters(out.fire && willJump, 2).reduce(_ || _)
   val waitFlushFinish = RegNext(out.fire && willJump)
   val inValid = in.valid && !waitFlushFinish
 
@@ -43,7 +42,6 @@ class Lsu(
     inBits.ctrl.wbuCtrl.isJump || (inBits.ctrl.wbuCtrl.isBranch && inBits.exuPayload.exu.aluOut(0))
   val realTarget = inBits.exuPayload.exu.jumpTarget
   val predDirectionErr = inBits.exuPayload.ifu.predTaken =/= realTaken
-  // val predTargetErr = realTaken && (inBits.exuPayload.ifu.predTarget =/= realTarget)
   val predTargetErr = realTaken && inBits.exuPayload.exu.predTargetMayErr
   val predErr = predDirectionErr || predTargetErr
   // val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
@@ -97,38 +95,59 @@ class Lsu(
     outBits.lsuPayload.trap.cause := eCause
   }
 
-  val axiCanValid = RegNext(RegNext(!reset.asBool)) && inValid && isMemAcc &&
+  val axiCanValid = inValid && isMemAcc &&
     !inTrap && !eLoadStoreAddressMisaligned
 
   // FSM
   val sIdle :: sWaitAddrReady :: sWaitDataReady :: sWaitResp :: Nil = Enum(4)
   val state = RegInit(sIdle)
 
-  state := MuxLookup(state, sIdle)(
-    Seq(
-      sIdle -> Mux(
-        axiCanValid,
-        MuxCase(
-          sIdle,
-          Seq(
-            (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
-            (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
-            (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
-            (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
-          )
-        ),
-        sIdle
-      ),
-      sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
-      sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
-      sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
-    )
-  )
+  // state := MuxLookup(state, sIdle)(
+  //   Seq(
+  //     sIdle -> Mux(
+  //       axiCanValid,
+  //       MuxCase(
+  //         sIdle,
+  //         Seq(
+  //           (exte.mem.ar.ready && ctrl.isLoad) -> sWaitResp,
+  //           (exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) -> sWaitResp,
+  //           (exte.mem.aw.ready && ctrl.isStore) -> sWaitDataReady,
+  //           (exte.mem.w.ready && ctrl.isStore) -> sWaitAddrReady
+  //         )
+  //       ),
+  //       sIdle
+  //     ),
+  //     sWaitAddrReady -> Mux(exte.mem.aw.ready, sWaitResp, sWaitAddrReady),
+  //     sWaitDataReady -> Mux(exte.mem.w.ready, sWaitResp, sWaitDataReady),
+  //     sWaitResp -> Mux(out.fire, sIdle, sWaitResp)
+  //   )
+  // )
+  switch(state) {
+    is(sIdle) {
+      when(axiCanValid) {
+        when(exte.mem.ar.ready && ctrl.isLoad) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && exte.mem.w.ready && ctrl.isStore) {state := sWaitResp}
+        .elsewhen(exte.mem.aw.ready && ctrl.isStore) {sWaitDataReady}
+        .elsewhen(exte.mem.w.ready && ctrl.isStore) {sWaitAddrReady}
+      }
+    }
+    is(sWaitAddrReady) {
+      when(exte.mem.aw.ready) {state := sWaitResp}
+    }
+    is(sWaitDataReady) {
+      when(exte.mem.w.ready) {state := sWaitResp}
+    }
+    is(sWaitResp) {
+      when(out.fire) {state := sIdle}
+    }
+  }
 
   // Handshake
   val isBypass = inValid && !axiCanValid
-  val rValid = ctrl.isLoad && exte.mem.r.valid
-  val bValid = ctrl.isStore && exte.mem.b.valid
+  // val rValid = ctrl.isLoad && exte.mem.r.valid
+  // val bValid = ctrl.isStore && exte.mem.b.valid
+  val rValid = exte.mem.r.valid
+  val bValid = exte.mem.b.valid
   val isMemDone = state === sWaitResp && (rValid || bValid)
 
   out.valid := isBypass || isMemDone
