@@ -11,14 +11,14 @@ AM_SRCS := riscv/npc-ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
-CFLAGS    += -fdata-sections -ffunction-sections -mno-relax #-mrelax
+CFLAGS    += -fdata-sections -ffunction-sections
 # CFLAGS += -falign-functions=8 -falign-loops=8
 CFLAGS += $(if $(AFDO),-fauto-profile=$(AFDO),)
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
 LDSCRIPTS_MEM += $(AM_HOME)/scripts/linker-ysyxsoc-mem.ld
 # LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
-LDFLAGS   += --gc-sections -e _start -Map=$(IMAGE).map -mno-relax #-mrelax
-ASFLAGS += -mno-relax
+LDFLAGS   += --gc-sections -e _start -Map=$(IMAGE).map
+ASFLAGS += -mno-relax -Wa,-mno-relax
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
@@ -33,23 +33,9 @@ insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) $(MAINARGS_PLACEHOLDER) "$(mainargs)"
 
 image: image-dep
-	$(CC) --version
-	$(OBJDUMP) -h $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
-	cat $(IMAGE).txt
-	cat $(IMAGE).map
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
-	@echo -e "\n\nMD5 ELF\n\n"
-	md5sum $(IMAGE).elf
-	@echo -e "\n\nBASE64 ELF\n\n"
-	base64 -w0 $(IMAGE).elf > $(IMAGE).elf.base64
-	cat $(IMAGE).elf.base64
-	@echo -e "\n\nMD5 BIN\n\n"
-	md5sum $(IMAGE).bin
-	@echo -e "\n\nBASE64 BIN\n\n"
-	base64 -w0 $(IMAGE).bin > $(IMAGE).bin.base64
-	cat $(IMAGE).bin.base64
 
 run: insert-arg
 	$(MAKE) -C $(NPC_HOME) run 

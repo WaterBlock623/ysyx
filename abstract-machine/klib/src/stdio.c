@@ -287,7 +287,9 @@ static int vcmdprintf(putchcmd_t put, char **save_ptr, const char *fmt, va_list 
       cnt++;
     }
   }
-  put('\0', save_ptr);
+  if (save_ptr != NULL) {
+    put('\0', save_ptr);
+  }
   return cnt;
 }
 
