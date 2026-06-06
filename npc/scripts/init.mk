@@ -1,7 +1,7 @@
 ifeq ($(wildcard $(NPC_HOME)/espresso/.git),)
 $(info Init espresso...)
 $(shell git submodule update --init $(NPC_HOME)/espresso)
-$(shell cd espresso && mkdir build && cd build && cmake .. && make)
+$(shell cd espresso && mkdir build && cd build && cmake BUILD_DOC=OFF .. && make)
 endif
 
 ifeq ($(wildcard $(NPC_HOME)/oss-cad-suite/bin),)
