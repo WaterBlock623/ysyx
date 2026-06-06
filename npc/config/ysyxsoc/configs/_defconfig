@@ -1,5 +1,6 @@
 CONFIG_RVE=y
 CONFIG_NPC=y
+CONFIG_NPC_WAVE=y
 CONFIG_NPC_TOP_NAME="ysyxSoCFull"
 CONFIG_NPC_VERILATOR_GPR="ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__getGprDpiC__DOT__temp_regs"
 CONFIG_CC_O3=y
