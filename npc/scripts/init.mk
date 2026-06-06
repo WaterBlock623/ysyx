@@ -14,7 +14,7 @@ $(info Found GITHUB_PATH: $(GITHUB_PATH))
 ifeq ($(shell command -v espresso),)
 $(shell cp $(NPC_HOME)/espresso/build/espresso /usr/local/bin/espresso)
 endif
-$(shell cp $(NPC_HOME)/oss-cad-suite/bin/* /usr/local/bin/)
+$(shell cp -r $(NPC_HOME)/oss-cad-suite/ $(OSS_CAD_SUITE_BIN_PATH))
 endif
 
 ifeq ($(shell command -v espresso),)
