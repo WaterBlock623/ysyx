@@ -1,25 +1,29 @@
-ifeq ($(wildcard $(NPC_HOME)/espresso/espresso),)
+ifeq ($(wildcard $(NPC_HOME)/espresso/.git),)
 $(info Init espresso...)
-$(shell mkdir -p $(NPC_HOME)/espresso/)
-$(shell wget https\://github.com/chipsalliance/espresso/releases/download/v2.4/x86_64-linux-gnu-espresso -O $(NPC_HOME)/espresso/espresso > /dev/null 2>&1)
-$(shell chmod u+x $(NPC_HOME)/espresso/espresso)
+$(shell git submodule update --init $(NPC_HOME)/espresso)
+$(shell cd espresso && mkdir build && cd build && cmake .. && make)
+endif
+
+ifeq ($(wildcard $(NPC_HOME)/oss-cad-suite/bin),)
+$(info Init oss-cad-suite...)
+$(shell wget -q -O - https\://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-05-15/oss-cad-suite-linux-x64-20260515.tgz | tar -zxf - > /dev/null 2>&1)
 endif
 
 ifneq ($(GITHUB_PATH),)
 $(info Found GITHUB_PATH: $(GITHUB_PATH))
 ifeq ($(shell command -v espresso),)
-# $(shell echo "$(NPC_HOME)/espresso" >> $(GITHUB_PATH))
-$(shell cp $(NPC_HOME)/espresso/espresso /usr/local/bin/espresso)
+$(shell cp $(NPC_HOME)/espresso/build/espresso /usr/local/bin/espresso)
 endif
+$(shell cp $(NPC_HOME)/oss-cad-suite/bin/* /usr/local/bin/)
 endif
 
-ifeq ($(shell command -v espresso),) # Check
-$(error Can not find espresso)
+ifeq ($(shell command -v espresso),)
+$(error Can not find espresso in \$PATH)
 endif
 
 ifeq ($(wildcard $(NPC_HOME)/sbt/bin/sbt),)
 $(info Init sbt...)
-$(shell wget -q -O - https\://github.com/sbt/sbt/releases/download/v1.12.11/sbt-1.12.11.tgz | tar -zxvf - > /dev/null 2>&1)
+$(shell wget -q -O - https\://github.com/sbt/sbt/releases/download/v1.12.11/sbt-1.12.11.tgz | tar -zxf - > /dev/null 2>&1)
 endif
 
 ifeq ($(wildcard ~/.ivy2/local/cn.ac.ios.tis/riscvspeccore_2.13/1.3-chisel7.11.0-7e43b32-SNAPSHOT/jars/riscvspeccore_2.13.jar),)
