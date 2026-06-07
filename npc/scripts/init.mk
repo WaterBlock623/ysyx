@@ -16,13 +16,7 @@ $(shell cp $(NPC_HOME)/espresso/build/espresso /usr/local/bin/espresso)
 endif
 OSS_CAD_SUITE_PATH := $(shell echo "$$PATH" | tr ':' '\n' | grep 'oss-cad-suite' | head -n 1 | sed 's|/bin$$||')
 ifneq ($(OSS_CAD_SUITE_PATH),)
-$(info Found oss-cad-suite path: $(OSS_CAD_SUITE_PATH))
-$(shell rm -r $(OSS_CAD_SUITE_PATH))
-$(shell mkdir -p $(OSS_CAD_SUITE_PATH))
-$(info $(shell ls -lh $(OSS_CAD_SUITE_PATH)))
-$(shell cp -r $(NPC_HOME)/oss-cad-suite $(OSS_CAD_SUITE_PATH))
-$(info $(shell ls -lh $(OSS_CAD_SUITE_PATH)))
-$(info $(shell yosys --version))
+$(shell cp -r $(NPC_HOME)/oss-cad-suite/. $(OSS_CAD_SUITE_PATH))
 endif
 endif
 
