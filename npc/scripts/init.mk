@@ -14,8 +14,9 @@ $(info Found GITHUB_PATH: $(GITHUB_PATH))
 ifeq ($(shell command -v espresso),)
 $(shell cp $(NPC_HOME)/espresso/build/espresso /usr/local/bin/espresso)
 endif
-ifneq ($(OSS_CAD_SUITE_BIN_PATH),)
-$(shell cp -r $(NPC_HOME)/oss-cad-suite/ $(OSS_CAD_SUITE_BIN_PATH))
+OSS_CAD_SUITE_PATH := $(shell echo "$$PATH" | tr ':' '\n' | grep 'oss-cad-suite' | head -n 1 | sed 's|/bin$$||')
+ifneq ($(OSS_CAD_SUITE_PATH),)
+$(shell cp -r $(NPC_HOME)/oss-cad-suite/ $(OSS_CAD_SUITE_PATH))
 endif
 endif
 
