@@ -21,6 +21,7 @@ build/
 **/include/config/
 **/include/generated/
 sbt/
+oss-cad-suite/
 
 # mill
 !*.mill
