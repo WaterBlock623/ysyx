@@ -11,7 +11,7 @@ class Wbu(
   implicit private val cfg: CoreConfig)
     extends Module {
   val exte = IO(new Bundle {
-    val pcReg = new WbuToPcRegIO
+    val pipelineCtrl = new PipelineCtrlIO
     val regFlie = new WbuToRegFileIO
     val csr = new WbuToCsrIO
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
@@ -28,15 +28,8 @@ class Wbu(
   val inBits = in.bits
 
   val ctrl = inBits.ctrl.wbuCtrl
-  val pcReg = exte.pcReg
-  val pc = inBits.lsuPayload.ifu.pc
   val regFile = exte.regFlie
-  // val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
-  // val csrData = inBits.lsuPayload.exu.csrData
-  val staticNextPc = inBits.lsuPayload.ifu.pc + Mux(inBits.lsuPayload.ifu.isC, 2.U, 4.U)
-  // val staticNextPc = 
-  //   Mux(inBits.lsuPayload.ifu.isC, inBits.lsuPayload.ifu.pc + 2.U, inBits.lsuPayload.ifu.pc + 4.U)
 
   // csr作为跳转地址
   val csrJumpTarget = MuxLookup(inBits.ctrl.wbuCtrl.jumpTargetSel, exte.csr.mepc)(
@@ -47,8 +40,8 @@ class Wbu(
   )
 
   // Jump ctrl (csr & trap)
-  pcReg.isJump := in.valid && (ctrl.isJumpCsr || inBits.lsuPayload.trap.isTrap)
-  pcReg.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, csrJumpTarget)
+  exte.pipelineCtrl.isJump := in.valid && (ctrl.isJumpCsr || inBits.lsuPayload.trap.isTrap)
+  exte.pipelineCtrl.target := Mux(inBits.lsuPayload.trap.isTrap, exte.csr.mtvec, csrJumpTarget)
 
   // csr
   val csr = exte.csr
@@ -60,7 +53,7 @@ class Wbu(
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
   csr.wData := inBits.lsuPayload.lsu.regWData
 
-  csr.pc := pc
+  csr.pc := inBits.lsuPayload.lsu.regWData
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
@@ -108,7 +101,7 @@ class Wbu(
     checker.io.instCommit.valid := RegNext(in.valid && !reset.asBool)
     checker.io.instCommit.excp := RegNext(in.bits.lsuPayload.trap.isTrap)
     checker.io.instCommit.inst := RegNext(in.bits.lsuPayload.ifu.inst)
-    checker.io.instCommit.pc := RegNext(in.bits.lsuPayload.ifu.pc)
+    checker.io.instCommit.pc := RegNext(in.bits.lsuPayload.ifu.debugPc)
     checker.io.instCommit.npc := DontCare
 
     ConnectHelper.setChecker(checker)(cfg.xlen, rvConfig)
@@ -135,11 +128,11 @@ class Wbu(
   if (cfg.isDebug) {
     dontTouch(debug.get)
     debug.get.valid := in.valid
-    debug.get.isJump := pcReg.isJump || inBits.debug.get.isJump
+    debug.get.isJump := exte.pipelineCtrl.isJump || inBits.debug.get.isJump
     when (in.valid) {
-      assert(!(pcReg.isJump && inBits.debug.get.isJump))
+      assert(!(exte.pipelineCtrl.isJump && inBits.debug.get.isJump))
     }
-    debug.get.jumpTarget := Mux(pcReg.isJump, pcReg.target, inBits.debug.get.jumpTarget)
+    debug.get.jumpTarget := Mux(exte.pipelineCtrl.isJump, exte.pipelineCtrl.target, inBits.debug.get.jumpTarget)
   }
 
   PerfWhen(

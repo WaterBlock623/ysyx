@@ -1,7 +1,7 @@
 From aef0ec4b7b70aef658beba58facd5c64fc668776 Mon Sep 17 00:00:00 2001
 From: Water Block <17048545@qq.com>
 Date: Wed, 20 May 2026 16:45:01 +0800
-Subject: [PATCH 3/4] Disable UART16550 $write
+Subject: [PATCH 3/5] Disable UART16550 $write
 
 ---
  perip/uart16550/rtl/uart_tfifo.v | 4 ++--

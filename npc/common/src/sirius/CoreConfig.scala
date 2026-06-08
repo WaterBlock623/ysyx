@@ -47,6 +47,8 @@ case class CoreConfig(
   require(memoryAddrWidth <= 32)
 
   def hasC: Boolean = extensions().contains(ExtTypeEnum.C)
+  def trivialBits = if (hasC) 1 else 2
+  def pcHiWidth = xlen - (predTargetWidth + trivialBits)
 
   // 根据配置映射解码Pattern和Field
   def fieldMap: CfgMap[

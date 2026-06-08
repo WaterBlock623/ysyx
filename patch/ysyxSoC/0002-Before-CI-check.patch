@@ -1,7 +1,7 @@
 From d63829f22f391f7ec1f08c6cb80da6ec965734e8 Mon Sep 17 00:00:00 2001
 From: Water Block <17048545@qq.com>
 Date: Mon, 18 May 2026 18:55:16 +0800
-Subject: [PATCH 2/4] Before CI check
+Subject: [PATCH 2/5] Before CI check
 
 ---
  .gitignore | 3 ---

@@ -16,3 +16,6 @@
 [submodule "npc/riscv-opcodes"]
 	path = npc/riscv-opcodes
 	url = https://github.com/riscv/riscv-opcodes.git
+[submodule "npc/espresso"]
+	path = npc/espresso
+	url = https://github.com/chipsalliance/espresso.git
