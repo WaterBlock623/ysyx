@@ -14,7 +14,7 @@ class BasicCore(
     val bpu = Option.when(cfg.formal)(new IfuToBpuIO)
   })
 
-  // val pcReg = Module(new PcReg)
+  val globalPcHi = Module(new GlobalPcHi)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
   val ifu = Module(new Ifu)
@@ -32,9 +32,9 @@ class BasicCore(
 
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
-  // pcReg.ifuIn :<>= ifu.exte.pcReg
-  // pcReg.lsuIn :<>= lsu.exte.pcReg
-  // pcReg.wbuIn :<>= wbu.exte.pcReg
+  ifu.exte.pcHi := globalPcHi.io.pcHi
+  exu.exte.pcHi := globalPcHi.io.pcHi
+  lsu.exte.pcHi := globalPcHi.io.pcHi
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
@@ -327,7 +327,7 @@ class Top(
       val debugInfoDpiC = Module(new DebugInfoDpiC)
       val getGprDpiC = Module(new GetGprDpiC)
       debugInfoDpiC.isEbreak := ebreakSignal
-      debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
+      debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.debugPc
       // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
       debugInfoDpiC.pcRaw := cfg.pcInit.U
       // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc

@@ -101,7 +101,7 @@ class Wbu(
     checker.io.instCommit.valid := RegNext(in.valid && !reset.asBool)
     checker.io.instCommit.excp := RegNext(in.bits.lsuPayload.trap.isTrap)
     checker.io.instCommit.inst := RegNext(in.bits.lsuPayload.ifu.inst)
-    checker.io.instCommit.pc := RegNext(in.bits.lsuPayload.ifu.pc)
+    checker.io.instCommit.pc := RegNext(in.bits.lsuPayload.ifu.debugPc)
     checker.io.instCommit.npc := DontCare
 
     ConnectHelper.setChecker(checker)(cfg.xlen, rvConfig)

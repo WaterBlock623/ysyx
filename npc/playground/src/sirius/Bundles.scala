@@ -15,7 +15,8 @@ class TrapIO(implicit private val cfg: CoreConfig) extends Bundle {
 class IfuPayload(implicit private val cfg: CoreConfig) extends Bundle {
   val trap = new TrapIO
   val ifu = new Bundle {
-    val pc = UInt(cfg.xlen.W)
+    val pcLo = UInt(cfg.predTargetWidth.W)
+    val debugPc = UInt(cfg.xlen.W)
     val inst = UInt(cfg.xlen.W)
     // val staticNextPc = UInt(cfg.xlen.W)
     val predTaken = Bool()

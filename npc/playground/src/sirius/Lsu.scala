@@ -12,6 +12,7 @@ class Lsu(
   }
 
   val exte = IO(new Bundle {
+    val pcHi = UInt(cfg.pcHiWidth.W)
     val mem = new Axi4IO
     val pipelineCtrl = new PipelineCtrlIO
     val bpu = new LsuToBpuIO
@@ -32,6 +33,7 @@ class Lsu(
   val rData = exte.mem.r.bits.data
   val rem = addr(1, 0)
   val inTrap = inValid && inBits.exuPayload.trap.isTrap
+  val pc = PcCat(cfg.hasC, exte.pcHi, inBits.exuPayload.ifu.pcLo)
 
   // 数据透传
   outBits.lsuPayload.viewAsSupertype(new ExuPayload) := inBits.exuPayload
@@ -44,12 +46,14 @@ class Lsu(
   val predDirectionErr = inBits.exuPayload.ifu.predTaken =/= realTaken
   val predTargetErr = realTaken && inBits.exuPayload.exu.predTargetMayErr
   val predErr = predDirectionErr || predTargetErr
-  val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
+  val staticNextPc = pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
   // val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
   // val newIn = inValid && (RegNext(!inValid) || RegNext(in.fire))
   val newIn = inValid && (RegNext(!inValid || in.fire))
-  exte.pipelineCtrl.isJump := newIn && (predErr || ctrl.isFlushIcache)
+  val pcLo = inBits.exuPayload.ifu.pcLo
+  val pcLoOverflow = pcLo(pcLo.getWidth - 1, 1).andR && Mux(inBits.exuPayload.ifu.isC, pcLo(0), true.B)
+  exte.pipelineCtrl.isJump := newIn && (predErr || ctrl.isFlushIcache || pcLoOverflow)
   exte.pipelineCtrl.target := dynamicNextPc
   if (cfg.isDebug) {
   val debug = outBits.debug.get
@@ -59,7 +63,7 @@ class Lsu(
 
   // Bpu
   exte.bpu.update := newIn
-  exte.bpu.pc := in.bits.exuPayload.ifu.pc
+  exte.bpu.pc := pc
   exte.bpu.isCtrlInst := inBits.ctrl.wbuCtrl.isJump || inBits.ctrl.wbuCtrl.isBranch
   exte.bpu.predTaken := inBits.exuPayload.ifu.predTaken
   exte.bpu.realTaken := realTaken
@@ -231,7 +235,7 @@ class Lsu(
   )
 
   // Output
-  outBits.lsuPayload.lsu.regWData := Mux(outBits.lsuPayload.trap.isTrap, inBits.exuPayload.ifu.pc,
+  outBits.lsuPayload.lsu.regWData := Mux(outBits.lsuPayload.trap.isTrap, pc,
     MuxLookup(inBits.ctrl.wbuCtrl.writeBackSel, inBits.exuPayload.exu.aluOut)(Seq(
       WriteBackSelEnum.lsu.asUInt -> loadData,
       WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc

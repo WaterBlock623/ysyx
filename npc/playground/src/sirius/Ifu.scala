@@ -8,7 +8,7 @@ class Ifu(
   implicit private val cfg: CoreConfig)
     extends Module {
   val exte = IO(new Bundle {
-    // val pcReg = new IfuToPcRegIO
+    val pcHi = Input(UInt(cfg.pcHiWidth.W))
     val bpu = new IfuToBpuIO
     val mem = new Axi4IO
     val fencei = Input(Bool())
@@ -23,7 +23,11 @@ class Ifu(
   outBits.ifuPayload.trap.cause := DontCare
 
   val flush = exte.flush || (out.fire && exte.bpu.taken)
-  val flushTarget = Mux(exte.flush, exte.jumpTarget, exte.bpu.target)
+  val flushTargetLo = Mux(
+    exte.flush,
+    ExtractFrom(exte.jumpTarget, cfg.trivialBits, cfg.predTargetWidth),
+    ExtractFrom(exte.bpu.target, cfg.trivialBits, cfg.predTargetWidth)
+  )
 
   if (!cfg.formal) {
     // icache
@@ -51,7 +55,8 @@ class Ifu(
     // }
     // cached.ar.bits.addr := ifetchAddr
 
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    val pcLo = RegInit((cfg.pcInit >> cfg.trivialBits).U(cfg.predTargetWidth.W))
+    val pc = PcCat(cfg.hasC, exte.pcHi, pcLo)
     val icache = Module(
       new SimpleIcache(
         setNum = 4,
@@ -64,11 +69,11 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.newAddr := Mux(cached.abort, flushTarget, pc)
+    cached.newAddr := PcCat(cfg.hasC, exte.pcHi, Mux(cached.abort, flushTargetLo, pcLo))
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
-    iqueue.io.targetUnalign := flushTarget(1)
+    iqueue.io.targetUnalign := flushTargetLo(0)
     iqueue.io.enq :<>= cached.r.map(_.data)
     // PipelineConnect(cached.r.map(_.data), iqueue.io.enq, flush = flush)
 
@@ -79,16 +84,15 @@ class Ifu(
     iqueueDeq.ready := out.ready
 
     when(flush) {
-      pc := flushTarget
+      pcLo := flushTargetLo
     }.elsewhen(out.fire) {
-      pc := pc + Mux(iqueueDeq.bits.isC, 2.U, 4.U)
+      pcLo := pcLo + Mux(iqueueDeq.bits.isC, 1.U, 2.U)
     }
 
-    val trivialBits = if (cfg.hasC) 1 else 2
-    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
-    exte.bpu.pc := sigPc
+    exte.bpu.pc := pc
 
-    outBits.ifuPayload.ifu.pc := sigPc
+    outBits.ifuPayload.ifu.pcLo := pcLo
+    outBits.ifuPayload.ifu.debugPc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     outBits.ifuPayload.ifu.predTarget :=
         (if (cfg.hasC) exte.bpu.target(cfg.predTargetWidth - 1 + 1, 1)
@@ -189,18 +193,18 @@ class Ifu(
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
   
-    val pc = RegInit(cfg.pcInit.U(cfg.xlen.W))
+    val pcLo = RegInit((cfg.pcInit >> cfg.trivialBits).U(cfg.predTargetWidth.W))
+    val pc = PcCat(cfg.hasC, exte.pcHi, pcLo)
+
     when(flush) {
-      pc := flushTarget
+      pcLo := flushTargetLo
     }.elsewhen(out.fire) {
-      pc := pc + Mux(outBits.ifuPayload.ifu.isC, 2.U, 4.U)
+      pcLo := pcLo + Mux(outBits.ifuPayload.ifu.isC, 1.U, 2.U)
     }
 
-    val trivialBits = if (cfg.hasC) 1 else 2
-    val sigPc = pc(cfg.xlen - 1, trivialBits) ## 0.U(trivialBits.W)
-    exte.bpu.pc := sigPc
+    exte.bpu.pc := pc
 
-    outBits.ifuPayload.ifu.pc := sigPc
+    outBits.ifuPayload.ifu.pcLo := pcLo
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     // outBits.ifuPayload.ifu.predTarget := exte.bpu.target
     outBits.ifuPayload.ifu.predTarget := 
