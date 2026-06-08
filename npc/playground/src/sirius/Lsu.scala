@@ -44,8 +44,8 @@ class Lsu(
   val predDirectionErr = inBits.exuPayload.ifu.predTaken =/= realTaken
   val predTargetErr = realTaken && inBits.exuPayload.exu.predTargetMayErr
   val predErr = predDirectionErr || predTargetErr
-  // val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
-  val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
+  val staticNextPc = inBits.exuPayload.ifu.pc + Mux(inBits.exuPayload.ifu.isC, 2.U, 4.U)
+  // val staticNextPc = Mux(inBits.exuPayload.ifu.isC, inBits.exuPayload.ifu.pc + 2.U, inBits.exuPayload.ifu.pc + 4.U)
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
   val newIn = inValid && (RegNext(!inValid) || RegNext(in.fire))
   exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcache)
