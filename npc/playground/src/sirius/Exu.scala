@@ -123,6 +123,7 @@ class Exu(
   implicit private val ucfg: UnitConfig)
     extends Module {
   val exte = IO(new Bundle {
+    val pcHi = Input(UInt(cfg.pcHiWidth.W))
     val csr = new ExuToCsrIO
     val stall = Input(Bool())
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
@@ -146,6 +147,7 @@ class Exu(
   val imm = inBits.iduPayload.idu.imm
   val rs1Data = inBits.iduPayload.idu.rs1Data
   val rs2Data = inBits.iduPayload.idu.rs2Data
+  val pc = PcCat(cfg.hasC, exte.pcHi, inBits.iduPayload.ifu.pcLo)
 
   // csr
   exte.csr.rAddr := inBits.iduPayload.idu.csrAddr
@@ -165,7 +167,7 @@ class Exu(
     Seq(
       AluInSelEnum.imm.asUInt -> imm,
       AluInSelEnum.rs.asUInt -> rs1Data,
-      AluInSelEnum.pc.asUInt -> inBits.iduPayload.ifu.pc
+      AluInSelEnum.pc.asUInt -> pc
     )
   )
   val src2 = MuxLookup(ctrl.aluIn2Sel, imm)(
@@ -197,15 +199,11 @@ class Exu(
   // 计算跳转地址
   val jumpTargetGenerator = Module(new JumpTargetGenerator)
   jumpTargetGenerator.io.jumpTargetSel := inBits.ctrl.wbuCtrl.jumpTargetSel
-  jumpTargetGenerator.io.pc := inBits.iduPayload.ifu.pc
+  jumpTargetGenerator.io.pc := pc
   jumpTargetGenerator.io.imm := imm
   jumpTargetGenerator.io.aluResult := aluOut
   outBits.exuPayload.exu.jumpTarget := jumpTargetGenerator.io.jumpTarget
-  val trivialBits = if(cfg.hasC) 1 else 2
-  val predTarget = 
-    inBits.iduPayload.ifu.pc.head(cfg.xlen - cfg.predTargetWidth - trivialBits) ## 
-    inBits.iduPayload.ifu.predTarget ## 
-    0.U(trivialBits.W)
+  val predTarget = PcCat(cfg.hasC, exte.pcHi, inBits.iduPayload.ifu.predTarget)
   outBits.exuPayload.exu.predTargetMayErr := 
     predTarget =/= jumpTargetGenerator.io.jumpTarget
 

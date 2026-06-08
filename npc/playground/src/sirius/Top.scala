@@ -14,7 +14,7 @@ class BasicCore(
     val bpu = Option.when(cfg.formal)(new IfuToBpuIO)
   })
 
-  // val pcReg = Module(new PcReg)
+  val globalPcHi = Module(new GlobalPcHi)
   val registerFile = Module(new RegisterFile)
   val csr = Module(new Csr)
   val ifu = Module(new Ifu)
@@ -32,14 +32,13 @@ class BasicCore(
 
   io.axiIfu :<>= ifu.exte.mem
   io.axiLsu :<>= lsu.exte.mem
-  // pcReg.ifuIn :<>= ifu.exte.pcReg
-  // pcReg.lsuIn :<>= lsu.exte.pcReg
-  // pcReg.wbuIn :<>= wbu.exte.pcReg
+  ifu.exte.pcHi := globalPcHi.io.pcHi
+  exu.exte.pcHi := globalPcHi.io.pcHi
+  lsu.exte.pcHi := globalPcHi.io.pcHi
   registerFile.iduIn :<>= idu.exte.regFile
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
   val fencei = lsu.in.valid && lsu.in.bits.ctrl.lsuCtrl.isFlushIcache
   ifu.exte.fencei := fencei
 
@@ -66,14 +65,14 @@ class BasicCore(
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
     val iduForwardBits = WireDefault(iduOut.bits)
-    val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
-    // val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
-    // val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    // val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    // val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
+    // val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    // val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    // val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    // val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
+    val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
+    val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
 
     // RAW (GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
@@ -147,13 +146,17 @@ class BasicCore(
     )
 
     // Pipeline ctrl
-    flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
-    flushIdu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
-    flushExu := wbu.exte.pcReg.isJump
-    ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    val jumpTarget = Mux(wbu.exte.pipelineCtrl.isJump, wbu.exte.pipelineCtrl.target, lsu.exte.pipelineCtrl.target)
+    globalPcHi.io.wEn := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    globalPcHi.io.wData := jumpTarget.head(cfg.pcHiWidth)
+    flushIfu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    flushIdu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    flushExu := wbu.exte.pipelineCtrl.isJump
+    ifu.exte.jumpTarget := jumpTarget
+    ifu.exte.flush := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
 
     stallIdu := isRawGpr
-    stallExu := rawCsr || lsu.exte.pcReg.isJump
+    stallExu := rawCsr || lsu.exte.pipelineCtrl.isJump
     exu.exte.stall := stallExu
 
     // Debug
@@ -183,7 +186,7 @@ class BasicCore(
         !reset.asBool,
         idu.in.valid,
         idu.in.ready,
-        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump))
       )
       perfPipeline(
         "idu",
@@ -191,7 +194,7 @@ class BasicCore(
         exu.in.valid,
         exu.in.ready,
         Map(
-          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump),
           "RawGpr" -> (isRawGpr || RegNext(isRawGpr))
         )
       )
@@ -201,7 +204,7 @@ class BasicCore(
         lsu.in.valid,
         lsu.in.ready,
         Map(
-          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump),
           "RawCsr" -> (rawCsr || RegNext(rawCsr))
           // "MayJump" -> (mayJump || RegNext(mayJump))
         )
@@ -211,10 +214,10 @@ class BasicCore(
         lsu.in.valid,
         wbu.in.valid,
         wbu.in.ready,
-        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump))
       )
 
-      PerfWhen("totalJump", wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump, Some(stopFlag))
+      PerfWhen("totalJump", wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump, Some(stopFlag))
 
       import rvspeccore.checker._
       implicit val XLEN = cfg.xlen
@@ -327,7 +330,7 @@ class Top(
       val debugInfoDpiC = Module(new DebugInfoDpiC)
       val getGprDpiC = Module(new GetGprDpiC)
       debugInfoDpiC.isEbreak := ebreakSignal
-      debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.pc
+      debugInfoDpiC.pc := wbuIn.bits.lsuPayload.ifu.debugPc
       // debugInfoDpiC.pcRaw := tapAndRead(basicCore.pcReg.debug.get.pc)
       debugInfoDpiC.pcRaw := cfg.pcInit.U
       // debugInfoDpiC.dnpc := pcReg.debug.get.dnpc
