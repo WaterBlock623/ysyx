@@ -60,10 +60,16 @@ class ClintDevice extends Module {
   in.ar.ready := state === sIdle
   in.r.valid := state =/= sIdle
 
-  val mtimeReg = RegInit(0.U(64.W))
-  mtimeReg := mtimeReg + 1.U
-  val mtimeLo = mtimeReg(31, 0)
-  val mtimeHi = mtimeReg(63, 32)
+  // val mtimeReg = RegInit(0.U(64.W))
+  // mtimeReg := mtimeReg + 1.U
+  // val mtimeLo = mtimeReg(31, 0)
+  // val mtimeHi = mtimeReg(63, 32)
+
+  val addResult = Wire(UInt(32.W))
+  val switcher = RegInit(false.B)
+  val mtimeLo = RegEnable(addResult, 0.U(32.W), !switcher)
+  val mtimeHi = RegEnable(addResult, 0.U(32.W), switcher && mtimeLo.andR)
+  addResult := 1.U + Mux(switcher, mtimeHi, mtimeLo)
 
   in.r.bits.data := MuxLookup(state, mtimeLo)(
     Seq(
