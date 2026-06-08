@@ -12,7 +12,7 @@ class Lsu(
   }
 
   val exte = IO(new Bundle {
-    val pcHi = UInt(cfg.pcHiWidth.W)
+    val pcHi = Input(UInt(cfg.pcHiWidth.W))
     val mem = new Axi4IO
     val pipelineCtrl = new PipelineCtrlIO
     val bpu = new LsuToBpuIO

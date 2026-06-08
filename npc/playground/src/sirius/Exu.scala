@@ -123,7 +123,7 @@ class Exu(
   implicit private val ucfg: UnitConfig)
     extends Module {
   val exte = IO(new Bundle {
-    val pcHi = UInt(cfg.pcHiWidth.W)
+    val pcHi = Input(UInt(cfg.pcHiWidth.W))
     val csr = new ExuToCsrIO
     val stall = Input(Bool())
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
