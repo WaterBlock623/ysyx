@@ -55,7 +55,8 @@ class Ifu(
     // }
     // cached.ar.bits.addr := ifetchAddr
 
-    val pcLo = RegInit((cfg.pcInit >> cfg.trivialBits).U(cfg.predTargetWidth.W))
+    val pcInitLo = (cfg.pcInit >> cfg.trivialBits) & ((1 << cfg.predTargetWidth) - 1)
+    val pcLo = RegInit(pcInitLo.U(cfg.predTargetWidth.W))
     val pc = PcCat(cfg.hasC, exte.pcHi, pcLo)
     val icache = Module(
       new SimpleIcache(
