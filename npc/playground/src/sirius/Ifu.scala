@@ -23,11 +23,7 @@ class Ifu(
   outBits.ifuPayload.trap.cause := DontCare
 
   val flush = exte.flush || (out.fire && exte.bpu.taken)
-  val flushTargetLo = Mux(
-    exte.flush,
-    ExtractFrom(exte.jumpTarget, cfg.trivialBits, cfg.predTargetWidth),
-    ExtractFrom(exte.bpu.target, cfg.trivialBits, cfg.predTargetWidth)
-  )
+  val flushTarget = Mux(exte.flush, exte.jumpTarget, exte.bpu.target)
 
   if (!cfg.formal) {
     // icache
@@ -70,11 +66,11 @@ class Ifu(
     val cached = icache.io.cached
     cached.fencei := exte.fencei
     cached.abort := flush
-    cached.newAddr := PcCat(cfg.hasC, exte.pcHi, Mux(cached.abort, flushTargetLo, pcLo))
+    cached.newAddr := Mux(cached.abort, flushTarget, pc)
 
     val iqueue = Module(new Iqueue(entries32 = 2))
     iqueue.io.flush := flush
-    iqueue.io.targetUnalign := flushTargetLo(0)
+    iqueue.io.targetUnalign := flushTarget(1)
     iqueue.io.enq :<>= cached.r.map(_.data)
     // PipelineConnect(cached.r.map(_.data), iqueue.io.enq, flush = flush)
 
@@ -85,9 +81,9 @@ class Ifu(
     iqueueDeq.ready := out.ready
 
     when(flush) {
-      pcLo := flushTargetLo
+      pcLo := ExtractFrom(flushTarget, cfg.trivialBits, cfg.predTargetWidth)
     }.elsewhen(out.fire) {
-      pcLo := pcLo + Mux(iqueueDeq.bits.isC, 1.U, 2.U)
+      pcLo := pcLo + Mux(iqueueDeq.bits.isC, (2 >> cfg.trivialBits).U, (4 >> cfg.trivialBits).U)
     }
 
     exte.bpu.pc := pc
@@ -198,9 +194,9 @@ class Ifu(
     val pc = PcCat(cfg.hasC, exte.pcHi, pcLo)
 
     when(flush) {
-      pcLo := flushTargetLo
+      pcLo := ExtractFrom(flushTarget, cfg.trivialBits, cfg.predTargetWidth)
     }.elsewhen(out.fire) {
-      pcLo := pcLo + Mux(outBits.ifuPayload.ifu.isC, 1.U, 2.U)
+      pcLo := pcLo + Mux(outBits.ifuPayload.ifu.isC, (2 >> cfg.trivialBits).U, (4 >> cfg.trivialBits).U)
     }
 
     exte.bpu.pc := pc
