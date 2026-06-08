@@ -148,7 +148,7 @@ class BasicCore(
     // Pipeline ctrl
     val jumpTarget = Mux(wbu.exte.pipelineCtrl.isJump, wbu.exte.pipelineCtrl.target, lsu.exte.pipelineCtrl.target)
     globalPcHi.io.wEn := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
-    globalPcHi.io.wData := jumpTarget
+    globalPcHi.io.wData := jumpTarget.head(cfg.pcHiWidth)
     flushIfu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
     flushIdu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
     flushExu := wbu.exte.pipelineCtrl.isJump
