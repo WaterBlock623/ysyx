@@ -39,7 +39,7 @@ class BasicCore(
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  ifu.exte.jumpTarget := Mux(wbu.exte.pcReg.isJump, wbu.exte.pcReg.target, lsu.exte.pcReg.target)
+  ifu.exte.jumpTarget := Mux(wbu.exte.pipelineCtrl.isJump, wbu.exte.pipelineCtrl.target, lsu.exte.pipelineCtrl.target)
   val fencei = lsu.in.valid && lsu.in.bits.ctrl.lsuCtrl.isFlushIcache
   ifu.exte.fencei := fencei
 
@@ -147,13 +147,13 @@ class BasicCore(
     )
 
     // Pipeline ctrl
-    flushIfu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
-    flushIdu := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
-    flushExu := wbu.exte.pcReg.isJump
-    ifu.exte.flush := wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump
+    flushIfu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    flushIdu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    flushExu := wbu.exte.pipelineCtrl.isJump
+    ifu.exte.flush := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
 
     stallIdu := isRawGpr
-    stallExu := rawCsr || lsu.exte.pcReg.isJump
+    stallExu := rawCsr || lsu.exte.pipelineCtrl.isJump
     exu.exte.stall := stallExu
 
     // Debug
@@ -183,7 +183,7 @@ class BasicCore(
         !reset.asBool,
         idu.in.valid,
         idu.in.ready,
-        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump))
       )
       perfPipeline(
         "idu",
@@ -191,7 +191,7 @@ class BasicCore(
         exu.in.valid,
         exu.in.ready,
         Map(
-          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump),
           "RawGpr" -> (isRawGpr || RegNext(isRawGpr))
         )
       )
@@ -201,7 +201,7 @@ class BasicCore(
         lsu.in.valid,
         lsu.in.ready,
         Map(
-          "Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump),
+          "Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump),
           "RawCsr" -> (rawCsr || RegNext(rawCsr))
           // "MayJump" -> (mayJump || RegNext(mayJump))
         )
@@ -211,10 +211,10 @@ class BasicCore(
         lsu.in.valid,
         wbu.in.valid,
         wbu.in.ready,
-        Map("Flush" -> RegNext(wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump))
+        Map("Flush" -> RegNext(wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump))
       )
 
-      PerfWhen("totalJump", wbu.exte.pcReg.isJump || lsu.exte.pcReg.isJump, Some(stopFlag))
+      PerfWhen("totalJump", wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump, Some(stopFlag))
 
       import rvspeccore.checker._
       implicit val XLEN = cfg.xlen

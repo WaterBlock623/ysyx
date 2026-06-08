@@ -13,7 +13,7 @@ class Lsu(
 
   val exte = IO(new Bundle {
     val mem = new Axi4IO
-    val pcReg = new LsuToPcRegIO
+    val pipelineCtrl = new PipelineCtrlIO
     val bpu = new LsuToBpuIO
     val debugEbreak = Option.when(cfg.isDebug)(Input(Bool()))
   })
@@ -49,8 +49,8 @@ class Lsu(
   val dynamicNextPc = Mux(realTaken, realTarget, staticNextPc)
   // val newIn = inValid && (RegNext(!inValid) || RegNext(in.fire))
   val newIn = inValid && (RegNext(!inValid || in.fire))
-  exte.pcReg.isJump := newIn && (predErr || ctrl.isFlushIcache)
-  exte.pcReg.target := dynamicNextPc
+  exte.pipelineCtrl.isJump := newIn && (predErr || ctrl.isFlushIcache)
+  exte.pipelineCtrl.target := dynamicNextPc
   if (cfg.isDebug) {
   val debug = outBits.debug.get
     debug.isJump := realTaken

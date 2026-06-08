@@ -96,12 +96,6 @@ class LsuToWbuIO(implicit private val cfg: CoreConfig) extends Bundle {
 }
 
 // 访问外部
-class IfuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val pc = Input(UInt(cfg.xlen.W))
-  val update = Output(Bool())
-  val nextPc = Output(UInt(cfg.xlen.W))
-}
-
 class IfuToMemIO(implicit private val cfg: CoreConfig) extends Bundle {
   val reqValid = Output(Bool())
   val reqReady = Input(Bool())
@@ -145,22 +139,12 @@ class WbuToRegFileIO(implicit private val cfg: CoreConfig) extends Bundle {
   val wData = Output(UInt(cfg.xlen.W))
 }
 
-class LsuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val isJump = Output(Bool())
-  val target = Output(UInt(cfg.xlen.W))
-}
-
 class LsuToBpuIO(implicit private val cfg: CoreConfig) extends Bundle {
   val update = Output(Bool())
   val isCtrlInst = Output(Bool())
   val realTaken = Output(Bool())
   val predTaken = Output(Bool())
   val pc = Output(UInt(cfg.xlen.W))
-  val target = Output(UInt(cfg.xlen.W))
-}
-
-class WbuToPcRegIO(implicit private val cfg: CoreConfig) extends Bundle {
-  val isJump = Output(Bool())
   val target = Output(UInt(cfg.xlen.W))
 }
 
@@ -176,4 +160,9 @@ class WbuToCsrIO(implicit private val cfg: CoreConfig) extends Bundle {
   val causeNum = Output(UInt(cfg.mxlen.W))
   val mtvec = Input(UInt(cfg.mxlen.W))
   val mepc = Input(UInt(cfg.mxlen.W))
+}
+
+class PipelineCtrlIO(implicit private val cfg: CoreConfig) extends Bundle {
+  val isJump = Output(Bool())
+  val target = Output(UInt(cfg.xlen.W))
 }

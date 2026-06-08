@@ -26,3 +26,23 @@ class PcReg(
     debug.get.pc := pcReg
   }
 }
+
+class GlobalPcHi(implicit private val cfg: CoreConfig) extends Module {
+  val trivialBits = if (cfg.hasC) 1 else 2
+  val pcLoWidth = cfg.predTargetWidth + trivialBits
+  val pcHiWidth = cfg.xlen - pcLoWidth
+
+  val io = IO(new Bundle {
+    val pcHi = Output(UInt(pcHiWidth.W))
+    val wEn = Input(Bool())
+    val wData = Input(UInt(pcHiWidth.W))
+  })
+
+  val pcHi = RegInit((cfg.pcInit >> pcLoWidth).U(pcHiWidth.W))
+
+  when(io.wEn) {
+    pcHi := io.wData
+  }
+
+  io.pcHi := pcHi
+}
