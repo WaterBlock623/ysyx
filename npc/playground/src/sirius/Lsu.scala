@@ -231,11 +231,11 @@ class Lsu(
   )
 
   // Output
-  outBits.lsuPayload.lsu.regWData := 
+  outBits.lsuPayload.lsu.regWData := Mux(outBits.lsuPayload.trap.isTrap, inBits.exuPayload.ifu.pc,
     MuxLookup(inBits.ctrl.wbuCtrl.writeBackSel, inBits.exuPayload.exu.aluOut)(Seq(
       WriteBackSelEnum.lsu.asUInt -> loadData,
       WriteBackSelEnum.staticNextPc.asUInt -> staticNextPc
-    ))
+    )))
 
   // Debug
   if (cfg.formal) {

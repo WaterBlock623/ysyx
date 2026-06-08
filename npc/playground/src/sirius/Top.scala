@@ -70,7 +70,6 @@ class BasicCore(
     val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
     val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
     val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
-    // wbu.in :<>= lsuOut
     // val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
     // val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
     // val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)

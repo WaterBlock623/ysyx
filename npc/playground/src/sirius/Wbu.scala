@@ -29,12 +29,10 @@ class Wbu(
 
   val ctrl = inBits.ctrl.wbuCtrl
   val pcReg = exte.pcReg
-  val pc = inBits.lsuPayload.ifu.pc
+  // val pc = inBits.lsuPayload.ifu.pc
   val regFile = exte.regFlie
-  // val imm = inBits.lsuPayload.idu.imm
   val aluOut = inBits.lsuPayload.exu.aluOut
-  // val csrData = inBits.lsuPayload.exu.csrData
-  val staticNextPc = inBits.lsuPayload.ifu.pc + Mux(inBits.lsuPayload.ifu.isC, 2.U, 4.U)
+  // val staticNextPc = inBits.lsuPayload.ifu.pc + Mux(inBits.lsuPayload.ifu.isC, 2.U, 4.U)
   // val staticNextPc = 
   //   Mux(inBits.lsuPayload.ifu.isC, inBits.lsuPayload.ifu.pc + 2.U, inBits.lsuPayload.ifu.pc + 4.U)
 
@@ -60,7 +58,7 @@ class Wbu(
   csr.wAddr := inBits.lsuPayload.idu.csrAddr
   csr.wData := inBits.lsuPayload.lsu.regWData
 
-  csr.pc := pc
+  csr.pc := inBits.lsuPayload.lsu.regWData
   csr.isTrap := in.valid && inBits.lsuPayload.trap.isTrap
   csr.causeNum := inBits.lsuPayload.trap.cause
 
