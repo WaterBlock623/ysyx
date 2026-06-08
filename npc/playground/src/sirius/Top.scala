@@ -39,7 +39,6 @@ class BasicCore(
   registerFile.wbuIn :<>= wbu.exte.regFlie
   csr.exuIn :<>= exu.exte.csr
   csr.wbuIn :<>= wbu.exte.csr
-  ifu.exte.jumpTarget := Mux(wbu.exte.pipelineCtrl.isJump, wbu.exte.pipelineCtrl.target, lsu.exte.pipelineCtrl.target)
   val fencei = lsu.in.valid && lsu.in.bits.ctrl.lsuCtrl.isFlushIcache
   ifu.exte.fencei := fencei
 
@@ -147,9 +146,13 @@ class BasicCore(
     )
 
     // Pipeline ctrl
+    val jumpTarget = Mux(wbu.exte.pipelineCtrl.isJump, wbu.exte.pipelineCtrl.target, lsu.exte.pipelineCtrl.target)
+    globalPcHi.io.wEn := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
+    globalPcHi.io.wData := jumpTarget
     flushIfu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
     flushIdu := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
     flushExu := wbu.exte.pipelineCtrl.isJump
+    ifu.exte.jumpTarget := jumpTarget
     ifu.exte.flush := wbu.exte.pipelineCtrl.isJump || lsu.exte.pipelineCtrl.isJump
 
     stallIdu := isRawGpr
