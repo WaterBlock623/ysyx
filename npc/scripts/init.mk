@@ -2,6 +2,7 @@ ifeq ($(wildcard $(NPC_HOME)/espresso/.git),)
 $(info Init espresso...)
 $(shell git submodule update --init $(NPC_HOME)/espresso)
 $(shell cd espresso && mkdir build && cd build && cmake .. -DBUILD_DOC=OFF > /dev/null 2>&1 && make > /dev/null 2>&1)
+$(shell mkdir -p $(NPC_HOME)/espresso/bin && cp $(NPC_HOME)/espresso/build/espresso $(NPC_HOME)/espresso/bin/espresso)
 endif
 
 ifneq ($(GITHUB_PATH),)
