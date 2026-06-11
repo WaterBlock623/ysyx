@@ -190,7 +190,8 @@ class Ifu(
     out.valid := exte.mem.r.valid
     outBits.ifuPayload.ifu.inst := exte.mem.r.bits.data
   
-    val pcLo = RegInit((cfg.pcInit >> cfg.trivialBits).U(cfg.predTargetWidth.W))
+    val pcInitLo = (cfg.pcInit >> cfg.trivialBits) & ((1 << cfg.predTargetWidth) - 1)
+    val pcLo = RegInit(pcInitLo.U(cfg.predTargetWidth.W))
     val pc = PcCat(cfg.hasC, exte.pcHi, pcLo)
 
     when(flush) {
@@ -202,6 +203,7 @@ class Ifu(
     exte.bpu.pc := pc
 
     outBits.ifuPayload.ifu.pcLo := pcLo
+    outBits.ifuPayload.ifu.debugPc := pc
     outBits.ifuPayload.ifu.predTaken := exte.bpu.taken
     // outBits.ifuPayload.ifu.predTarget := exte.bpu.target
     outBits.ifuPayload.ifu.predTarget := 
