@@ -4,19 +4,10 @@ $(shell git submodule update --init $(NPC_HOME)/espresso)
 $(shell cd espresso && mkdir build && cd build && cmake .. -DBUILD_DOC=OFF > /dev/null 2>&1 && make > /dev/null 2>&1)
 endif
 
-ifeq ($(wildcard $(NPC_HOME)/oss-cad-suite/bin),)
-$(info Init oss-cad-suite...)
-$(shell wget -q -O - https\://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-05-15/oss-cad-suite-linux-x64-20260515.tgz | tar -zxf - > /dev/null 2>&1)
-endif
-
 ifneq ($(GITHUB_PATH),)
 $(info Found GITHUB_PATH: $(GITHUB_PATH))
 ifeq ($(shell command -v espresso),)
 $(shell cp $(NPC_HOME)/espresso/build/espresso /usr/local/bin/espresso)
-endif
-OSS_CAD_SUITE_PATH := $(shell echo "$$PATH" | tr ':' '\n' | grep 'oss-cad-suite' | head -n 1 | sed 's|/bin$$||')
-ifneq ($(OSS_CAD_SUITE_PATH),)
-$(shell cp -r $(NPC_HOME)/oss-cad-suite/. $(OSS_CAD_SUITE_PATH))
 endif
 endif
 
