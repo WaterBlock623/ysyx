@@ -1,7 +1,7 @@
 From da5b5fee4b32f6e0ac3447ece7ae1c8a2c370e2c Mon Sep 17 00:00:00 2001
 From: Water Block <17048545@qq.com>
 Date: Thu, 21 May 2026 10:18:38 +0800
-Subject: [PATCH 4/5] Skip AXI and APB delayer
+Subject: [PATCH 4/6] Skip AXI and APB delayer
 
 ---
  src/amba/APBDelayer.scala  | 11 +++++++++--

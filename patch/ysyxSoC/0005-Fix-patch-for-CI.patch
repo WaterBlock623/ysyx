@@ -1,7 +1,7 @@
 From 1756f0b5738fc62e3a96071d437039b1dcbc2973 Mon Sep 17 00:00:00 2001
 From: Water Block <17048545@qq.com>
 Date: Sat, 6 Jun 2026 11:42:46 +0800
-Subject: [PATCH 5/5] Fix patch for CI
+Subject: [PATCH 5/6] Fix patch for CI
 
 ---
  Makefile                     |  6 ++++++
