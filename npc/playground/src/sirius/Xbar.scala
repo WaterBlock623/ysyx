@@ -225,48 +225,51 @@ class SimpleXbar extends Module {
     }
   }
 
-  val wAllowHandshake = RegInit(false.B)
-  val wOutSel = RegInit(false.B)
-
-  val wInValid = io.in(0).aw.valid
-  val wFinish = io.in(0).b.fire
-  switch(rAllowHandshake) {
-    is(false.B) {
-      when(wInValid) {
-        wAllowHandshake := true.B
-        wOutSel := outSel(io.in(0).aw.bits.addr)
-      }
-    }
-    is(true.B) {
-      when(wFinish) {
-        wAllowHandshake := false.B
-      }
-    }
-  }
-
-  
-  io.out.foreach { axi =>
-    axi.aw.bits := DontCare
-    axi.w.bits := DontCare
-    axi.aw.valid := false.B
-    axi.w.valid := false.B
-    axi.b.ready := false.B
-  }
-  io.in.foreach { axi =>
-    axi.b.bits := DontCare
-    axi.b.valid := false.B
-    axi.aw.ready := false.B
-    axi.w.ready := false.B
-  }
-  when(wAllowHandshake) {
-    when(wOutSel) {
-      io.out(0).aw :<>= io.in(0).aw
-      io.out(0).w :<>= io.in(0).w
-      io.in(0).b :<>= io.out(0).b
-    }.otherwise {
-      io.out(0).aw :<>= io.in(0).aw
-      io.out(0).w :<>= io.in(0).w
-      io.in(0).b :<>= io.out(0).b
-    }
-  }
+  io.out(0).aw :<>= io.in(0).aw
+  io.out(0).w :<>= io.in(0).w
+  io.in(0).b :<>= io.out(0).b
+  // val wAllowHandshake = RegInit(false.B)
+  // val wOutSel = RegInit(false.B)
+  //
+  // val wInValid = io.in(0).aw.valid
+  // val wFinish = io.in(0).b.fire
+  // switch(rAllowHandshake) {
+  //   is(false.B) {
+  //     when(wInValid) {
+  //       wAllowHandshake := true.B
+  //       wOutSel := outSel(io.in(0).aw.bits.addr)
+  //     }
+  //   }
+  //   is(true.B) {
+  //     when(wFinish) {
+  //       wAllowHandshake := false.B
+  //     }
+  //   }
+  // }
+  //
+  //
+  // io.out.foreach { axi =>
+  //   axi.aw.bits := DontCare
+  //   axi.w.bits := DontCare
+  //   axi.aw.valid := false.B
+  //   axi.w.valid := false.B
+  //   axi.b.ready := false.B
+  // }
+  // io.in.foreach { axi =>
+  //   axi.b.bits := DontCare
+  //   axi.b.valid := false.B
+  //   axi.aw.ready := false.B
+  //   axi.w.ready := false.B
+  // }
+  // when(wAllowHandshake) {
+  //   when(wOutSel) {
+  //     io.out(0).aw :<>= io.in(0).aw
+  //     io.out(0).w :<>= io.in(0).w
+  //     io.in(0).b :<>= io.out(0).b
+  //   }.otherwise {
+  //     io.out(0).aw :<>= io.in(0).aw
+  //     io.out(0).w :<>= io.in(0).w
+  //     io.in(0).b :<>= io.out(0).b
+  //   }
+  // }
 }
