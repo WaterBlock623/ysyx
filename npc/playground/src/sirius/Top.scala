@@ -48,7 +48,7 @@ class BasicCore(
         btbIndexWidth = 3,
         btbTagWidth = 3,
         btbTargetWidth = cfg.predTargetWidth,
-        phtIndexWidth = 3,
+        phtIndexWidth = 4,
         phtCounterWidth = 2
       )
     )
@@ -281,16 +281,17 @@ class Top(
   withModulePrefix(cfg.modulePrefix.getOrElse("")) {
 
     val basicCore = Module(new BasicCore)
-    val xbar = Module(
-      new Xbar(
-        2,
-        2,
-        Seq(
-          addr => addr < "h02000000".U || addr >= "h02010000".U,
-          addr => addr >= "h02000000".U && addr < "h02010000".U
-        )
-      )
-    )
+    // val xbar = Module(
+    //   new Xbar(
+    //     2,
+    //     2,
+    //     Seq(
+    //       addr => addr < "h02000000".U || addr >= "h02010000".U,
+    //       addr => addr >= "h02000000".U && addr < "h02010000".U
+    //     )
+    //   )
+    // )
+    val xbar = Module(new SimpleXbar)
     val clintDevice = Module(new ClintDevice)
 
     xbar.io.in(0) :<>= basicCore.io.axiLsu
