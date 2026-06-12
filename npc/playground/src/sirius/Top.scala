@@ -48,7 +48,7 @@ class BasicCore(
         btbIndexWidth = 3,
         btbTagWidth = 4,
         btbTargetWidth = cfg.predTargetWidth,
-        phtIndexWidth = 3,
+        phtIndexWidth = 4,
         phtCounterWidth = 2
       )
     )
