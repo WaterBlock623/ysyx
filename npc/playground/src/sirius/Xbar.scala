@@ -229,9 +229,14 @@ class SimpleXbar extends Module {
   io.out(0).w :<>= io.in(0).w
   io.in(0).b :<>= io.out(0).b
 
-  io.out(1).aw :#= 0.U.asTypeOf(chiselTypeOf(io.out(1).aw))
-  io.out(1).w :#= 0.U.asTypeOf(chiselTypeOf(io.out(1).w))
-  io.in(1).b :#= 0.U.asTypeOf(chiselTypeOf(io.in(1).b))
+  0.U.asTypeOf(chiselTypeOf(io.out(1).aw)) :>= io.in(1).aw
+  0.U.asTypeOf(chiselTypeOf(io.out(1).w)) :>= io.in(1).w
+  io.in(1).b :<= 0.U.asTypeOf(chiselTypeOf(io.in(1).b))
+
+  io.out(1).aw :<= 0.U.asTypeOf(chiselTypeOf(io.out(1).aw))
+  io.out(1).w :<= 0.U.asTypeOf(chiselTypeOf(io.out(1).w))
+  0.U.asTypeOf(chiselTypeOf(io.out(1).b)) :>= io.out(1).b
+
   // val wAllowHandshake = RegInit(false.B)
   // val wOutSel = RegInit(false.B)
   //
