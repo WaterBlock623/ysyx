@@ -46,9 +46,9 @@ class BasicCore(
     val bpu = Module(
       new Bpu(
         btbIndexWidth = 3,
-        btbTagWidth = 4,
+        btbTagWidth = 3,
         btbTargetWidth = cfg.predTargetWidth,
-        phtIndexWidth = 3,
+        phtIndexWidth = 4,
         phtCounterWidth = 2
       )
     )
@@ -65,14 +65,14 @@ class BasicCore(
     val flushIdu = Wire(Bool())
     val flushExu = Wire(Bool())
     val iduForwardBits = WireDefault(iduOut.bits)
-    val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
-    val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
-    // val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
-    // val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
-    // val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
-    // val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
+    // val pipeIfId = PipelineConnect(ifuOut, idu.in, flush = flushIfu)
+    // val pipeIdEx = PipelineConnect(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    // val pipeExLs = PipelineConnect(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    // val pipeLsWb = PipelineConnect(lsuOut, wbu.in)
+    val pipeIfId = PipelineConnectModule(ifuOut, idu.in, flush = flushIfu)
+    val pipeIdEx = PipelineConnectModule(iduOut.map(_ => iduForwardBits), exu.in, stall = stallIdu, flush = flushIdu)
+    val pipeExLs = PipelineConnectModule(exuOut, lsu.in, stall = stallExu, flush = flushExu)
+    val pipeLsWb = PipelineConnectModule(lsuOut, wbu.in)
 
     // RAW (GPR)
     val readRs1 = globalCtrl.globalCtrl.readRs1
